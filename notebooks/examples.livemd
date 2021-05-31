@@ -1,0 +1,94 @@
+# Examples
+
+## Setup
+
+```elixir
+Mix.install([
+  {:vega_lite, "~> 0.1.0"},
+  {:kino, "~> 0.1.0"}
+])
+```
+
+```elixir
+alias VegaLite, as: Vl
+```
+
+## VegaLite
+
+To dynamically stream data to a plot, all you need is a regular
+[VegaLite](https://github.com/elixir-nx/vega_lite) specification
+that you can pass to `Kino.VegaLite.start/1`. You don't have to specify any data up-front.
+
+```elixir
+vl_widget =
+  Vl.new(width: 400, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.start()
+```
+
+Then you can push data to the plot widget at any point and see it update dynamically:
+
+```elixir
+for i <- 1..300 do
+  point = %{x: i / 10, y: :math.sin(i / 10)}
+
+  # The :window option ensures we only show the latest
+  # 100 data points on the plot
+  Kino.VegaLite.push(vl_widget, point, window: 100)
+
+  Process.sleep(25)
+end
+```
+
+You can also explicitly clear the data:
+
+```elixir
+Kino.VegaLite.clear(vl_widget)
+```
+
+## Kino.render/1
+
+Above we saw how you can render and stram data to the plot from separate cells.
+However, the widget can also be rendered explicitly at any point with
+the `Kino.render/1` function.
+
+```elixir
+vl_widget =
+  Vl.new(width: 400, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.start()
+  |> Kino.render()
+
+for i <- 1..300 do
+  point = %{x: i / 10, y: :math.sin(i / 10)}
+  Kino.VegaLite.push(vl_widget, point, window: 100)
+  Process.sleep(25)
+end
+```
+
+In fact, you can think of this function as a generalized `IO.puts/2` that works
+for any type and is rendered by Livebook similarly to regular evaluation results.
+
+```elixir
+# Arbitrary data structures
+Kino.render([%{name: "Jake Peralta"}, %{name: "Amy Santiago"}])
+
+# Static plots
+vl =
+  Vl.new(width: 400, height: 400)
+  |> Vl.data_from_series(x: 1..100, y: 1..100)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+
+Kino.render(vl)
+Kino.render(vl)
+
+Kino.render("Plain text")
+
+"Cell result 🚀"
+```

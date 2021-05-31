@@ -5,7 +5,7 @@
 
 **Note: This is currently experimental and yet to be released**
 
-Interactive widgets for [Livebook](https://github.com/elixir-nx/livebook)
+Interactive widgets for [Livebook](https://github.com/elixir-nx/livebook).
 
 ## Installation
 
