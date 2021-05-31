@@ -1,4 +1,4 @@
-defmodule LiveWidget do
+defmodule Kino do
   @moduledoc """
   Interactive widgets for Livebook.
   """
@@ -21,14 +21,14 @@ defmodule LiveWidget do
 
   Arbitrary data structure
 
-      LiveWidget.render([%{name: "Jake Peralta"}, %{name: "Amy Santiago"}])
+      Kino.render([%{name: "Jake Peralta"}, %{name: "Amy Santiago"}])
 
   VegaLite plot
 
       Vl.new(...)
       |> Vl.data_from_series(...)
       |> ...
-      |> LiveWidget.render()
+      |> Kino.render()
 
       # more code
 
@@ -38,9 +38,9 @@ defmodule LiveWidget do
         Vl.new(...)
         |> Vl.data_from_series(...)
         |> ...
-        |> LiveWidget.VegaLite.start()
+        |> Kino.VegaLite.start()
 
-      LiveWidget.render(vl_widget)
+      Kino.render(vl_widget)
 
       # stream data to the plot
   """

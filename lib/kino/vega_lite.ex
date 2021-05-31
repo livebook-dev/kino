@@ -1,4 +1,4 @@
-defmodule LiveWidget.VegaLite do
+defmodule Kino.VegaLite do
   @moduledoc """
   A widget wrapping [VegaLite](https://hexdocs.pm/vega_lite) graphic.
 
@@ -12,12 +12,12 @@ defmodule LiveWidget.VegaLite do
         |> Vl.mark(:line)
         |> Vl.encode_field(:x, "x", type: :quantitative)
         |> Vl.encode_field(:y, "y", type: :quantitative)
-        |> LiveWidget.VegaLite.start()
-        |> LiveWidget.render()
+        |> Kino.VegaLite.start()
+        |> Kino.render()
 
       for i <- 1..300 do
         point = %{x: i / 10, y: :math.sin(i / 10)}
-        LiveWidget.VegaLite.push(vl_widget, point)
+        Kino.VegaLite.push(vl_widget, point)
         Process.sleep(25)
       end
   """
@@ -50,13 +50,13 @@ defmodule LiveWidget.VegaLite do
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
-  @spec start(VegaLite.t()) :: LiveWidget.t()
+  @spec start(VegaLite.t()) :: Kino.t()
   def start(vl) do
     opts = [vl: vl]
 
     case GenServer.start(__MODULE__, opts) do
       {:ok, pid} ->
-        %LiveWidget{pid: pid, type: @widget_type}
+        %Kino{pid: pid, type: @widget_type}
 
       {:error, reason} ->
         raise RuntimeError, "failed to start VegaLite widget server, reason: #{inspect(reason)}"
@@ -76,7 +76,7 @@ defmodule LiveWidget.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec push(LiveWidget.t(), map(), keyword()) :: :ok
+  @spec push(Kino.t(), map(), keyword()) :: :ok
   def push(widget, data_point, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -88,7 +88,7 @@ defmodule LiveWidget.VegaLite do
 
   See `push/3` for more details.
   """
-  @spec push_many(LiveWidget.t(), list(map()), keyword()) :: :ok
+  @spec push_many(Kino.t(), list(map()), keyword()) :: :ok
   def push_many(widget, data, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -104,7 +104,7 @@ defmodule LiveWidget.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec clear(LiveWidget.t(), keyword()) :: :ok
+  @spec clear(Kino.t(), keyword()) :: :ok
   def clear(widget, opts \\ []) do
     dataset = opts[:dataset]
     GenServer.cast(widget.pid, {:clear, dataset})

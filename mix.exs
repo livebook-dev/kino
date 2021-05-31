@@ -1,9 +1,9 @@
-defmodule LiveWidget.MixProject do
+defmodule Kino.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :live_widget,
+      app: :kino,
       version: "0.1.0",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
