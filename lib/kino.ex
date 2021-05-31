@@ -39,14 +39,18 @@ defmodule Kino do
   """
   @spec render(term()) :: term()
   def render(term) do
-    ref = make_ref()
+    gl = Process.group_leader()
+    ref = Process.monitor(gl)
 
-    send(Process.group_leader(), {:io_request, self(), ref, {:livebook_put_term, term}})
+    send(gl, {:io_request, self(), ref, {:livebook_put_term, term}})
 
     receive do
       {:io_reply, ^ref, :ok} -> :ok
       {:io_reply, ^ref, _} -> :error
+      {:DOWN, ^ref, :process, _object, _reason} -> :error
     end
+
+    Process.demonitor(ref)
 
     term
   end
