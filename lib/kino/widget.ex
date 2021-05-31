@@ -1,6 +1,6 @@
 defmodule Kino.Widget do
   @moduledoc """
-  A structure representing to a widget process.
+  A structure representing a widget process.
   """
 
   defstruct [:pid, :type]

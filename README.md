@@ -7,6 +7,7 @@
 
 Interactive widgets for [Livebook](https://github.com/elixir-nx/livebook).
 
+<!--
 ## Installation
 
 To bring Kino to Livebook all you need to do is `Mix.install/2`:
@@ -19,6 +20,7 @@ Mix.install([
 
 You may need other dependencies for specific widgets, like
 [`:vega_lite`](https://github.com/elixir-nx/vega_lite) for dynamic plots.
+-->
 
 ## License
 
