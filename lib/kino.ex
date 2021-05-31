@@ -3,13 +3,6 @@ defmodule Kino do
   Interactive widgets for Livebook.
   """
 
-  defstruct [:pid, :type]
-
-  @type t :: %__MODULE__{
-          pid: pid(),
-          type: atom()
-        }
-
   @doc """
   Sends the given term as cell output.
 

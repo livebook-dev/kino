@@ -36,10 +36,11 @@ defmodule Kino.VegaLite do
   #
   #     {:push, %{data: list, dataset: binary, window: non_neg_integer}}
 
-  use GenServer
+  use GenServer, restart: :temporary
 
   @widget_type :vega_lite
 
+  @typedoc false
   @type state :: %{
           vl: VegaLite.t(),
           window: non_neg_integer(),
@@ -50,17 +51,16 @@ defmodule Kino.VegaLite do
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
-  @spec start(VegaLite.t()) :: Kino.t()
+  @spec start(VegaLite.t()) :: Kino.Widget.t()
   def start(vl) do
     opts = [vl: vl]
 
-    case GenServer.start(__MODULE__, opts) do
-      {:ok, pid} ->
-        %Kino{pid: pid, type: @widget_type}
+    Kino.Widget.start!(__MODULE__, opts, @widget_type)
+  end
 
-      {:error, reason} ->
-        raise RuntimeError, "failed to start VegaLite widget server, reason: #{inspect(reason)}"
-    end
+  @doc false
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts)
   end
 
   @doc """
@@ -76,7 +76,7 @@ defmodule Kino.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec push(Kino.t(), map(), keyword()) :: :ok
+  @spec push(Kino.Widget.t(), map(), keyword()) :: :ok
   def push(widget, data_point, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -88,7 +88,7 @@ defmodule Kino.VegaLite do
 
   See `push/3` for more details.
   """
-  @spec push_many(Kino.t(), list(map()), keyword()) :: :ok
+  @spec push_many(Kino.Widget.t(), list(map()), keyword()) :: :ok
   def push_many(widget, data, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -104,7 +104,7 @@ defmodule Kino.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec clear(Kino.t(), keyword()) :: :ok
+  @spec clear(Kino.Widget.t(), keyword()) :: :ok
   def clear(widget, opts \\ []) do
     dataset = opts[:dataset]
     GenServer.cast(widget.pid, {:clear, dataset})
