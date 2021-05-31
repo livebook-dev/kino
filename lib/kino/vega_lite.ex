@@ -52,7 +52,7 @@ defmodule Kino.VegaLite do
   Starts a widget process with the given VegaLite definition.
   """
   @spec start(VegaLite.t()) :: Kino.Widget.t()
-  def start(vl) do
+  def start(vl) when is_struct(vl, VegaLite) do
     opts = [vl: vl]
 
     Kino.Widget.start!(__MODULE__, opts, @widget_type)
