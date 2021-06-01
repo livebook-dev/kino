@@ -57,7 +57,7 @@ defmodule Kino.VegaLite do
   def start(vl) when is_struct(vl, VegaLite) do
     opts = [vl: vl]
 
-    pid = Kino.Widget.start!(__MODULE__, opts)
+    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
 
     %__MODULE__{pid: pid}
   end
