@@ -22,20 +22,6 @@ defmodule Kino.VegaLite do
       end
   """
 
-  # === Communication protocol ===
-  #
-  # The client should connect to the widget by sending:
-  #
-  #     {:connect, pid}
-  #
-  # The widget responds with
-  #
-  #     {:connect_reply, %{spec: VegaLite.spec}}
-  #
-  # The widget may then keep sending one of the following events
-  #
-  #     {:push, %{data: list, dataset: binary, window: non_neg_integer}}
-
   use GenServer, restart: :temporary
 
   defstruct [:pid]
