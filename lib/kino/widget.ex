@@ -1,30 +1,21 @@
 defmodule Kino.Widget do
-  @moduledoc """
-  A structure representing a widget process.
-  """
-
-  defstruct [:pid, :type]
-
-  @type t :: %__MODULE__{
-          pid: pid(),
-          type: atom()
-        }
+  @moduledoc false
 
   @doc false
-  @spec start!(module(), keyword(), atom()) :: Kino.Widget.t()
-  def start!(module, opts, type) do
+  @spec start!(module(), keyword()) :: pid()
+  def start!(module, opts) do
     case DynamicSupervisor.start_child(Kino.WidgetSupervisor, {module, opts}) do
       {:ok, pid} ->
-        %Kino.Widget{pid: pid, type: type}
+        pid
 
       {:ok, pid, _info} ->
-        %Kino.Widget{pid: pid, type: type}
+        pid
 
       {:error, reason} ->
-        raise RuntimeError, "failed to start #{type} widget, reason: #{inspect(reason)}"
+        raise RuntimeError, "failed to start #{module} widget, reason: #{inspect(reason)}"
 
       :ignore ->
-        raise RuntimeError, "failed to start #{type} widget, reason: :ignore"
+        raise RuntimeError, "failed to start #{module} widget, reason: :ignore"
     end
   end
 end
