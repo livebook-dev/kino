@@ -1,4 +1,4 @@
-defmodule Kino.LivebookOutput do
+defmodule Kino.Output do
   @moduledoc """
   A number of output formats supported by Livebook.
   """
