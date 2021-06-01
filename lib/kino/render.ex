@@ -29,7 +29,7 @@ end
 # External packages
 
 defimpl Kino.Render, for: VegaLite do
-  def to_output(vl) when is_struct(vl, VegaLite) do
+  def to_output(vl) do
     spec = VegaLite.to_spec(vl)
     Kino.Output.vega_lite_static(spec)
   end
