@@ -22,23 +22,11 @@ defmodule Kino.VegaLite do
       end
   """
 
-  # === Communication protocol ===
-  #
-  # The client should connect to the widget by sending:
-  #
-  #     {:connect, pid}
-  #
-  # The widget responds with
-  #
-  #     {:connect_reply, %{spec: VegaLite.spec}}
-  #
-  # The widget may then keep sending one of the following events
-  #
-  #     {:push, %{data: list, dataset: binary, window: non_neg_integer}}
-
   use GenServer, restart: :temporary
 
-  @widget_type :vega_lite
+  defstruct [:pid]
+
+  @type t :: %__MODULE__{pid: pid()}
 
   @typedoc false
   @type state :: %{
@@ -51,11 +39,13 @@ defmodule Kino.VegaLite do
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
-  @spec start(VegaLite.t()) :: Kino.Widget.t()
+  @spec start(VegaLite.t()) :: Kino.VegaLite.t()
   def start(vl) when is_struct(vl, VegaLite) do
     opts = [vl: vl]
 
-    Kino.Widget.start!(__MODULE__, opts, @widget_type)
+    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+
+    %__MODULE__{pid: pid}
   end
 
   @doc false
