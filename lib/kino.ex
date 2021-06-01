@@ -41,7 +41,7 @@ defmodule Kino do
   def render(term) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
-    output = Kino.Render.to_output(term)
+    output = Kino.Render.to_livebook(term)
 
     send(gl, {:io_request, self(), ref, {:livebook_put_output, output}})
 
