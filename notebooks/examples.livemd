@@ -50,7 +50,7 @@ Kino.VegaLite.clear(vl_widget)
 
 ## Kino.render/1
 
-Above we saw how you can render and stram data to the plot from separate cells.
+Above we saw how you can render and stream data to the plot from separate cells.
 However, the widget can also be rendered explicitly at any point with
 the `Kino.render/1` function.
 
