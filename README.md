@@ -3,7 +3,7 @@
 [![Actions Status](https://github.com/elixir-nx/kino/workflows/Test/badge.svg)](https://github.com/elixir-nx/kino/actions)
 [![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/kino)
 
-Interactive widgets for [Livebook](https://github.com/elixir-nx/livebook).
+Client-driven interactive widgets for [Livebook](https://github.com/elixir-nx/livebook).
 
 ## Installation
 
