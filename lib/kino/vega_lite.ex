@@ -108,6 +108,8 @@ defmodule Kino.VegaLite do
 
     * `{:cont, acc}` - the continue with the new accumulated value
     * `:halt` - to no longer schedule callback evaluation
+
+  The callback is run for the first time immediately upon registration.
   """
   @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
   def periodically(widget, interval_ms, acc, fun) do
