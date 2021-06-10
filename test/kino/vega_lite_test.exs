@@ -59,6 +59,26 @@ defmodule Kino.VegaLiteTest do
     assert_receive {:push, %{data: [], dataset: nil, window: 0}}
   end
 
+  test "periodically/4 evaluates the given callback in background until stopped" do
+    widget = start_widget()
+
+    connect_self(widget)
+
+    Kino.VegaLite.periodically(widget, 1, 1, fn n ->
+      if n < 3 do
+        Kino.VegaLite.push(widget, %{x: n, y: n})
+        {:cont, n + 1}
+      else
+        :halt
+      end
+    end)
+
+    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
+    assert_receive {:push, %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
+    Process.sleep(5)
+    refute_received {:push, _}
+  end
+
   defp start_widget() do
     Vl.new()
     |> Vl.mark(:point)

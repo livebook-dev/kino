@@ -66,7 +66,7 @@ defmodule Kino.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec push(Kino.Widget.t(), map(), keyword()) :: :ok
+  @spec push(t(), map(), keyword()) :: :ok
   def push(widget, data_point, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -78,7 +78,7 @@ defmodule Kino.VegaLite do
 
   See `push/3` for more details.
   """
-  @spec push_many(Kino.Widget.t(), list(map()), keyword()) :: :ok
+  @spec push_many(t(), list(map()), keyword()) :: :ok
   def push_many(widget, data, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
@@ -94,10 +94,26 @@ defmodule Kino.VegaLite do
       the VegaLite specification. Defaults to the default
       anonymous dataset.
   """
-  @spec clear(Kino.Widget.t(), keyword()) :: :ok
+  @spec clear(t(), keyword()) :: :ok
   def clear(widget, opts \\ []) do
     dataset = opts[:dataset]
     GenServer.cast(widget.pid, {:clear, dataset})
+  end
+
+  @doc """
+  Registers a callback to run periodically in the widget process.
+
+  The callback is run every `interval_ms` milliseconds and recives
+  the accumulated value. The callback should return either of:
+
+    * `{:cont, acc}` - the continue with the new accumulated value
+    * `:halt` - to no longer schedule callback evaluation
+
+  The callback is run for the first time immediately upon registration.
+  """
+  @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
+  def periodically(widget, interval_ms, acc, fun) do
+    GenServer.cast(widget.pid, {:periodically, interval_ms, acc, fun})
   end
 
   @impl true
@@ -137,6 +153,11 @@ defmodule Kino.VegaLite do
     {:noreply, state}
   end
 
+  def handle_cast({:periodically, interval_ms, acc, fun}, state) do
+    periodically_iter(interval_ms, acc, fun)
+    {:noreply, state}
+  end
+
   @compile {:no_warn_undefined, {VegaLite, :to_spec, 1}}
 
   @impl true
@@ -152,7 +173,22 @@ defmodule Kino.VegaLite do
     {:noreply, %{state | pids: [pid | state.pids]}}
   end
 
+  def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
+    periodically_iter(interval_ms, acc, fun)
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, _, :process, pid, _}, state) do
     {:noreply, %{state | pids: List.delete(state.pids, pid)}}
+  end
+
+  defp periodically_iter(interval_ms, acc, fun) do
+    case fun.(acc) do
+      {:cont, acc} ->
+        Process.send_after(self(), {:periodically_iter, interval_ms, acc, fun}, interval_ms)
+
+      :halt ->
+        :ok
+    end
   end
 end
