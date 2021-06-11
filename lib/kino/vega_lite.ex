@@ -41,7 +41,8 @@ defmodule Kino.VegaLite do
   """
   @spec start(VegaLite.t()) :: Kino.VegaLite.t()
   def start(vl) when is_struct(vl, VegaLite) do
-    opts = [vl: vl]
+    parent = self()
+    opts = [vl: vl, parent: parent]
 
     {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
 
@@ -119,8 +120,11 @@ defmodule Kino.VegaLite do
   @impl true
   def init(opts) do
     vl = Keyword.fetch!(opts, :vl)
+    parent = Keyword.fetch!(opts, :parent)
 
-    {:ok, %{vl: vl, datasets: %{}, pids: []}}
+    parent_monitor_ref = Process.monitor(parent)
+
+    {:ok, %{parent_monitor_ref: parent_monitor_ref, vl: vl, datasets: %{}, pids: []}}
   end
 
   @impl true
@@ -178,7 +182,11 @@ defmodule Kino.VegaLite do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, _, :process, pid, _}, state) do
+  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
+    {:stop, :shutdown, state}
+  end
+
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
     {:noreply, %{state | pids: List.delete(state.pids, pid)}}
   end
 
