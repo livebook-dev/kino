@@ -1,4 +1,4 @@
-<h1><img src="https://github.com/elixir-nx/kino/raw/main/kino.png" alt="Kino" width="400"></h1>
+<h1><img src="https://github.com/elixir-nx/kino/raw/main/images/kino.png" alt="Kino" width="400"></h1>
 
 [![Actions Status](https://github.com/elixir-nx/kino/workflows/Test/badge.svg)](https://github.com/elixir-nx/kino/actions)
 [![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/kino)
