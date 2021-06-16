@@ -68,13 +68,19 @@ defmodule Kino.ETS do
 
   @impl true
   def handle_info({:connect, pid}, state) do
+    table_name = :ets.info(state.tid, :name)
+    name = "ETS #{inspect(table_name)}"
+
     columns =
       case :ets.match_object(state.tid, :_, 1) do
         {[record], _} -> columns_structure_from_record(record)
         :"$end_of_table" -> []
       end
 
-    send(pid, {:connect_reply, %{columns: columns, features: [:pagination, :sorting]}})
+    send(
+      pid,
+      {:connect_reply, %{name: name, columns: columns, features: [:pagination, :sorting]}}
+    )
 
     {:noreply, state}
   end
