@@ -3,7 +3,10 @@
 [![Actions Status](https://github.com/elixir-nx/kino/workflows/Test/badge.svg)](https://github.com/elixir-nx/kino/actions)
 [![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/kino)
 
-Client-driven interactive widgets for [Livebook](https://github.com/elixir-nx/livebook).
+`Kino` is the library used by [Livebook](https://github.com/elixir-nx/livebook)
+to render rich and interactive output directly from your Elixir code.
+
+[See the documentation](https://hexdocs.pm/kino).
 
 ## Installation
 
