@@ -64,14 +64,14 @@ defmodule Kino.VegaLiteTest do
 
     connect_self(widget)
 
-    assert Kino.VegaLite.periodically(widget, 1, 1, fn n ->
-             if n < 3 do
-               Kino.VegaLite.push(widget, %{x: n, y: n})
-               {:cont, n + 1}
-             else
-               :halt
-             end
-           end) == widget
+    Kino.VegaLite.periodically(widget, 1, 1, fn n ->
+      if n < 3 do
+        Kino.VegaLite.push(widget, %{x: n, y: n})
+        {:cont, n + 1}
+      else
+        :halt
+      end
+    end)
 
     assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
     assert_receive {:push, %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
