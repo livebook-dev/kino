@@ -79,7 +79,8 @@ defmodule Kino.ETS do
 
     send(
       pid,
-      {:connect_reply, %{name: name, columns: columns, features: [:pagination, :sorting]}}
+      {:connect_reply,
+       %{name: name, columns: columns, features: [:refetch, :pagination, :sorting]}}
     )
 
     {:noreply, state}
