@@ -35,7 +35,7 @@ defmodule Kino.MixProject do
 
   defp docs do
     [
-      main: "readme",
+      main: "Kino",
       source_url: "https://github.com/elixir-nx/kino",
       source_ref: "v#{@version}",
       extras: [
