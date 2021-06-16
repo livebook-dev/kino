@@ -71,6 +71,9 @@ defmodule Kino.VegaLite do
   def push(widget, data_point, opts \\ []) do
     dataset = opts[:dataset]
     window = opts[:window]
+
+    data_point = Map.new(data_point)
+
     GenServer.cast(widget.pid, {:push, dataset, [data_point], window})
   end
 
@@ -80,10 +83,13 @@ defmodule Kino.VegaLite do
   See `push/3` for more details.
   """
   @spec push_many(t(), list(map()), keyword()) :: :ok
-  def push_many(widget, data, opts \\ []) do
+  def push_many(widget, data_points, opts \\ []) when is_list(data_points) do
     dataset = opts[:dataset]
     window = opts[:window]
-    GenServer.cast(widget.pid, {:push, dataset, data, window})
+
+    data_points = Enum.map(data_points, &Map.new/1)
+
+    GenServer.cast(widget.pid, {:push, dataset, data_points, window})
   end
 
   @doc """
