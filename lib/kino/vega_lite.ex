@@ -30,6 +30,7 @@ defmodule Kino.VegaLite do
 
   @typedoc false
   @type state :: %{
+          parent_monitor_ref: reference(),
           vl: VegaLite.t(),
           window: non_neg_integer(),
           datasets: %{binary() => list()},
@@ -39,7 +40,7 @@ defmodule Kino.VegaLite do
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
-  @spec start(VegaLite.t()) :: Kino.VegaLite.t()
+  @spec start(VegaLite.t()) :: t()
   def start(vl) when is_struct(vl, VegaLite) do
     parent = self()
     opts = [vl: vl, parent: parent]

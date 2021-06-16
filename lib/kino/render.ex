@@ -26,6 +26,39 @@ defimpl Kino.Render, for: Kino.VegaLite do
   end
 end
 
+defimpl Kino.Render, for: Kino.ETS do
+  def to_livebook(widget) do
+    Kino.Output.table_dynamic(widget.pid)
+  end
+end
+
+# Elixir built-ins
+
+defimpl Kino.Render, for: Reference do
+  def to_livebook(reference) do
+    cond do
+      accessible_ets_table?(reference) ->
+        reference |> Kino.ETS.start() |> Kino.Render.to_livebook()
+
+      true ->
+        Kino.Output.inspect(reference)
+    end
+  end
+
+  defp accessible_ets_table?(reference) when is_reference(reference) do
+    try do
+      case :ets.info(reference, :protection) do
+        :undefined -> false
+        :private -> false
+        _ -> true
+      end
+    rescue
+      # When the reference is not a valid table identifier
+      ArgumentError -> false
+    end
+  end
+end
+
 # External packages
 
 defimpl Kino.Render, for: VegaLite do
