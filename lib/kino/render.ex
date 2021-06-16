@@ -26,6 +26,12 @@ defimpl Kino.Render, for: Kino.VegaLite do
   end
 end
 
+defimpl Kino.Render, for: Kino.ETS do
+  def to_livebook(widget) do
+    Kino.Output.table_dynamic(widget.pid)
+  end
+end
+
 # External packages
 
 defimpl Kino.Render, for: VegaLite do
