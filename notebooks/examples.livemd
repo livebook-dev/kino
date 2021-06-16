@@ -118,3 +118,35 @@ Kino.VegaLite.periodically(vl_widget, 25, 0, fn i ->
   {:cont, i + 1}
 end)
 ```
+
+## ETS tables
+
+You can use `Kino.ETS.start/1` to render ETS tables and easily
+browse their contents.
+
+```elixir
+Kino.ETS.start(:elixir_config)
+```
+
+```elixir
+Kino.ETS.start(:logger)
+```
+
+Now, let's create our own table!
+
+```elixir
+tid = :ets.new(:users, [:set, :public])
+```
+
+You can see that Livebook automatically recognises that it's
+dealing with an ETS table and renders it as such. Currently
+the table is empty, so it's time to insert some rows.
+
+```elixir
+for id <- 1..24 do
+  :ets.insert(tid, {id, "User #{id}", :rand.uniform(100), "Description #{id}"})
+end
+```
+
+Having the rows inserted, click on the "Refetch" icon in the table output
+above to see them.
