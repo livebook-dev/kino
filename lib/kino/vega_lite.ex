@@ -112,9 +112,10 @@ defmodule Kino.VegaLite do
 
   The callback is run for the first time immediately upon registration.
   """
-  @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
+  @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: t()
   def periodically(widget, interval_ms, acc, fun) do
     GenServer.cast(widget.pid, {:periodically, interval_ms, acc, fun})
+    widget
   end
 
   @impl true
