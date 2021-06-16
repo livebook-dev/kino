@@ -21,6 +21,25 @@ defmodule Kino.VegaLiteTest do
     assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: "points", window: nil}}
   end
 
+  test "push/3 converts keyword list to map" do
+    widget = start_widget()
+
+    connect_self(widget)
+
+    Kino.VegaLite.push(widget, x: 1, y: 1)
+    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
+  end
+
+  test "push/3 raises if an invalid data type is given" do
+    widget = start_widget()
+
+    connect_self(widget)
+
+    assert_raise Protocol.UndefinedError, ~r/"invalid"/, fn ->
+      Kino.VegaLite.push(widget, "invalid")
+    end
+  end
+
   test "sends current data after initial connection" do
     widget = start_widget()
     Kino.VegaLite.push(widget, %{x: 1, y: 1})
@@ -48,6 +67,16 @@ defmodule Kino.VegaLiteTest do
     points = [%{x: 1, y: 1}, %{x: 2, y: 2}]
     Kino.VegaLite.push_many(widget, points)
     assert_receive {:push, %{data: ^points, dataset: nil, window: nil}}
+  end
+
+  test "push_many/3 raises if an invalid data type is given" do
+    widget = start_widget()
+
+    connect_self(widget)
+
+    assert_raise Protocol.UndefinedError, ~r/"invalid"/, fn ->
+      Kino.VegaLite.push_many(widget, ["invalid"])
+    end
   end
 
   test "clear/2 pushes empty data" do
