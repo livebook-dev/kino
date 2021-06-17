@@ -32,7 +32,7 @@ defmodule Kino.ETSTest do
 
       send(widget.pid, {:connect, self()})
 
-      assert_receive {:connect_reply, %{columns: [], features: [:pagination, :sorting]}}
+      assert_receive {:connect_reply, %{columns: [], features: [:refetch, :pagination, :sorting]}}
     end
 
     test "connect reply contains columns definition if there are some records" do
@@ -46,7 +46,7 @@ defmodule Kino.ETSTest do
       assert_receive {:connect_reply,
                       %{
                         columns: [%{key: 0, label: "1"}, %{key: 1, label: "2"}],
-                        features: [:pagination, :sorting]
+                        features: [:refetch, :pagination, :sorting]
                       }}
     end
   end

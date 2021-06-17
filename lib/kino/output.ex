@@ -82,7 +82,7 @@ defmodule Kino.Output do
       {:connect_reply, %{
         name: binary(),
         columns: list(column()),
-        features: list(:pagination | :sorting)
+        features: list(:refetch | :pagination | :sorting)
       }}
 
   The client may then query for table rows by sending the following requests:
