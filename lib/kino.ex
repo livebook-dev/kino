@@ -10,13 +10,15 @@ defmodule Kino do
   an implementation is not available. The data structures supported
   by Kino out of the box are:
 
-  ### [VegaLite](https://github.com/elixir-nx/vega_lite) widgets
+  ### VegaLite widgets
+
+  `VegaLite` specifications are rendered as visualizations:
 
       Vl.new(...)
       |> Vl.data_from_series(...)
       |> ...
 
-  ### [Kino.VegaLite](https://github.com/elixir-nx/vega_lite) widgets
+  ### Kino.VegaLite widgets
 
   `Kino.VegaLite` is an extension of `VegaLite` that allows data to
   be streamed:
@@ -29,6 +31,14 @@ defmodule Kino do
         |> Kino.render()
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
+
+  ### Kino.ETS widgets
+
+  `Kino.ETS` implements a data table output for ETS tables in the
+  system:
+
+      tid = :ets.new(:users, [:set, :public])
+      Kino.ETS.start(tid)
 
   ### All others
 
