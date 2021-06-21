@@ -235,7 +235,11 @@ defmodule Kino.DataTable do
   end
 
   defp get_field(record, key) when is_tuple(record) do
-    elem(record, key)
+    if key < tuple_size(record) do
+      elem(record, key)
+    else
+      nil
+    end
   end
 
   defp get_field(record, key) when is_map(record) or is_list(record) do

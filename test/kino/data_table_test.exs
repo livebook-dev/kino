@@ -42,26 +42,54 @@ defmodule Kino.DataTableTest do
   ]
 
   describe "connecting" do
-    test "connect reply contains empty columns definition if there is no data" do
-      widget = Kino.DataTable.start([])
+    test "connect reply contains empty columns definition if the :keys option is not given" do
+      widget = Kino.DataTable.start(@people_data)
 
       send(widget.pid, {:connect, self()})
 
-      assert_receive {:connect_reply, %{columns: [], features: [:pagination, :sorting]}}
+      assert_receive {:connect_reply, %{columns: [], features: _features}}
     end
 
-    test "connect reply contains columns definition if there is some data" do
-      widget = Kino.DataTable.start(@people_data)
+    test "connect reply contains columns definition if the :keys option is given" do
+      widget = Kino.DataTable.start(@people_data, keys: [:id, :name])
 
       send(widget.pid, {:connect, self()})
 
       assert_receive {:connect_reply,
                       %{
                         columns: [%{key: :id, label: ":id"}, %{key: :name, label: ":name"}],
-                        features: [:pagination, :sorting]
+                        features: _features
                       }}
     end
 
+    test "sorting is enabled by default when a list is given" do
+      widget = Kino.DataTable.start([])
+
+      send(widget.pid, {:connect, self()})
+
+      assert_receive {:connect_reply, %{features: [:pagination, :sorting]}}
+    end
+
+    test "sorting is disabled by default when non-list is given" do
+      widget = Kino.DataTable.start(MapSet.new())
+
+      send(widget.pid, {:connect, self()})
+
+      assert_receive {:connect_reply, %{features: [:pagination]}}
+    end
+
+    test "sorting is enabled when set explicitly with :enable_sorting" do
+      widget = Kino.DataTable.start(MapSet.new(), sorting_enabled: true)
+
+      send(widget.pid, {:connect, self()})
+
+      assert_receive {:connect_reply, %{features: [:pagination, :sorting]}}
+    end
+  end
+
+  @default_rows_spec %{offset: 0, limit: 10, order_by: nil, order: :asc}
+
+  describe "querying rows" do
     test "columns preserve attributes order when records are compatible keyword lists" do
       data = [
         [b: 1, a: 1],
@@ -69,10 +97,11 @@ defmodule Kino.DataTableTest do
       ]
 
       widget = Kino.DataTable.start(data)
+      connect_self(widget)
 
-      send(widget.pid, {:connect, self()})
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
 
-      assert_receive {:connect_reply,
+      assert_receive {:rows,
                       %{
                         columns: [%{key: :b, label: ":b"}, %{key: :a, label: ":a"}]
                       }}
@@ -85,10 +114,11 @@ defmodule Kino.DataTableTest do
       ]
 
       widget = Kino.DataTable.start(data)
+      connect_self(widget)
 
-      send(widget.pid, {:connect, self()})
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
 
-      assert_receive {:connect_reply,
+      assert_receive {:rows,
                       %{
                         columns: [
                           %{key: :a, label: ":a"},
@@ -106,10 +136,11 @@ defmodule Kino.DataTableTest do
       ]
 
       widget = Kino.DataTable.start(data)
+      connect_self(widget)
 
-      send(widget.pid, {:connect, self()})
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
 
-      assert_receive {:connect_reply,
+      assert_receive {:rows,
                       %{
                         columns: [
                           %{key: 0, label: "0"},
@@ -120,24 +151,15 @@ defmodule Kino.DataTableTest do
                       }}
     end
 
-    test "columns include only user-specified keys if given" do
-      data = [
-        %{b: 1, a: 1, c: 1},
-        %{b: 2, a: 2, c: 2}
-      ]
+    test "columns are reused if the :keys option is given" do
+      widget = Kino.DataTable.start(@people_data, keys: [:name])
+      connect_self(widget)
 
-      widget = Kino.DataTable.start(data, keys: [:c, :b])
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
 
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply,
-                      %{
-                        columns: [%{key: :c, label: ":c"}, %{key: :b, label: ":b"}]
-                      }}
+      assert_receive {:rows, %{columns: :initial}}
     end
-  end
 
-  describe "querying rows" do
     test "preserves data order by default" do
       widget = Kino.DataTable.start(@people_data)
       connect_self(widget)
@@ -159,7 +181,7 @@ defmodule Kino.DataTableTest do
                           %{id: _, fields: %{id: "2", name: ~s/"Terry Jeffords"/}}
                         ],
                         total_rows: 3,
-                        columns: :initial
+                        columns: _columns
                       }}
     end
 
@@ -184,7 +206,7 @@ defmodule Kino.DataTableTest do
                           %{id: _, fields: %{id: "3", name: ~s/"Amy Santiago"/}}
                         ],
                         total_rows: 3,
-                        columns: :initial
+                        columns: _columns
                       }}
     end
 
@@ -207,7 +229,7 @@ defmodule Kino.DataTableTest do
                           %{id: _, fields: %{id: "2", name: ~s/"Terry Jeffords"/}}
                         ],
                         total_rows: 3,
-                        columns: :initial
+                        columns: _columns
                       }}
     end
 
@@ -232,7 +254,7 @@ defmodule Kino.DataTableTest do
                           %{id: _, fields: %{id: "2"}}
                         ],
                         total_rows: 3,
-                        columns: :initial
+                        columns: _columns
                       }}
     end
   end
