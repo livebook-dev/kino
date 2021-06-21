@@ -45,7 +45,7 @@ defmodule Kino.ETSTest do
 
       assert_receive {:connect_reply,
                       %{
-                        columns: [%{key: 0, label: "1"}, %{key: 1, label: "2"}],
+                        columns: [%{key: 0, label: "0"}, %{key: 1, label: "1"}],
                         features: [:refetch, :pagination]
                       }}
     end

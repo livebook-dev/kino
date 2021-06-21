@@ -112,7 +112,7 @@ defmodule Kino.ETS do
       |> Enum.max()
 
     for idx <- 0..(max_columns - 1) do
-      %{key: idx, label: "#{idx + 1}"}
+      %{key: idx, label: to_string(idx)}
     end
   end
 
