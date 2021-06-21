@@ -40,6 +40,18 @@ defmodule Kino do
       tid = :ets.new(:users, [:set, :public])
       Kino.ETS.start(tid)
 
+  ### Kino.DataTable widgets
+
+  `Kino.DataTable` implements a data table output for user-provided
+  tabular data:
+
+      data = [
+        %{id: 1, name: "Elixir", website: "https://elixir-lang.org"},
+        %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
+      ]
+
+      Kino.DataTable.start(data)
+
   ### All others
 
   All other data structures are rendered as text using Elixir's
