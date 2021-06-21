@@ -109,7 +109,7 @@ defmodule Kino.ETS do
   defp columns_structure_for_records(records) do
     max_columns =
       records
-      |> Enum.map(&(&1 |> Tuple.to_list() |> length()))
+      |> Enum.map(&tuple_size/1)
       |> Enum.max()
 
     for idx <- 0..(max_columns - 1) do
