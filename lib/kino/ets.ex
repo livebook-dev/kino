@@ -73,7 +73,7 @@ defmodule Kino.ETS do
 
     columns =
       case :ets.match_object(state.tid, :_, 1) do
-        {[record], _} -> columns_structure_from_record(record)
+        {[record], _} -> columns_structure_for_records([record])
         :"$end_of_table" -> []
       end
 
@@ -94,7 +94,7 @@ defmodule Kino.ETS do
     columns =
       case records do
         [] -> :initial
-        [record | _] -> columns_structure_from_record(record)
+        records -> columns_structure_for_records(records)
       end
 
     send(pid, {:rows, %{rows: rows, total_rows: total_rows, columns: columns}})
@@ -106,13 +106,15 @@ defmodule Kino.ETS do
     {:stop, :shutdown, state}
   end
 
-  defp columns_structure_from_record(record) do
-    record
-    |> Tuple.to_list()
-    |> Enum.with_index()
-    |> Enum.map(fn {_, idx} ->
+  defp columns_structure_for_records(records) do
+    max_columns =
+      records
+      |> Enum.map(&tuple_size/1)
+      |> Enum.max()
+
+    for idx <- 0..(max_columns - 1) do
       %{key: idx, label: "#{idx + 1}"}
-    end)
+    end
   end
 
   defp get_records(tid, rows_spec) do

@@ -134,6 +134,29 @@ defmodule Kino.ETSTest do
                         columns: [_, _]
                       }}
     end
+
+    test "determines enough columns to accommodate longest record", %{tid: tid} do
+      :ets.insert(tid, {4, "Sherlock Holmes", 100})
+      :ets.insert(tid, {5, "John Watson", 150, :doctor})
+      :ets.insert(tid, {6})
+
+      widget = Kino.ETS.start(tid)
+      connect_self(widget)
+
+      spec = %{
+        offset: 0,
+        limit: 10,
+        order_by: 0,
+        order: :asc
+      }
+
+      send(widget.pid, {:get_rows, self(), spec})
+
+      assert_receive {:rows,
+                      %{
+                        columns: [_, _, _, _]
+                      }}
+    end
   end
 
   defp connect_self(widget) do
