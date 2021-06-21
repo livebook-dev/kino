@@ -111,13 +111,6 @@ defmodule Kino.DataTable do
 
     parent_monitor_ref = Process.monitor(parent)
 
-    columns =
-      if keys do
-        Enum.map(keys, &key_to_column/1)
-      else
-        columns_structure(data)
-      end
-
     total_rows = Enum.count(data)
 
     {:ok,
@@ -125,15 +118,27 @@ defmodule Kino.DataTable do
        parent_monitor_ref: parent_monitor_ref,
        data: data,
        total_rows: total_rows,
-       columns: columns
+       keys: keys
      }}
   end
 
   @impl true
   def handle_info({:connect, pid}, state) do
+    columns =
+      if state.keys do
+        Enum.map(state.keys, &key_to_column/1)
+      else
+        []
+      end
+
     send(
       pid,
-      {:connect_reply, %{name: "Data", columns: state.columns, features: [:pagination, :sorting]}}
+      {:connect_reply,
+       %{
+         name: "Data",
+         columns: columns,
+         features: [:pagination, :sorting]
+       }}
     )
 
     {:noreply, state}
@@ -141,10 +146,16 @@ defmodule Kino.DataTable do
 
   def handle_info({:get_rows, pid, rows_spec}, state) do
     records = get_records(state.data, rows_spec)
-    keys = Enum.map(state.columns, & &1.key)
-    rows = Enum.map(records, &record_to_row(&1, keys))
+    rows = Enum.map(records, &record_to_row(&1, state.keys))
 
-    send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: :initial}})
+    columns =
+      if state.keys do
+        :initial
+      else
+        columns_structure(records)
+      end
+
+    send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: columns}})
 
     {:noreply, state}
   end
