@@ -79,8 +79,7 @@ defmodule Kino.ETS do
 
     send(
       pid,
-      {:connect_reply,
-       %{name: name, columns: columns, features: [:refetch, :pagination, :sorting]}}
+      {:connect_reply, %{name: name, columns: columns, features: [:refetch, :pagination]}}
     )
 
     {:noreply, state}
@@ -119,17 +118,6 @@ defmodule Kino.ETS do
 
   defp get_records(tid, rows_spec) do
     query = :ets.table(tid)
-
-    order_by_pos = (rows_spec[:order_by] || 0) + 1
-
-    order =
-      case rows_spec.order do
-        :asc -> :ascending
-        :desc -> :descending
-      end
-
-    query = :qlc.keysort(order_by_pos, query, order: order)
-
     cursor = :qlc.cursor(query)
 
     if rows_spec.offset > 0 do
