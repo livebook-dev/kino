@@ -47,6 +47,11 @@ defmodule Kino.DataTable do
     * `:keys` - a list of keys to include in the table for each record.
       The order is reflected in the rendered table. For tuples use 0-based
       indices. Optional.
+
+    * `:sorting_enabled` - whether the widget should support sorting the data.
+      Sorting requires traversal of the whole enumerable, so it may not be
+      desirable for lazy enumerables. Defaults to `true` if data is a list
+      and `false` otherwise.
   """
   @spec start(Enum.t(), keyword()) :: t()
   def start(data, opts \\ []) do
@@ -54,7 +59,8 @@ defmodule Kino.DataTable do
 
     parent = self()
     keys = opts[:keys]
-    opts = [data: data, parent: parent, keys: keys]
+    sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
+    opts = [data: data, parent: parent, keys: keys, sorting_enabled: sorting_enabled]
 
     {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
 
@@ -108,6 +114,7 @@ defmodule Kino.DataTable do
     data = Keyword.fetch!(opts, :data)
     parent = Keyword.fetch!(opts, :parent)
     keys = Keyword.fetch!(opts, :keys)
+    sorting_enabled = Keyword.fetch!(opts, :sorting_enabled)
 
     parent_monitor_ref = Process.monitor(parent)
 
@@ -118,7 +125,8 @@ defmodule Kino.DataTable do
        parent_monitor_ref: parent_monitor_ref,
        data: data,
        total_rows: total_rows,
-       keys: keys
+       keys: keys,
+       sorting_enabled: sorting_enabled
      }}
   end
 
@@ -131,29 +139,29 @@ defmodule Kino.DataTable do
         []
       end
 
-    send(
-      pid,
-      {:connect_reply,
-       %{
-         name: "Data",
-         columns: columns,
-         features: [:pagination, :sorting]
-       }}
-    )
+    features =
+      [pagination: true, sorting: state.sorting_enabled]
+      |> Enum.filter(&elem(&1, 1))
+      |> Keyword.keys()
+
+    send(pid, {:connect_reply, %{name: "Data", columns: columns, features: features}})
 
     {:noreply, state}
   end
 
   def handle_info({:get_rows, pid, rows_spec}, state) do
     records = get_records(state.data, rows_spec)
-    rows = Enum.map(records, &record_to_row(&1, state.keys))
 
-    columns =
+    {columns, keys} =
       if state.keys do
-        :initial
+        {:initial, state.keys}
       else
-        columns_structure(records)
+        columns = columns_structure(records)
+        keys = Enum.map(columns, & &1.key)
+        {columns, keys}
       end
+
+    rows = Enum.map(records, &record_to_row(&1, keys))
 
     send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: columns}})
 
