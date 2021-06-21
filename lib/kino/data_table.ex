@@ -61,7 +61,8 @@ defmodule Kino.DataTable do
     %__MODULE__{pid: pid}
   end
 
-  defp validate_data!(data) do
+  # Validate data only if we have a whole list upfront
+  defp validate_data!(data) when is_list(data) do
     Enum.reduce(data, nil, fn record, type ->
       case record_type(record) do
         :struct ->
@@ -84,6 +85,8 @@ defmodule Kino.DataTable do
       end
     end)
   end
+
+  defp validate_data!(_data), do: :ok
 
   defp record_type(record) do
     cond do
@@ -150,28 +153,32 @@ defmodule Kino.DataTable do
     {:stop, :shutdown, state}
   end
 
-  defp columns_structure([]), do: []
+  defp columns_structure(records) do
+    case Enum.at(records, 0) do
+      nil ->
+        []
 
-  defp columns_structure([record | _] = records) do
-    first_record_columns = columns_structure_for_record(record)
+      first_record ->
+        first_record_columns = columns_structure_for_record(first_record)
 
-    all_columns =
-      records
-      |> Enum.reduce(MapSet.new(), fn record, columns ->
-        record
-        |> columns_structure_for_record()
-        |> MapSet.new()
-        |> MapSet.union(columns)
-      end)
-      |> MapSet.to_list()
-      |> Enum.sort_by(& &1.key)
+        all_columns =
+          records
+          |> Enum.reduce(MapSet.new(), fn record, columns ->
+            record
+            |> columns_structure_for_record()
+            |> MapSet.new()
+            |> MapSet.union(columns)
+          end)
+          |> MapSet.to_list()
+          |> Enum.sort_by(& &1.key)
 
-    # If all records have the same structure, keep the order,
-    # otherwise sort the accumulated columns
-    if length(first_record_columns) == length(all_columns) do
-      first_record_columns
-    else
-      all_columns
+        # If all records have the same structure, keep the order,
+        # otherwise sort the accumulated columns
+        if length(first_record_columns) == length(all_columns) do
+          first_record_columns
+        else
+          all_columns
+        end
     end
   end
 

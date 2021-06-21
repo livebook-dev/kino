@@ -28,6 +28,11 @@ defmodule Kino.DataTableTest do
                      Kino.DataTable.start([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
                    end
     end
+
+    test "does not validate enumerables other than list" do
+      data = MapSet.new([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
+      Kino.DataTable.start(data)
+    end
   end
 
   @people_data [
