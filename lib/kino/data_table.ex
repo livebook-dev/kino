@@ -41,6 +41,12 @@ defmodule Kino.DataTable do
 
   @doc """
   Starts a widget process with enumerable tabular data.
+
+  ## Options
+
+    * `:keys` - a list of keys to include in the table for each record.
+      The order is reflected in the rendered table. For tuples use 0-based
+      indices. Optional.
   """
   @spec start(Enum.t(), keyword()) :: t()
   def start(data, opts \\ []) do
