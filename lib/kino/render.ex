@@ -38,6 +38,12 @@ defimpl Kino.Render, for: Kino.DataTable do
   end
 end
 
+defimpl Kino.Render, for: Kino.Image do
+  def to_livebook(image) do
+    Kino.Output.image(image.content, image.mime_type)
+  end
+end
+
 # Elixir built-ins
 
 defimpl Kino.Render, for: Reference do
