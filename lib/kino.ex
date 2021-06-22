@@ -10,7 +10,7 @@ defmodule Kino do
   an implementation is not available. The data structures supported
   by Kino out of the box are:
 
-  ### VegaLite widgets
+  ### VegaLite
 
   `VegaLite` specifications are rendered as visualizations:
 
@@ -18,7 +18,7 @@ defmodule Kino do
       |> Vl.data_from_series(...)
       |> ...
 
-  ### Kino.VegaLite widgets
+  ### Kino.VegaLite
 
   `Kino.VegaLite` is an extension of `VegaLite` that allows data to
   be streamed:
@@ -32,7 +32,7 @@ defmodule Kino do
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
 
-  ### Kino.ETS widgets
+  ### Kino.ETS
 
   `Kino.ETS` implements a data table output for ETS tables in the
   system:
@@ -40,7 +40,7 @@ defmodule Kino do
       tid = :ets.new(:users, [:set, :public])
       Kino.ETS.start(tid)
 
-  ### Kino.DataTable widgets
+  ### Kino.DataTable
 
   `Kino.DataTable` implements a data table output for user-provided
   tabular data:
@@ -51,6 +51,14 @@ defmodule Kino do
       ]
 
       Kino.DataTable.start(data)
+
+  ### Kino.Image
+
+  `Kino.Image` wraps binary image content and can be used to render
+  raw images of any given format:
+
+      content = File.read!("/path/to/image.jpeg")
+      Kino.Image.new(content, "image/jpeg")
 
   ### All others
 
