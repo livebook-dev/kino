@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 (2021-06-24)
+
+  * Start dynamic widgets with new for consistency ([#25](https://github.com/elixir-nx/kino/pull/25))
+  * Add image output and meta-struct ([#24](https://github.com/elixir-nx/kino/pull/24))
+
 ## v0.1.3 (2021-06-21)
 
   * Implement DataTable ([#22](https://github.com/elixir-nx/kino/pull/22))
