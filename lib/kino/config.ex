@@ -9,7 +9,7 @@ defmodule Kino.Config do
   end
 
   @spec configuration(atom()) :: term()
-  def configuration(key, default \\ nil) do
+  def configuration(key, default \\ nil) when key in @keys do
     Application.get_env(:kino, key, default)
   end
 
