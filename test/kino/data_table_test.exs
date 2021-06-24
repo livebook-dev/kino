@@ -1,12 +1,12 @@
 defmodule Kino.DataTableTest do
   use ExUnit.Case, async: true
 
-  describe "start/1" do
+  describe "new/1" do
     test "raises an error when structs are given" do
       assert_raise ArgumentError,
                    "struct records are not supported, you need to convert them to maps explicitly",
                    fn ->
-                     Kino.DataTable.start([
+                     Kino.DataTable.new([
                        URI.parse("https://elixir-lang.org"),
                        URI.parse("https://www.erlang.org")
                      ])
@@ -17,7 +17,7 @@ defmodule Kino.DataTableTest do
       assert_raise ArgumentError,
                    "expected record to be either map, tuple or keyword list, got: \"value\"",
                    fn ->
-                     Kino.DataTable.start(["value"])
+                     Kino.DataTable.new(["value"])
                    end
     end
 
@@ -25,13 +25,13 @@ defmodule Kino.DataTableTest do
       assert_raise ArgumentError,
                    "expected records to have the same data type, found map and tuple",
                    fn ->
-                     Kino.DataTable.start([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
+                     Kino.DataTable.new([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
                    end
     end
 
     test "does not validate enumerables other than list" do
       data = MapSet.new([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
-      Kino.DataTable.start(data)
+      Kino.DataTable.new(data)
     end
   end
 
@@ -43,7 +43,7 @@ defmodule Kino.DataTableTest do
 
   describe "connecting" do
     test "connect reply contains empty columns definition if the :keys option is not given" do
-      widget = Kino.DataTable.start(@people_data)
+      widget = Kino.DataTable.new(@people_data)
 
       send(widget.pid, {:connect, self()})
 
@@ -51,7 +51,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "connect reply contains columns definition if the :keys option is given" do
-      widget = Kino.DataTable.start(@people_data, keys: [:id, :name])
+      widget = Kino.DataTable.new(@people_data, keys: [:id, :name])
 
       send(widget.pid, {:connect, self()})
 
@@ -63,7 +63,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "sorting is enabled by default when a list is given" do
-      widget = Kino.DataTable.start([])
+      widget = Kino.DataTable.new([])
 
       send(widget.pid, {:connect, self()})
 
@@ -71,7 +71,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "sorting is disabled by default when non-list is given" do
-      widget = Kino.DataTable.start(MapSet.new())
+      widget = Kino.DataTable.new(MapSet.new())
 
       send(widget.pid, {:connect, self()})
 
@@ -79,7 +79,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "sorting is enabled when set explicitly with :enable_sorting" do
-      widget = Kino.DataTable.start(MapSet.new(), sorting_enabled: true)
+      widget = Kino.DataTable.new(MapSet.new(), sorting_enabled: true)
 
       send(widget.pid, {:connect, self()})
 
@@ -96,7 +96,7 @@ defmodule Kino.DataTableTest do
         [b: 2, a: 2]
       ]
 
-      widget = Kino.DataTable.start(data)
+      widget = Kino.DataTable.new(data)
       connect_self(widget)
 
       send(widget.pid, {:get_rows, self(), @default_rows_spec})
@@ -113,7 +113,7 @@ defmodule Kino.DataTableTest do
         %{b: 2, c: 2}
       ]
 
-      widget = Kino.DataTable.start(data)
+      widget = Kino.DataTable.new(data)
       connect_self(widget)
 
       send(widget.pid, {:get_rows, self(), @default_rows_spec})
@@ -135,7 +135,7 @@ defmodule Kino.DataTableTest do
         {3}
       ]
 
-      widget = Kino.DataTable.start(data)
+      widget = Kino.DataTable.new(data)
       connect_self(widget)
 
       send(widget.pid, {:get_rows, self(), @default_rows_spec})
@@ -152,7 +152,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "columns are reused if the :keys option is given" do
-      widget = Kino.DataTable.start(@people_data, keys: [:name])
+      widget = Kino.DataTable.new(@people_data, keys: [:name])
       connect_self(widget)
 
       send(widget.pid, {:get_rows, self(), @default_rows_spec})
@@ -161,7 +161,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "preserves data order by default" do
-      widget = Kino.DataTable.start(@people_data)
+      widget = Kino.DataTable.new(@people_data)
       connect_self(widget)
 
       spec = %{
@@ -186,7 +186,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "supports sorting by other columns" do
-      widget = Kino.DataTable.start(@people_data)
+      widget = Kino.DataTable.new(@people_data)
       connect_self(widget)
 
       spec = %{
@@ -211,7 +211,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "supports offset and limit" do
-      widget = Kino.DataTable.start(@people_data)
+      widget = Kino.DataTable.new(@people_data)
       connect_self(widget)
 
       spec = %{
@@ -234,7 +234,7 @@ defmodule Kino.DataTableTest do
     end
 
     test "sends only relevant fields if user-specified keys are given" do
-      widget = Kino.DataTable.start(@people_data, keys: [:id])
+      widget = Kino.DataTable.new(@people_data, keys: [:id])
       connect_self(widget)
 
       spec = %{

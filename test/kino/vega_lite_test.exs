@@ -136,7 +136,7 @@ defmodule Kino.VegaLiteTest do
     |> Vl.mark(:point)
     |> Vl.encode_field(:x, "x", type: :quantitative)
     |> Vl.encode_field(:y, "y", type: :quantitative)
-    |> Kino.VegaLite.start()
+    |> Kino.VegaLite.new()
   end
 
   defp connect_self(widget) do

@@ -5,9 +5,9 @@ defmodule Kino.ETS do
   ## Examples
 
       tid = :ets.new(:users, [:set, :public])
-      Kino.ETS.start(tid)
+      Kino.ETS.new(tid)
 
-      Kino.ETS.start(:elixir_config)
+      Kino.ETS.new(:elixir_config)
   """
 
   use GenServer, restart: :temporary
@@ -28,8 +28,8 @@ defmodule Kino.ETS do
   Note that private tables cannot be read by an arbitrary process,
   so the given table must have either public or protected access.
   """
-  @spec start(:ets.tid()) :: t()
-  def start(tid) do
+  @spec new(:ets.tid()) :: t()
+  def new(tid) do
     case :ets.info(tid, :protection) do
       :private ->
         raise ArgumentError,
@@ -50,6 +50,10 @@ defmodule Kino.ETS do
 
     %__MODULE__{pid: pid}
   end
+
+  # TODO: remove in v0.3.0
+  @deprecated "Use Kino.ETS.new/1 instead"
+  def start(tid), do: new(tid)
 
   @doc false
   def start_link(opts) do

@@ -1,14 +1,14 @@
 defmodule Kino.ETSTest do
   use ExUnit.Case, async: true
 
-  describe "start/1" do
+  describe "new/1" do
     test "raises an error when private table is given" do
       tid = :ets.new(:users, [:set, :private])
 
       assert_raise ArgumentError,
                    "the given table must be either public or protected, but a private one was given",
                    fn ->
-                     Kino.ETS.start(tid)
+                     Kino.ETS.new(tid)
                    end
     end
 
@@ -19,7 +19,7 @@ defmodule Kino.ETSTest do
       assert_raise ArgumentError,
                    "the given table identifier #{inspect(tid)} does not refer to an existing ETS table",
                    fn ->
-                     Kino.ETS.start(tid)
+                     Kino.ETS.new(tid)
                    end
     end
   end
@@ -28,7 +28,7 @@ defmodule Kino.ETSTest do
     test "connect reply contains empty columns definition if there are no records" do
       tid = :ets.new(:users, [:set, :public])
 
-      widget = Kino.ETS.start(tid)
+      widget = Kino.ETS.new(tid)
 
       send(widget.pid, {:connect, self()})
 
@@ -39,7 +39,7 @@ defmodule Kino.ETSTest do
       tid = :ets.new(:users, [:set, :public])
       :ets.insert(tid, {1, "Terry Jeffords"})
 
-      widget = Kino.ETS.start(tid)
+      widget = Kino.ETS.new(tid)
 
       send(widget.pid, {:connect, self()})
 
@@ -63,7 +63,7 @@ defmodule Kino.ETSTest do
     end
 
     test "replies with records and total rows", %{tid: tid} do
-      widget = Kino.ETS.start(tid)
+      widget = Kino.ETS.new(tid)
       connect_self(widget)
 
       spec = %{
@@ -88,7 +88,7 @@ defmodule Kino.ETSTest do
     end
 
     test "supports offset and limit", %{tid: tid} do
-      widget = Kino.ETS.start(tid)
+      widget = Kino.ETS.new(tid)
       connect_self(widget)
 
       spec = %{
@@ -115,7 +115,7 @@ defmodule Kino.ETSTest do
       :ets.insert(tid, {5, "John Watson", 150, :doctor})
       :ets.insert(tid, {6})
 
-      widget = Kino.ETS.start(tid)
+      widget = Kino.ETS.new(tid)
       connect_self(widget)
 
       spec = %{

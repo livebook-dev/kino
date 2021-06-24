@@ -27,7 +27,7 @@ defmodule Kino do
         Vl.new(...)
         |> Vl.data_from_series(...)
         |> ...
-        |> Kino.VegaLite.start()
+        |> Kino.VegaLite.new()
         |> Kino.render()
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
@@ -38,7 +38,7 @@ defmodule Kino do
   system:
 
       tid = :ets.new(:users, [:set, :public])
-      Kino.ETS.start(tid)
+      Kino.ETS.new(tid)
 
   ### Kino.DataTable
 
@@ -50,7 +50,7 @@ defmodule Kino do
         %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
       ]
 
-      Kino.DataTable.start(data)
+      Kino.DataTable.new(data)
 
   ### Kino.Image
 

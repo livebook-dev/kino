@@ -12,7 +12,7 @@ defmodule Kino.VegaLite do
         |> Vl.mark(:line)
         |> Vl.encode_field(:x, "x", type: :quantitative)
         |> Vl.encode_field(:y, "y", type: :quantitative)
-        |> Kino.VegaLite.start()
+        |> Kino.VegaLite.new()
         |> Kino.render()
 
       for i <- 1..300 do
@@ -40,8 +40,8 @@ defmodule Kino.VegaLite do
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
-  @spec start(VegaLite.t()) :: t()
-  def start(vl) when is_struct(vl, VegaLite) do
+  @spec new(VegaLite.t()) :: t()
+  def new(vl) when is_struct(vl, VegaLite) do
     parent = self()
     opts = [vl: vl, parent: parent]
 
@@ -49,6 +49,10 @@ defmodule Kino.VegaLite do
 
     %__MODULE__{pid: pid}
   end
+
+  # TODO: remove in v0.3.0
+  @deprecated "Use Kino.VegaLite.new/1 instead"
+  def start(vl), do: new(vl)
 
   @doc false
   def start_link(opts) do

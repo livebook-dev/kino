@@ -50,7 +50,7 @@ defimpl Kino.Render, for: Reference do
   def to_livebook(reference) do
     cond do
       accessible_ets_table?(reference) ->
-        reference |> Kino.ETS.start() |> Kino.Render.to_livebook()
+        reference |> Kino.ETS.new() |> Kino.Render.to_livebook()
 
       true ->
         Kino.Output.inspect(reference)
