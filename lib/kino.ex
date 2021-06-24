@@ -91,4 +91,35 @@ defmodule Kino do
 
     term
   end
+
+  @doc """
+  Configures Kino.
+
+  The supported options are:
+
+    * `:inspect`
+
+  They are discussed individually in the sections below.
+
+  ## Inspect
+
+  A keyword list containing inspect options used for printing
+  usual evaluation results. Defaults to pretty formatting with
+  a limit of 50 entries.
+
+  To show more entries, you configure a higher limit:
+
+      Kino.configure(inspect: [limit: 200])
+
+  You can also show all entries by setting the limit to `:infinity`,
+  but keep in mind that for large data structures it is memory-expensive
+  and is not an advised configuration in this case. Instead prefer
+  the use of `IO.inspect/2` with `:infinity` limit when needed.
+
+  See `Inspect.Opts` for the full list of options.
+  """
+  @spec configure(keyword()) :: :ok
+  def configure(options) do
+    Kino.Config.configure(options)
+  end
 end

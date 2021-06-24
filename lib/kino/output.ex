@@ -177,9 +177,10 @@ defmodule Kino.Output do
     text_block(inspected)
   end
 
-  defp inspect_opts(opts \\ []) do
+  defp inspect_opts() do
     default_opts = [pretty: true, width: 100, syntax_colors: syntax_colors()]
-    Keyword.merge(default_opts, opts)
+    config_opts = Kino.Config.configuration(:inspect, [])
+    Keyword.merge(default_opts, config_opts)
   end
 
   defp syntax_colors() do
