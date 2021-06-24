@@ -8,6 +8,11 @@ defmodule Kino.Config do
     Application.get_all_env(:kino) |> Keyword.take(@keys)
   end
 
+  @spec configuration(atom()) :: term()
+  def configuration(key, default \\ nil) do
+    Application.get_env(:kino, key, default)
+  end
+
   @spec configure(keyword()) :: :ok
   def configure(options) do
     Enum.each(options, &validate_option/1)

@@ -179,7 +179,7 @@ defmodule Kino.Output do
 
   defp inspect_opts() do
     default_opts = [pretty: true, width: 100, syntax_colors: syntax_colors()]
-    config_opts = Kino.Config.configuration() |> Keyword.get(:inspect, [])
+    config_opts = Kino.Config.configuration(:inspect, [])
     Keyword.merge(default_opts, config_opts)
   end
 
