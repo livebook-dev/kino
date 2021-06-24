@@ -13,14 +13,14 @@ defmodule Kino.DataTable do
         %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
       ]
 
-      Kino.DataTable.start(data)
+      Kino.DataTable.new(data)
 
   The tabular view allows you to quickly preview the data
   and analyze it thanks to sorting capabilities.
 
       data = Process.list() |> Enum.map(&Process.info/1)
 
-      Kino.DataTable.start(
+      Kino.DataTable.new(
         data,
         keys: [:registered_name, :initial_call, :reductions, :stack_size]
       )
@@ -53,8 +53,8 @@ defmodule Kino.DataTable do
       desirable for lazy enumerables. Defaults to `true` if data is a list
       and `false` otherwise.
   """
-  @spec start(Enum.t(), keyword()) :: t()
-  def start(data, opts \\ []) do
+  @spec new(Enum.t(), keyword()) :: t()
+  def new(data, opts \\ []) do
     validate_data!(data)
 
     parent = self()
@@ -66,6 +66,10 @@ defmodule Kino.DataTable do
 
     %__MODULE__{pid: pid}
   end
+
+  # TODO: remove in v0.3.0
+  @deprecated "Use Kino.DataTable.new/2 instead"
+  def start(data, opts \\ []), do: new(data, opts)
 
   # Validate data only if we have a whole list upfront
   defp validate_data!(data) when is_list(data) do
