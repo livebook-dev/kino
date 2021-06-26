@@ -60,6 +60,29 @@ defmodule Kino do
       content = File.read!("/path/to/image.jpeg")
       Kino.Image.new(content, "image/jpeg")
 
+  ### Kino.Markdown
+
+  `Kino.Markdown` wraps Markdown content for richer text rendering.
+
+      Kino.Markdown.new(\"\"\"
+      # Example
+
+      A regular Markdown file.
+
+      ## Code
+
+      ```elixir
+      "Elixir" |> String.graphemes() |> Enum.frequencies()
+      ```
+
+      ## Table
+
+      | ID | Name   | Website                 |
+      | -- | ------ | ----------------------- |
+      | 1  | Elixir | https://elixir-lang.org |
+      | 2  | Erlang | https://www.erlang.org  |
+      \"\"\")
+
   ### All others
 
   All other data structures are rendered as text using Elixir's
