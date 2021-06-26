@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.1 (2021-06-26)
+
+  * Add markdown output and meta-struct ([#28](https://github.com/elixir-nx/kino/pull/28))
+  * Make inspect options globally configurable ([#26](https://github.com/elixir-nx/kino/pull/26))
+
 ## v0.2.0 (2021-06-24)
 
   * Start dynamic widgets with new for consistency ([#25](https://github.com/elixir-nx/kino/pull/25))
