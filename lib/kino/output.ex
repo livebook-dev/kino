@@ -10,6 +10,7 @@ defmodule Kino.Output do
           ignored()
           | text_inline()
           | text_block()
+          | markdown()
           | image()
           | vega_lite_static()
           | vega_lite_dynamic()
@@ -29,6 +30,11 @@ defmodule Kino.Output do
   Standalone text block.
   """
   @type text_block :: {:text, binary()}
+
+  @typedoc """
+  Markdown content.
+  """
+  @type markdown :: {:markdown, binary()}
 
   @typedoc """
   A raw image in the given format.
@@ -134,6 +140,14 @@ defmodule Kino.Output do
   @spec text_block(binary()) :: t()
   def text_block(text) when is_binary(text) do
     {:text, text}
+  end
+
+  @doc """
+  See `t:markdown/0`.
+  """
+  @spec markdown(binary()) :: t()
+  def markdown(content) when is_binary(content) do
+    {:markdown, content}
   end
 
   @doc """
