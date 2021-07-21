@@ -3,8 +3,7 @@ defmodule Kino.DataTable do
   A widget for interactively viewing enumerable data.
 
   The data must be an enumerable of records, where each
-  record is either map, keyword list or tuple. Structs
-  however must be manually converted to maps.
+  record is either map, struct, keyword list or tuple.
 
   ## Examples
 
@@ -75,13 +74,9 @@ defmodule Kino.DataTable do
   defp validate_data!(data) when is_list(data) do
     Enum.reduce(data, nil, fn record, type ->
       case record_type(record) do
-        :struct ->
-          raise ArgumentError,
-                "struct records are not supported, you need to convert them to maps explicitly"
-
         :other ->
           raise ArgumentError,
-                "expected record to be either map, tuple or keyword list, got: #{inspect(record)}"
+                "expected record to be either map, struct, tuple or keyword list, got: #{inspect(record)}"
 
         first_type when type == nil ->
           first_type
@@ -212,7 +207,7 @@ defmodule Kino.DataTable do
     |> Enum.map(fn {_, idx} -> key_to_column(idx) end)
   end
 
-  defp columns_structure_for_record(record) when is_map(record) do
+  defp columns_structure_for_record(record) when is_map(record) or is_struct(record) do
     record
     |> Map.keys()
     |> Enum.sort()
@@ -246,8 +241,12 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp get_field(record, key) when is_map(record) or is_list(record) do
+  defp get_field(record, key) when is_list(record) do
     record[key]
+  end
+
+  defp get_field(record, key) when is_map(record) or is_struct(record) do
+    Map.get(record, key)
   end
 
   defp record_to_row(record, keys) do

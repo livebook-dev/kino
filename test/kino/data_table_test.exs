@@ -2,20 +2,9 @@ defmodule Kino.DataTableTest do
   use ExUnit.Case, async: true
 
   describe "new/1" do
-    test "raises an error when structs are given" do
-      assert_raise ArgumentError,
-                   "struct records are not supported, you need to convert them to maps explicitly",
-                   fn ->
-                     Kino.DataTable.new([
-                       URI.parse("https://elixir-lang.org"),
-                       URI.parse("https://www.erlang.org")
-                     ])
-                   end
-    end
-
     test "raises an error when records have invalid data type" do
       assert_raise ArgumentError,
-                   "expected record to be either map, tuple or keyword list, got: \"value\"",
+                   "expected record to be either map, struct, tuple or keyword list, got: \"value\"",
                    fn ->
                      Kino.DataTable.new(["value"])
                    end
