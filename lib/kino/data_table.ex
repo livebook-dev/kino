@@ -226,7 +226,7 @@ defmodule Kino.DataTable do
     |> Enum.map(fn {_, idx} -> key_to_column(idx) end)
   end
 
-  defp columns_structure_for_record(record) when is_map(record) or is_struct(record) do
+  defp columns_structure_for_record(record) when is_map(record) do
     record
     |> Map.keys()
     |> Enum.sort()
@@ -264,7 +264,7 @@ defmodule Kino.DataTable do
     record[key]
   end
 
-  defp get_field(record, key) when is_map(record) or is_struct(record) do
+  defp get_field(record, key) when is_map(record) do
     Map.get(record, key)
   end
 
