@@ -3,8 +3,7 @@ defmodule Kino.DataTable do
   A widget for interactively viewing enumerable data.
 
   The data must be an enumerable of records, where each
-  record is either map, keyword list or tuple. Structs
-  however must be manually converted to maps.
+  record is either map, struct, keyword list or tuple.
 
   ## Examples
 
@@ -52,6 +51,9 @@ defmodule Kino.DataTable do
       Sorting requires traversal of the whole enumerable, so it may not be
       desirable for lazy enumerables. Defaults to `true` if data is a list
       and `false` otherwise.
+
+    * `:show_underscored` - whether to include record keys starting with underscore.
+      This option is ignored if `:keys` is also given. Defaults to `false`.
   """
   @spec new(Enum.t(), keyword()) :: t()
   def new(data, opts \\ []) do
@@ -60,7 +62,15 @@ defmodule Kino.DataTable do
     parent = self()
     keys = opts[:keys]
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
-    opts = [data: data, parent: parent, keys: keys, sorting_enabled: sorting_enabled]
+    show_underscored = Keyword.get(opts, :show_underscored, false)
+
+    opts = [
+      data: data,
+      parent: parent,
+      keys: keys,
+      sorting_enabled: sorting_enabled,
+      show_underscored: show_underscored
+    ]
 
     {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
 
@@ -75,13 +85,9 @@ defmodule Kino.DataTable do
   defp validate_data!(data) when is_list(data) do
     Enum.reduce(data, nil, fn record, type ->
       case record_type(record) do
-        :struct ->
-          raise ArgumentError,
-                "struct records are not supported, you need to convert them to maps explicitly"
-
         :other ->
           raise ArgumentError,
-                "expected record to be either map, tuple or keyword list, got: #{inspect(record)}"
+                "expected record to be either map, struct, tuple or keyword list, got: #{inspect(record)}"
 
         first_type when type == nil ->
           first_type
@@ -119,6 +125,7 @@ defmodule Kino.DataTable do
     parent = Keyword.fetch!(opts, :parent)
     keys = Keyword.fetch!(opts, :keys)
     sorting_enabled = Keyword.fetch!(opts, :sorting_enabled)
+    show_underscored = Keyword.fetch!(opts, :show_underscored)
 
     parent_monitor_ref = Process.monitor(parent)
 
@@ -130,7 +137,8 @@ defmodule Kino.DataTable do
        data: data,
        total_rows: total_rows,
        keys: keys,
-       sorting_enabled: sorting_enabled
+       sorting_enabled: sorting_enabled,
+       show_underscored: show_underscored
      }}
   end
 
@@ -161,6 +169,12 @@ defmodule Kino.DataTable do
         {:initial, state.keys}
       else
         columns = columns_structure(records)
+
+        columns =
+          if state.show_underscored,
+            do: columns,
+            else: Enum.reject(columns, &underscored?(&1.key))
+
         keys = Enum.map(columns, & &1.key)
         {columns, keys}
       end
@@ -246,8 +260,12 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp get_field(record, key) when is_map(record) or is_list(record) do
+  defp get_field(record, key) when is_list(record) do
     record[key]
+  end
+
+  defp get_field(record, key) when is_map(record) do
+    Map.get(record, key)
   end
 
   defp record_to_row(record, keys) do
@@ -260,4 +278,10 @@ defmodule Kino.DataTable do
     # Note: id is opaque to the client, and we don't need it for now
     %{id: nil, fields: fields}
   end
+
+  defp underscored?(key) when is_atom(key) do
+    key |> Atom.to_string() |> String.starts_with?("_")
+  end
+
+  defp underscored?(_key), do: false
 end

@@ -2,20 +2,9 @@ defmodule Kino.DataTableTest do
   use ExUnit.Case, async: true
 
   describe "new/1" do
-    test "raises an error when structs are given" do
-      assert_raise ArgumentError,
-                   "struct records are not supported, you need to convert them to maps explicitly",
-                   fn ->
-                     Kino.DataTable.new([
-                       URI.parse("https://elixir-lang.org"),
-                       URI.parse("https://www.erlang.org")
-                     ])
-                   end
-    end
-
     test "raises an error when records have invalid data type" do
       assert_raise ArgumentError,
-                   "expected record to be either map, tuple or keyword list, got: \"value\"",
+                   "expected record to be either map, struct, tuple or keyword list, got: \"value\"",
                    fn ->
                      Kino.DataTable.new(["value"])
                    end
@@ -124,6 +113,52 @@ defmodule Kino.DataTableTest do
                           %{key: :a, label: ":a"},
                           %{key: :b, label: ":b"},
                           %{key: :c, label: ":c"}
+                        ]
+                      }}
+    end
+
+    defmodule User do
+      defstruct [:__meta__, :id, :name]
+    end
+
+    test "columns don't include underscored attributes by default" do
+      data = [
+        %User{id: 1, name: "Sherlock Holmes"},
+        %User{id: 2, name: "John Watson"}
+      ]
+
+      widget = Kino.DataTable.new(data)
+      connect_self(widget)
+
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+
+      assert_receive {:rows,
+                      %{
+                        columns: [
+                          %{key: :id, label: ":id"},
+                          %{key: :name, label: ":name"}
+                        ]
+                      }}
+    end
+
+    test "columns include underscored attributes if the :show_underscored option is set" do
+      data = [
+        %User{id: 1, name: "Sherlock Holmes"},
+        %User{id: 2, name: "John Watson"}
+      ]
+
+      widget = Kino.DataTable.new(data, show_underscored: true)
+      connect_self(widget)
+
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+
+      assert_receive {:rows,
+                      %{
+                        columns: [
+                          %{key: :__meta__, label: ":__meta__"},
+                          %{key: :__struct__, label: ":__struct__"},
+                          %{key: :id, label: ":id"},
+                          %{key: :name, label: ":name"}
                         ]
                       }}
     end
