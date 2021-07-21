@@ -117,6 +117,52 @@ defmodule Kino.DataTableTest do
                       }}
     end
 
+    defmodule User do
+      defstruct [:__meta__, :id, :name]
+    end
+
+    test "columns don't include underscored attributes by default" do
+      data = [
+        %User{id: 1, name: "Sherlock Holmes"},
+        %User{id: 2, name: "John Watson"}
+      ]
+
+      widget = Kino.DataTable.new(data)
+      connect_self(widget)
+
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+
+      assert_receive {:rows,
+                      %{
+                        columns: [
+                          %{key: :id, label: ":id"},
+                          %{key: :name, label: ":name"}
+                        ]
+                      }}
+    end
+
+    test "columns include underscored attributes if the :show_underscored option is set" do
+      data = [
+        %User{id: 1, name: "Sherlock Holmes"},
+        %User{id: 2, name: "John Watson"}
+      ]
+
+      widget = Kino.DataTable.new(data, show_underscored: true)
+      connect_self(widget)
+
+      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+
+      assert_receive {:rows,
+                      %{
+                        columns: [
+                          %{key: :__meta__, label: ":__meta__"},
+                          %{key: :__struct__, label: ":__struct__"},
+                          %{key: :id, label: ":id"},
+                          %{key: :name, label: ":name"}
+                        ]
+                      }}
+    end
+
     test "columns accommodate for the longest record when records are tuples of mixed length" do
       data = [
         {1, "Sherlock Holmes", 100},
