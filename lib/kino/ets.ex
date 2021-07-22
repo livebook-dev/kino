@@ -12,6 +12,8 @@ defmodule Kino.ETS do
 
   use GenServer, restart: :temporary
 
+  alias Kino.Utils.Table
+
   defstruct [:pid]
 
   @type t :: %__MODULE__{pid: pid()}
@@ -77,7 +79,7 @@ defmodule Kino.ETS do
 
     columns =
       case :ets.match_object(state.tid, :_, 1) do
-        {[record], _} -> columns_structure_for_records([record])
+        {[record], _} -> Table.columns_for_records([record])
         :"$end_of_table" -> []
       end
 
@@ -97,7 +99,7 @@ defmodule Kino.ETS do
     columns =
       case records do
         [] -> :initial
-        records -> columns_structure_for_records(records)
+        records -> Table.columns_for_records(records)
       end
 
     send(pid, {:rows, %{rows: rows, total_rows: total_rows, columns: columns}})
@@ -107,17 +109,6 @@ defmodule Kino.ETS do
 
   def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
     {:stop, :shutdown, state}
-  end
-
-  defp columns_structure_for_records(records) do
-    max_columns =
-      records
-      |> Enum.map(&tuple_size/1)
-      |> Enum.max()
-
-    for idx <- 0..(max_columns - 1) do
-      %{key: idx, label: to_string(idx)}
-    end
   end
 
   defp get_records(tid, rows_spec) do

@@ -27,6 +27,8 @@ defmodule Kino.DataTable do
 
   use GenServer, restart: :temporary
 
+  alias Kino.Utils.Table
+
   defstruct [:pid]
 
   @type t :: %__MODULE__{pid: pid()}
@@ -146,15 +148,12 @@ defmodule Kino.DataTable do
   def handle_info({:connect, pid}, state) do
     columns =
       if state.keys do
-        Enum.map(state.keys, &key_to_column/1)
+        Table.keys_to_columns(state.keys)
       else
         []
       end
 
-    features =
-      [pagination: true, sorting: state.sorting_enabled]
-      |> Enum.filter(&elem(&1, 1))
-      |> Keyword.keys()
+    features = Kino.Utils.truthy_keys(pagination: true, sorting: state.sorting_enabled)
 
     send(pid, {:connect_reply, %{name: "Data", columns: columns, features: features}})
 
@@ -168,7 +167,7 @@ defmodule Kino.DataTable do
       if state.keys do
         {:initial, state.keys}
       else
-        columns = columns_structure(records)
+        columns = Table.columns_for_records(records)
 
         columns =
           if state.show_underscored,
@@ -179,7 +178,7 @@ defmodule Kino.DataTable do
         {columns, keys}
       end
 
-    rows = Enum.map(records, &record_to_row(&1, keys))
+    rows = Enum.map(records, &Table.record_to_row(&1, keys))
 
     send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: columns}})
 
@@ -190,93 +189,15 @@ defmodule Kino.DataTable do
     {:stop, :shutdown, state}
   end
 
-  defp columns_structure(records) do
-    case Enum.at(records, 0) do
-      nil ->
-        []
-
-      first_record ->
-        first_record_columns = columns_structure_for_record(first_record)
-
-        all_columns =
-          records
-          |> Enum.reduce(MapSet.new(), fn record, columns ->
-            record
-            |> columns_structure_for_record()
-            |> MapSet.new()
-            |> MapSet.union(columns)
-          end)
-          |> MapSet.to_list()
-          |> Enum.sort_by(& &1.key)
-
-        # If all records have the same structure, keep the order,
-        # otherwise sort the accumulated columns
-        if length(first_record_columns) == length(all_columns) do
-          first_record_columns
-        else
-          all_columns
-        end
-    end
-  end
-
-  defp columns_structure_for_record(record) when is_tuple(record) do
-    record
-    |> Tuple.to_list()
-    |> Enum.with_index()
-    |> Enum.map(fn {_, idx} -> key_to_column(idx) end)
-  end
-
-  defp columns_structure_for_record(record) when is_map(record) do
-    record
-    |> Map.keys()
-    |> Enum.sort()
-    |> Enum.map(&key_to_column/1)
-  end
-
-  defp columns_structure_for_record(record) when is_list(record) do
-    record
-    |> Keyword.keys()
-    |> Enum.map(&key_to_column/1)
-  end
-
-  defp key_to_column(key), do: %{key: key, label: inspect(key)}
-
   defp get_records(data, rows_spec) do
     sorted_data =
       if order_by = rows_spec[:order_by] do
-        Enum.sort_by(data, fn record -> get_field(record, order_by) end, rows_spec.order)
+        Enum.sort_by(data, &Table.get_field(&1, order_by), rows_spec.order)
       else
         data
       end
 
     Enum.slice(sorted_data, rows_spec.offset, rows_spec.limit)
-  end
-
-  defp get_field(record, key) when is_tuple(record) do
-    if key < tuple_size(record) do
-      elem(record, key)
-    else
-      nil
-    end
-  end
-
-  defp get_field(record, key) when is_list(record) do
-    record[key]
-  end
-
-  defp get_field(record, key) when is_map(record) do
-    Map.get(record, key)
-  end
-
-  defp record_to_row(record, keys) do
-    fields =
-      Map.new(keys, fn key ->
-        value = get_field(record, key)
-        {key, inspect(value)}
-      end)
-
-    # Note: id is opaque to the client, and we don't need it for now
-    %{id: nil, fields: fields}
   end
 
   defp underscored?(key) when is_atom(key) do
