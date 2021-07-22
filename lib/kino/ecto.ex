@@ -146,7 +146,7 @@ defmodule Kino.Ecto do
   end
 
   defp default_select_query?(queryable) do
-    query = from(q in queryable, [])
+    query = Ecto.Queryable.to_query(queryable)
     query.select == nil
   end
 end
