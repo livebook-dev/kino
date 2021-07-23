@@ -45,8 +45,8 @@ defmodule Kino.Utils.Table do
   end
 
   defp columns_for_record(record) when is_map(record) do
-    if is_struct(record) and ecto_schema?(record.__struct__) do
-      record.__struct__.__schema__(:fields)
+    if schema = ecto_schema(record) do
+      schema.__schema__(:fields)
     else
       record |> Map.keys() |> Enum.sort()
     end
@@ -113,9 +113,27 @@ defmodule Kino.Utils.Table do
   end
 
   @doc """
-  Checks if the given term is an Ecto.Schema.
+  Extracts schema module from the given struct or queryable.
+
+  If no schema found, `nil` is returned.
   """
-  def ecto_schema?(queryable) do
-    is_atom(queryable) and function_exported?(queryable, :__schema__, 1)
+  def ecto_schema(queryable)
+
+  def ecto_schema(struct) when is_struct(struct) do
+    ecto_schema(struct.__struct__)
   end
+
+  def ecto_schema(queryable) when is_atom(queryable) do
+    if function_exported?(queryable, :__schema__, 1) do
+      queryable
+    else
+      nil
+    end
+  end
+
+  def ecto_schema(%{from: %{source: {_source, schema}}}) when schema != nil do
+    schema
+  end
+
+  def ecto_schema(_queryable), do: nil
 end

@@ -78,9 +78,9 @@ defmodule Kino.Ecto do
   @impl true
   def handle_info({:connect, pid}, state) do
     {name, columns} =
-      if Table.ecto_schema?(state.queryable) do
-        name = state.queryable.__schema__(:source) |> to_string()
-        columns = state.queryable.__schema__(:fields) |> Table.keys_to_columns()
+      if schema = Table.ecto_schema(state.queryable) do
+        name = schema.__schema__(:source) |> to_string()
+        columns = schema.__schema__(:fields) |> Table.keys_to_columns()
         {name, columns}
       else
         {"Query", []}
@@ -107,8 +107,8 @@ defmodule Kino.Ecto do
     {total_rows, records} = get_records(state.repo, state.queryable, rows_spec)
 
     {columns, keys} =
-      if Table.ecto_schema?(state.queryable) do
-        keys = state.queryable.__schema__(:fields)
+      if schema = Table.ecto_schema(state.queryable) do
+        keys = schema.__schema__(:fields)
         {:initial, keys}
       else
         columns = Table.columns_for_records(records)
