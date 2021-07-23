@@ -83,6 +83,13 @@ defmodule Kino do
       | 2  | Erlang | https://www.erlang.org  |
       \"\"\")
 
+  ### Kino.Ecto
+
+  `Kino.Ecto` implements a data table output for arbitrary
+  `Ecto` queries:
+
+      Kino.Ecto.new(Weather, Repo)
+
   ### All others
 
   All other data structures are rendered as text using Elixir's

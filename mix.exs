@@ -29,6 +29,7 @@ defmodule Kino.MixProject do
   defp deps do
     [
       {:vega_lite, "~> 0.1.0", optional: true},
+      {:ecto_sql, "~> 3.0", optional: true},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
   end
