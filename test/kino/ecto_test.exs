@@ -313,6 +313,38 @@ defmodule Kino.EctoTest do
                         ]
                       }}
     end
+
+    test "handles a list of atomic items" do
+      query = from(u in User, select: u.name)
+      widget = Kino.Ecto.new(query, MockRepo)
+      connect_self(widget)
+
+      spec = %{offset: 0, limit: 10, order_by: :id, order: :desc}
+
+      MockRepo.subscribe()
+
+      send(widget.pid, {:get_rows, self(), spec})
+
+      assert_receive {from, [MockRepo, :aggregate, query: _, aggregate: :count, opts: []]}
+      MockRepo.resolve_call(from, 3)
+
+      data = ["Amy Santiago", "Jake Peralta"]
+
+      assert_receive {from, [MockRepo, :all, query: _, opts: []]}
+      MockRepo.resolve_call(from, data)
+
+      assert_receive {:rows,
+                      %{
+                        rows: [
+                          %{id: _, fields: %{:item => ~s/"Amy Santiago"/}},
+                          %{id: _, fields: %{:item => ~s/"Jake Peralta"/}}
+                        ],
+                        total_rows: 3,
+                        columns: [
+                          %{key: :item, label: ":item"}
+                        ]
+                      }}
+    end
   end
 
   defp connect_self(widget) do
