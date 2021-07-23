@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2 (2021-07-23)
+
+  * Implement table widget for Ecto queries ([#34](https://github.com/elixir-nx/kino/pull/34))
+  * Support structs in DataTable ([#33](https://github.com/elixir-nx/kino/pull/33))
+
 ## v0.2.1 (2021-06-26)
 
   * Add markdown output and meta-struct ([#28](https://github.com/elixir-nx/kino/pull/28))
