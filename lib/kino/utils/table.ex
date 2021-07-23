@@ -119,8 +119,8 @@ defmodule Kino.Utils.Table do
   """
   def ecto_schema(queryable)
 
-  def ecto_schema(struct) when is_struct(struct) do
-    ecto_schema(struct.__struct__)
+  def ecto_schema(%{from: %{source: {_source, schema}}}) do
+    schema
   end
 
   def ecto_schema(queryable) when is_atom(queryable) do
@@ -131,8 +131,8 @@ defmodule Kino.Utils.Table do
     end
   end
 
-  def ecto_schema(%{from: %{source: {_source, schema}}}) when schema != nil do
-    schema
+  def ecto_schema(struct) when is_struct(struct) do
+    ecto_schema(struct.__struct__)
   end
 
   def ecto_schema(_queryable), do: nil

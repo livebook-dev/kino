@@ -77,14 +77,8 @@ defmodule Kino.Ecto do
 
   @impl true
   def handle_info({:connect, pid}, state) do
-    {name, columns} =
-      if schema = Table.ecto_schema(state.queryable) do
-        name = schema.__schema__(:source) |> to_string()
-        columns = schema.__schema__(:fields) |> Table.keys_to_columns()
-        {name, columns}
-      else
-        {"Query", []}
-      end
+    name = state.queryable |> query_source() |> to_string()
+    columns = state.queryable |> keys_from_queryable() |> Table.keys_to_columns()
 
     features =
       Kino.Utils.truthy_keys(
@@ -107,13 +101,14 @@ defmodule Kino.Ecto do
     {total_rows, records} = get_records(state.repo, state.queryable, rows_spec)
 
     {columns, keys} =
-      if schema = Table.ecto_schema(state.queryable) do
-        keys = schema.__schema__(:fields)
-        {:initial, keys}
-      else
-        columns = Table.columns_for_records(records)
-        keys = Enum.map(columns, & &1.key)
-        {columns, keys}
+      case keys_from_queryable(state.queryable) do
+        [] ->
+          columns = Table.columns_for_records(records)
+          keys = Enum.map(columns, & &1.key)
+          {columns, keys}
+
+        keys ->
+          {:initial, keys}
       end
 
     rows = Enum.map(records, &Table.record_to_row(&1, keys))
@@ -134,6 +129,7 @@ defmodule Kino.Ecto do
 
     query =
       if rows_spec[:order_by] do
+        query = Ecto.Query.exclude(query, :order_by)
         order_by = [{rows_spec.order, rows_spec.order_by}]
         from(q in query, order_by: ^order_by)
       else
@@ -145,8 +141,23 @@ defmodule Kino.Ecto do
     {count, records}
   end
 
+  defp query_source(queryable) do
+    %{from: %{source: {source, _schema}}} = Ecto.Queryable.to_query(queryable)
+    source
+  end
+
   defp default_select_query?(queryable) do
     query = Ecto.Queryable.to_query(queryable)
     query.select == nil
+  end
+
+  defp keys_from_queryable(queryable) do
+    schema = Table.ecto_schema(queryable)
+
+    if schema != nil and default_select_query?(queryable) do
+      schema.__schema__(:fields)
+    else
+      []
+    end
   end
 end
