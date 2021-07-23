@@ -124,7 +124,7 @@ defmodule Kino.Utils.Table do
   end
 
   def ecto_schema(queryable) when is_atom(queryable) do
-    if function_exported?(queryable, :__schema__, 1) do
+    if Code.ensure_loaded?(queryable) and function_exported?(queryable, :__schema__, 1) do
       queryable
     else
       nil
