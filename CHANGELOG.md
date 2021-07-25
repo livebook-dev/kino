@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.3 (2021-07-25)
+
+  * Do not require Ecto at compilation time ([#35](https://github.com/livebook-dev/kino/issues/35))
+
 ## v0.2.2 (2021-07-23)
 
   * Implement table widget for Ecto queries ([#34](https://github.com/elixir-nx/kino/pull/34))
