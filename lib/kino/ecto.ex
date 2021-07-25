@@ -25,8 +25,6 @@ defmodule Kino.Ecto do
 
   defstruct [:pid]
 
-  import Ecto.Query, only: [from: 2]
-
   @type t :: %__MODULE__{pid: pid()}
 
   @typedoc false
@@ -124,20 +122,8 @@ defmodule Kino.Ecto do
 
   defp get_records(repo, queryable, rows_spec) do
     count = repo.aggregate(queryable, :count)
-
-    query = from(q in queryable, limit: ^rows_spec.limit, offset: ^rows_spec.offset)
-
-    query =
-      if rows_spec[:order_by] do
-        query = Ecto.Query.exclude(query, :order_by)
-        order_by = [{rows_spec.order, rows_spec.order_by}]
-        from(q in query, order_by: ^order_by)
-      else
-        query
-      end
-
+    query = prepare_query(queryable, rows_spec)
     records = repo.all(query)
-
     {count, records}
   end
 
@@ -159,5 +145,22 @@ defmodule Kino.Ecto do
     else
       []
     end
+  end
+
+  if Code.ensure_loaded?(Ecto.Query) do
+    defp prepare_query(queryable, rows_spec) do
+      import Ecto.Query, only: [from: 2]
+      query = from(q in queryable, limit: ^rows_spec.limit, offset: ^rows_spec.offset)
+
+      if rows_spec[:order_by] do
+        query = Ecto.Query.exclude(query, :order_by)
+        order_by = [{rows_spec.order, rows_spec.order_by}]
+        from(q in query, order_by: ^order_by)
+      else
+        query
+      end
+    end
+  else
+    defp prepare_query(_queryable, _rows_spec), do: raise "Ecto is missing"
   end
 end
