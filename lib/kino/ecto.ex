@@ -161,6 +161,6 @@ defmodule Kino.Ecto do
       end
     end
   else
-    defp prepare_query(_queryable, _rows_spec), do: raise "Ecto is missing"
+    defp prepare_query(_queryable, _rows_spec), do: raise("Ecto is missing")
   end
 end
