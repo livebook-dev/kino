@@ -236,9 +236,11 @@ defmodule Kino.EctoTest do
       send(widget.pid, {:get_rows, self(), spec})
 
       assert_receive {from, [MockRepo, :aggregate, query: _, aggregate: :count, opts: []]}
-      MockRepo.resolve_call(from, 3)
+      MockRepo.resolve_call(from, 0)
 
       assert_receive {_from, [MockRepo, :all, query: %{offset: offset, limit: limit}, opts: []]}
+      MockRepo.resolve_call(from, [])
+
       assert Macro.to_string(offset.expr) == "^0"
       assert offset.params == [{0, :integer}]
       assert Macro.to_string(limit.expr) == "^0"
@@ -257,9 +259,11 @@ defmodule Kino.EctoTest do
       send(widget.pid, {:get_rows, self(), spec})
 
       assert_receive {from, [MockRepo, :aggregate, query: _, aggregate: :count, opts: []]}
-      MockRepo.resolve_call(from, 3)
+      MockRepo.resolve_call(from, 0)
 
       assert_receive {_from, [MockRepo, :all, query: %{order_bys: [order_by]}, opts: []]}
+      MockRepo.resolve_call(from, [])
+
       assert Macro.to_string(order_by.expr) == "[asc: &0.name()]"
     end
 
@@ -275,9 +279,11 @@ defmodule Kino.EctoTest do
       send(widget.pid, {:get_rows, self(), spec})
 
       assert_receive {from, [MockRepo, :aggregate, query: _, aggregate: :count, opts: []]}
-      MockRepo.resolve_call(from, 3)
+      MockRepo.resolve_call(from, 0)
 
       assert_receive {_from, [MockRepo, :all, query: %{order_bys: [order_by]}, opts: []]}
+      MockRepo.resolve_call(from, [])
+
       assert Macro.to_string(order_by.expr) == "[desc: &0.id()]"
     end
 
