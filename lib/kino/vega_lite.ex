@@ -7,17 +7,17 @@ defmodule Kino.VegaLite do
 
   ## Examples
 
-      vl_widget =
+      widget =
         Vl.new(width: 400, height: 400)
         |> Vl.mark(:line)
         |> Vl.encode_field(:x, "x", type: :quantitative)
         |> Vl.encode_field(:y, "y", type: :quantitative)
         |> Kino.VegaLite.new()
-        |> Kino.render()
+        |> tap(&Kino.render/1)
 
       for i <- 1..300 do
         point = %{x: i / 10, y: :math.sin(i / 10)}
-        Kino.VegaLite.push(vl_widget, point)
+        Kino.VegaLite.push(widget, point)
         Process.sleep(25)
       end
   """
