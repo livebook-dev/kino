@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0 (2021-07-28)
+
+  **Breaking changes**
+
+  * Change Kino.render/1 to return hidden value ([#38](https://github.com/livebook-dev/kino/issues/38))
+
 ## v0.2.3 (2021-07-25)
 
   * Do not require Ecto at compilation time ([#35](https://github.com/livebook-dev/kino/issues/35))
