@@ -28,7 +28,7 @@ defmodule Kino do
         |> Vl.data_from_series(...)
         |> ...
         |> Kino.VegaLite.new()
-        |> Kino.render()
+        |> tap(&Kino.render/1)
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
 
@@ -103,7 +103,7 @@ defmodule Kino do
   results. You can think of this function as a generalized
   `IO.puts/2` that works for any type.
   """
-  @spec render(term()) :: term()
+  @spec render(term()) :: :"do not show this result in output"
   def render(term) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
@@ -119,7 +119,7 @@ defmodule Kino do
 
     Process.demonitor(ref)
 
-    term
+    :"do not show this result in output"
   end
 
   @doc """
