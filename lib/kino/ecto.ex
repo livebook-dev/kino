@@ -19,6 +19,7 @@ defmodule Kino.Ecto do
       |> Kino.Ecto.new(Repo)
   """
 
+  @doc false
   use GenServer, restart: :temporary
 
   alias Kino.Utils.Table

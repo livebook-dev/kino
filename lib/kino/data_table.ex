@@ -25,6 +25,7 @@ defmodule Kino.DataTable do
       )
   """
 
+  @doc false
   use GenServer, restart: :temporary
 
   alias Kino.Utils.Table

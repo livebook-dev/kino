@@ -22,6 +22,7 @@ defmodule Kino.VegaLite do
       end
   """
 
+  @doc false
   use GenServer, restart: :temporary
 
   defstruct [:pid]

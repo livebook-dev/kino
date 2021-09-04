@@ -10,6 +10,7 @@ defmodule Kino.ETS do
       Kino.ETS.new(:elixir_config)
   """
 
+  @doc false
   use GenServer, restart: :temporary
 
   alias Kino.Utils.Table
