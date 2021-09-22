@@ -116,7 +116,7 @@ defmodule Kino.VegaLite do
   @doc """
   Registers a callback to run periodically in the widget process.
 
-  The callback is run every `interval_ms` milliseconds and recives
+  The callback is run every `interval_ms` milliseconds and receives
   the accumulated value. The callback should return either of:
 
     * `{:cont, acc}` - the continue with the new accumulated value
