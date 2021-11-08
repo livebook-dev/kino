@@ -15,6 +15,7 @@ defmodule Kino.Output do
           | vega_lite_static()
           | vega_lite_dynamic()
           | table_dynamic()
+          | frame_dynamic()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -126,6 +127,28 @@ defmodule Kino.Output do
   """
   @type table_dynamic :: {:table_dynamic, pid()}
 
+  @typedoc """
+  Animable output.
+
+  There should be a server process responsible for communication
+  with subscribers.
+
+  ## Communication protocol
+
+  A client process should connect to the server process by sending:
+
+      {:connect, pid()}
+
+  And expect the following reply:
+
+      {:connect_reply, %{output: Kino.Output.t() | nil}}
+
+  The server process may then keep sending one of the following events:
+
+      {:render, %{output: Kino.Output.t()}}
+  """
+  @type frame_dynamic :: {:frame_dynamic, pid()}
+
   @doc """
   See `t:text_inline/0`.
   """
@@ -180,6 +203,14 @@ defmodule Kino.Output do
   @spec table_dynamic(pid()) :: t()
   def table_dynamic(pid) when is_pid(pid) do
     {:table_dynamic, pid}
+  end
+
+  @doc """
+  See `t:frame_dynamic/0`.
+  """
+  @spec frame_dynamic(pid()) :: t()
+  def frame_dynamic(pid) when is_pid(pid) do
+    {:frame_dynamic, pid}
   end
 
   @doc """

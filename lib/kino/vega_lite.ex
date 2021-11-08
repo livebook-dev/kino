@@ -120,6 +120,7 @@ defmodule Kino.VegaLite do
   the accumulated value. The callback should return either of:
 
     * `{:cont, acc}` - the continue with the new accumulated value
+
     * `:halt` - to no longer schedule callback evaluation
 
   The callback is run for the first time immediately upon registration.
