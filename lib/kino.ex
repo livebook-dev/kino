@@ -178,7 +178,7 @@ defmodule Kino do
           pos_integer(),
           term(),
           (term() -> {:cont, term(), acc :: term()} | :halt)
-        ) :: Kino.Frame.t()
+        ) :: :"do not show this result in output"
   def animate(interval_ms, acc, fun) do
     widget = Kino.Frame.new()
 
@@ -193,6 +193,6 @@ defmodule Kino do
       end
     end)
 
-    widget
+    Kino.render(widget)
   end
 end
