@@ -152,4 +152,47 @@ defmodule Kino do
   def configure(options) do
     Kino.Config.configure(options)
   end
+
+  @doc ~S"""
+  Returns a widget that periodically calls the given function
+  to render a new result.
+
+  The callback is run every `interval_ms` milliseconds and receives
+  the accumulated value. The callback should return either of:
+
+    * `{:cont, term_to_render, acc}` - the continue
+
+    * `:halt` - to no longer schedule callback evaluation
+
+  This function uses `Kino.Frame` as the underlying widget.
+
+  ## Examples
+
+      # Render new Markdown every 100ms
+      Kino.animate(100, 0, fn i ->
+        md = Kino.Markdown.new("**Iteration: `#{i}`**")
+        {:cont, md, i + 1}
+      end)
+  """
+  @spec animate(
+          pos_integer(),
+          term(),
+          (term() -> {:cont, term(), acc :: term()} | :halt)
+        ) :: :"do not show this result in output"
+  def animate(interval_ms, acc, fun) do
+    widget = Kino.Frame.new()
+
+    Kino.Frame.periodically(widget, interval_ms, acc, fn acc ->
+      case fun.(acc) do
+        {:cont, term, acc} ->
+          Kino.Frame.render(widget, term)
+          {:cont, acc}
+
+        :halt ->
+          :halt
+      end
+    end)
+
+    Kino.render(widget)
+  end
 end

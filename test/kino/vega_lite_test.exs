@@ -104,8 +104,7 @@ defmodule Kino.VegaLiteTest do
 
     assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
     assert_receive {:push, %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
-    Process.sleep(5)
-    refute_received {:push, _}
+    refute_receive {:push, _}, 5
   end
 
   test "terminates as soon as the parent process terminates" do
