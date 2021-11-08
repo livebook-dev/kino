@@ -160,8 +160,7 @@ defmodule Kino do
   The callback is run every `interval_ms` milliseconds and receives
   the accumulated value. The callback should return either of:
 
-    * `{:cont, term_to_render, acc}` - the continue with the new
-      accumulated value
+    * `{:cont, term_to_render, acc}` - the continue
 
     * `:halt` - to no longer schedule callback evaluation
 
