@@ -37,7 +37,7 @@ defmodule Kino.Frame do
   @typedoc false
   @type state :: %{
           parent_monitor_ref: reference(),
-          pids: list(pid()),
+          client_pids: list(pid()),
           output: Kino.Output.t() | nil
         }
 
@@ -93,14 +93,14 @@ defmodule Kino.Frame do
 
     parent_monitor_ref = Process.monitor(parent)
 
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, pids: [], output: nil}}
+    {:ok, %{parent_monitor_ref: parent_monitor_ref, client_pids: [], output: nil}}
   end
 
   @impl true
   def handle_cast({:render, term}, state) do
     output = Kino.Render.to_livebook(term)
 
-    for pid <- state.pids do
+    for pid <- state.client_pids do
       send(pid, {:render, %{output: output}})
     end
 
@@ -120,7 +120,7 @@ defmodule Kino.Frame do
 
     send(pid, {:connect_reply, %{output: state.output}})
 
-    {:noreply, %{state | pids: [pid | state.pids]}}
+    {:noreply, %{state | client_pids: [pid | state.client_pids]}}
   end
 
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
@@ -133,7 +133,7 @@ defmodule Kino.Frame do
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, %{state | pids: List.delete(state.pids, pid)}}
+    {:noreply, %{state | client_pids: List.delete(state.client_pids, pid)}}
   end
 
   defp periodically_iter(interval_ms, acc, fun) do

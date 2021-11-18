@@ -16,6 +16,7 @@ defmodule Kino.Output do
           | vega_lite_dynamic()
           | table_dynamic()
           | frame_dynamic()
+          | controls_dynamic()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -54,8 +55,7 @@ defmodule Kino.Output do
   Interactive [Vega-Lite](https://vega.github.io/vega-lite) graphic
   with data streaming capabilities.
 
-  There should be a server process responsible for communication
-  with subscribers.
+  This output points to a server process that clients can talk to.
 
   ## Communication protocol
 
@@ -76,8 +76,8 @@ defmodule Kino.Output do
   @typedoc """
   Interactive data table.
 
-  There should be a server process that serves data requests,
-  filtering, sorting and slicing data as necessary.
+  This output points to a server process that serves data requests,
+  handling filtering, sorting and slicing data as necessary.
 
   ## Communication protocol
 
@@ -130,8 +130,7 @@ defmodule Kino.Output do
   @typedoc """
   Animable output.
 
-  There should be a server process responsible for communication
-  with subscribers.
+  This output points to a server process that clients can talk to.
 
   ## Communication protocol
 
@@ -148,6 +147,31 @@ defmodule Kino.Output do
       {:render, %{output: Kino.Output.t()}}
   """
   @type frame_dynamic :: {:frame_dynamic, pid()}
+
+  @typedoc """
+  Controls output.
+
+  This output points to a server process that clients can talk to.
+
+  ## Communication protocol
+
+  A client process should connect to the server process by sending:
+
+      {:connect, pid()}
+
+  And expect the following reply:
+
+      {:connect_reply, %{controls: list(Kino.Control.control())}}
+
+  The client can then keep sending events, with `:type` identifying
+  the event kind, `:origin` being the client pid and optionally
+  additional properties specific to the given event.
+
+      @type event :: %{type: atom(), origin: pid(), optional(atom()) => any()}
+
+      {:event, event()}
+  """
+  @type controls_dynamic :: {:controls_dynamic, pid()}
 
   @doc """
   See `t:text_inline/0`.
@@ -211,6 +235,14 @@ defmodule Kino.Output do
   @spec frame_dynamic(pid()) :: t()
   def frame_dynamic(pid) when is_pid(pid) do
     {:frame_dynamic, pid}
+  end
+
+  @doc """
+  See `t:controls_dynamic/0`.
+  """
+  @spec controls_dynamic(pid()) :: t()
+  def controls_dynamic(pid) when is_pid(pid) do
+    {:controls_dynamic, pid}
   end
 
   @doc """

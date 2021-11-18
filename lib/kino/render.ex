@@ -62,6 +62,12 @@ defimpl Kino.Render, for: Kino.Frame do
   end
 end
 
+defimpl Kino.Render, for: Kino.Controls do
+  def to_livebook(widget) do
+    Kino.Output.controls_dynamic(widget.pid)
+  end
+end
+
 # Elixir built-ins
 
 defimpl Kino.Render, for: Reference do

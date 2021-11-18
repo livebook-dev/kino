@@ -1,7 +1,7 @@
 defmodule Kino.FrameTest do
   use ExUnit.Case, async: true
 
-  test "render/2 formats the givne value into output and sends to the client" do
+  test "render/2 formats the given value into output and sends to the client" do
     widget = Kino.Frame.new()
 
     connect_self(widget)

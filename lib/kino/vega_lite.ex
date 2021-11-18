@@ -35,7 +35,7 @@ defmodule Kino.VegaLite do
           vl: VegaLite.t(),
           window: non_neg_integer(),
           datasets: %{binary() => list()},
-          pids: list(pid())
+          client_pids: list(pid())
         }
 
   @doc """
@@ -137,12 +137,12 @@ defmodule Kino.VegaLite do
 
     parent_monitor_ref = Process.monitor(parent)
 
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, vl: vl, datasets: %{}, pids: []}}
+    {:ok, %{parent_monitor_ref: parent_monitor_ref, vl: vl, datasets: %{}, client_pids: []}}
   end
 
   @impl true
   def handle_cast({:push, dataset, data, window}, state) do
-    for pid <- state.pids do
+    for pid <- state.client_pids do
       send(pid, {:push, %{data: data, dataset: dataset, window: window}})
     end
 
@@ -161,7 +161,7 @@ defmodule Kino.VegaLite do
   end
 
   def handle_cast({:clear, dataset}, state) do
-    for pid <- state.pids do
+    for pid <- state.client_pids do
       send(pid, {:push, %{data: [], dataset: dataset, window: 0}})
     end
 
@@ -187,7 +187,7 @@ defmodule Kino.VegaLite do
       send(pid, {:push, %{data: data, dataset: dataset, window: nil}})
     end
 
-    {:noreply, %{state | pids: [pid | state.pids]}}
+    {:noreply, %{state | client_pids: [pid | state.client_pids]}}
   end
 
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
@@ -200,7 +200,7 @@ defmodule Kino.VegaLite do
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, %{state | pids: List.delete(state.pids, pid)}}
+    {:noreply, %{state | client_pids: List.delete(state.client_pids, pid)}}
   end
 
   defp periodically_iter(interval_ms, acc, fun) do

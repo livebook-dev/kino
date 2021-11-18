@@ -38,7 +38,10 @@ defmodule Kino.DataTable do
   @type state :: %{
           parent_monitor_ref: reference(),
           data: Enum.t(),
-          total_rows: non_neg_integer()
+          total_rows: non_neg_integer(),
+          keys: list(term()),
+          sorting_enabled: boolean(),
+          show_underscored: boolean()
         }
 
   @doc """

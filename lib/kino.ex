@@ -90,6 +90,25 @@ defmodule Kino do
 
       Kino.Ecto.new(Weather, Repo)
 
+  ### Kino.Frame
+
+  `Kino.Frame` is a placeholder for static outptus that can
+  be dynamically updated.
+
+      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+
+      for i <- 1..100 do
+        Kino.Frame.render(widget, i)
+        Process.sleep(50)
+      end
+
+  Also see `Kino.animate/3`.
+
+  ### Kino.Controls
+
+  `Kino.Controls` is a set of UI elements that allow for user
+  interactions via message passing.
+
   ### All others
 
   All other data structures are rendered as text using Elixir's
