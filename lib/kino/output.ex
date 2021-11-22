@@ -214,7 +214,7 @@ defmodule Kino.Output do
   end
 
   @doc """
-  Returns `t:text_block/0` with the inspectd term.
+  Returns `t:text_block/0` with the inspected term.
   """
   @spec inspect(term()) :: t()
   def inspect(term) do
