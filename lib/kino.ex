@@ -1,5 +1,5 @@
 defmodule Kino do
-  @moduledoc """
+  @moduledoc ~S'''
   Client-driven interactive widgets for Livebook.
 
   Kino is the library used by Livebook to render rich and interactive
@@ -64,7 +64,7 @@ defmodule Kino do
 
   `Kino.Markdown` wraps Markdown content for richer text rendering.
 
-      Kino.Markdown.new(\"\"\"
+      Kino.Markdown.new("""
       # Example
 
       A regular Markdown file.
@@ -81,7 +81,7 @@ defmodule Kino do
       | -- | ------ | ----------------------- |
       | 1  | Elixir | https://elixir-lang.org |
       | 2  | Erlang | https://www.erlang.org  |
-      \"\"\")
+      """)
 
   ### Kino.Ecto
 
@@ -94,7 +94,7 @@ defmodule Kino do
 
   All other data structures are rendered as text using Elixir's
   `inspect/2`.
-  """
+  '''
 
   @doc """
   Sends the given term as cell output.
