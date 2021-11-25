@@ -62,6 +62,12 @@ defimpl Kino.Render, for: Kino.Frame do
   end
 end
 
+defimpl Kino.Render, for: Kino.Input do
+  def to_livebook(input) do
+    Kino.Output.input(input.attrs)
+  end
+end
+
 # Elixir built-ins
 
 defimpl Kino.Render, for: Reference do

@@ -16,6 +16,7 @@ defmodule Kino.Output do
           | vega_lite_dynamic()
           | table_dynamic()
           | frame_dynamic()
+          | input()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -149,6 +150,86 @@ defmodule Kino.Output do
   """
   @type frame_dynamic :: {:frame_dynamic, pid()}
 
+  @typedoc """
+  An input field.
+
+  All inputs have the following properties:
+
+    * `:type` - one of the recognisd input types
+
+    * `:id` - a unique input identifier, in Livebook must be
+      reevaluation-safe
+
+    * `:label` - an arbitrary text used as the input caption
+
+    * `:default` - the initial input value
+
+  On top of that, each input type may have additional attributes.
+  """
+  @type input :: {:input, attrs :: input_attrs()}
+
+  @type input_id :: String.t()
+
+  @type input_attrs ::
+          %{
+            type: :text,
+            id: input_id(),
+            label: String.t(),
+            default: String.t()
+          }
+          | %{
+              type: :textarea,
+              id: input_id(),
+              label: String.t(),
+              default: String.t()
+            }
+          | %{
+              type: :password,
+              id: input_id(),
+              label: String.t(),
+              default: String.t()
+            }
+          | %{
+              type: :number,
+              id: input_id(),
+              label: String.t(),
+              default: number() | nil
+            }
+          | %{
+              type: :url,
+              id: input_id(),
+              label: String.t(),
+              default: String.t() | nil
+            }
+          | %{
+              type: :select,
+              id: input_id(),
+              label: String.t(),
+              default: term(),
+              options: list({value :: term(), label :: String.t()})
+            }
+          | %{
+              type: :checkbox,
+              id: input_id(),
+              label: String.t(),
+              default: boolean()
+            }
+          | %{
+              type: :range,
+              id: input_id(),
+              label: String.t(),
+              default: number(),
+              min: number(),
+              max: number(),
+              step: number()
+            }
+          | %{
+              type: :color,
+              id: input_id(),
+              label: String.t(),
+              default: String.t()
+            }
+
   @doc """
   See `t:text_inline/0`.
   """
@@ -211,6 +292,14 @@ defmodule Kino.Output do
   @spec frame_dynamic(pid()) :: t()
   def frame_dynamic(pid) when is_pid(pid) do
     {:frame_dynamic, pid}
+  end
+
+  @doc """
+  See `t:input/0`.
+  """
+  @spec input(input_attrs()) :: t()
+  def input(attrs) when is_map(attrs) do
+    {:input, attrs}
   end
 
   @doc """
