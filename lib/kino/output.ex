@@ -187,8 +187,8 @@ defmodule Kino.Output do
           | %{
               type: :number,
               id: input_id(),
-              label: String.t() | nil,
-              default: number()
+              label: String.t(),
+              default: number() | nil
             }
           | %{
               type: :url,
