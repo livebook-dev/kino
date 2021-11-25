@@ -54,7 +54,7 @@ defmodule Kino.Input do
     * `:default` - the initial input value. Defaults to `""`
   """
   @spec password(String.t(), keyword()) :: t()
-  def password(label, opts \\ []) do
+  def password(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = Keyword.get(opts, :default, "")
     new(%{type: :password, label: label, default: default})
   end
@@ -113,6 +113,11 @@ defmodule Kino.Input do
     if options == [] do
       raise ArgumentError, "expected at least on option, got: []"
     end
+
+    options =
+      options
+      |> Enum.map(fn {key, val} -> {key, to_string(val)} end)
+      |> Map.new()
 
     values = Enum.map(options, &elem(&1, 0))
 
