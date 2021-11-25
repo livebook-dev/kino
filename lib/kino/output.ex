@@ -175,9 +175,14 @@ defmodule Kino.Output do
             type: :text,
             id: input_id(),
             label: String.t(),
-            default: String.t(),
-            multiline: boolean()
+            default: String.t()
           }
+          | %{
+              type: :textarea,
+              id: input_id(),
+              label: String.t(),
+              default: String.t()
+            }
           | %{
               type: :password,
               id: input_id(),

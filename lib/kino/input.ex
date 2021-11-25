@@ -32,15 +32,24 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `""`
-
-    * `:multiline` - whether the input should be multiline
-      text box. Defaults to `false`
   """
   @spec text(String.t(), keyword()) :: t()
   def text(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = Keyword.get(opts, :default, "")
-    multiline = Keyword.get(opts, :multiline, false)
-    new(%{type: :text, label: label, default: default, multiline: multiline})
+    new(%{type: :text, label: label, default: default})
+  end
+
+  @doc """
+  Creates a new multiline text input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to `""`
+  """
+  @spec textarea(String.t(), keyword()) :: t()
+  def textarea(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    default = Keyword.get(opts, :default, "")
+    new(%{type: :textarea, label: label, default: default})
   end
 
   @doc """
