@@ -105,20 +105,8 @@ defmodule Kino do
   """
   @spec render(term()) :: :"do not show this result in output"
   def render(term) do
-    gl = Process.group_leader()
-    ref = Process.monitor(gl)
     output = Kino.Render.to_livebook(term)
-
-    send(gl, {:io_request, self(), ref, {:livebook_put_output, output}})
-
-    receive do
-      {:io_reply, ^ref, :ok} -> :ok
-      {:io_reply, ^ref, _} -> :error
-      {:DOWN, ^ref, :process, _object, _reason} -> :error
-    end
-
-    Process.demonitor(ref)
-
+    Kino.Bridge.put_output(output)
     :"do not show this result in output"
   end
 
