@@ -1,5 +1,5 @@
 defmodule Kino do
-  @moduledoc """
+  @moduledoc ~S'''
   Client-driven interactive widgets for Livebook.
 
   Kino is the library used by Livebook to render rich and interactive
@@ -64,7 +64,7 @@ defmodule Kino do
 
   `Kino.Markdown` wraps Markdown content for richer text rendering.
 
-      Kino.Markdown.new(\"\"\"
+      Kino.Markdown.new("""
       # Example
 
       A regular Markdown file.
@@ -81,7 +81,7 @@ defmodule Kino do
       | -- | ------ | ----------------------- |
       | 1  | Elixir | https://elixir-lang.org |
       | 2  | Erlang | https://www.erlang.org  |
-      \"\"\")
+      """)
 
   ### Kino.Ecto
 
@@ -113,7 +113,9 @@ defmodule Kino do
 
   All other data structures are rendered as text using Elixir's
   `inspect/2`.
-  """
+  '''
+
+  @type nothing :: :"do not show this result in output"
 
   @doc """
   Sends the given term as cell output.
@@ -122,23 +124,11 @@ defmodule Kino do
   results. You can think of this function as a generalized
   `IO.puts/2` that works for any type.
   """
-  @spec render(term()) :: :"do not show this result in output"
+  @spec render(term()) :: nothing()
   def render(term) do
-    gl = Process.group_leader()
-    ref = Process.monitor(gl)
     output = Kino.Render.to_livebook(term)
-
-    send(gl, {:io_request, self(), ref, {:livebook_put_output, output}})
-
-    receive do
-      {:io_reply, ^ref, :ok} -> :ok
-      {:io_reply, ^ref, _} -> :error
-      {:DOWN, ^ref, :process, _object, _reason} -> :error
-    end
-
-    Process.demonitor(ref)
-
-    :"do not show this result in output"
+    Kino.Bridge.put_output(output)
+    nothing()
   end
 
   @doc """
@@ -197,7 +187,7 @@ defmodule Kino do
           pos_integer(),
           term(),
           (term() -> {:cont, term(), acc :: term()} | :halt)
-        ) :: :"do not show this result in output"
+        ) :: nothing()
   def animate(interval_ms, acc, fun) do
     widget = Kino.Frame.new()
 
@@ -213,5 +203,13 @@ defmodule Kino do
     end)
 
     Kino.render(widget)
+  end
+
+  @doc """
+  Returns a special value that results in no visible output.
+  """
+  @spec nothing() :: nothing()
+  def nothing() do
+    :"do not show this result in output"
   end
 end
