@@ -104,10 +104,10 @@ defmodule Kino do
 
   Also see `Kino.animate/3`.
 
-  ### Kino.Controls
+  ### User interactions
 
-  `Kino.Controls` is a set of UI elements that allow for user
-  interactions via message passing.
+  `Kino.Input` and `Kino.Controls` provide a set of widgets for
+  entering data and capturing user events.
 
   ### All others
 

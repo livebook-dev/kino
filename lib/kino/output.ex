@@ -17,7 +17,7 @@ defmodule Kino.Output do
           | table_dynamic()
           | frame_dynamic()
           | input()
-          | controls_dynamic()
+          | control()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -154,7 +154,7 @@ defmodule Kino.Output do
 
   All inputs have the following properties:
 
-    * `:type` - one of the recognisd input types
+    * `:type` - one of the recognised input types
 
     * `:id` - a unique input identifier, in Livebook must be
       reevaluation-safe
@@ -162,6 +162,8 @@ defmodule Kino.Output do
     * `:label` - an arbitrary text used as the input caption
 
     * `:default` - the initial input value
+
+    * `:destination` - the process to send event messages to
 
   On top of that, each input type may have additional attributes.
   """
@@ -174,50 +176,58 @@ defmodule Kino.Output do
             type: :text,
             id: input_id(),
             label: String.t(),
-            default: String.t()
+            default: String.t(),
+            destination: Process.dest()
           }
           | %{
               type: :textarea,
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
             }
           | %{
               type: :password,
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
             }
           | %{
               type: :number,
               id: input_id(),
               label: String.t(),
-              default: number() | nil
+              default: number() | nil,
+              destination: Process.dest()
             }
           | %{
               type: :url,
               id: input_id(),
               label: String.t(),
-              default: String.t() | nil
+              default: String.t() | nil,
+              destination: Process.dest()
             }
           | %{
               type: :select,
               id: input_id(),
               label: String.t(),
               default: term(),
+              destination: Process.dest(),
               options: list({value :: term(), label :: String.t()})
             }
           | %{
               type: :checkbox,
               id: input_id(),
               label: String.t(),
-              default: boolean()
+              default: boolean(),
+              destination: Process.dest()
             }
           | %{
               type: :range,
               id: input_id(),
               label: String.t(),
               default: number(),
+              destination: Process.dest(),
               min: number(),
               max: number(),
               step: number()
@@ -226,33 +236,47 @@ defmodule Kino.Output do
               type: :color,
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
             }
 
   @typedoc """
-  Controls output.
+  A control widget.
 
-  This output points to a server process that clients can talk to.
+  All controls have the following properties:
 
-  ## Communication protocol
+    * `:type` - one of the recognised control types
 
-  A client process should connect to the server process by sending:
+    * `:id` - a unique control identifier
 
-      {:connect, pid()}
+    * `:destination` - the process to send event messages to
 
-  And expect the following reply:
+  On top of that, each control type may have additional attributes.
 
-      {:connect_reply, %{controls: list(Kino.Control.control())}}
+  ## Events
 
-  The client can then keep sending events, with `:type` identifying
-  the event kind, `:origin` being the client pid and optionally
-  additional properties specific to the given event.
-
-      @type event :: %{type: atom(), origin: pid(), optional(atom()) => any()}
-
-      {:event, event()}
+  All control events are sent to `:destination` as `{:event, id, info}`,
+  where info is a map including additional details. In particular, it
+  always includes `:origin`, which is an opaque identifier of the client
+  that triggered the event.
   """
-  @type controls_dynamic :: {:controls_dynamic, pid()}
+  @type control :: {:control, attrs :: control_attrs()}
+
+  @type control_id :: String.t()
+
+  @type control_attrs ::
+          %{
+            type: :keyboard,
+            id: control_id(),
+            destination: Process.dest(),
+            events: list(:keyup | :keydown)
+          }
+          | %{
+              type: :button,
+              id: control_id(),
+              destination: Process.dest(),
+              label: String.t()
+            }
 
   @doc """
   See `t:text_inline/0`.
@@ -327,11 +351,11 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:controls_dynamic/0`.
+  See `t:control/0`.
   """
-  @spec controls_dynamic(pid()) :: t()
-  def controls_dynamic(pid) when is_pid(pid) do
-    {:controls_dynamic, pid}
+  @spec control(control_attrs()) :: t()
+  def control(attrs) when is_map(attrs) do
+    {:control, attrs}
   end
 
   @doc """

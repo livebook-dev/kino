@@ -68,9 +68,9 @@ defimpl Kino.Render, for: Kino.Input do
   end
 end
 
-defimpl Kino.Render, for: Kino.Controls do
-  def to_livebook(widget) do
-    Kino.Output.controls_dynamic(widget.pid)
+defimpl Kino.Render, for: Kino.Control do
+  def to_livebook(control) do
+    Kino.Output.control(control.attrs)
   end
 end
 

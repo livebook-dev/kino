@@ -17,12 +17,18 @@ defmodule Kino.Input do
 
   defstruct [:attrs]
 
-  @type t :: %__MODULE__{attrs: map()}
+  @type t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
 
   defp new(attrs) do
     token = Kino.Bridge.generate_token()
     id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
-    attrs = Map.put(attrs, :id, id)
+
+    attrs =
+      Map.merge(attrs, %{
+        id: id,
+        destination: Kino.SubscriptionManager.cross_node_name()
+      })
+
     %__MODULE__{attrs: attrs}
   end
 
@@ -120,16 +126,11 @@ defmodule Kino.Input do
   def select(label, options, opts \\ [])
       when is_binary(label) and is_list(options) and is_list(opts) do
     if options == [] do
-      raise ArgumentError, "expected at least on option, got: []"
+      raise ArgumentError, "expected at least one option, got: []"
     end
 
-    options =
-      options
-      |> Enum.map(fn {key, val} -> {key, to_string(val)} end)
-      |> Map.new()
-
+    options = Enum.map(options, fn {key, val} -> {key, to_string(val)} end)
     values = Enum.map(options, &elem(&1, 0))
-
     default = Keyword.get_lazy(opts, :default, fn -> hd(values) end)
 
     if default not in values do
@@ -238,5 +239,25 @@ defmodule Kino.Input do
       {:error, reason} ->
         raise "failed to read input value, reason: #{inspect(reason)}"
     end
+  end
+
+  @doc """
+  Subscribes the calling process to input changes.
+
+  The events are sent as `{:event, receive_as, info}`.
+
+  See `Kino.Control.subscribe/2` for more details.
+  """
+  @spec subscribe(t(), term()) :: :ok
+  def subscribe(input, receive_as) do
+    Kino.SubscriptionManager.subscribe(input.attrs.id, self(), receive_as)
+  end
+
+  @doc """
+  Unsubscribes the calling process from input events.
+  """
+  @spec unsubscribe(t()) :: :ok
+  def unsubscribe(input) do
+    Kino.SubscriptionManager.unsubscribe(input.attrs.id, self())
   end
 end
