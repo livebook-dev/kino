@@ -35,12 +35,9 @@ defmodule Kino.Control do
   @type t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
 
   defp new(attrs) do
-    token = Kino.Bridge.generate_token()
-    id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
-
     attrs =
       Map.merge(attrs, %{
-        id: id,
+        ref: make_ref(),
         destination: Kino.SubscriptionManager.cross_node_name()
       })
 
@@ -113,7 +110,7 @@ defmodule Kino.Control do
   """
   @spec subscribe(t(), term()) :: :ok
   def subscribe(control, receive_as) do
-    Kino.SubscriptionManager.subscribe(control.attrs.id, self(), receive_as)
+    Kino.SubscriptionManager.subscribe(control.attrs.ref, self(), receive_as)
   end
 
   @doc """
@@ -121,6 +118,6 @@ defmodule Kino.Control do
   """
   @spec unsubscribe(t()) :: :ok
   def unsubscribe(control) do
-    Kino.SubscriptionManager.unsubscribe(control.attrs.id, self())
+    Kino.SubscriptionManager.unsubscribe(control.attrs.ref, self())
   end
 end

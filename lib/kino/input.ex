@@ -21,11 +21,12 @@ defmodule Kino.Input do
 
   defp new(attrs) do
     token = Kino.Bridge.generate_token()
-    id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
+    persistent_id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
 
     attrs =
       Map.merge(attrs, %{
-        id: id,
+        ref: make_ref(),
+        id: persistent_id,
         destination: Kino.SubscriptionManager.cross_node_name()
       })
 
@@ -250,7 +251,7 @@ defmodule Kino.Input do
   """
   @spec subscribe(t(), term()) :: :ok
   def subscribe(input, receive_as) do
-    Kino.SubscriptionManager.subscribe(input.attrs.id, self(), receive_as)
+    Kino.SubscriptionManager.subscribe(input.attrs.ref, self(), receive_as)
   end
 
   @doc """
@@ -258,6 +259,6 @@ defmodule Kino.Input do
   """
   @spec unsubscribe(t()) :: :ok
   def unsubscribe(input) do
-    Kino.SubscriptionManager.unsubscribe(input.attrs.id, self())
+    Kino.SubscriptionManager.unsubscribe(input.attrs.ref, self())
   end
 end

@@ -114,7 +114,7 @@ defmodule Kino.Output do
 
       @type row :: %{
         # An identifier, opaque to the client
-        id: term(),
+        ref: term(),
         # A string value for every column key
         fields: list(%{term() => binary()})
       }
@@ -156,8 +156,9 @@ defmodule Kino.Output do
 
     * `:type` - one of the recognised input types
 
-    * `:id` - a unique input identifier, in Livebook must be
-      reevaluation-safe
+    * `:ref` - a unique identifier
+
+    * `:id` - a persistent input identifier, the same on every reevaluation
 
     * `:label` - an arbitrary text used as the input caption
 
@@ -169,11 +170,13 @@ defmodule Kino.Output do
   """
   @type input :: {:input, attrs :: input_attrs()}
 
+  @type input_ref :: reference()
   @type input_id :: String.t()
 
   @type input_attrs ::
           %{
             type: :text,
+            ref: input_ref(),
             id: input_id(),
             label: String.t(),
             default: String.t(),
@@ -181,6 +184,7 @@ defmodule Kino.Output do
           }
           | %{
               type: :textarea,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -188,6 +192,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :password,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -195,6 +200,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :number,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: number() | nil,
@@ -202,6 +208,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :url,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: String.t() | nil,
@@ -209,6 +216,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :select,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: term(),
@@ -217,6 +225,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :checkbox,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: boolean(),
@@ -224,6 +233,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :range,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: number(),
@@ -234,6 +244,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :color,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -247,7 +258,7 @@ defmodule Kino.Output do
 
     * `:type` - one of the recognised control types
 
-    * `:id` - a unique control identifier
+    * `:ref` - a unique identifier
 
     * `:destination` - the process to send event messages to
 
@@ -262,18 +273,18 @@ defmodule Kino.Output do
   """
   @type control :: {:control, attrs :: control_attrs()}
 
-  @type control_id :: String.t()
+  @type control_ref :: reference()
 
   @type control_attrs ::
           %{
             type: :keyboard,
-            id: control_id(),
+            ref: control_ref(),
             destination: Process.dest(),
             events: list(:keyup | :keydown)
           }
           | %{
               type: :button,
-              id: control_id(),
+              ref: control_ref(),
               destination: Process.dest(),
               label: String.t()
             }
