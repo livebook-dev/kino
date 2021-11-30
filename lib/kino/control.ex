@@ -103,14 +103,14 @@ defmodule Kino.Control do
   @doc """
   Subscribes the calling process to control events.
 
-  The events are sent as `{:event, receive_as, info}`, where
+  The events are sent as `{:event, tag, info}`, where
   info is a map with event details. In particular, it always
   includes `:origin`, which is an opaque identifier of the
   client that triggered the event.
   """
   @spec subscribe(t(), term()) :: :ok
-  def subscribe(control, receive_as) do
-    Kino.SubscriptionManager.subscribe(control.attrs.ref, self(), receive_as)
+  def subscribe(control, tag) do
+    Kino.SubscriptionManager.subscribe(control.attrs.ref, self(), tag)
   end
 
   @doc """

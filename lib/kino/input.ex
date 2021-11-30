@@ -245,13 +245,13 @@ defmodule Kino.Input do
   @doc """
   Subscribes the calling process to input changes.
 
-  The events are sent as `{:event, receive_as, info}`.
+  The events are sent as `{:event, tag, info}`.
 
   See `Kino.Control.subscribe/2` for more details.
   """
   @spec subscribe(t(), term()) :: :ok
-  def subscribe(input, receive_as) do
-    Kino.SubscriptionManager.subscribe(input.attrs.ref, self(), receive_as)
+  def subscribe(input, tag) do
+    Kino.SubscriptionManager.subscribe(input.attrs.ref, self(), tag)
   end
 
   @doc """

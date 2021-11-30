@@ -9,7 +9,7 @@ defmodule Kino.SubscriptionManager do
   @name __MODULE__
 
   @type state :: %{
-          subscribers_by_topic: %{(topic :: term()) => {teraget :: pid(), receive_as :: term()}}
+          subscribers_by_topic: %{(topic :: term()) => {teraget :: pid(), tag :: term()}}
         }
 
   def cross_node_name() do
@@ -26,12 +26,12 @@ defmodule Kino.SubscriptionManager do
   @doc """
   Subscribes the given process to events under `topic`.
 
-  All events are sent as `{:event, receive_as, info}`,
-  where `receive_as` is the given term.
+  All events are sent as `{:event, tag, info}`, where
+  `tag` is the given term.
   """
   @spec subscribe(term(), pid(), term()) :: :ok
-  def subscribe(topic, pid, receive_as) do
-    GenServer.cast(@name, {:subscribe, topic, pid, receive_as})
+  def subscribe(topic, pid, tag) do
+    GenServer.cast(@name, {:subscribe, topic, pid, tag})
   end
 
   @doc """
@@ -48,13 +48,13 @@ defmodule Kino.SubscriptionManager do
   end
 
   @impl true
-  def handle_cast({:subscribe, topic, pid, receive_as}, state) do
+  def handle_cast({:subscribe, topic, pid, tag}, state) do
     Process.monitor(pid)
 
     state =
       update_in(state.subscribers_by_topic[topic], fn
-        nil -> [{pid, receive_as}]
-        subscribers -> [{pid, receive_as} | remove_pid(subscribers, pid)]
+        nil -> [{pid, tag}]
+        subscribers -> [{pid, tag} | remove_pid(subscribers, pid)]
       end)
 
     {:noreply, state}
@@ -72,8 +72,8 @@ defmodule Kino.SubscriptionManager do
 
   @impl true
   def handle_info({:event, topic, event}, state) do
-    for {pid, receive_as} <- state.subscribers_by_topic[topic] || [] do
-      send(pid, {:event, receive_as, event})
+    for {pid, tag} <- state.subscribers_by_topic[topic] || [] do
+      send(pid, {:event, tag, event})
     end
 
     {:noreply, state}
@@ -90,6 +90,6 @@ defmodule Kino.SubscriptionManager do
   end
 
   defp remove_pid(subscribers, pid) do
-    Enum.reject(subscribers, &match?({^pid, _receive_as}, &1))
+    Enum.reject(subscribers, &match?({^pid, _tag}, &1))
   end
 end
