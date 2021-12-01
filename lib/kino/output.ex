@@ -280,7 +280,7 @@ defmodule Kino.Output do
             type: :keyboard,
             ref: control_ref(),
             destination: Process.dest(),
-            events: list(:keyup | :keydown)
+            events: list(:keyup | :keydown | :status)
           }
           | %{
               type: :button,

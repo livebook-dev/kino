@@ -65,11 +65,20 @@ defmodule Kino.Control do
 
   ## Event info
 
-  In addition to standard properties, all events inlcude:
+  In addition to standard properties, all events include additional
+  properties.
+
+  ### Key events
 
     * `:type` - either `:keyup` or `:keydown`
 
     * `:key` - the value matching the browser [KeyboardEvent.key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key)
+
+  ### Status event
+
+    * `:type` - either `:status`
+
+    * `:enabled` - whether the keyboard is activated
 
   ## Examples
 
@@ -89,16 +98,16 @@ defmodule Kino.Control do
       #=> {:event, :keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
       #=> {:event, :keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keyup}}
   """
-  @spec keyboard(list(:keyup | :keydown)) :: t()
+  @spec keyboard(list(:keyup | :keydown | :status)) :: t()
   def keyboard(events) when is_list(events) do
     if events == [] do
       raise ArgumentError, "expected at least one event, got: []"
     end
 
     for event <- events do
-      unless event in [:keyup, :keydown] do
+      unless event in [:keyup, :keydown, :status] do
         raise ArgumentError,
-              "expected event to be either :keyup or :keydown, got: #{inspect(event)}"
+              "expected event to be either :keyup, :keydown or :status, got: #{inspect(event)}"
       end
     end
 

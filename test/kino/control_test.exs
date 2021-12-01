@@ -10,7 +10,7 @@ defmodule Kino.ControlTest do
 
     test "raises an error when an invalid event is given" do
       assert_raise ArgumentError,
-                   "expected event to be either :keyup or :keydown, got: :keyword",
+                   "expected event to be either :keyup, :keydown or :status, got: :keyword",
                    fn ->
                      Kino.Control.keyboard([:keyword])
                    end
