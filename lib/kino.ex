@@ -216,8 +216,8 @@ defmodule Kino do
   @doc """
   Ties the given process lifetime to the caller.
 
-  When used directly in a Livebook cell, the process is tied
-  to the particular evaluation and gets killed on re-evaluation.
+  When used directly in a Livebook cell, the process is killed
+  on re-evaluation.
 
   When used from another process, the given process is killed
   as soon as the parent terminates.
@@ -225,7 +225,7 @@ defmodule Kino do
   @spec bind_process(pid()) :: :ok | {:error, atom()}
   def bind_process(pid) do
     with :ok <- Kino.Bridge.object_add_pointer(pid) do
-      Kino.Bridge.object_add_release_hook(pid, {:kill, pid})
+      Kino.Bridge.object_add_release_hook(pid, fn -> Process.exit(pid, :shutdown) end)
     end
   end
 end

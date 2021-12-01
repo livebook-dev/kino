@@ -52,10 +52,7 @@ defmodule Kino.Bridge do
   @doc """
   Adds a hook to be executed on object release.
   """
-  @spec object_add_release_hook(
-          term(),
-          {:send, pid(), term()} | {:kill, pid()}
-        ) :: :ok | {:error, atom()}
+  @spec object_add_release_hook(term(), (() -> any())) :: :ok | {:error, atom()}
   def object_add_release_hook(object_id, hook) do
     case io_request({:livebook_object_add_release_hook, object_id, hook}) do
       {:ok, :ok} -> :ok

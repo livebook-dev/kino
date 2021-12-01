@@ -41,7 +41,10 @@ defmodule Kino.Control do
     attrs = Map.merge(attrs, %{ref: ref, destination: subscription_manager})
 
     Kino.Bridge.object_add_pointer(ref)
-    Kino.Bridge.object_add_release_hook(ref, {:send, subscription_manager, {:clear_topic, ref}})
+
+    Kino.Bridge.object_add_release_hook(ref, fn ->
+      Kino.SubscriptionManager.clear_topic(ref)
+    end)
 
     %__MODULE__{attrs: attrs}
   end
