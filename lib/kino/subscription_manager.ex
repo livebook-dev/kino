@@ -17,7 +17,7 @@ defmodule Kino.SubscriptionManager do
   end
 
   @doc """
-  Starts the manager
+  Starts the manager.
   """
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: @name)
@@ -40,14 +40,6 @@ defmodule Kino.SubscriptionManager do
   @spec unsubscribe(term(), pid()) :: :ok
   def unsubscribe(topic, pid) do
     GenServer.cast(@name, {:unsubscribe, topic, pid})
-  end
-
-  @doc """
-  Removes all subscriptions for the given topic.
-  """
-  @spec clear_topic(term()) :: :ok
-  def clear_topic(topic) do
-    GenServer.cast(@name, {:clear_topic, topic})
   end
 
   @impl true
@@ -78,17 +70,17 @@ defmodule Kino.SubscriptionManager do
     {:noreply, state}
   end
 
-  def handle_cast({:clear_topic, topic}, state) do
-    {_, state} = pop_in(state.subscribers_by_topic[topic])
-    {:noreply, state}
-  end
-
   @impl true
   def handle_info({:event, topic, event}, state) do
     for {pid, tag} <- state.subscribers_by_topic[topic] || [] do
       send(pid, {tag, event})
     end
 
+    {:noreply, state}
+  end
+
+  def handle_info({:clear_topic, topic}, state) do
+    {_, state} = pop_in(state.subscribers_by_topic[topic])
     {:noreply, state}
   end
 

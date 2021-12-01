@@ -24,11 +24,11 @@ defmodule Kino.SubscriptionManagerTest do
     refute_received {:tag1, ^event}
   end
 
-  test "clear_topic/3 removes all subscribers for the given topic" do
+  test "{:clear_topic, topic} removes all subscribers for the given topic" do
     Kino.SubscriptionManager.subscribe("topic1", self(), :tag1)
     Kino.SubscriptionManager.subscribe("topic2", self(), :tag2)
 
-    Kino.SubscriptionManager.clear_topic("topic1")
+    send(Kino.SubscriptionManager, {:clear_topic, "topic1"})
 
     event = %{type: :ping}
     send(Kino.SubscriptionManager, {:event, "topic1", event})

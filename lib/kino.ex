@@ -214,18 +214,40 @@ defmodule Kino do
   end
 
   @doc """
-  Ties the given process lifetime to the caller.
+  Starts a process under the Kino supervisor.
 
-  When used directly in a Livebook cell, the process is killed
-  on re-evaluation.
-
-  When used from another process, the given process is killed
-  as soon as the parent terminates.
+  The process is automatically terminated when the current process
+  terminates or the current cell reevaluates.
   """
-  @spec bind_process(pid()) :: :ok | {:error, atom()}
-  def bind_process(pid) do
-    with :ok <- Kino.Bridge.object_add_pointer(pid) do
-      Kino.Bridge.object_add_release_hook(pid, fn -> Process.exit(pid, :shutdown) end)
+  @spec start_child(
+          Supervisor.child_spec()
+          | {module(), term()}
+          | module()
+        ) :: DynamicSupervisor.on_start_child()
+  def start_child(child_spec) do
+    %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
+    parent = self()
+    child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent]}}
+    DynamicSupervisor.start_child(Kino.DynamicSupervisor, child_spec)
+  end
+
+  @doc false
+  def __start_override__({mod, fun, args}, parent) do
+    apply(mod, fun, args)
+    |> case do
+      {:ok, pid} = resp -> {:ok, resp, pid}
+      {:ok, pid, _info} = resp -> {:ok, resp, pid}
+      resp -> {:error, resp}
+    end
+    |> case do
+      {:ok, resp, pid} ->
+        gl = Process.info(parent)[:group_leader]
+        Kino.Bridge.object_add_pointer(gl, pid, parent)
+        Kino.Bridge.object_monitor(gl, pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
+        resp
+
+      {:error, resp} ->
+        resp
     end
   end
 end

@@ -39,29 +39,31 @@ defmodule Kino.Bridge do
   end
 
   @doc """
-  Adds the calling process as pointer to the given object.
+  Adds the given process as a pointer to the given object.
+
+  In most cases the parent process should be the caller.
   """
-  @spec object_add_pointer(term()) :: :ok | {:error, atom()}
-  def object_add_pointer(object_id) do
-    case io_request({:livebook_object_add_pointer, object_id, self()}) do
+  @spec object_add_pointer(pid(), term(), pid()) :: :ok | {:error, atom()}
+  def object_add_pointer(gl \\ Process.group_leader(), object_id, parent) do
+    case io_request(gl, {:livebook_object_add_pointer, object_id, parent}) do
       {:ok, :ok} -> :ok
       {:error, error} -> {:error, error}
     end
   end
 
   @doc """
-  Adds a hook to be executed on object release.
+  Schedules `payload` to be send to `destination` when the object
+  is released.
   """
-  @spec object_add_release_hook(term(), (() -> any())) :: :ok | {:error, atom()}
-  def object_add_release_hook(object_id, hook) do
-    case io_request({:livebook_object_add_release_hook, object_id, hook}) do
+  @spec object_monitor(pid(), term(), Process.dest(), payload :: term()) :: :ok | {:error, atom()}
+  def object_monitor(gl \\ Process.group_leader(), object_id, destination, payload) do
+    case io_request(gl, {:livebook_object_monitor, object_id, destination, payload}) do
       {:ok, :ok} -> :ok
       {:error, error} -> {:error, error}
     end
   end
 
-  defp io_request(request) do
-    gl = Process.group_leader()
+  defp io_request(gl \\ Process.group_leader(), request) do
     ref = Process.monitor(gl)
 
     send(gl, {:io_request, self(), ref, request})

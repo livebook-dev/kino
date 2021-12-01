@@ -45,10 +45,7 @@ defmodule Kino.Frame do
   """
   @spec new() :: t()
   def new() do
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, []})
-
-    Kino.bind_process(pid)
-
+    {:ok, pid} = Kino.start_child(__MODULE__)
     %__MODULE__{pid: pid}
   end
 

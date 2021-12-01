@@ -47,9 +47,7 @@ defmodule Kino.Ecto do
 
     opts = [repo: repo, queryable: queryable]
 
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
-
-    Kino.bind_process(pid)
+    {:ok, pid} = Kino.start_child({__MODULE__, opts})
 
     %__MODULE__{pid: pid}
   end
