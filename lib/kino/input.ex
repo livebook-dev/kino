@@ -254,7 +254,7 @@ defmodule Kino.Input do
   @doc """
   Subscribes the calling process to input changes.
 
-  The events are sent as `{:event, tag, info}`.
+  The events are sent as `{tag, info}`.
 
   See `Kino.Control.subscribe/2` for more details.
   """

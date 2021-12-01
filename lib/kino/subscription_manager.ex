@@ -26,8 +26,8 @@ defmodule Kino.SubscriptionManager do
   @doc """
   Subscribes the given process to events under `topic`.
 
-  All events are sent as `{:event, tag, info}`, where
-  `tag` is the given term.
+  All events are sent as `{tag, info}`, where `tag` is
+  the given term used for identifying the messages.
   """
   @spec subscribe(term(), pid(), term()) :: :ok
   def subscribe(topic, pid, tag) do
@@ -86,7 +86,7 @@ defmodule Kino.SubscriptionManager do
   @impl true
   def handle_info({:event, topic, event}, state) do
     for {pid, tag} <- state.subscribers_by_topic[topic] || [] do
-      send(pid, {:event, tag, event})
+      send(pid, {tag, event})
     end
 
     {:noreply, state}

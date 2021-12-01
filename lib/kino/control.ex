@@ -26,8 +26,8 @@ defmodule Kino.Control do
   receives corresponding events.
 
       IEx.Helpers.flush()
-      #=> {:event, :hello, %{origin: #PID<10895.9854.0>}}
-      #=> {:event, :hello, %{origin: #PID<10895.9854.0>}}
+      #=> {:hello, %{origin: #PID<10895.9854.0>}}
+      #=> {:hello, %{origin: #PID<10895.9854.0>}}
   """
 
   defstruct [:attrs]
@@ -93,10 +93,10 @@ defmodule Kino.Control do
   As the user types events are streamed:
 
       IEx.Helpers.flush()
-      #=> {:event, :keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keydown}}
-      #=> {:event, :keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keydown}}
-      #=> {:event, :keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
-      #=> {:event, :keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keyup}}
+      #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keydown}}
+      #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keydown}}
+      #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
+      #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keyup}}
   """
   @spec keyboard(list(:keyup | :keydown | :status)) :: t()
   def keyboard(events) when is_list(events) do
@@ -117,10 +117,9 @@ defmodule Kino.Control do
   @doc """
   Subscribes the calling process to control events.
 
-  The events are sent as `{:event, tag, info}`, where
-  info is a map with event details. In particular, it always
-  includes `:origin`, which is an opaque identifier of the
-  client that triggered the event.
+  The events are sent as `{tag, info}`, where info is a map with
+  event details. In particular, it always includes `:origin`, which
+  is an opaque identifier of the client that triggered the event.
   """
   @spec subscribe(t(), term()) :: :ok
   def subscribe(control, tag) do
