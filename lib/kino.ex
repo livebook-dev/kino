@@ -225,6 +225,14 @@ defmodule Kino do
           | module()
         ) :: DynamicSupervisor.on_start_child()
   def start_child(child_spec) do
+    # Starting a process that calls Kino.start_child/1 in its init
+    # would block forever, so we don't allow nesting
+    if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
+      raise "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
+              " because the current process has been started with Kino.start_child/1." <>
+              " Please move the nested start outside and pass the result as an argument to this process"
+    end
+
     %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
     parent = self()
     child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent]}}
