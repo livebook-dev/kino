@@ -32,29 +32,6 @@ defmodule Kino.FrameTest do
     refute_receive {:render, _}, 5
   end
 
-  test "terminates as soon as the parent process terminates" do
-    root = self()
-
-    parent =
-      spawn_link(fn ->
-        widget = Kino.Frame.new()
-        send(root, {:widget, widget})
-
-        receive do
-          :stop -> :ok
-        end
-      end)
-
-    widget =
-      receive do
-        {:widget, widget} -> widget
-      end
-
-    ref = Process.monitor(widget.pid)
-    send(parent, :stop)
-    assert_receive {:DOWN, ^ref, :process, _, _}
-  end
-
   defp connect_self(widget) do
     send(widget.pid, {:connect, self()})
     assert_receive {:connect_reply, %{}}

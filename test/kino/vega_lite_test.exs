@@ -107,29 +107,6 @@ defmodule Kino.VegaLiteTest do
     refute_receive {:push, _}, 5
   end
 
-  test "terminates as soon as the parent process terminates" do
-    root = self()
-
-    parent =
-      spawn_link(fn ->
-        widget = start_widget()
-        send(root, {:widget, widget})
-
-        receive do
-          :stop -> :ok
-        end
-      end)
-
-    widget =
-      receive do
-        {:widget, widget} -> widget
-      end
-
-    ref = Process.monitor(widget.pid)
-    send(parent, :stop)
-    assert_receive {:DOWN, ^ref, :process, _, _}
-  end
-
   defp start_widget() do
     Vl.new()
     |> Vl.mark(:point)

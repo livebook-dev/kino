@@ -24,7 +24,7 @@ defmodule Kino.ControlTest do
       Kino.Control.subscribe(button, :name)
 
       info = %{origin: self()}
-      send(button.attrs.destination, {:event, button.attrs.id, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
 
       assert_receive {:event, :name, ^info}
     end

@@ -42,7 +42,7 @@ defmodule Kino.InputTest do
       Kino.Input.subscribe(input, :name)
 
       info = %{origin: self(), value: "Jake"}
-      send(input.attrs.destination, {:event, input.attrs.id, info})
+      send(input.attrs.destination, {:event, input.attrs.ref, info})
 
       assert_receive {:event, :name, ^info}
     end

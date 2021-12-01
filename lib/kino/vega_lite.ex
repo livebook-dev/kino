@@ -31,7 +31,6 @@ defmodule Kino.VegaLite do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           vl: VegaLite.t(),
           window: non_neg_integer(),
           datasets: %{binary() => list()},
@@ -43,10 +42,11 @@ defmodule Kino.VegaLite do
   """
   @spec new(VegaLite.t()) :: t()
   def new(vl) when is_struct(vl, VegaLite) do
-    parent = self()
-    opts = [vl: vl, parent: parent]
+    opts = [vl: vl]
 
     {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+
+    Kino.bind_process(pid)
 
     %__MODULE__{pid: pid}
   end
@@ -133,11 +133,8 @@ defmodule Kino.VegaLite do
   @impl true
   def init(opts) do
     vl = Keyword.fetch!(opts, :vl)
-    parent = Keyword.fetch!(opts, :parent)
 
-    parent_monitor_ref = Process.monitor(parent)
-
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, vl: vl, datasets: %{}, client_pids: []}}
+    {:ok, %{vl: vl, datasets: %{}, client_pids: []}}
   end
 
   @impl true
@@ -193,10 +190,6 @@ defmodule Kino.VegaLite do
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
     periodically_iter(interval_ms, acc, fun)
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do

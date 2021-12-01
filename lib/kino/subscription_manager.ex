@@ -79,6 +79,11 @@ defmodule Kino.SubscriptionManager do
     {:noreply, state}
   end
 
+  def handle_info({:clear_topic, topic}, state) do
+    {_, state} = pop_in(state.subscribers_by_topic[topic])
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
     subscribers_by_topic =
       state.subscribers_by_topic

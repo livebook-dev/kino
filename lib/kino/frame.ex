@@ -36,7 +36,6 @@ defmodule Kino.Frame do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           client_pids: list(pid()),
           output: Kino.Output.t() | nil
         }
@@ -46,10 +45,9 @@ defmodule Kino.Frame do
   """
   @spec new() :: t()
   def new() do
-    parent = self()
-    opts = [parent: parent]
+    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, []})
 
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+    Kino.bind_process(pid)
 
     %__MODULE__{pid: pid}
   end
@@ -88,12 +86,8 @@ defmodule Kino.Frame do
   end
 
   @impl true
-  def init(opts) do
-    parent = Keyword.fetch!(opts, :parent)
-
-    parent_monitor_ref = Process.monitor(parent)
-
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, client_pids: [], output: nil}}
+  def init(_opts) do
+    {:ok, %{client_pids: [], output: nil}}
   end
 
   @impl true
@@ -126,10 +120,6 @@ defmodule Kino.Frame do
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
     periodically_iter(interval_ms, acc, fun)
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do

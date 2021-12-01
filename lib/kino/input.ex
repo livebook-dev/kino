@@ -23,12 +23,18 @@ defmodule Kino.Input do
     token = Kino.Bridge.generate_token()
     persistent_id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
 
+    ref = make_ref()
+    subscription_manager = Kino.SubscriptionManager.cross_node_name()
+
     attrs =
       Map.merge(attrs, %{
-        ref: make_ref(),
+        ref: ref,
         id: persistent_id,
-        destination: Kino.SubscriptionManager.cross_node_name()
+        destination: subscription_manager
       })
+
+    Kino.Bridge.object_add_pointer(ref)
+    Kino.Bridge.object_add_release_hook(ref, {:send, subscription_manager, {:clear_topic, ref}})
 
     %__MODULE__{attrs: attrs}
   end

@@ -21,7 +21,6 @@ defmodule Kino.ETS do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           tid: :ets.tid()
         }
 
@@ -46,10 +45,11 @@ defmodule Kino.ETS do
         :ok
     end
 
-    parent = self()
-    opts = [tid: tid, parent: parent]
+    opts = [tid: tid]
 
     {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+
+    Kino.bind_process(pid)
 
     %__MODULE__{pid: pid}
   end
@@ -66,11 +66,8 @@ defmodule Kino.ETS do
   @impl true
   def init(opts) do
     tid = Keyword.fetch!(opts, :tid)
-    parent = Keyword.fetch!(opts, :parent)
 
-    parent_monitor_ref = Process.monitor(parent)
-
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, tid: tid}}
+    {:ok, %{tid: tid}}
   end
 
   @impl true
@@ -106,10 +103,6 @@ defmodule Kino.ETS do
     send(pid, {:rows, %{rows: rows, total_rows: total_rows, columns: columns}})
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
   end
 
   defp get_records(tid, rows_spec) do

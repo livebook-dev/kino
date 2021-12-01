@@ -35,11 +35,13 @@ defmodule Kino.Control do
   @type t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
 
   defp new(attrs) do
-    attrs =
-      Map.merge(attrs, %{
-        ref: make_ref(),
-        destination: Kino.SubscriptionManager.cross_node_name()
-      })
+    ref = make_ref()
+    subscription_manager = Kino.SubscriptionManager.cross_node_name()
+
+    attrs = Map.merge(attrs, %{ref: ref, destination: subscription_manager})
+
+    Kino.Bridge.object_add_pointer(ref)
+    Kino.Bridge.object_add_release_hook(ref, {:send, subscription_manager, {:clear_topic, ref}})
 
     %__MODULE__{attrs: attrs}
   end

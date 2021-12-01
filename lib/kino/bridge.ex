@@ -38,6 +38,31 @@ defmodule Kino.Bridge do
     with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}), do: reply
   end
 
+  @doc """
+  Adds the calling process as pointer to the given object.
+  """
+  @spec object_add_pointer(term()) :: :ok | {:error, atom()}
+  def object_add_pointer(object_id) do
+    case io_request({:livebook_object_add_pointer, object_id, self()}) do
+      {:ok, :ok} -> :ok
+      {:error, error} -> {:error, error}
+    end
+  end
+
+  @doc """
+  Adds a hook to be executed on object release.
+  """
+  @spec object_add_release_hook(
+          term(),
+          {:send, pid(), term()} | {:kill, pid()}
+        ) :: :ok | {:error, atom()}
+  def object_add_release_hook(object_id, hook) do
+    case io_request({:livebook_object_add_release_hook, object_id, hook}) do
+      {:ok, :ok} -> :ok
+      {:error, error} -> {:error, error}
+    end
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
