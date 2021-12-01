@@ -233,21 +233,31 @@ defmodule Kino do
 
   @doc false
   def __start_override__({mod, fun, args}, parent) do
-    apply(mod, fun, args)
-    |> case do
-      {:ok, pid} = resp -> {:ok, resp, pid}
-      {:ok, pid, _info} = resp -> {:ok, resp, pid}
-      resp -> {:error, resp}
-    end
-    |> case do
-      {:ok, resp, pid} ->
-        gl = Process.info(parent)[:group_leader]
-        Kino.Bridge.object_add_pointer(gl, pid, parent)
-        Kino.Bridge.object_monitor(gl, pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
-        resp
+    # We switch the group leader, so that the newly started
+    # process gets the same group leder as the caller
+    initial_gl = Process.group_leader()
+    gl = Process.info(parent)[:group_leader]
 
-      {:error, resp} ->
-        resp
+    Process.group_leader(self(), gl)
+
+    try do
+      apply(mod, fun, args)
+      |> case do
+        {:ok, pid} = resp -> {:ok, resp, pid}
+        {:ok, pid, _info} = resp -> {:ok, resp, pid}
+        resp -> {:error, resp}
+      end
+      |> case do
+        {:ok, resp, pid} ->
+          Kino.Bridge.object_add_pointer(pid, parent)
+          Kino.Bridge.object_monitor(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
+          resp
+
+        {:error, resp} ->
+          resp
+      end
+    after
+      Process.group_leader(self(), initial_gl)
     end
   end
 end

@@ -43,9 +43,9 @@ defmodule Kino.Bridge do
 
   In most cases the parent process should be the caller.
   """
-  @spec object_add_pointer(pid(), term(), pid()) :: :ok | {:error, atom()}
-  def object_add_pointer(gl \\ Process.group_leader(), object_id, parent) do
-    case io_request(gl, {:livebook_object_add_pointer, object_id, parent}) do
+  @spec object_add_pointer(term(), pid()) :: :ok | {:error, atom()}
+  def object_add_pointer(object_id, parent) do
+    case io_request({:livebook_object_add_pointer, object_id, parent}) do
       {:ok, :ok} -> :ok
       {:error, error} -> {:error, error}
     end
@@ -55,15 +55,16 @@ defmodule Kino.Bridge do
   Schedules `payload` to be send to `destination` when the object
   is released.
   """
-  @spec object_monitor(pid(), term(), Process.dest(), payload :: term()) :: :ok | {:error, atom()}
-  def object_monitor(gl \\ Process.group_leader(), object_id, destination, payload) do
-    case io_request(gl, {:livebook_object_monitor, object_id, destination, payload}) do
+  @spec object_monitor(term(), Process.dest(), payload :: term()) :: :ok | {:error, atom()}
+  def object_monitor(object_id, destination, payload) do
+    case io_request({:livebook_object_monitor, object_id, destination, payload}) do
       {:ok, :ok} -> :ok
       {:error, error} -> {:error, error}
     end
   end
 
-  defp io_request(gl \\ Process.group_leader(), request) do
+  defp io_request(request) do
+    gl = Process.group_leader()
     ref = Process.monitor(gl)
 
     send(gl, {:io_request, self(), ref, request})
