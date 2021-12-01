@@ -68,6 +68,8 @@ defmodule Kino.Bridge do
 
     result =
       receive do
+        {:io_reply, ^ref, {:error, {:request, _}}} -> {:error, :unsupported}
+        {:io_reply, ^ref, {:error, :request}} -> {:error, :unsupported}
         {:io_reply, ^ref, reply} -> {:ok, reply}
         {:DOWN, ^ref, :process, _object, _reason} -> {:error, :terminated}
       end
