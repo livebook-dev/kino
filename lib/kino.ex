@@ -90,6 +90,25 @@ defmodule Kino do
 
       Kino.Ecto.new(Weather, Repo)
 
+  ### Kino.Frame
+
+  `Kino.Frame` is a placeholder for static outptus that can
+  be dynamically updated.
+
+      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+
+      for i <- 1..100 do
+        Kino.Frame.render(widget, i)
+        Process.sleep(50)
+      end
+
+  Also see `Kino.animate/3`.
+
+  ### User interactions
+
+  `Kino.Input` and `Kino.Controls` provide a set of widgets for
+  entering data and capturing user events.
+
   ### All others
 
   All other data structures are rendered as text using Elixir's
@@ -192,5 +211,60 @@ defmodule Kino do
   @spec nothing() :: nothing()
   def nothing() do
     :"do not show this result in output"
+  end
+
+  @doc """
+  Starts a process under the Kino supervisor.
+
+  The process is automatically terminated when the current process
+  terminates or the current cell reevaluates.
+  """
+  @spec start_child(
+          Supervisor.child_spec()
+          | {module(), term()}
+          | module()
+        ) :: DynamicSupervisor.on_start_child()
+  def start_child(child_spec) do
+    # Starting a process that calls Kino.start_child/1 in its init
+    # would block forever, so we don't allow nesting
+    if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
+      raise ArgumentError,
+            "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
+              " because the current process has been started with Kino.start_child/1." <>
+              " Please move the nested start outside and pass the result as an argument to this process"
+    end
+
+    %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
+    parent = self()
+    gl = Process.group_leader()
+    child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent, gl]}}
+    DynamicSupervisor.start_child(Kino.DynamicSupervisor, child_spec)
+  end
+
+  @doc false
+  def __start_override__({mod, fun, args}, parent, gl) do
+    # We switch the group leader, so that the newly started
+    # process gets the same group leder as the caller
+    initial_gl = Process.group_leader()
+
+    Process.group_leader(self(), gl)
+
+    try do
+      {resp, pid} =
+        case apply(mod, fun, args) do
+          {:ok, pid} = resp -> {resp, pid}
+          {:ok, pid, _info} = resp -> {resp, pid}
+          resp -> {resp, nil}
+        end
+
+      if pid do
+        Kino.Bridge.reference_object(pid, parent)
+        Kino.Bridge.monitor_object(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
+      end
+
+      resp
+    after
+      Process.group_leader(self(), initial_gl)
+    end
   end
 end

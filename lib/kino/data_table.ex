@@ -36,9 +36,11 @@ defmodule Kino.DataTable do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           data: Enum.t(),
-          total_rows: non_neg_integer()
+          total_rows: non_neg_integer(),
+          keys: list(term()),
+          sorting_enabled: boolean(),
+          show_underscored: boolean()
         }
 
   @doc """
@@ -62,20 +64,18 @@ defmodule Kino.DataTable do
   def new(data, opts \\ []) do
     validate_data!(data)
 
-    parent = self()
     keys = opts[:keys]
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
     show_underscored = Keyword.get(opts, :show_underscored, false)
 
     opts = [
       data: data,
-      parent: parent,
       keys: keys,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
     ]
 
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+    {:ok, pid} = Kino.start_child({__MODULE__, opts})
 
     %__MODULE__{pid: pid}
   end
@@ -125,18 +125,14 @@ defmodule Kino.DataTable do
   @impl true
   def init(opts) do
     data = Keyword.fetch!(opts, :data)
-    parent = Keyword.fetch!(opts, :parent)
     keys = Keyword.fetch!(opts, :keys)
     sorting_enabled = Keyword.fetch!(opts, :sorting_enabled)
     show_underscored = Keyword.fetch!(opts, :show_underscored)
-
-    parent_monitor_ref = Process.monitor(parent)
 
     total_rows = Enum.count(data)
 
     {:ok,
      %{
-       parent_monitor_ref: parent_monitor_ref,
        data: data,
        total_rows: total_rows,
        keys: keys,
@@ -184,10 +180,6 @@ defmodule Kino.DataTable do
     send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: columns}})
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
   end
 
   defp get_records(data, rows_spec) do

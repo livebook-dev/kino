@@ -3,7 +3,7 @@ defmodule Kino.InputTest do
 
   describe "select/3" do
     test "raises an error for empty option list" do
-      assert_raise ArgumentError, "expected at least on option, got: []", fn ->
+      assert_raise ArgumentError, "expected at least one option, got: []", fn ->
         Kino.Input.select("Language", [])
       end
     end
@@ -32,6 +32,19 @@ defmodule Kino.InputTest do
       assert_raise ArgumentError, "expected :default to be between :min and :max, got: 20", fn ->
         Kino.Input.range("Length", min: 0, max: 10, default: 20)
       end
+    end
+  end
+
+  describe "subscribe/2" do
+    test "subscribes to input events" do
+      input = Kino.Input.text("Name")
+
+      Kino.Input.subscribe(input, :name)
+
+      info = %{origin: self(), value: "Jake"}
+      send(input.attrs.destination, {:event, input.attrs.ref, info})
+
+      assert_receive {:name, ^info}
     end
   end
 end

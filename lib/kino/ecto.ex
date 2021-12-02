@@ -30,7 +30,6 @@ defmodule Kino.Ecto do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           repo: Ecto.Repo.t(),
           queryable: Ecto.Queryable.t()
         }
@@ -46,10 +45,9 @@ defmodule Kino.Ecto do
             "expected a term implementing the Ecto.Queryable protocol, got: #{inspect(queryable)}"
     end
 
-    parent = self()
-    opts = [repo: repo, queryable: queryable, parent: parent]
+    opts = [repo: repo, queryable: queryable]
 
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
+    {:ok, pid} = Kino.start_child({__MODULE__, opts})
 
     %__MODULE__{pid: pid}
   end
@@ -67,11 +65,8 @@ defmodule Kino.Ecto do
   def init(opts) do
     repo = Keyword.fetch!(opts, :repo)
     queryable = Keyword.fetch!(opts, :queryable)
-    parent = Keyword.fetch!(opts, :parent)
 
-    parent_monitor_ref = Process.monitor(parent)
-
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, repo: repo, queryable: queryable}}
+    {:ok, %{repo: repo, queryable: queryable}}
   end
 
   @impl true
@@ -115,10 +110,6 @@ defmodule Kino.Ecto do
     send(pid, {:rows, %{rows: rows, total_rows: total_rows, columns: columns}})
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
   end
 
   defp get_records(repo, queryable, rows_spec) do

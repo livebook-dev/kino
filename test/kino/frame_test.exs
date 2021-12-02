@@ -1,7 +1,7 @@
 defmodule Kino.FrameTest do
   use ExUnit.Case, async: true
 
-  test "render/2 formats the givne value into output and sends to the client" do
+  test "render/2 formats the given value into output and sends to the client" do
     widget = Kino.Frame.new()
 
     connect_self(widget)
@@ -30,29 +30,6 @@ defmodule Kino.FrameTest do
     assert_receive {:render, %{output: {:text, "\e[34m1\e[0m"}}}
     assert_receive {:render, %{output: {:text, "\e[34m2\e[0m"}}}
     refute_receive {:render, _}, 5
-  end
-
-  test "terminates as soon as the parent process terminates" do
-    root = self()
-
-    parent =
-      spawn_link(fn ->
-        widget = Kino.Frame.new()
-        send(root, {:widget, widget})
-
-        receive do
-          :stop -> :ok
-        end
-      end)
-
-    widget =
-      receive do
-        {:widget, widget} -> widget
-      end
-
-    ref = Process.monitor(widget.pid)
-    send(parent, :stop)
-    assert_receive {:DOWN, ^ref, :process, _, _}
   end
 
   defp connect_self(widget) do

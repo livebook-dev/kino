@@ -5,7 +5,9 @@ defmodule Kino.Application do
 
   def start(_type, _args) do
     children = [
-      {DynamicSupervisor, strategy: :one_for_one, name: Kino.WidgetSupervisor}
+      {DynamicSupervisor, strategy: :one_for_one, name: Kino.DynamicSupervisor},
+      Kino.SubscriptionManager,
+      Kino.Terminator
     ]
 
     opts = [strategy: :one_for_one, name: Kino.Supervisor]

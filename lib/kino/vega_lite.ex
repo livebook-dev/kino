@@ -31,11 +31,10 @@ defmodule Kino.VegaLite do
 
   @typedoc false
   @type state :: %{
-          parent_monitor_ref: reference(),
           vl: VegaLite.t(),
           window: non_neg_integer(),
           datasets: %{binary() => list()},
-          pids: list(pid())
+          client_pids: list(pid())
         }
 
   @doc """
@@ -43,11 +42,8 @@ defmodule Kino.VegaLite do
   """
   @spec new(VegaLite.t()) :: t()
   def new(vl) when is_struct(vl, VegaLite) do
-    parent = self()
-    opts = [vl: vl, parent: parent]
-
-    {:ok, pid} = DynamicSupervisor.start_child(Kino.WidgetSupervisor, {__MODULE__, opts})
-
+    opts = [vl: vl]
+    {:ok, pid} = Kino.start_child({__MODULE__, opts})
     %__MODULE__{pid: pid}
   end
 
@@ -133,16 +129,13 @@ defmodule Kino.VegaLite do
   @impl true
   def init(opts) do
     vl = Keyword.fetch!(opts, :vl)
-    parent = Keyword.fetch!(opts, :parent)
 
-    parent_monitor_ref = Process.monitor(parent)
-
-    {:ok, %{parent_monitor_ref: parent_monitor_ref, vl: vl, datasets: %{}, pids: []}}
+    {:ok, %{vl: vl, datasets: %{}, client_pids: []}}
   end
 
   @impl true
   def handle_cast({:push, dataset, data, window}, state) do
-    for pid <- state.pids do
+    for pid <- state.client_pids do
       send(pid, {:push, %{data: data, dataset: dataset, window: window}})
     end
 
@@ -161,7 +154,7 @@ defmodule Kino.VegaLite do
   end
 
   def handle_cast({:clear, dataset}, state) do
-    for pid <- state.pids do
+    for pid <- state.client_pids do
       send(pid, {:push, %{data: [], dataset: dataset, window: 0}})
     end
 
@@ -187,7 +180,7 @@ defmodule Kino.VegaLite do
       send(pid, {:push, %{data: data, dataset: dataset, window: nil}})
     end
 
-    {:noreply, %{state | pids: [pid | state.pids]}}
+    {:noreply, %{state | client_pids: [pid | state.client_pids]}}
   end
 
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
@@ -195,12 +188,8 @@ defmodule Kino.VegaLite do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %{parent_monitor_ref: ref} = state) do
-    {:stop, :shutdown, state}
-  end
-
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, %{state | pids: List.delete(state.pids, pid)}}
+    {:noreply, %{state | client_pids: List.delete(state.client_pids, pid)}}
   end
 
   defp periodically_iter(interval_ms, acc, fun) do

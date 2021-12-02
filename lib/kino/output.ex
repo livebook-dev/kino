@@ -17,6 +17,7 @@ defmodule Kino.Output do
           | table_dynamic()
           | frame_dynamic()
           | input()
+          | control()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -55,8 +56,7 @@ defmodule Kino.Output do
   Interactive [Vega-Lite](https://vega.github.io/vega-lite) graphic
   with data streaming capabilities.
 
-  There should be a server process responsible for communication
-  with subscribers.
+  This output points to a server process that clients can talk to.
 
   ## Communication protocol
 
@@ -77,8 +77,8 @@ defmodule Kino.Output do
   @typedoc """
   Interactive data table.
 
-  There should be a server process that serves data requests,
-  filtering, sorting and slicing data as necessary.
+  This output points to a server process that serves data requests,
+  handling filtering, sorting and slicing data as necessary.
 
   ## Communication protocol
 
@@ -114,7 +114,7 @@ defmodule Kino.Output do
 
       @type row :: %{
         # An identifier, opaque to the client
-        id: term(),
+        ref: term(),
         # A string value for every column key
         fields: list(%{term() => binary()})
       }
@@ -131,8 +131,7 @@ defmodule Kino.Output do
   @typedoc """
   Animable output.
 
-  There should be a server process responsible for communication
-  with subscribers.
+  This output points to a server process that clients can talk to.
 
   ## Communication protocol
 
@@ -155,79 +154,139 @@ defmodule Kino.Output do
 
   All inputs have the following properties:
 
-    * `:type` - one of the recognisd input types
+    * `:type` - one of the recognised input types
 
-    * `:id` - a unique input identifier, in Livebook must be
-      reevaluation-safe
+    * `:ref` - a unique identifier
+
+    * `:id` - a persistent input identifier, the same on every reevaluation
 
     * `:label` - an arbitrary text used as the input caption
 
     * `:default` - the initial input value
 
+    * `:destination` - the process to send event messages to
+
   On top of that, each input type may have additional attributes.
   """
   @type input :: {:input, attrs :: input_attrs()}
 
+  @type input_ref :: reference()
   @type input_id :: String.t()
 
   @type input_attrs ::
           %{
             type: :text,
+            ref: input_ref(),
             id: input_id(),
             label: String.t(),
-            default: String.t()
+            default: String.t(),
+            destination: Process.dest()
           }
           | %{
               type: :textarea,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
             }
           | %{
               type: :password,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
             }
           | %{
               type: :number,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: number() | nil
+              default: number() | nil,
+              destination: Process.dest()
             }
           | %{
               type: :url,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t() | nil
+              default: String.t() | nil,
+              destination: Process.dest()
             }
           | %{
               type: :select,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: term(),
+              destination: Process.dest(),
               options: list({value :: term(), label :: String.t()})
             }
           | %{
               type: :checkbox,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: boolean()
+              default: boolean(),
+              destination: Process.dest()
             }
           | %{
               type: :range,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
               default: number(),
+              destination: Process.dest(),
               min: number(),
               max: number(),
               step: number()
             }
           | %{
               type: :color,
+              ref: input_ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t()
+              default: String.t(),
+              destination: Process.dest()
+            }
+
+  @typedoc """
+  A control widget.
+
+  All controls have the following properties:
+
+    * `:type` - one of the recognised control types
+
+    * `:ref` - a unique identifier
+
+    * `:destination` - the process to send event messages to
+
+  On top of that, each control type may have additional attributes.
+
+  ## Events
+
+  All control events are sent to `:destination` as `{:event, id, info}`,
+  where info is a map including additional details. In particular, it
+  always includes `:origin`, which is an opaque identifier of the client
+  that triggered the event.
+  """
+  @type control :: {:control, attrs :: control_attrs()}
+
+  @type control_ref :: reference()
+
+  @type control_attrs ::
+          %{
+            type: :keyboard,
+            ref: control_ref(),
+            destination: Process.dest(),
+            events: list(:keyup | :keydown | :status)
+          }
+          | %{
+              type: :button,
+              ref: control_ref(),
+              destination: Process.dest(),
+              label: String.t()
             }
 
   @doc """
@@ -300,6 +359,14 @@ defmodule Kino.Output do
   @spec input(input_attrs()) :: t()
   def input(attrs) when is_map(attrs) do
     {:input, attrs}
+  end
+
+  @doc """
+  See `t:control/0`.
+  """
+  @spec control(control_attrs()) :: t()
+  def control(attrs) when is_map(attrs) do
+    {:control, attrs}
   end
 
   @doc """
