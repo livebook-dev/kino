@@ -5,6 +5,8 @@ defmodule Kino.Bridge do
   # achieved via the group leader. For the implementation of
   # that group leader see Livebook.Evaluator.IOProxy
 
+  @type request_error :: :unsupported | :terminated
+
   @doc """
   Generates a unique, reevaluation-safe token.
 
@@ -22,7 +24,7 @@ defmodule Kino.Bridge do
   @doc """
   Sends the given output as intermediate evaluation result.
   """
-  @spec put_output(Kino.Output.t()) :: :ok | {:error, atom()}
+  @spec put_output(Kino.Output.t()) :: :ok | {:error, request_error()}
   def put_output(output) do
     with {:ok, reply} <- io_request({:livebook_put_output, output}), do: reply
   end
@@ -33,33 +35,54 @@ defmodule Kino.Bridge do
   Note that the input must be known to Livebook, otherwise
   an error is returned.
   """
-  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, atom()}
+  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, request_error()}
   def get_input_value(input_id) do
-    with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}), do: reply
-  end
+    with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}) do
+      case reply do
+        {:ok, value} ->
+          {:ok, value}
 
-  @doc """
-  Adds the given process as a pointer to the given object.
-
-  In most cases the parent process should be the caller.
-  """
-  @spec object_add_pointer(term(), pid()) :: :ok | {:error, atom()}
-  def object_add_pointer(object_id, parent) do
-    case io_request({:livebook_object_add_pointer, object_id, parent}) do
-      {:ok, :ok} -> :ok
-      {:error, error} -> {:error, error}
+        {:error, :not_found} ->
+          raise ArgumentError,
+                "failed to read input value, no input found for id #{inspect(input_id)}"
+      end
     end
   end
 
   @doc """
-  Schedules `payload` to be send to `destination` when the object
-  is released.
+  Associates `object` with `pid`.
+
+  Any monitoring added to `object` will be dispatched once
+  all of its associated pids terminate or the associated
+  cells reevaluate.
+
+  See `monitor_oject/3` to add a monitoring.
   """
-  @spec object_monitor(term(), Process.dest(), payload :: term()) :: :ok | {:error, atom()}
-  def object_monitor(object_id, destination, payload) do
-    case io_request({:livebook_object_monitor, object_id, destination, payload}) do
-      {:ok, :ok} -> :ok
-      {:error, error} -> {:error, error}
+  @spec reference_object(term(), pid()) :: :ok | {:error, request_error()}
+  def reference_object(object, pid) do
+    with {:ok, reply} <- io_request({:livebook_reference_object, object, pid}), do: reply
+  end
+
+  @doc """
+  Monitors an existing object to send `payload` to `target`
+  when all of its associated pids or the associated cells
+  reevaluate.
+
+  It must be called after at least one reference is added
+  via `reference_object/2`.
+  """
+  @spec monitor_object(term(), Process.dest(), payload :: term()) ::
+          :ok | {:error, request_error()}
+  def monitor_object(object, destination, payload) do
+    with {:ok, reply} <- io_request({:livebook_monitor_object, object, destination, payload}) do
+      case reply do
+        :ok ->
+          :ok
+
+        {:error, :bad_object} ->
+          raise ArgumentError,
+                "failed to monitor object #{inspect(object)}, at least one reference must be added via reference_object/2 first"
+      end
     end
   end
 

@@ -22,21 +22,21 @@ end
 
 defimpl Kino.Render, for: Kino.VegaLite do
   def to_livebook(widget) do
-    Kino.Bridge.object_add_pointer(widget.pid, self())
+    Kino.Bridge.reference_object(widget.pid, self())
     Kino.Output.vega_lite_dynamic(widget.pid)
   end
 end
 
 defimpl Kino.Render, for: Kino.ETS do
   def to_livebook(widget) do
-    Kino.Bridge.object_add_pointer(widget.pid, self())
+    Kino.Bridge.reference_object(widget.pid, self())
     Kino.Output.table_dynamic(widget.pid)
   end
 end
 
 defimpl Kino.Render, for: Kino.DataTable do
   def to_livebook(widget) do
-    Kino.Bridge.object_add_pointer(widget.pid, self())
+    Kino.Bridge.reference_object(widget.pid, self())
     Kino.Output.table_dynamic(widget.pid)
   end
 end
@@ -55,28 +55,28 @@ end
 
 defimpl Kino.Render, for: Kino.Ecto do
   def to_livebook(widget) do
-    Kino.Bridge.object_add_pointer(widget.pid, self())
+    Kino.Bridge.reference_object(widget.pid, self())
     Kino.Output.table_dynamic(widget.pid)
   end
 end
 
 defimpl Kino.Render, for: Kino.Frame do
   def to_livebook(widget) do
-    Kino.Bridge.object_add_pointer(widget.pid, self())
+    Kino.Bridge.reference_object(widget.pid, self())
     Kino.Output.frame_dynamic(widget.pid)
   end
 end
 
 defimpl Kino.Render, for: Kino.Input do
   def to_livebook(input) do
-    Kino.Bridge.object_add_pointer(input.attrs.ref, self())
+    Kino.Bridge.reference_object(input.attrs.ref, self())
     Kino.Output.input(input.attrs)
   end
 end
 
 defimpl Kino.Render, for: Kino.Control do
   def to_livebook(control) do
-    Kino.Bridge.object_add_pointer(control.attrs.ref, self())
+    Kino.Bridge.reference_object(control.attrs.ref, self())
     Kino.Output.control(control.attrs)
   end
 end

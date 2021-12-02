@@ -258,8 +258,8 @@ defmodule Kino do
         end
 
       if pid do
-        Kino.Bridge.object_add_pointer(pid, parent)
-        Kino.Bridge.object_monitor(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
+        Kino.Bridge.reference_object(pid, parent)
+        Kino.Bridge.monitor_object(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
       end
 
       resp
