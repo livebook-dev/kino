@@ -228,42 +228,41 @@ defmodule Kino do
     # Starting a process that calls Kino.start_child/1 in its init
     # would block forever, so we don't allow nesting
     if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
-      raise "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
+      raise ArgumentError,
+            "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
               " because the current process has been started with Kino.start_child/1." <>
               " Please move the nested start outside and pass the result as an argument to this process"
     end
 
     %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
     parent = self()
-    child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent]}}
+    gl = Process.group_leader()
+    child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent, gl]}}
     DynamicSupervisor.start_child(Kino.DynamicSupervisor, child_spec)
   end
 
   @doc false
-  def __start_override__({mod, fun, args}, parent) do
+  def __start_override__({mod, fun, args}, parent, gl) do
     # We switch the group leader, so that the newly started
     # process gets the same group leder as the caller
     initial_gl = Process.group_leader()
-    gl = Process.info(parent)[:group_leader]
 
     Process.group_leader(self(), gl)
 
     try do
-      apply(mod, fun, args)
-      |> case do
-        {:ok, pid} = resp -> {:ok, resp, pid}
-        {:ok, pid, _info} = resp -> {:ok, resp, pid}
-        resp -> {:error, resp}
-      end
-      |> case do
-        {:ok, resp, pid} ->
-          Kino.Bridge.object_add_pointer(pid, parent)
-          Kino.Bridge.object_monitor(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
-          resp
+      {resp, pid} =
+        case apply(mod, fun, args) do
+          {:ok, pid} = resp -> {resp, pid}
+          {:ok, pid, _info} = resp -> {resp, pid}
+          resp -> {resp, nil}
+        end
 
-        {:error, resp} ->
-          resp
+      if pid do
+        Kino.Bridge.object_add_pointer(pid, parent)
+        Kino.Bridge.object_monitor(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
       end
+
+      resp
     after
       Process.group_leader(self(), initial_gl)
     end
