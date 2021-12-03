@@ -119,7 +119,7 @@ defmodule Kino.Control do
   is an opaque identifier of the client that triggered the event.
   """
   @spec subscribe(t(), term()) :: :ok
-  def subscribe(control, tag) do
+  def subscribe(%Kino.Control{} = control, tag) do
     Kino.SubscriptionManager.subscribe(control.attrs.ref, self(), tag)
   end
 
@@ -127,7 +127,7 @@ defmodule Kino.Control do
   Unsubscribes the calling process from control events.
   """
   @spec unsubscribe(t()) :: :ok
-  def unsubscribe(control) do
+  def unsubscribe(%Kino.Control{} = control) do
     Kino.SubscriptionManager.unsubscribe(control.attrs.ref, self())
   end
 end

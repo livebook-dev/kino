@@ -238,7 +238,7 @@ defmodule Kino.Input do
       Kino.Input.read(input)
   """
   @spec read(t()) :: term()
-  def read(input) do
+  def read(%Kino.Input{} = input) do
     case Kino.Bridge.get_input_value(input.attrs.id) do
       {:ok, value} ->
         value
@@ -256,7 +256,7 @@ defmodule Kino.Input do
   See `Kino.Control.subscribe/2` for more details.
   """
   @spec subscribe(t(), term()) :: :ok
-  def subscribe(input, tag) do
+  def subscribe(%Kino.Input{} = input, tag) do
     Kino.SubscriptionManager.subscribe(input.attrs.ref, self(), tag)
   end
 
@@ -264,7 +264,7 @@ defmodule Kino.Input do
   Unsubscribes the calling process from input events.
   """
   @spec unsubscribe(t()) :: :ok
-  def unsubscribe(input) do
+  def unsubscribe(%Kino.Input{} = input) do
     Kino.SubscriptionManager.unsubscribe(input.attrs.ref, self())
   end
 end
