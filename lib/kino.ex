@@ -106,8 +106,9 @@ defmodule Kino do
 
   ### User interactions
 
-  `Kino.Input` and `Kino.Controls` provide a set of widgets for
-  entering data and capturing user events.
+  `Kino.Input` and `Kino.Control` provide a set of widgets for
+  entering data and capturing user events. See the respective
+  module documentation for examples.
 
   ### All others
 
