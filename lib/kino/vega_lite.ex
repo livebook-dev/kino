@@ -13,7 +13,7 @@ defmodule Kino.VegaLite do
         |> Vl.encode_field(:x, "x", type: :quantitative)
         |> Vl.encode_field(:y, "y", type: :quantitative)
         |> Kino.VegaLite.new()
-        |> tap(&Kino.render/1)
+        |> Kino.render()
 
       for i <- 1..300 do
         point = %{x: i / 10, y: :math.sin(i / 10)}

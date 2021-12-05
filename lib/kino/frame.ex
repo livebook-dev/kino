@@ -10,7 +10,7 @@ defmodule Kino.Frame do
 
   ## Examples
 
-      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+      widget = Kino.Frame.new() |> Kino.render()
 
       for i <- 1..100 do
         Kino.Frame.render(widget, i)
@@ -19,7 +19,7 @@ defmodule Kino.Frame do
 
   Or with a scheduled task in the background.
 
-      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+      widget = Kino.Frame.new() |> Kino.render()
 
       Kino.Frame.periodically(widget, 50, 0, fn i ->
         Kino.Frame.render(widget, i)

@@ -28,7 +28,7 @@ defmodule Kino do
         |> Vl.data_from_series(...)
         |> ...
         |> Kino.VegaLite.new()
-        |> tap(&Kino.render/1)
+        |> Kino.render()
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
 
@@ -95,7 +95,7 @@ defmodule Kino do
   `Kino.Frame` is a placeholder for static outptus that can
   be dynamically updated.
 
-      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+      widget = Kino.Frame.new() |> Kino.render()
 
       for i <- 1..100 do
         Kino.Frame.render(widget, i)
@@ -116,20 +116,42 @@ defmodule Kino do
   `inspect/2`.
   '''
 
+  import Kernel, except: [inspect: 1]
+
   @type nothing :: :"do not show this result in output"
 
   @doc """
-  Sends the given term as cell output.
+  Renders the given term as cell output.
 
-  This allows any Livebook cell to have multiple evaluation
-  results. You can think of this function as a generalized
-  `IO.puts/2` that works for any type.
+  This effectively allows any Livebook cell to have multiple
+  evaluation results.
   """
-  @spec render(term()) :: nothing()
+  @spec render(term()) :: term()
   def render(term) do
     output = Kino.Render.to_livebook(term)
     Kino.Bridge.put_output(output)
-    nothing()
+    term
+  end
+
+  @doc """
+  Inspects the given term as cell output.
+
+  This works essentially the same as `IO.inspect/2`, except it
+  always produces colored text and respects the configuration
+  set with `configure/1`.
+
+  Opposite to `render/1`, it does not attempt to render the given
+  term as a widget.
+  """
+  @spec inspect(term(), keyword()) :: term()
+  def inspect(term, opts \\ []) do
+    label = if label = opts[:label], do: "#{label}: ", else: ""
+
+    {:text, text} = Kino.Output.inspect(term, opts)
+    output = {:text, label <> text}
+    Kino.Bridge.put_output(output)
+
+    term
   end
 
   @doc """
@@ -204,6 +226,8 @@ defmodule Kino do
     end)
 
     Kino.render(widget)
+
+    nothing()
   end
 
   @doc """
@@ -230,7 +254,7 @@ defmodule Kino do
     # would block forever, so we don't allow nesting
     if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
       raise ArgumentError,
-            "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
+            "could not start #{Kernel.inspect(child_spec)} using Kino.start_child/1," <>
               " because the current process has been started with Kino.start_child/1." <>
               " Please move the nested start outside and pass the result as an argument to this process"
     end
