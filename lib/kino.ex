@@ -28,7 +28,7 @@ defmodule Kino do
         |> Vl.data_from_series(...)
         |> ...
         |> Kino.VegaLite.new()
-        |> tap(&Kino.render/1)
+        |> Kino.render()
 
       Kino.VegaLite.push(widget, %{x: 1, y: 2})
 
@@ -95,7 +95,7 @@ defmodule Kino do
   `Kino.Frame` is a placeholder for static outptus that can
   be dynamically updated.
 
-      widget = Kino.Frame.new() |> tap(&Kino.render/1)
+      widget = Kino.Frame.new() |> Kino.render()
 
       for i <- 1..100 do
         Kino.Frame.render(widget, i)
@@ -119,17 +119,17 @@ defmodule Kino do
   @type nothing :: :"do not show this result in output"
 
   @doc """
-  Sends the given term as cell output.
+  Renders the given term as cell output.
 
-  This allows any Livebook cell to have multiple evaluation
-  results. You can think of this function as a generalized
-  `IO.puts/2` that works for any type.
+  This effectively allows any Livebook cell to have multiple
+  evaluation results. You can think of this function as a
+  generalized `IO.inspect/2` that works for any type.
   """
-  @spec render(term()) :: nothing()
+  @spec render(term()) :: term()
   def render(term) do
     output = Kino.Render.to_livebook(term)
     Kino.Bridge.put_output(output)
-    nothing()
+    term
   end
 
   @doc """
@@ -204,6 +204,8 @@ defmodule Kino do
     end)
 
     Kino.render(widget)
+
+    nothing()
   end
 
   @doc """
