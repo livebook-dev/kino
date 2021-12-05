@@ -116,18 +116,33 @@ defmodule Kino do
   `inspect/2`.
   '''
 
+  import Kernel, except: [inspect: 1]
+
   @type nothing :: :"do not show this result in output"
 
   @doc """
   Renders the given term as cell output.
 
   This effectively allows any Livebook cell to have multiple
-  evaluation results. You can think of this function as a
-  generalized `IO.inspect/2` that works for any type.
+  evaluation results.
   """
   @spec render(term()) :: term()
   def render(term) do
     output = Kino.Render.to_livebook(term)
+    Kino.Bridge.put_output(output)
+    term
+  end
+
+  @doc """
+  Inspects the given term as cell output.
+
+  This works essentially the same as `IO.inspect/2`, except it
+  always produces colored text and respects the configuration
+  set with `configure/1`.
+  """
+  @spec inscpect(term()) :: term()
+  def inscpect(term) do
+    output = Kino.Output.inspect(term)
     Kino.Bridge.put_output(output)
     term
   end
@@ -232,7 +247,7 @@ defmodule Kino do
     # would block forever, so we don't allow nesting
     if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
       raise ArgumentError,
-            "could not start #{inspect(child_spec)} using Kino.start_child/1," <>
+            "could not start #{Kernel.inspect(child_spec)} using Kino.start_child/1," <>
               " because the current process has been started with Kino.start_child/1." <>
               " Please move the nested start outside and pass the result as an argument to this process"
     end
