@@ -139,9 +139,12 @@ defmodule Kino do
   This works essentially the same as `IO.inspect/2`, except it
   always produces colored text and respects the configuration
   set with `configure/1`.
+
+  Opposite to `render/1`, it does not attempt to render the given
+  term as a widget.
   """
-  @spec inscpect(term(), keyword()) :: term()
-  def inscpect(term, opts \\ []) do
+  @spec inspect(term(), keyword()) :: term()
+  def inspect(term, opts \\ []) do
     label = if label = opts[:label], do: "#{label}: ", else: ""
 
     {:text, text} = Kino.Output.inspect(term, opts)
