@@ -140,10 +140,14 @@ defmodule Kino do
   always produces colored text and respects the configuration
   set with `configure/1`.
   """
-  @spec inscpect(term()) :: term()
-  def inscpect(term) do
-    output = Kino.Output.inspect(term)
+  @spec inscpect(term(), keyword()) :: term()
+  def inscpect(term, opts \\ []) do
+    label = if label = opts[:label], do: "#{label}: ", else: ""
+
+    {:text, text} = Kino.Output.inspect(term, opts)
+    output = {:text, label <> text}
     Kino.Bridge.put_output(output)
+
     term
   end
 

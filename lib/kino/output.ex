@@ -3,6 +3,8 @@ defmodule Kino.Output do
   A number of output formats supported by Livebook.
   """
 
+  import Kernel, except: [inspect: 2]
+
   @typedoc """
   Livebook cell output may be one of these values and gets rendered accordingly.
   """
@@ -372,16 +374,19 @@ defmodule Kino.Output do
   @doc """
   Returns `t:text_block/0` with the inspected term.
   """
-  @spec inspect(term()) :: t()
-  def inspect(term) do
-    inspected = inspect(term, inspect_opts())
+  @spec inspect(term(), keyword()) :: t()
+  def inspect(term, opts \\ []) do
+    inspected = Kernel.inspect(term, inspect_opts(opts))
     text_block(inspected)
   end
 
-  defp inspect_opts() do
+  defp inspect_opts(opts) do
     default_opts = [pretty: true, width: 100, syntax_colors: syntax_colors()]
     config_opts = Kino.Config.configuration(:inspect, [])
-    Keyword.merge(default_opts, config_opts)
+
+    default_opts
+    |> Keyword.merge(config_opts)
+    |> Keyword.merge(opts)
   end
 
   defp syntax_colors() do
