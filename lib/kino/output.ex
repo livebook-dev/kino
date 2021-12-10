@@ -290,6 +290,15 @@ defmodule Kino.Output do
               destination: Process.dest(),
               label: String.t()
             }
+          | %{
+              type: :form,
+              ref: control_ref(),
+              destination: Process.dest(),
+              fields: list({field :: atom(), input_attrs()}),
+              submit: String.t() | nil,
+              report_change: boolean(),
+              reset_on_submit: list(field :: atom())
+            }
 
   @doc """
   See `t:text_inline/0`.
