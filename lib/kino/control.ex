@@ -194,10 +194,10 @@ defmodule Kino.Control do
     end
 
     fields =
-      Keyword.map(fields, fn {_field, input} ->
+      Enum.map(fields, fn {field, input} ->
         # Make sure we use this input only in the form and nowhere else
         input = Kino.Input.duplicate(input)
-        input.attrs
+        {field, input.attrs}
       end)
 
     submit = Keyword.get(opts, :submit, nil)
