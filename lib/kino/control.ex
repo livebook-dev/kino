@@ -119,14 +119,14 @@ defmodule Kino.Control do
   Consequently, the form is another control for producing user-specific
   events.
 
-  Either `:submit` or `:report_change` must be specified.
+  Either `:submit` or `:report_changes` must be specified.
 
   ## Options
 
     * `:submit` - specifies the label to use for the submit button
       and enables submit events
 
-    * `:report_change` - whether to send new form value whenever any
+    * `:report_changes` - whether to send new form value whenever any
       of the input changes. Defaults to `false`
 
     * `:reset_on_submit` - a list of fields to revert to their default
@@ -144,12 +144,16 @@ defmodule Kino.Control do
 
   ## Examples
 
-  Create a form of out inputs:
+  Create a form out of inputs:
 
-      form = Kino.Control.form([
-        name: Kino.Input.text("Name"),
-        message: Kino.Input.textarea("Message")
-      ])
+      form =
+        Kino.Control.form(
+          [
+            name: Kino.Input.text("Name"),
+            message: Kino.Input.textarea("Message")
+          ],
+          submit: "Send"
+        )
 
   Subscribe to events:
 
@@ -189,8 +193,8 @@ defmodule Kino.Control do
       end
     end
 
-    unless opts[:submit] || opts[:report_change] do
-      raise ArgumentError, "expected either :submit or :report_change option to be enabled"
+    unless opts[:submit] || opts[:report_changes] do
+      raise ArgumentError, "expected either :submit or :report_changes option to be enabled"
     end
 
     fields =
@@ -201,7 +205,13 @@ defmodule Kino.Control do
       end)
 
     submit = Keyword.get(opts, :submit, nil)
-    report_change = Keyword.get(opts, :report_change, false)
+
+    report_changes =
+      if Keyword.get(opts, :report_changes, false) do
+        Map.new(fields, fn {field, _} -> {field, true} end)
+      else
+        %{}
+      end
 
     reset_on_submit =
       case Keyword.get(opts, :reset_on_submit, []) do
@@ -214,7 +224,7 @@ defmodule Kino.Control do
       type: :form,
       fields: fields,
       submit: submit,
-      report_change: report_change,
+      report_changes: report_changes,
       reset_on_submit: reset_on_submit
     })
   end
