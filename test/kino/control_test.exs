@@ -17,6 +17,43 @@ defmodule Kino.ControlTest do
     end
   end
 
+  describe "form/1" do
+    test "raises an error for empty field list" do
+      assert_raise ArgumentError, "expected at least one field, got: []", fn ->
+        Kino.Control.form([], submit: "Send")
+      end
+    end
+
+    test "raises an error when value other than input is given" do
+      assert_raise ArgumentError,
+                   "expected each field to be a Kino.Input widget, got: %{id: 1} for :name",
+                   fn ->
+                     Kino.Control.form(name: %{id: 1}, submit: "Send")
+                   end
+    end
+
+    test "raises an error when neither submit nor change trigger is enabled" do
+      assert_raise ArgumentError,
+                   "expected either :submit or :report_changes option to be enabled",
+                   fn ->
+                     Kino.Control.form(name: Kino.Input.text("Name"))
+                   end
+    end
+
+    test "supports boolean values for :reset_on_submit" do
+      assert %Kino.Control{attrs: %{reset_on_submit: [:name]}} =
+               Kino.Control.form([name: Kino.Input.text("Name")],
+                 submit: "Send",
+                 reset_on_submit: true
+               )
+    end
+
+    test "supports boolean values for :report_changes" do
+      assert %Kino.Control{attrs: %{report_changes: %{name: true}}} =
+               Kino.Control.form([name: Kino.Input.text("Name")], report_changes: true)
+    end
+  end
+
   describe "subscribe/2" do
     test "subscribes to control events" do
       button = Kino.Control.button("Name")

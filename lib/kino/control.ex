@@ -112,6 +112,124 @@ defmodule Kino.Control do
   end
 
   @doc """
+  Creates a new form.
+
+  A form is composed of regular inputs from the `Kino.Input` module,
+  however in a form input values are not synchronized between users.
+  Consequently, the form is another control for producing user-specific
+  events.
+
+  Either `:submit` or `:report_changes` must be specified.
+
+  ## Options
+
+    * `:submit` - specifies the label to use for the submit button
+      and enables submit events
+
+    * `:report_changes` - whether to send new form value whenever any
+      of the input changes. Defaults to `false`
+
+    * `:reset_on_submit` - a list of fields to revert to their default
+      values once the form is submitted. Use `true` to indicate all
+      fields. Defaults to `[]`
+
+  ## Event info
+
+  In addition to standard properties, all events include additional
+  properties.
+
+    * `:type` - either `:submit` or `:change`
+
+    * `:data` - a map with field values, matching the field list
+
+  ## Examples
+
+  Create a form out of inputs:
+
+      form =
+        Kino.Control.form(
+          [
+            name: Kino.Input.text("Name"),
+            message: Kino.Input.textarea("Message")
+          ],
+          submit: "Send"
+        )
+
+  Subscribe to events:
+
+      Kino.Control.subscribe(form, :chat_form)
+
+  As users submit the form the payload is sent:
+
+      IEx.Helpers.flush()
+      #=> {:chat_form,
+      #=>   %{
+      #=>     data: %{message: "Hola", name: "Amy"},
+      #=>     origin: #PID<10905.5195.0>,
+      #=>     type: :submit
+      #=>   }}
+      #=> {:chat_form,
+      #=>   %{
+      #=>     data: %{message: "Hey!", name: "Jake"},
+      #=>     origin: #PID<10905.5186.0>,
+      #=>     type: :submit
+      #=>   }}
+  """
+  @spec form(list({atom(), Kino.Input.t()}), keyword()) :: t()
+  def form(fields, opts \\ []) when is_list(fields) do
+    if fields == [] do
+      raise ArgumentError, "expected at least one field, got: []"
+    end
+
+    for {field, input} <- fields do
+      unless is_atom(field) do
+        raise ArgumentError,
+              "expected each field key to be an atom, got: #{inspect(field)}"
+      end
+
+      unless is_struct(input, Kino.Input) do
+        raise ArgumentError,
+              "expected each field to be a Kino.Input widget, got: #{inspect(input)} for #{inspect(field)}"
+      end
+    end
+
+    unless opts[:submit] || opts[:report_changes] do
+      raise ArgumentError, "expected either :submit or :report_changes option to be enabled"
+    end
+
+    fields =
+      Enum.map(fields, fn {field, input} ->
+        # Make sure we use this input only in the form and nowhere else
+        input = Kino.Input.duplicate(input)
+        {field, input.attrs}
+      end)
+
+    submit = Keyword.get(opts, :submit, nil)
+
+    report_changes =
+      if Keyword.get(opts, :report_changes, false) do
+        Map.new(fields, fn {field, _} -> {field, true} end)
+      else
+        %{}
+      end
+
+    reset_on_submit =
+      case Keyword.get(opts, :reset_on_submit, []) do
+        true -> Keyword.keys(fields)
+        false -> []
+        fields -> fields
+      end
+
+    new(%{
+      type: :form,
+      fields: fields,
+      submit: submit,
+      report_changes: report_changes,
+      reset_on_submit: reset_on_submit
+    })
+  end
+
+  @doc """
   Subscribes the calling process to control events.
 
   The events are sent as `{tag, info}`, where info is a map with

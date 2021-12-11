@@ -39,6 +39,13 @@ defmodule Kino.Input do
     %__MODULE__{attrs: attrs}
   end
 
+  @doc false
+  def duplicate(input) do
+    input.attrs
+    |> Map.drop([:ref, :id, :destination])
+    |> new()
+  end
+
   @doc """
   Creates a new text input.
 

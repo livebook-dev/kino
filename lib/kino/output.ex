@@ -290,6 +290,17 @@ defmodule Kino.Output do
               destination: Process.dest(),
               label: String.t()
             }
+          | %{
+              type: :form,
+              ref: control_ref(),
+              destination: Process.dest(),
+              fields: list({field :: atom(), input_attrs()}),
+              submit: String.t() | nil,
+              # Currently we always use true, but we can support
+              # other tracking modes in the future
+              report_changes: %{(field :: atom()) => true},
+              reset_on_submit: list(field :: atom())
+            }
 
   @doc """
   See `t:text_inline/0`.
