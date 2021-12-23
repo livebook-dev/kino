@@ -46,4 +46,40 @@ defmodule Kino.JS.LiveTest do
     assert_receive {:connect_reply, data}
     data
   end
+
+  describe "assign/2" do
+    test "stores value under the given key if it doesn't exist" do
+      ctx = Kino.JS.Live.Context.new()
+      assert %{assigns: %{count: 1}} = Kino.JS.Live.assign(ctx, count: 1)
+    end
+
+    test "overrides value if the given key already exists" do
+      ctx = Kino.JS.Live.Context.new() |> Kino.JS.Live.assign(count: 1)
+      assert %{assigns: %{count: 2}} = Kino.JS.Live.assign(ctx, count: 2)
+    end
+  end
+
+  describe "update/3" do
+    test "raises an error when nonexistent key is given" do
+      ctx = Kino.JS.Live.Context.new()
+
+      assert_raise KeyError, ~r/:count/, fn ->
+        Kino.JS.Live.update(ctx, :count, &(&1 + 1))
+      end
+    end
+
+    test "updates value with the given function" do
+      ctx = Kino.JS.Live.Context.new() |> Kino.JS.Live.assign(count: 1)
+      assert %{assigns: %{count: 2}} = Kino.JS.Live.update(ctx, :count, &(&1 + 1))
+    end
+  end
+
+  describe "broadcast_event/3" do
+    test "stores the given event in context" do
+      ctx = Kino.JS.Live.Context.new()
+
+      assert %{events: [{"update", %{count: 1}}]} =
+               Kino.JS.Live.broadcast_event(ctx, "update", %{count: 1})
+    end
+  end
 end

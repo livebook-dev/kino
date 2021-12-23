@@ -129,11 +129,6 @@ defmodule Kino.JS.Live do
 
   defstruct [:module, :pid]
 
-  @doc false
-  use GenServer
-
-  require Logger
-
   alias Kino.JS.Live.Context
 
   @type t :: %__MODULE__{module: module(), pid: pid()}
@@ -200,7 +195,7 @@ defmodule Kino.JS.Live do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Kino.JS.Live
 
-      import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3]
+      import Kino.JS.Live, only: [assign: 2, update: 3, broadcast_event: 3]
 
       @before_compile Kino.JS.Live
     end
@@ -230,13 +225,8 @@ defmodule Kino.JS.Live do
   """
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
-    {:ok, pid} = Kino.start_child({__MODULE__, {module, init_arg}})
+    {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg}})
     %__MODULE__{module: module, pid: pid}
-  end
-
-  @doc false
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
   end
 
   @doc """
@@ -246,7 +236,7 @@ defmodule Kino.JS.Live do
   """
   @spec cast(t(), term()) :: :ok
   def cast(widget, term) do
-    GenServer.cast(widget.pid, term)
+    Kino.JS.LiveServer.cast(widget.pid, term)
   end
 
   @doc """
@@ -255,102 +245,53 @@ defmodule Kino.JS.Live do
 
   See `GenServer.call/3` for more details.
   """
+  @spec call(t(), term(), timeout()) :: term()
   def call(widget, term, timeout \\ 5_000) do
-    GenServer.call(widget.pid, term, timeout)
+    Kino.JS.LiveServer.call(widget.pid, term, timeout)
   end
 
-  @impl true
-  def init({module, init_arg}) do
-    ctx = Context.new()
+  @doc """
+  Stores key-value pairs in the state.
 
-    {:ok, ctx} =
-      if has_function?(module, :init, 2) do
-        module.init(init_arg, ctx)
-      else
-        {:ok, ctx}
-      end
+  ## Examples
 
-    {:ok, %{module: module, client_pids: [], client_monitor_refs: [], ctx: ctx}}
+      assign(ctx, count: 1, timestamp: DateTime.utc_now())
+  """
+  @spec assign(Context.t(), Enumerable.t()) :: Context.t()
+  def assign(%Context{} = ctx, assigns) do
+    assigns =
+      Enum.reduce(assigns, ctx.assigns, fn {key, val}, assigns ->
+        Map.put(assigns, key, val)
+      end)
+
+    %{ctx | assigns: assigns}
   end
 
-  @impl true
-  def handle_cast(msg, state) do
-    {:noreply, ctx} = state.module.handle_cast(msg, state.ctx)
-    {:noreply, apply_ctx(state, ctx)}
+  @doc """
+  Updates an existing key with the given function in the state.
+
+  ## Examples
+
+      assign(ctx, count: 1, timestamp: DateTime.utc_now())
+  """
+  @spec update(Context.t(), term(), (term() -> term())) :: Context.t()
+  def update(%Context{} = ctx, key, fun) when is_function(fun, 1) do
+    val = Map.fetch!(ctx.assigns, key)
+    assign(ctx, [{key, fun.(val)}])
   end
 
-  @impl true
-  def handle_call(msg, from, state) do
-    {:reply, reply, ctx} = state.module.handle_call(msg, from, state.ctx)
-    {:reply, reply, apply_ctx(state, ctx)}
-  end
+  @doc """
+  Sends an event to the client.
 
-  @impl true
-  def handle_info({:connect, pid}, state) do
-    ref = Process.monitor(pid)
+  The event is dispatched to the registered JavaScript callback
+  on all connected clients.
 
-    state = update_in(state.client_pids, &[pid | &1])
-    state = update_in(state.client_monitor_refs, &[ref | &1])
+  ## Examples
 
-    {:ok, data, ctx} = state.module.handle_connect(state.ctx)
-    send(pid, {:connect_reply, data})
-
-    {:noreply, apply_ctx(state, ctx)}
-  end
-
-  def handle_info({:event, event, payload}, state) do
-    {:noreply, ctx} = state.module.handle_event(event, payload, state.ctx)
-    {:noreply, apply_ctx(state, ctx)}
-  end
-
-  def handle_info({:DOWN, ref, :process, pid, _reason} = msg, state) do
-    if ref in state.client_monitor_refs do
-      state = update_in(state.client_pids, &List.delete(&1, pid))
-      state = update_in(state.client_monitor_refs, &List.delete(&1, ref))
-      {:noreply, state}
-    else
-      apply_handle_info(msg, state)
-    end
-  end
-
-  def handle_info(msg, state) do
-    apply_handle_info(msg, state)
-  end
-
-  @impl true
-  def terminate(reason, state) do
-    if has_function?(state.module, :terminate, 2) do
-      state.module.terminate(reason, state.ctx)
-    end
-
-    :ok
-  end
-
-  defp apply_ctx(state, ctx) do
-    for {event, payload} <- Enum.reverse(ctx.events),
-        pid <- state.client_pids,
-        do: send(pid, {:event, event, payload})
-
-    ctx = %{ctx | events: []}
-    %{state | ctx: ctx}
-  end
-
-  defp apply_handle_info(msg, state) do
-    {:noreply, ctx} =
-      if has_function?(state.module, :handle_info, 2) do
-        state.module.handle_info(msg, state.ctx)
-      else
-        Logger.error(
-          "received message in #{inspect(__MODULE__)}, but no handle_info/2 was defined in #{inspect(state.module)}"
-        )
-
-        {:noreply, state.ctx}
-      end
-
-    {:noreply, apply_ctx(state, ctx)}
-  end
-
-  defp has_function?(module, function, arity) do
-    Code.ensure_loaded?(module) and function_exported?(module, function, arity)
+      broadcast_event(ctx, "new_point", %{x: 10, y: 10})
+  """
+  @spec broadcast_event(Context.t(), String.t(), term()) :: Context.t()
+  def broadcast_event(%Context{} = ctx, event, payload \\ nil) when is_binary(event) do
+    update_in(ctx, [Access.key!(:events)], &[{event, payload} | &1])
   end
 end
