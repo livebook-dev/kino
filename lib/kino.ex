@@ -3,12 +3,14 @@ defmodule Kino do
   Client-driven interactive widgets for Livebook.
 
   Kino is the library used by Livebook to render rich and interactive
-  output directly from your Elixir code.
+  outputs directly from your Elixir code.
+
+  ## Built-in widgets
 
   Kino renders any data structure that implements the `Kino.Render`
-  protocol, falling back to the `inspect/2` representation whenever
-  an implementation is not available. The data structures supported
-  by Kino out of the box are:
+  protocol, falling back to the `Kernel.inspect/2` representation
+  whenever an implementation is not available. The data structures
+  supported by Kino out of the box are:
 
   ### VegaLite
 
@@ -113,7 +115,12 @@ defmodule Kino do
   ### All others
 
   All other data structures are rendered as text using Elixir's
-  `inspect/2`.
+  `Kernel.inspect/2`.
+
+  ## Custom widgets
+
+  Kino makes it possible to define custom JavaScript powered
+  widgets, see `Kino.JS` and `Kino.JS.Live` for more details.
   '''
 
   import Kernel, except: [inspect: 1]
