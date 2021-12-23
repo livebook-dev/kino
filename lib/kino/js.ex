@@ -158,26 +158,10 @@ defmodule Kino.JS do
 
       @before_compile Kino.JS
 
-      Kino.JS.__register__(__ENV__, opts[:assets_path])
+      @js_opts opts
+
+      Module.register_attribute(__MODULE__, :inline_assets, accumulate: true)
     end
-  end
-
-  def __register__(env, assets_path) do
-    Module.register_attribute(env.module, :inline_assets, accumulate: true)
-
-    asset_paths = Kino.JS.__paths__(assets_path)
-
-    loaded_assets =
-      for path <- asset_paths do
-        abs_path = Path.join(assets_path, path)
-        Module.put_attribute(env.module, :external_resources, Path.relative_to_cwd(abs_path))
-        content = File.read!(abs_path)
-        {path, content}
-      end
-
-    Module.put_attribute(env.module, :loaded_assets, loaded_assets)
-    Module.put_attribute(env.module, :assets_path, assets_path)
-    Module.put_attribute(env.module, :asset_paths, asset_paths)
   end
 
   @doc ~S'''
@@ -212,10 +196,19 @@ defmodule Kino.JS do
   end
 
   defmacro __before_compile__(env) do
+    opts = Module.get_attribute(env.module, :js_opts)
+    assets_path = opts[:assets_path]
+    asset_paths = __paths__(assets_path)
+
+    loaded_assets =
+      for path <- asset_paths do
+        abs_path = Path.join(assets_path, path)
+        Module.put_attribute(env.module, :external_resources, Path.relative_to_cwd(abs_path))
+        content = File.read!(abs_path)
+        {path, content}
+      end
+
     inline_assets = Module.get_attribute(env.module, :inline_assets)
-    loaded_assets = Module.get_attribute(env.module, :loaded_assets)
-    assets_path = Module.get_attribute(env.module, :assets_path)
-    asset_paths = Module.get_attribute(env.module, :asset_paths)
 
     any_inline_assets? = inline_assets != []
     assets_path_defined? = assets_path != nil

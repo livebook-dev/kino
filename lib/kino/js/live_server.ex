@@ -1,23 +1,27 @@
 defmodule Kino.JS.LiveServer do
   @moduledoc false
 
-  @doc false
   use GenServer
 
   require Logger
 
   alias Kino.JS.Live.Context
 
-  @doc false
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts)
   end
 
-  @doc false
   defdelegate cast(pid, term), to: GenServer
 
-  @doc false
   defdelegate call(pid, term, timeout), to: GenServer
+
+  def broadcast_event(ctx, event, payload) do
+    for pid <- ctx.__private__.client_pids do
+      send(pid, {:event, event, payload})
+    end
+
+    :ok
+  end
 
   @impl true
   def init({module, init_arg}) do
@@ -30,42 +34,42 @@ defmodule Kino.JS.LiveServer do
         {:ok, ctx}
       end
 
-    {:ok, %{module: module, client_pids: [], client_monitor_refs: [], ctx: ctx}}
+    {:ok, %{module: module, client_monitor_refs: [], ctx: ctx}}
   end
 
   @impl true
   def handle_cast(msg, state) do
     {:noreply, ctx} = state.module.handle_cast(msg, state.ctx)
-    {:noreply, apply_ctx(state, ctx)}
+    {:noreply, %{state | ctx: ctx}}
   end
 
   @impl true
   def handle_call(msg, from, state) do
     {:reply, reply, ctx} = state.module.handle_call(msg, from, state.ctx)
-    {:reply, reply, apply_ctx(state, ctx)}
+    {:reply, reply, %{state | ctx: ctx}}
   end
 
   @impl true
   def handle_info({:connect, pid}, state) do
     ref = Process.monitor(pid)
 
-    state = update_in(state.client_pids, &[pid | &1])
+    state = update_in(state.ctx.__private__.client_pids, &[pid | &1])
     state = update_in(state.client_monitor_refs, &[ref | &1])
 
     {:ok, data, ctx} = state.module.handle_connect(state.ctx)
     send(pid, {:connect_reply, data})
 
-    {:noreply, apply_ctx(state, ctx)}
+    {:noreply, %{state | ctx: ctx}}
   end
 
   def handle_info({:event, event, payload}, state) do
     {:noreply, ctx} = state.module.handle_event(event, payload, state.ctx)
-    {:noreply, apply_ctx(state, ctx)}
+    {:noreply, %{state | ctx: ctx}}
   end
 
   def handle_info({:DOWN, ref, :process, pid, _reason} = msg, state) do
     if ref in state.client_monitor_refs do
-      state = update_in(state.client_pids, &List.delete(&1, pid))
+      state = update_in(state.ctx.__private__.client_pids, &List.delete(&1, pid))
       state = update_in(state.client_monitor_refs, &List.delete(&1, ref))
       {:noreply, state}
     else
@@ -86,15 +90,6 @@ defmodule Kino.JS.LiveServer do
     :ok
   end
 
-  defp apply_ctx(state, ctx) do
-    for {event, payload} <- Enum.reverse(ctx.events),
-        pid <- state.client_pids,
-        do: send(pid, {:event, event, payload})
-
-    ctx = %{ctx | events: []}
-    %{state | ctx: ctx}
-  end
-
   defp apply_handle_info(msg, state) do
     {:noreply, ctx} =
       if has_function?(state.module, :handle_info, 2) do
@@ -107,7 +102,7 @@ defmodule Kino.JS.LiveServer do
         {:noreply, state.ctx}
       end
 
-    {:noreply, apply_ctx(state, ctx)}
+    {:noreply, %{state | ctx: ctx}}
   end
 
   defp has_function?(module, function, arity) do

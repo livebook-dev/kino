@@ -73,13 +73,4 @@ defmodule Kino.JS.LiveTest do
       assert %{assigns: %{count: 2}} = Kino.JS.Live.update(ctx, :count, &(&1 + 1))
     end
   end
-
-  describe "broadcast_event/3" do
-    test "stores the given event in context" do
-      ctx = Kino.JS.Live.Context.new()
-
-      assert %{events: [{"update", %{count: 1}}]} =
-               Kino.JS.Live.broadcast_event(ctx, "update", %{count: 1})
-    end
-  end
 end

@@ -292,6 +292,7 @@ defmodule Kino.JS.Live do
   """
   @spec broadcast_event(Context.t(), String.t(), term()) :: Context.t()
   def broadcast_event(%Context{} = ctx, event, payload \\ nil) when is_binary(event) do
-    update_in(ctx, [Access.key!(:events)], &[{event, payload} | &1])
+    Kino.JS.LiveServer.broadcast_event(ctx, event, payload)
+    ctx
   end
 end
