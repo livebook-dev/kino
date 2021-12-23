@@ -158,28 +158,26 @@ defmodule Kino.JS do
 
       @before_compile Kino.JS
 
-      Module.register_attribute(__MODULE__, :inline_assets, accumulate: true)
-
-      assets_path = opts[:assets_path]
-      asset_paths = Kino.JS.__paths__(assets_path)
-
-      loaded_assets =
-        for path <- asset_paths do
-          abs_path = Path.join(assets_path, path)
-          @external_resource Path.relative_to_cwd(abs_path)
-          content = File.read!(abs_path)
-          {path, content}
-        end
-
-      @loaded_assets loaded_assets
-      @assets_path assets_path
-
-      # Force recompilation if new assets are added
-      def __mix_recompile__? do
-        current_paths = Kino.JS.__paths__(unquote(assets_path))
-        :erlang.md5(current_paths) != unquote(:erlang.md5(asset_paths))
-      end
+      Kino.JS.__register__(__ENV__, opts[:assets_path])
     end
+  end
+
+  def __register__(env, assets_path) do
+    Module.register_attribute(env.module, :inline_assets, accumulate: true)
+
+    asset_paths = Kino.JS.__paths__(assets_path)
+
+    loaded_assets =
+      for path <- asset_paths do
+        abs_path = Path.join(assets_path, path)
+        Module.put_attribute(env.module, :external_resources, Path.relative_to_cwd(abs_path))
+        content = File.read!(abs_path)
+        {path, content}
+      end
+
+    Module.put_attribute(env.module, :loaded_assets, loaded_assets)
+    Module.put_attribute(env.module, :assets_path, assets_path)
+    Module.put_attribute(env.module, :asset_paths, asset_paths)
   end
 
   @doc ~S'''
@@ -217,6 +215,7 @@ defmodule Kino.JS do
     inline_assets = Module.get_attribute(env.module, :inline_assets)
     loaded_assets = Module.get_attribute(env.module, :loaded_assets)
     assets_path = Module.get_attribute(env.module, :assets_path)
+    asset_paths = Module.get_attribute(env.module, :asset_paths)
 
     any_inline_assets? = inline_assets != []
     assets_path_defined? = assets_path != nil
@@ -308,6 +307,12 @@ defmodule Kino.JS do
           }
         }
       end
+
+      # Force recompilation if new assets are added
+      def __mix_recompile__? do
+        current_paths = Kino.JS.__paths__(unquote(assets_path))
+        :erlang.md5(current_paths) != unquote(:erlang.md5(asset_paths))
+      end
     end
   end
 
@@ -336,7 +341,7 @@ defmodule Kino.JS do
   defp assets_hash(assets) do
     md5_hash =
       assets
-      |> Enum.sort_by(fn {filename, _content} -> filename end)
+      |> Enum.sort()
       |> Enum.flat_map(&Tuple.to_list/1)
       |> :erlang.md5()
 

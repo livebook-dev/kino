@@ -76,7 +76,7 @@ defmodule Kino.JS.Live do
   the `c:init/2` callback is called with the initial argument.
   In this case we store the given `html` in server state.
 
-  Whenever the widget is rendered on the client, the `c:handle_connect/1`
+  Whenever the widget is rendered on a new client, the `c:handle_connect/1`
   callback is called and it builds the initial data for the
   client. In this case, we always return the stored `html`.
   This initial data is then passed to the JavaScript `init`
@@ -171,7 +171,7 @@ defmodule Kino.JS.Live do
 
   See `c:GenServer.handle_call/3` for more details.
   """
-  @callback handle_call(msg :: term(), {pid(), reference()}, ctx :: Context.t()) ::
+  @callback handle_call(msg :: term(), from :: term(), ctx :: Context.t()) ::
               {:noreply, ctx :: Context.t()} | {:reply, term(), ctx :: Context.t()}
 
   @doc """
@@ -187,7 +187,7 @@ defmodule Kino.JS.Live do
   See `c:GenServer.terminate/2` for more details.
   """
   @callback terminate(reason, ctx :: Context.t()) :: term()
-            when reason: :normal | :shutdown | {:shutdown, term()}
+            when reason: :normal | :shutdown | {:shutdown, term} | term
 
   @optional_callbacks init: 2,
                       handle_event: 3,
@@ -212,7 +212,6 @@ defmodule Kino.JS.Live do
       make sure to include Kino.JS in #{inspect(env.module)} and define the necessary assets.
 
           use Kino.JS
-          use Kino.JS.Live
 
       See Kino.JS for more details.
       """
@@ -276,20 +275,12 @@ defmodule Kino.JS.Live do
 
   @impl true
   def handle_cast(msg, state) do
-    unless has_function?(state.module, :handle_cast, 2) do
-      raise "attempted to cast #{inspect(__MODULE__)}, but no handle_cast/2 was defined #{inspect(state.module)}"
-    end
-
     {:noreply, ctx} = state.module.handle_cast(msg, state.ctx)
     {:noreply, apply_ctx(state, ctx)}
   end
 
   @impl true
   def handle_call(msg, from, state) do
-    unless has_function?(state.module, :handle_call, 3) do
-      raise "attempted to call #{inspect(__MODULE__)}, but no handle_call/3 was defined in #{inspect(state.module)}"
-    end
-
     {:reply, reply, ctx} = state.module.handle_call(msg, from, state.ctx)
     {:reply, reply, apply_ctx(state, ctx)}
   end
@@ -308,10 +299,6 @@ defmodule Kino.JS.Live do
   end
 
   def handle_info({:event, event, payload}, state) do
-    unless has_function?(state.module, :handle_event, 3) do
-      raise "received #{inspect(event)} event in #{inspect(__MODULE__)}, but no handle_event/3 was defined in #{inspect(state.module)}"
-    end
-
     {:noreply, ctx} = state.module.handle_event(event, payload, state.ctx)
     {:noreply, apply_ctx(state, ctx)}
   end
