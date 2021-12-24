@@ -114,7 +114,7 @@ defmodule Kino.VegaLiteTest do
   end
 
   defp connect_self(widget) do
-    send(widget.pid, {:connect, self()})
+    send(widget.pid, {:connect, self(), %{origin: self()}})
     assert_receive {:connect_reply, %{} = data}
     data
   end

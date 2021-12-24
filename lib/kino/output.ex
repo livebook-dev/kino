@@ -66,7 +66,7 @@ defmodule Kino.Output do
 
   A client process should connect to the server process by sending:
 
-      {:connect, pid()}
+      {:connect, pid(), info :: %{origin: term()}}
 
   And expect the following reply:
 
@@ -78,7 +78,7 @@ defmodule Kino.Output do
 
   The client process may keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term()}
+      {:event, event :: String.t(), payload :: term(), info :: %{origin: term()}}
 
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """

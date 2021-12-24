@@ -50,20 +50,26 @@ defmodule Kino.JS.LiveServer do
   end
 
   @impl true
-  def handle_info({:connect, pid}, state) do
+  def handle_info({:connect, pid, %{origin: origin}}, state) do
     ref = Process.monitor(pid)
 
     state = update_in(state.ctx.__private__.client_pids, &[pid | &1])
     state = update_in(state.client_monitor_refs, &[ref | &1])
 
-    {:ok, data, ctx} = state.module.handle_connect(state.ctx)
+    ctx = %{state.ctx | origin: origin}
+    {:ok, data, ctx} = state.module.handle_connect(ctx)
+    ctx = %{ctx | origin: nil}
+
     send(pid, {:connect_reply, data})
 
     {:noreply, %{state | ctx: ctx}}
   end
 
-  def handle_info({:event, event, payload}, state) do
-    {:noreply, ctx} = state.module.handle_event(event, payload, state.ctx)
+  def handle_info({:event, event, payload, %{origin: origin}}, state) do
+    ctx = %{state.ctx | origin: origin}
+    {:noreply, ctx} = state.module.handle_event(event, payload, ctx)
+    ctx = %{ctx | origin: nil}
+
     {:noreply, %{state | ctx: ctx}}
   end
 

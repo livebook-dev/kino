@@ -35,14 +35,14 @@ defmodule Kino.JS.LiveTest do
     test "handle_event/3" do
       widget = LiveCounter.new(0)
       # Simulate a client event
-      send(widget.pid, {:event, "bump", %{"by" => 2}})
+      send(widget.pid, {:event, "bump", %{"by" => 2}, %{origin: self()}})
       count = LiveCounter.read(widget)
       assert count == 2
     end
   end
 
   defp connect_self(widget) do
-    send(widget.pid, {:connect, self()})
+    send(widget.pid, {:connect, self(), %{origin: self()}})
     assert_receive {:connect_reply, data}
     data
   end
