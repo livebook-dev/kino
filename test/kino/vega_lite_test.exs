@@ -3,13 +3,30 @@ defmodule Kino.VegaLiteTest do
 
   alias VegaLite, as: Vl
 
+  test "sends current data after initial connection" do
+    widget = start_widget()
+    Kino.VegaLite.push(widget, %{x: 1, y: 1})
+
+    data = connect_self(widget)
+    assert %{spec: %{}, datasets: [[nil, [%{x: 1, y: 1}]]]} = data
+  end
+
+  test "does not send data outside of the specified window" do
+    widget = start_widget()
+    Kino.VegaLite.push(widget, %{x: 1, y: 1}, window: 1)
+    Kino.VegaLite.push(widget, %{x: 2, y: 2}, window: 1)
+
+    data = connect_self(widget)
+    assert %{spec: %{}, datasets: [[nil, [%{x: 2, y: 2}]]]} = data
+  end
+
   test "push/3 sends data point message to the client" do
     widget = start_widget()
 
     connect_self(widget)
 
     Kino.VegaLite.push(widget, %{x: 1, y: 1})
-    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
+    assert_receive {:event, "push", %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
   end
 
   test "push/3 allows for specifying the dataset" do
@@ -18,7 +35,7 @@ defmodule Kino.VegaLiteTest do
     connect_self(widget)
 
     Kino.VegaLite.push(widget, %{x: 1, y: 1}, dataset: "points")
-    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: "points", window: nil}}
+    assert_receive {:event, "push", %{data: [%{x: 1, y: 1}], dataset: "points", window: nil}}
   end
 
   test "push/3 converts keyword list to map" do
@@ -27,7 +44,7 @@ defmodule Kino.VegaLiteTest do
     connect_self(widget)
 
     Kino.VegaLite.push(widget, x: 1, y: 1)
-    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
+    assert_receive {:event, "push", %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
   end
 
   test "push/3 raises if an invalid data type is given" do
@@ -40,25 +57,6 @@ defmodule Kino.VegaLiteTest do
     end
   end
 
-  test "sends current data after initial connection" do
-    widget = start_widget()
-    Kino.VegaLite.push(widget, %{x: 1, y: 1})
-
-    connect_self(widget)
-
-    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
-  end
-
-  test "does not send data outside of the specified window" do
-    widget = start_widget()
-    Kino.VegaLite.push(widget, %{x: 1, y: 1}, window: 1)
-    Kino.VegaLite.push(widget, %{x: 2, y: 2}, window: 1)
-
-    connect_self(widget)
-
-    assert_receive {:push, %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
-  end
-
   test "push_many/3 sends multiple datapoints" do
     widget = start_widget()
 
@@ -66,7 +64,7 @@ defmodule Kino.VegaLiteTest do
 
     points = [%{x: 1, y: 1}, %{x: 2, y: 2}]
     Kino.VegaLite.push_many(widget, points)
-    assert_receive {:push, %{data: ^points, dataset: nil, window: nil}}
+    assert_receive {:event, "push", %{data: ^points, dataset: nil, window: nil}}
   end
 
   test "push_many/3 raises if an invalid data type is given" do
@@ -85,7 +83,7 @@ defmodule Kino.VegaLiteTest do
     connect_self(widget)
 
     Kino.VegaLite.clear(widget)
-    assert_receive {:push, %{data: [], dataset: nil, window: 0}}
+    assert_receive {:event, "push", %{data: [], dataset: nil, window: 0}}
   end
 
   test "periodically/4 evaluates the given callback in background until stopped" do
@@ -102,9 +100,9 @@ defmodule Kino.VegaLiteTest do
       end
     end)
 
-    assert_receive {:push, %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
-    assert_receive {:push, %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
-    refute_receive {:push, _}, 5
+    assert_receive {:event, "push", %{data: [%{x: 1, y: 1}], dataset: nil, window: nil}}
+    assert_receive {:event, "push", %{data: [%{x: 2, y: 2}], dataset: nil, window: nil}}
+    refute_receive {:event, "push", _}, 5
   end
 
   defp start_widget() do
@@ -116,7 +114,8 @@ defmodule Kino.VegaLiteTest do
   end
 
   defp connect_self(widget) do
-    send(widget.pid, {:connect, self()})
-    assert_receive {:connect_reply, %{} = _vl_spec}
+    send(widget.pid, {:connect, self(), %{origin: self()}})
+    assert_receive {:connect_reply, %{} = data}
+    data
   end
 end

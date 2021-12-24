@@ -14,8 +14,8 @@ defmodule Kino.Output do
           | text_block()
           | markdown()
           | image()
-          | vega_lite_static()
-          | vega_lite_dynamic()
+          | js_static()
+          | js_dynamic()
           | table_dynamic()
           | frame_dynamic()
           | input()
@@ -47,34 +47,65 @@ defmodule Kino.Output do
   @type image :: {:image, content :: binary(), mime_type :: binary()}
 
   @typedoc """
-  [Vega-Lite](https://vega.github.io/vega-lite) graphic.
+  JavaScript powered output with static data.
 
-  `spec` should be a valid Vega-Lite specification, essentially
-  JSON represented with Elixir data structures.
+  When rendered, the specified JS is invoked with the given data
+  and can freely manipulate document tree in the output element.
+
+  See `Kino.JS` for more details.
   """
-  @type vega_lite_static() :: {:vega_lite_static, spec :: map()}
+  @type js_static() :: {:js_static, info :: js_info(), data :: term()}
 
   @typedoc """
-  Interactive [Vega-Lite](https://vega.github.io/vega-lite) graphic
-  with data streaming capabilities.
+  JavaScript powered output with dynamic data and events.
 
-  This output points to a server process that clients can talk to.
+  This output points to a server process that serves data requests
+  and sends custom events.
 
   ## Communication protocol
 
   A client process should connect to the server process by sending:
 
-      {:connect, pid()}
+      {:connect, pid(), info :: %{origin: term()}}
 
   And expect the following reply:
 
-      {:connect_reply, %{spec: map()}}
+      {:connect_reply, initial_data}
 
   The server process may then keep sending one of the following events:
 
-      {:push, %{data: list(), dataset: binary(), window: non_neg_integer()}}
+      {:event, event :: String.t(), payload :: term()}
+
+  The client process may keep sending one of the following events:
+
+      {:event, event :: String.t(), payload :: term(), info :: %{origin: term()}}
+
+  See `Kino.JS` and `Kino.JS.Live` for more details.
   """
-  @type vega_lite_dynamic :: {:vega_lite_dynamic, pid()}
+  @type js_dynamic() :: {:js_dynamic, info :: js_info(), pid()}
+
+  @typedoc """
+  Data describing a custom JS output component.
+
+  ## Assets
+
+  The `:assets` map includes information about the relevant files.
+
+    * `:archive_path` - an absolute path to a `.tar.gz` archive
+      with all the assets
+
+    * `:hash` - a checksum of all assets in the archive
+
+    * `:js_path` - a relative asset path pointing to the JavaScript
+      entrypoint module
+  """
+  @type js_info() :: %{
+          assets: %{
+            archive_path: String.t(),
+            hash: String.t(),
+            js_path: String.t()
+          }
+        }
 
   @typedoc """
   Interactive data table.
@@ -335,19 +366,19 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:vega_lite_static/0`.
+  See `t:js_static/0`.
   """
-  @spec vega_lite_static(vega_lite_spec :: map()) :: t()
-  def vega_lite_static(spec) when is_map(spec) do
-    {:vega_lite_static, spec}
+  @spec js_static(js_info(), term()) :: t()
+  def js_static(info, data) when is_map(info) do
+    {:js_static, info, data}
   end
 
   @doc """
-  See `t:vega_lite_dynamic/0`.
+  See `t:js_dynamic/0`.
   """
-  @spec vega_lite_dynamic(pid()) :: t()
-  def vega_lite_dynamic(pid) when is_pid(pid) do
-    {:vega_lite_dynamic, pid}
+  @spec js_dynamic(js_info(), pid()) :: t()
+  def js_dynamic(info, pid) when is_map(info) and is_pid(pid) do
+    {:js_dynamic, info, pid}
   end
 
   @doc """

@@ -22,29 +22,17 @@ defmodule Kino.VegaLite do
       end
   """
 
-  @doc false
-  use GenServer, restart: :temporary
+  use Kino.JS, assets_path: "lib/assets/vega_lite"
+  use Kino.JS.Live
 
-  defstruct [:pid]
-
-  @type t :: %__MODULE__{pid: pid()}
-
-  @typedoc false
-  @type state :: %{
-          vl: VegaLite.t(),
-          window: non_neg_integer(),
-          datasets: %{binary() => list()},
-          client_pids: list(pid())
-        }
+  @type t :: Kino.JS.Live.t()
 
   @doc """
   Starts a widget process with the given VegaLite definition.
   """
   @spec new(VegaLite.t()) :: t()
   def new(vl) when is_struct(vl, VegaLite) do
-    opts = [vl: vl]
-    {:ok, pid} = Kino.start_child({__MODULE__, opts})
-    %__MODULE__{pid: pid}
+    Kino.JS.Live.new(__MODULE__, vl)
   end
 
   # TODO: remove in v0.3.0
@@ -52,8 +40,14 @@ defmodule Kino.VegaLite do
   def start(vl), do: new(vl)
 
   @doc false
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  @spec static(VegaLite.t()) :: Kino.JS.t()
+  def static(vl) when is_struct(vl, VegaLite) do
+    data = %{
+      spec: VegaLite.to_spec(vl),
+      datasets: []
+    }
+
+    Kino.JS.new(__MODULE__, data)
   end
 
   @doc """
@@ -76,7 +70,7 @@ defmodule Kino.VegaLite do
 
     data_point = Map.new(data_point)
 
-    GenServer.cast(widget.pid, {:push, dataset, [data_point], window})
+    Kino.JS.Live.cast(widget, {:push, dataset, [data_point], window})
   end
 
   @doc """
@@ -91,7 +85,7 @@ defmodule Kino.VegaLite do
 
     data_points = Enum.map(data_points, &Map.new/1)
 
-    GenServer.cast(widget.pid, {:push, dataset, data_points, window})
+    Kino.JS.Live.cast(widget, {:push, dataset, data_points, window})
   end
 
   @doc """
@@ -106,7 +100,7 @@ defmodule Kino.VegaLite do
   @spec clear(t(), keyword()) :: :ok
   def clear(widget, opts \\ []) do
     dataset = opts[:dataset]
-    GenServer.cast(widget.pid, {:clear, dataset})
+    Kino.JS.Live.cast(widget, {:clear, dataset})
   end
 
   @doc """
@@ -123,44 +117,54 @@ defmodule Kino.VegaLite do
   """
   @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
   def periodically(widget, interval_ms, acc, fun) do
-    GenServer.cast(widget.pid, {:periodically, interval_ms, acc, fun})
+    Kino.JS.Live.cast(widget, {:periodically, interval_ms, acc, fun})
   end
 
   @impl true
-  def init(opts) do
-    vl = Keyword.fetch!(opts, :vl)
+  def init(vl, ctx) do
+    {:ok, assign(ctx, vl: vl, datasets: %{})}
+  end
 
-    {:ok, %{vl: vl, datasets: %{}, client_pids: []}}
+  @compile {:no_warn_undefined, {VegaLite, :to_spec, 1}}
+
+  @impl true
+  def handle_connect(ctx) do
+    data = %{
+      spec: VegaLite.to_spec(ctx.assigns.vl),
+      datasets: for({dataset, data} <- ctx.assigns.datasets, do: [dataset, data])
+    }
+
+    {:ok, data, ctx}
   end
 
   @impl true
-  def handle_cast({:push, dataset, data, window}, state) do
-    for pid <- state.client_pids do
-      send(pid, {:push, %{data: data, dataset: dataset, window: window}})
-    end
+  def handle_cast({:push, dataset, data, window}, ctx) do
+    ctx =
+      ctx
+      |> broadcast_event("push", %{data: data, dataset: dataset, window: window})
+      |> update(:datasets, fn datasets ->
+        {current_data, datasets} = Map.pop(datasets, dataset, [])
 
-    state =
-      update_in(state.datasets[dataset], fn current_data ->
-        current_data = current_data || []
+        new_data =
+          if window do
+            Enum.take(current_data ++ data, -window)
+          else
+            current_data ++ data
+          end
 
-        if window do
-          Enum.take(current_data ++ data, -window)
-        else
-          current_data ++ data
-        end
+        Map.put(datasets, dataset, new_data)
       end)
 
-    {:noreply, state}
+    {:noreply, ctx}
   end
 
-  def handle_cast({:clear, dataset}, state) do
-    for pid <- state.client_pids do
-      send(pid, {:push, %{data: [], dataset: dataset, window: 0}})
-    end
+  def handle_cast({:clear, dataset}, ctx) do
+    ctx =
+      ctx
+      |> broadcast_event("push", %{data: [], dataset: dataset, window: 0})
+      |> update(:datasets, &Map.delete(&1, dataset))
 
-    {_, state} = pop_in(state.datasets[dataset])
-
-    {:noreply, state}
+    {:noreply, ctx}
   end
 
   def handle_cast({:periodically, interval_ms, acc, fun}, state) do
@@ -168,28 +172,10 @@ defmodule Kino.VegaLite do
     {:noreply, state}
   end
 
-  @compile {:no_warn_undefined, {VegaLite, :to_spec, 1}}
-
   @impl true
-  def handle_info({:connect, pid}, state) do
-    Process.monitor(pid)
-
-    send(pid, {:connect_reply, %{spec: VegaLite.to_spec(state.vl)}})
-
-    for {dataset, data} <- state.datasets do
-      send(pid, {:push, %{data: data, dataset: dataset, window: nil}})
-    end
-
-    {:noreply, %{state | client_pids: [pid | state.client_pids]}}
-  end
-
-  def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
+  def handle_info({:periodically_iter, interval_ms, acc, fun}, ctx) do
     periodically_iter(interval_ms, acc, fun)
-    {:noreply, state}
-  end
-
-  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, %{state | client_pids: List.delete(state.client_pids, pid)}}
+    {:noreply, ctx}
   end
 
   defp periodically_iter(interval_ms, acc, fun) do

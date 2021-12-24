@@ -20,10 +20,18 @@ end
 
 # Kino widgets
 
-defimpl Kino.Render, for: Kino.VegaLite do
+defimpl Kino.Render, for: Kino.JS do
+  def to_livebook(widget) do
+    info = widget.module.__js_info__()
+    Kino.Output.js_static(info, widget.data)
+  end
+end
+
+defimpl Kino.Render, for: Kino.JS.Live do
   def to_livebook(widget) do
     Kino.Bridge.reference_object(widget.pid, self())
-    Kino.Output.vega_lite_dynamic(widget.pid)
+    info = widget.module.__js_info__()
+    Kino.Output.js_dynamic(info, widget.pid)
   end
 end
 
@@ -112,7 +120,6 @@ end
 
 defimpl Kino.Render, for: VegaLite do
   def to_livebook(vl) do
-    spec = VegaLite.to_spec(vl)
-    Kino.Output.vega_lite_static(spec)
+    vl |> Kino.VegaLite.static() |> Kino.Render.to_livebook()
   end
 end
