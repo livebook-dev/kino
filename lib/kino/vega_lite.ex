@@ -22,7 +22,7 @@ defmodule Kino.VegaLite do
       end
   """
 
-  use Kino.JS, assets_path: Path.expand("assets/vega_lite", __DIR__)
+  use Kino.JS, assets_path: "lib/assets/vega_lite"
   use Kino.JS.Live
 
   @type t :: Kino.JS.Live.t()

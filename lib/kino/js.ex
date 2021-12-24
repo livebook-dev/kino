@@ -58,7 +58,7 @@ defmodule Kino.JS do
   highlighting and other editor features. To do that, we just need
   to specify where the corresponding directory is located:
 
-      use Kino.JS, assets_path: Path.expand("assets/html", __DIR__)
+      use Kino.JS, assets_path: "lib/assets/html"
 
   ### URLs
 
@@ -244,7 +244,7 @@ defmodule Kino.JS do
 
           Make sure to either explicitly specify assets directory:
 
-              use Kino.JS, assets_path: Path.expand("path/to/assets", __DIR__)
+              use Kino.JS, assets_path: "lib/assets/my_widget"
 
           Or define assets inline:
 
