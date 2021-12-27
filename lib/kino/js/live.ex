@@ -195,7 +195,7 @@ defmodule Kino.JS.Live do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Kino.JS.Live
 
-      import Kino.JS.Live, only: [assign: 2, update: 3, broadcast_event: 3]
+      import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3]
 
       @before_compile Kino.JS.Live
     end
@@ -257,51 +257,5 @@ defmodule Kino.JS.Live do
   @spec call(t(), term(), timeout()) :: term()
   def call(widget, term, timeout \\ 5_000) do
     Kino.JS.LiveServer.call(widget.pid, term, timeout)
-  end
-
-  @doc """
-  Stores key-value pairs in the state.
-
-  ## Examples
-
-      assign(ctx, count: 1, timestamp: DateTime.utc_now())
-  """
-  @spec assign(Context.t(), Enumerable.t()) :: Context.t()
-  def assign(%Context{} = ctx, assigns) do
-    assigns =
-      Enum.reduce(assigns, ctx.assigns, fn {key, val}, assigns ->
-        Map.put(assigns, key, val)
-      end)
-
-    %{ctx | assigns: assigns}
-  end
-
-  @doc """
-  Updates an existing key with the given function in the state.
-
-  ## Examples
-
-      assign(ctx, count: 1, timestamp: DateTime.utc_now())
-  """
-  @spec update(Context.t(), term(), (term() -> term())) :: Context.t()
-  def update(%Context{} = ctx, key, fun) when is_function(fun, 1) do
-    val = Map.fetch!(ctx.assigns, key)
-    assign(ctx, [{key, fun.(val)}])
-  end
-
-  @doc """
-  Sends an event to the client.
-
-  The event is dispatched to the registered JavaScript callback
-  on all connected clients.
-
-  ## Examples
-
-      broadcast_event(ctx, "new_point", %{x: 10, y: 10})
-  """
-  @spec broadcast_event(Context.t(), String.t(), term()) :: Context.t()
-  def broadcast_event(%Context{} = ctx, event, payload \\ nil) when is_binary(event) do
-    Kino.JS.LiveServer.broadcast_event(ctx, event, payload)
-    ctx
   end
 end
