@@ -148,7 +148,7 @@ defmodule Kino.JS do
   interaction, see `Kino.JS.Live` as a next step in our discussion.
   '''
 
-  defstruct [:module, :data]
+  defstruct [:module, :data, :export]
 
   @type t :: %__MODULE__{module: module(), data: term()}
 
@@ -291,13 +291,11 @@ defmodule Kino.JS do
     {archive_path, hash} = package_assets!(dir, assets)
 
     quote do
-      def __js_info__() do
+      def __assets_info__() do
         %{
-          assets: %{
-            archive_path: unquote(archive_path),
-            js_path: "main.js",
-            hash: unquote(hash)
-          }
+          archive_path: unquote(archive_path),
+          js_path: "main.js",
+          hash: unquote(hash)
         }
       end
 
@@ -352,9 +350,63 @@ defmodule Kino.JS do
 
   The given `data` is passed directly to the JavaScript side during
   initialization.
+
+  ## Options
+
+    * `:export_info_string` - used as the info string for the Markdown
+      code block where output data is persisted
+
+    * `:export_key` - in case the data is a map and only a specific part
+      should be exported
+
+  ## Export
+
+  The output can optionally be exported in notebook source by specifying
+  `:export_info_string`. For example:
+
+      data = "graph TD;A-->B;"
+      Kino.JS.new(__MODULE__, data, export_info_string: "mermaid")
+
+  Would be rendered as the following Live Markdown:
+
+  ````markdown
+  ```mermaid
+  graph TD;A-->B;
+  ```
+  ````
+
+  Non-binary data is automatically serialized to JSON.
   """
-  @spec new(module(), term()) :: t()
-  def new(module, data) do
-    %__MODULE__{module: module, data: data}
+  @spec new(module(), term(), keyword()) :: t()
+  def new(module, data, opts \\ []) do
+    export =
+      if info_string = opts[:export_info_string] do
+        export_key = opts[:export_key]
+
+        if export_key do
+          unless is_map(data) do
+            raise ArgumentError,
+                  "expected data to be a map, because :export_key is specified, got: #{inspect(data)}"
+          end
+
+          unless is_map_key(data, export_key) do
+            raise ArgumentError,
+                  "got :export_key of #{inspect(export_key)}, but no such key found in data: #{inspect(data)}"
+          end
+        end
+
+        %{info_string: info_string, key: export_key}
+      end
+
+    %__MODULE__{module: module, data: data, export: export}
+  end
+
+  @doc false
+  @spec js_info(t()) :: Kino.Output.js_info()
+  def js_info(%__MODULE__{} = widget) do
+    %{
+      assets: widget.module.__assets_info__(),
+      export: widget.export
+    }
   end
 end
