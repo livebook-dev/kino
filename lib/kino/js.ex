@@ -382,6 +382,19 @@ defmodule Kino.JS do
     export =
       if info_string = opts[:export_info_string] do
         export_key = opts[:export_key]
+
+        if export_key do
+          unless is_map(data) do
+            raise ArgumentError,
+                  "expected data to be a map, because :export_key is specified, got: #{inspect(data)}"
+          end
+
+          unless is_map_key(data, export_key) do
+            raise ArgumentError,
+                  "got :export_key of #{inspect(export_key)}, but no such key found in data: #{inspect(data)}"
+          end
+        end
+
         %{info_string: info_string, key: export_key}
       end
 
