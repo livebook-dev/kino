@@ -98,13 +98,30 @@ defmodule Kino.Output do
 
     * `:js_path` - a relative asset path pointing to the JavaScript
       entrypoint module
+
+  ## Export
+
+  The `:export` map describes how the output should be persisted.
+  The output data is put in a Markdown fenced code block.
+
+    * `:info_string` - used as the info string for the Markdown
+      code block
+
+    * `:key` - in case the data is a map and only a specific part
+      should be exported
   """
   @type js_info() :: %{
           assets: %{
             archive_path: String.t(),
             hash: String.t(),
             js_path: String.t()
-          }
+          },
+          export:
+            nil
+            | %{
+                info_string: String.t(),
+                key: nil | term()
+              }
         }
 
   @typedoc """

@@ -202,7 +202,7 @@ defmodule Kino.JS.Live do
   end
 
   def __before_compile__(env) do
-    unless Module.defines?(env.module, {:__js_info__, 0}) do
+    unless Module.defines?(env.module, {:__assets_info__, 0}) do
       message = """
       make sure to include Kino.JS in #{inspect(env.module)} and define the necessary assets.
 
@@ -227,6 +227,15 @@ defmodule Kino.JS.Live do
   def new(module, init_arg) do
     {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg}})
     %__MODULE__{module: module, pid: pid}
+  end
+
+  @doc false
+  @spec js_info(t()) :: Kino.Output.js_info()
+  def js_info(%__MODULE__{} = widget) do
+    %{
+      assets: widget.module.__assets_info__(),
+      export: nil
+    }
   end
 
   @doc """

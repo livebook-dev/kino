@@ -22,7 +22,7 @@ end
 
 defimpl Kino.Render, for: Kino.JS do
   def to_livebook(widget) do
-    info = widget.module.__js_info__()
+    info = Kino.JS.js_info(widget)
     Kino.Output.js_static(info, widget.data)
   end
 end
@@ -30,7 +30,7 @@ end
 defimpl Kino.Render, for: Kino.JS.Live do
   def to_livebook(widget) do
     Kino.Bridge.reference_object(widget.pid, self())
-    info = widget.module.__js_info__()
+    info = Kino.JS.Live.js_info(widget)
     Kino.Output.js_dynamic(info, widget.pid)
   end
 end

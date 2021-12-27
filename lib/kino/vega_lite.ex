@@ -47,7 +47,7 @@ defmodule Kino.VegaLite do
       datasets: []
     }
 
-    Kino.JS.new(__MODULE__, data)
+    Kino.JS.new(__MODULE__, data, export_info_string: "vega-lite", export_key: :spec)
   end
 
   @doc """
