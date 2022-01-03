@@ -24,278 +24,265 @@ defmodule Kino.DataTableTest do
     end
   end
 
-  @people_data [
+  @people_entries [
     %{id: 3, name: "Amy Santiago"},
     %{id: 1, name: "Jake Peralta"},
     %{id: 2, name: "Terry Jeffords"}
   ]
 
-  describe "connecting" do
-    test "connect reply contains empty columns definition if the :keys option is not given" do
-      widget = Kino.DataTable.new(@people_data)
+  test "sorting is enabled by default when a list is given" do
+    widget = Kino.DataTable.new([])
+    data = connect_self(widget)
 
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply, %{columns: [], features: _features}}
-    end
-
-    test "connect reply contains columns definition if the :keys option is given" do
-      widget = Kino.DataTable.new(@people_data, keys: [:id, :name])
-
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply,
-                      %{
-                        columns: [%{key: :id, label: ":id"}, %{key: :name, label: ":name"}],
-                        features: _features
-                      }}
-    end
-
-    test "sorting is enabled by default when a list is given" do
-      widget = Kino.DataTable.new([])
-
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply, %{features: [:pagination, :sorting]}}
-    end
-
-    test "sorting is disabled by default when non-list is given" do
-      widget = Kino.DataTable.new(MapSet.new())
-
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply, %{features: [:pagination]}}
-    end
-
-    test "sorting is enabled when set explicitly with :enable_sorting" do
-      widget = Kino.DataTable.new(MapSet.new(), sorting_enabled: true)
-
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply, %{features: [:pagination, :sorting]}}
-    end
+    assert %{features: [:pagination, :sorting]} = data
   end
 
-  @default_rows_spec %{offset: 0, limit: 10, order_by: nil, order: :asc}
+  test "sorting is disabled by default when non-list is given" do
+    widget = Kino.DataTable.new(MapSet.new())
+    data = connect_self(widget)
 
-  describe "querying rows" do
-    test "columns preserve attributes order when records are compatible keyword lists" do
-      data = [
-        [b: 1, a: 1],
-        [b: 2, a: 2]
-      ]
+    assert %{features: [:pagination]} = data
+  end
 
-      widget = Kino.DataTable.new(data)
-      connect_self(widget)
+  test "sorting is enabled when set explicitly with :enable_sorting" do
+    widget = Kino.DataTable.new(MapSet.new(), sorting_enabled: true)
+    data = connect_self(widget)
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+    assert %{features: [:pagination, :sorting]} = data
+  end
 
-      assert_receive {:rows,
-                      %{
-                        columns: [%{key: :b, label: ":b"}, %{key: :a, label: ":a"}]
-                      }}
-    end
+  test "initial data respects current query parameters" do
+    widget = Kino.DataTable.new(@people_entries)
+    data = connect_self(widget)
 
-    test "columns include all attributes when records with mixed attributes are given" do
-      data = [
-        %{b: 1, a: 1},
-        %{b: 2, c: 2}
-      ]
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":id"},
+                 %{key: "1", label: ":name"}
+               ],
+               rows: [
+                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
+                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
+                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
+               ],
+               order: :asc,
+               order_by: nil
+             }
+           } = data
 
-      widget = Kino.DataTable.new(data)
-      connect_self(widget)
+    send(
+      widget.pid,
+      {:event, "order_by", %{"key" => "0", "order" => "desc"}, %{origin: self()}}
+    )
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+    data = connect_self(widget)
 
-      assert_receive {:rows,
-                      %{
-                        columns: [
-                          %{key: :a, label: ":a"},
-                          %{key: :b, label: ":b"},
-                          %{key: :c, label: ":c"}
-                        ]
-                      }}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":id"},
+                 %{key: "1", label: ":name"}
+               ],
+               rows: [
+                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
+                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}},
+                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}}
+               ],
+               order: :desc,
+               order_by: "0"
+             }
+           } = data
+  end
 
-    defmodule User do
-      defstruct [:__meta__, :id, :name]
-    end
+  test "columns preserve attributes order when records are compatible keyword lists" do
+    entries = [
+      [b: 1, a: 1],
+      [b: 2, a: 2]
+    ]
 
-    test "columns don't include underscored attributes by default" do
-      data = [
-        %User{id: 1, name: "Sherlock Holmes"},
-        %User{id: 2, name: "John Watson"}
-      ]
+    widget = Kino.DataTable.new(entries)
+    data = connect_self(widget)
 
-      widget = Kino.DataTable.new(data)
-      connect_self(widget)
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: ":b"}, %{key: "1", label: ":a"}]
+             }
+           } = data
+  end
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+  test "columns include all attributes when records with mixed attributes are given" do
+    entries = [
+      %{b: 1, a: 1},
+      %{b: 2, c: 2}
+    ]
 
-      assert_receive {:rows,
-                      %{
-                        columns: [
-                          %{key: :id, label: ":id"},
-                          %{key: :name, label: ":name"}
-                        ]
-                      }}
-    end
+    widget = Kino.DataTable.new(entries)
+    data = connect_self(widget)
 
-    test "columns include underscored attributes if the :show_underscored option is set" do
-      data = [
-        %User{id: 1, name: "Sherlock Holmes"},
-        %User{id: 2, name: "John Watson"}
-      ]
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":a"},
+                 %{key: "1", label: ":b"},
+                 %{key: "2", label: ":c"}
+               ]
+             }
+           } = data
+  end
 
-      widget = Kino.DataTable.new(data, show_underscored: true)
-      connect_self(widget)
+  defmodule User do
+    defstruct [:__meta__, :id, :name]
+  end
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+  test "columns don't include underscored attributes by default" do
+    entries = [
+      %User{id: 1, name: "Sherlock Holmes"},
+      %User{id: 2, name: "John Watson"}
+    ]
 
-      assert_receive {:rows,
-                      %{
-                        columns: [
-                          %{key: :__meta__, label: ":__meta__"},
-                          %{key: :__struct__, label: ":__struct__"},
-                          %{key: :id, label: ":id"},
-                          %{key: :name, label: ":name"}
-                        ]
-                      }}
-    end
+    widget = Kino.DataTable.new(entries)
+    data = connect_self(widget)
 
-    test "columns accommodate for the longest record when records are tuples of mixed length" do
-      data = [
-        {1, "Sherlock Holmes", 100},
-        {2, "John Watson", 150, :doctor},
-        {3}
-      ]
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":id"},
+                 %{key: "1", label: ":name"}
+               ]
+             }
+           } = data
+  end
 
-      widget = Kino.DataTable.new(data)
-      connect_self(widget)
+  test "columns include underscored attributes if the :show_underscored option is set" do
+    entries = [
+      %User{id: 1, name: "Sherlock Holmes"},
+      %User{id: 2, name: "John Watson"}
+    ]
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+    widget = Kino.DataTable.new(entries, show_underscored: true)
+    data = connect_self(widget)
 
-      assert_receive {:rows,
-                      %{
-                        columns: [
-                          %{key: 0, label: "0"},
-                          %{key: 1, label: "1"},
-                          %{key: 2, label: "2"},
-                          %{key: 3, label: "3"}
-                        ]
-                      }}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":__meta__"},
+                 %{key: "1", label: ":__struct__"},
+                 %{key: "2", label: ":id"},
+                 %{key: "3", label: ":name"}
+               ]
+             }
+           } = data
+  end
 
-    test "columns are reused if the :keys option is given" do
-      widget = Kino.DataTable.new(@people_data, keys: [:name])
-      connect_self(widget)
+  test "columns accommodate for the longest record when records are tuples of mixed length" do
+    entries = [
+      {1, "Sherlock Holmes", 100},
+      {2, "John Watson", 150, :doctor},
+      {3}
+    ]
 
-      send(widget.pid, {:get_rows, self(), @default_rows_spec})
+    widget = Kino.DataTable.new(entries)
+    data = connect_self(widget)
 
-      assert_receive {:rows, %{columns: :initial}}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: "0"},
+                 %{key: "1", label: "1"},
+                 %{key: "2", label: "2"},
+                 %{key: "3", label: "3"}
+               ]
+             }
+           } = data
+  end
 
-    test "preserves data order by default" do
-      widget = Kino.DataTable.new(@people_data)
-      connect_self(widget)
+  test "sends only relevant fields if user-specified keys are given" do
+    widget = Kino.DataTable.new(@people_entries, keys: [:id])
+    data = connect_self(widget)
 
-      spec = %{
-        offset: 0,
-        limit: 10,
-        order_by: nil,
-        order: :asc
-      }
+    assert data.content.rows == [
+             %{fields: %{"0" => "3"}},
+             %{fields: %{"0" => "1"}},
+             %{fields: %{"0" => "2"}}
+           ]
+  end
 
-      send(widget.pid, {:get_rows, self(), spec})
+  test "preserves data order by default" do
+    widget = Kino.DataTable.new(@people_entries)
+    data = connect_self(widget)
 
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{id: "3", name: ~s/"Amy Santiago"/}},
-                          %{id: _, fields: %{id: "1", name: ~s/"Jake Peralta"/}},
-                          %{id: _, fields: %{id: "2", name: ~s/"Terry Jeffords"/}}
-                        ],
-                        total_rows: 3,
-                        columns: _columns
-                      }}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":id"},
+                 %{key: "1", label: ":name"}
+               ],
+               rows: [
+                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
+                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
+                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
+               ],
+               order: :asc,
+               order_by: nil,
+               page: 1,
+               max_page: 1
+             }
+           } = data
+  end
 
-    test "supports sorting by other columns" do
-      widget = Kino.DataTable.new(@people_data)
-      connect_self(widget)
+  test "supports sorting by other columns" do
+    widget = Kino.DataTable.new(@people_entries)
+    connect_self(widget)
 
-      spec = %{
-        offset: 0,
-        limit: 10,
-        order_by: :name,
-        order: :desc
-      }
+    send(
+      widget.pid,
+      {:event, "order_by", %{"key" => "1", "order" => "desc"}, %{origin: self()}}
+    )
 
-      send(widget.pid, {:get_rows, self(), spec})
+    assert {:event, "update_content",
+            %{
+              columns: [
+                %{key: "0", label: ":id"},
+                %{key: "1", label: ":name"}
+              ],
+              rows: [
+                %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}},
+                %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
+                %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}}
+              ],
+              order: :desc,
+              order_by: "0"
+            }}
+  end
 
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{id: "2", name: ~s/"Terry Jeffords"/}},
-                          %{id: _, fields: %{id: "1", name: ~s/"Jake Peralta"/}},
-                          %{id: _, fields: %{id: "3", name: ~s/"Amy Santiago"/}}
-                        ],
-                        total_rows: 3,
-                        columns: _columns
-                      }}
-    end
+  test "supports pagination" do
+    entries = for n <- 1..25, do: %{n: n}
 
-    test "supports offset and limit" do
-      widget = Kino.DataTable.new(@people_data)
-      connect_self(widget)
+    widget = Kino.DataTable.new(entries)
+    data = connect_self(widget)
 
-      spec = %{
-        offset: 1,
-        limit: 1,
-        order_by: :id,
-        order: :asc
-      }
+    assert %{
+             content: %{
+               page: 1,
+               max_page: 3,
+               rows: [%{fields: %{"0" => "1"}} | _]
+             }
+           } = data
 
-      send(widget.pid, {:get_rows, self(), spec})
+    send(widget.pid, {:event, "show_page", %{"page" => 2}, %{origin: self()}})
 
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{id: "2", name: ~s/"Terry Jeffords"/}}
-                        ],
-                        total_rows: 3,
-                        columns: _columns
-                      }}
-    end
-
-    test "sends only relevant fields if user-specified keys are given" do
-      widget = Kino.DataTable.new(@people_data, keys: [:id])
-      connect_self(widget)
-
-      spec = %{
-        offset: 0,
-        limit: 10,
-        order_by: nil,
-        order: :asc
-      }
-
-      send(widget.pid, {:get_rows, self(), spec})
-
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{id: "3"}},
-                          %{id: _, fields: %{id: "1"}},
-                          %{id: _, fields: %{id: "2"}}
-                        ],
-                        total_rows: 3,
-                        columns: _columns
-                      }}
-    end
+    assert_receive {:event, "update_content",
+                    %{
+                      page: 2,
+                      max_page: 3,
+                      rows: [%{fields: %{"0" => "11"}} | _]
+                    }}
   end
 
   defp connect_self(widget) do
-    send(widget.pid, {:connect, self()})
-    assert_receive {:connect_reply, %{}}
+    send(widget.pid, {:connect, self(), %{origin: self()}})
+    assert_receive {:connect_reply, %{} = data}
+    data
   end
 end

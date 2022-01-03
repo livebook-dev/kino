@@ -25,23 +25,11 @@ defmodule Kino.DataTable do
       )
   """
 
-  @doc false
-  use GenServer, restart: :temporary
+  @behaviour Kino.Table
 
-  alias Kino.Utils.Table
+  alias Kino.Utils
 
-  defstruct [:pid]
-
-  @type t :: %__MODULE__{pid: pid()}
-
-  @typedoc false
-  @type state :: %{
-          data: Enum.t(),
-          total_rows: non_neg_integer(),
-          keys: list(term()),
-          sorting_enabled: boolean(),
-          show_underscored: boolean()
-        }
+  @type t :: Kino.Table.t()
 
   @doc """
   Starts a widget process with enumerable tabular data.
@@ -68,16 +56,14 @@ defmodule Kino.DataTable do
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
     show_underscored = Keyword.get(opts, :show_underscored, false)
 
-    opts = [
+    opts = %{
       data: data,
       keys: keys,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
-    ]
+    }
 
-    {:ok, pid} = Kino.start_child({__MODULE__, opts})
-
-    %__MODULE__{pid: pid}
+    Kino.Table.new(__MODULE__, opts)
   end
 
   # TODO: remove in v0.3.0
@@ -117,75 +103,56 @@ defmodule Kino.DataTable do
     end
   end
 
-  @doc false
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
-  end
-
   @impl true
   def init(opts) do
-    data = Keyword.fetch!(opts, :data)
-    keys = Keyword.fetch!(opts, :keys)
-    sorting_enabled = Keyword.fetch!(opts, :sorting_enabled)
-    show_underscored = Keyword.fetch!(opts, :show_underscored)
+    %{
+      data: data,
+      keys: keys,
+      sorting_enabled: sorting_enabled,
+      show_underscored: show_underscored
+    } = opts
 
+    features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
+    info = %{name: "Data", features: features}
     total_rows = Enum.count(data)
 
-    {:ok,
+    {:ok, info,
      %{
        data: data,
        total_rows: total_rows,
        keys: keys,
-       sorting_enabled: sorting_enabled,
        show_underscored: show_underscored
      }}
   end
 
   @impl true
-  def handle_info({:connect, pid}, state) do
-    columns =
-      if state.keys do
-        Table.keys_to_columns(state.keys)
-      else
-        []
-      end
-
-    features = Kino.Utils.truthy_keys(pagination: true, sorting: state.sorting_enabled)
-
-    send(pid, {:connect_reply, %{name: "Data", columns: columns, features: features}})
-
-    {:noreply, state}
-  end
-
-  def handle_info({:get_rows, pid, rows_spec}, state) do
+  def get_data(rows_spec, state) do
     records = get_records(state.data, rows_spec)
 
-    {columns, keys} =
-      if state.keys do
-        {:initial, state.keys}
+    keys =
+      if keys = state.keys do
+        keys
       else
-        columns = Table.columns_for_records(records)
+        keys = Utils.Table.keys_for_records(records)
 
-        columns =
-          if state.show_underscored,
-            do: columns,
-            else: Enum.reject(columns, &underscored?(&1.key))
-
-        keys = Enum.map(columns, & &1.key)
-        {columns, keys}
+        if state.show_underscored do
+          keys
+        else
+          Enum.reject(keys, &underscored?/1)
+        end
       end
 
-    rows = Enum.map(records, &Table.record_to_row(&1, keys))
+    columns = Utils.Table.keys_to_columns(keys)
 
-    send(pid, {:rows, %{rows: rows, total_rows: state.total_rows, columns: columns}})
+    rows = Enum.map(records, &Utils.Table.record_to_row(&1, keys))
 
-    {:noreply, state}
+    {:ok, %{columns: columns, rows: rows, total_rows: state.total_rows}, state}
   end
 
   defp get_records(data, rows_spec) do
     sorted_data =
       if order_by = rows_spec[:order_by] do
-        Enum.sort_by(data, &Table.get_field(&1, order_by), rows_spec.order)
+        Enum.sort_by(data, &Utils.Table.get_field(&1, order_by), rows_spec.order)
       else
         data
       end

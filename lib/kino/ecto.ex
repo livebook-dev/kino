@@ -7,7 +7,7 @@ defmodule Kino.Ecto do
 
   ## Examples
 
-  The widget primarly allows for viewing a database table
+  The widget primarily allows for viewing a database table
   given a schema:
 
       Kino.Ecto.new(Weather, Repo)
@@ -19,20 +19,11 @@ defmodule Kino.Ecto do
       |> Kino.Ecto.new(Repo)
   """
 
-  @doc false
-  use GenServer, restart: :temporary
+  @behaviour Kino.Table
 
-  alias Kino.Utils.Table
+  alias Kino.Utils
 
-  defstruct [:pid]
-
-  @type t :: %__MODULE__{pid: pid()}
-
-  @typedoc false
-  @type state :: %{
-          repo: Ecto.Repo.t(),
-          queryable: Ecto.Queryable.t()
-        }
+  @type t :: Kino.Table.t()
 
   @doc """
   Starts a widget process with the given queryable as
@@ -45,34 +36,16 @@ defmodule Kino.Ecto do
             "expected a term implementing the Ecto.Queryable protocol, got: #{inspect(queryable)}"
     end
 
-    opts = [repo: repo, queryable: queryable]
-
-    {:ok, pid} = Kino.start_child({__MODULE__, opts})
-
-    %__MODULE__{pid: pid}
+    Kino.Table.new(__MODULE__, {repo, queryable})
   end
 
   defp queryable?(term) do
     Ecto.Queryable.impl_for(term) != nil
   end
 
-  @doc false
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
-  end
-
   @impl true
-  def init(opts) do
-    repo = Keyword.fetch!(opts, :repo)
-    queryable = Keyword.fetch!(opts, :queryable)
-
-    {:ok, %{repo: repo, queryable: queryable}}
-  end
-
-  @impl true
-  def handle_info({:connect, pid}, state) do
-    name = state.queryable |> query_source() |> to_string()
-    columns = state.queryable |> keys_from_queryable() |> Table.keys_to_columns()
+  def init({repo, queryable}) do
+    name = queryable |> query_source() |> to_string()
 
     features =
       Kino.Utils.truthy_keys(
@@ -80,36 +53,29 @@ defmodule Kino.Ecto do
         pagination: true,
         # If the user specifies custom select, the record keys
         # are not valid "order by" fields, so we disable sorting
-        sorting: default_select_query?(state.queryable)
+        sorting: default_select_query?(queryable)
       )
 
-    send(
-      pid,
-      {:connect_reply, %{name: name, columns: columns, features: features}}
-    )
+    info = %{name: name, features: features}
 
-    {:noreply, state}
+    {:ok, info, %{repo: repo, queryable: queryable}}
   end
 
-  def handle_info({:get_rows, pid, rows_spec}, state) do
+  @impl true
+  def get_data(rows_spec, state) do
     {total_rows, records} = get_records(state.repo, state.queryable, rows_spec)
 
-    {columns, keys} =
+    keys =
       case keys_from_queryable(state.queryable) do
-        [] ->
-          columns = Table.columns_for_records(records)
-          keys = Enum.map(columns, & &1.key)
-          {columns, keys}
-
-        keys ->
-          {:initial, keys}
+        [] -> Utils.Table.keys_for_records(records)
+        keys -> keys
       end
 
-    rows = Enum.map(records, &Table.record_to_row(&1, keys))
+    columns = Utils.Table.keys_to_columns(keys)
 
-    send(pid, {:rows, %{rows: rows, total_rows: total_rows, columns: columns}})
+    rows = Enum.map(records, &Utils.Table.record_to_row(&1, keys))
 
-    {:noreply, state}
+    {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state}
   end
 
   defp get_records(repo, queryable, rows_spec) do
@@ -130,7 +96,7 @@ defmodule Kino.Ecto do
   end
 
   defp keys_from_queryable(queryable) do
-    schema = Table.ecto_schema(queryable)
+    schema = Utils.Table.ecto_schema(queryable)
 
     if schema != nil and default_select_query?(queryable) do
       schema.__schema__(:fields)

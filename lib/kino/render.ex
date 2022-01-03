@@ -35,20 +35,6 @@ defimpl Kino.Render, for: Kino.JS.Live do
   end
 end
 
-defimpl Kino.Render, for: Kino.ETS do
-  def to_livebook(widget) do
-    Kino.Bridge.reference_object(widget.pid, self())
-    Kino.Output.table_dynamic(widget.pid)
-  end
-end
-
-defimpl Kino.Render, for: Kino.DataTable do
-  def to_livebook(widget) do
-    Kino.Bridge.reference_object(widget.pid, self())
-    Kino.Output.table_dynamic(widget.pid)
-  end
-end
-
 defimpl Kino.Render, for: Kino.Image do
   def to_livebook(image) do
     Kino.Output.image(image.content, image.mime_type)
@@ -58,13 +44,6 @@ end
 defimpl Kino.Render, for: Kino.Markdown do
   def to_livebook(markdown) do
     Kino.Output.markdown(markdown.content)
-  end
-end
-
-defimpl Kino.Render, for: Kino.Ecto do
-  def to_livebook(widget) do
-    Kino.Bridge.reference_object(widget.pid, self())
-    Kino.Output.table_dynamic(widget.pid)
   end
 end
 

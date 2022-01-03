@@ -24,118 +24,110 @@ defmodule Kino.ETSTest do
     end
   end
 
-  describe "connecting" do
-    test "connect reply contains empty columns definition if there are no records" do
-      tid = :ets.new(:users, [:set, :public])
+  test "includes table name in the information" do
+    tid = :ets.new(:users, [:set, :public])
 
-      widget = Kino.ETS.new(tid)
+    widget = Kino.ETS.new(tid)
+    data = connect_self(widget)
 
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply, %{columns: [], features: [:refetch, :pagination]}}
-    end
-
-    test "connect reply contains columns definition if there are some records" do
-      tid = :ets.new(:users, [:set, :public])
-      :ets.insert(tid, {1, "Terry Jeffords"})
-
-      widget = Kino.ETS.new(tid)
-
-      send(widget.pid, {:connect, self()})
-
-      assert_receive {:connect_reply,
-                      %{
-                        columns: [%{key: 0, label: "0"}, %{key: 1, label: "1"}],
-                        features: [:refetch, :pagination]
-                      }}
-    end
+    assert %{name: "ETS :users", features: [:refetch, :pagination]} = data
   end
 
-  describe "querying rows" do
-    setup do
-      tid = :ets.new(:users, [:ordered_set, :public])
+  test "content contains empty columns definition if there are no records" do
+    tid = :ets.new(:users, [:set, :public])
 
-      :ets.insert(tid, {1, "Jake Peralta"})
-      :ets.insert(tid, {2, "Terry Jeffords"})
-      :ets.insert(tid, {3, "Amy Santiago"})
+    widget = Kino.ETS.new(tid)
+    data = connect_self(widget)
 
-      {:ok, tid: tid}
-    end
+    assert %{
+             content: %{
+               columns: [],
+               rows: []
+             }
+           } = data
+  end
 
-    test "replies with records and total rows", %{tid: tid} do
-      widget = Kino.ETS.new(tid)
-      connect_self(widget)
+  test "content contains columns and rows if there are table records" do
+    tid = :ets.new(:users, [:ordered_set, :public])
 
-      spec = %{
-        offset: 0,
-        limit: 10,
-        order_by: nil,
-        order: :asc
-      }
+    :ets.insert(tid, {1, "Jake Peralta"})
+    :ets.insert(tid, {2, "Terry Jeffords"})
+    :ets.insert(tid, {3, "Amy Santiago"})
 
-      send(widget.pid, {:get_rows, self(), spec})
+    widget = Kino.ETS.new(tid)
+    data = connect_self(widget)
 
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{0 => "1", 1 => ~s/"Jake Peralta"/}},
-                          %{id: _, fields: %{0 => "2", 1 => ~s/"Terry Jeffords"/}},
-                          %{id: _, fields: %{0 => "3", 1 => ~s/"Amy Santiago"/}}
-                        ],
-                        total_rows: 3,
-                        columns: [_, _]
-                      }}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: "0"},
+                 %{key: "1", label: "1"}
+               ],
+               rows: [
+                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
+                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}},
+                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}}
+               ],
+               page: 1,
+               max_page: 1,
+               order_by: nil,
+               order: :asc
+             }
+           } = data
+  end
 
-    test "supports offset and limit", %{tid: tid} do
-      widget = Kino.ETS.new(tid)
-      connect_self(widget)
+  test "determines enough columns to accommodate longest record" do
+    tid = :ets.new(:users, [:ordered_set, :public])
 
-      spec = %{
-        offset: 1,
-        limit: 1,
-        order_by: 0,
-        order: :asc
-      }
+    :ets.insert(tid, {1, "Jake Peralta"})
+    :ets.insert(tid, {2, "Sherlock Holmes", 100})
+    :ets.insert(tid, {3, "John Watson", 150, :doctor})
+    :ets.insert(tid, {4})
 
-      send(widget.pid, {:get_rows, self(), spec})
+    widget = Kino.ETS.new(tid)
+    data = connect_self(widget)
 
-      assert_receive {:rows,
-                      %{
-                        rows: [
-                          %{id: _, fields: %{0 => "2", 1 => ~s/"Terry Jeffords"/}}
-                        ],
-                        total_rows: 3,
-                        columns: [_, _]
-                      }}
-    end
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: "0"},
+                 %{key: "1", label: "1"},
+                 %{key: "2", label: "2"},
+                 %{key: "3", label: "3"}
+               ]
+             }
+           } = data
+  end
 
-    test "determines enough columns to accommodate longest record", %{tid: tid} do
-      :ets.insert(tid, {4, "Sherlock Holmes", 100})
-      :ets.insert(tid, {5, "John Watson", 150, :doctor})
-      :ets.insert(tid, {6})
+  test "supports pagination" do
+    tid = :ets.new(:users, [:ordered_set, :public])
 
-      widget = Kino.ETS.new(tid)
-      connect_self(widget)
+    for n <- 1..25, do: :ets.insert(tid, {n})
 
-      spec = %{
-        offset: 0,
-        limit: 10,
-        order_by: nil,
-        order: :asc
-      }
+    widget = Kino.ETS.new(tid)
+    data = connect_self(widget)
 
-      send(widget.pid, {:get_rows, self(), spec})
+    assert %{
+             content: %{
+               page: 1,
+               max_page: 3,
+               rows: [%{fields: %{"0" => "1"}} | _]
+             }
+           } = data
 
-      assert_receive {:rows,
-                      %{
-                        columns: [_, _, _, _]
-                      }}
-    end
+    send(widget.pid, {:event, "show_page", %{"page" => 2}, %{origin: self()}})
+
+    assert_receive {:event, "update_content",
+                    %{
+                      page: 2,
+                      max_page: 3,
+                      rows: [%{fields: %{"0" => "11"}} | _]
+                    }}
   end
 
   defp connect_self(widget) do
-    send(widget.pid, {:connect, self()})
-    assert_receive {:connect_reply, %{}}
+    send(widget.pid, {:connect, self(), %{origin: self()}})
+    assert_receive {:connect_reply, %{} = data}
+    data
   end
 end
