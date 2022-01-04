@@ -40,10 +40,6 @@ defmodule Kino.ETS do
     Kino.Table.new(__MODULE__, {tid})
   end
 
-  # TODO: remove in v0.3.0
-  @deprecated "Use Kino.ETS.new/1 instead"
-  def start(tid), do: new(tid)
-
   @impl true
   def init({tid}) do
     table_name = :ets.info(tid, :name)

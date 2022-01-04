@@ -35,10 +35,6 @@ defmodule Kino.VegaLite do
     Kino.JS.Live.new(__MODULE__, vl)
   end
 
-  # TODO: remove in v0.3.0
-  @deprecated "Use Kino.VegaLite.new/1 instead"
-  def start(vl), do: new(vl)
-
   @doc false
   @spec static(VegaLite.t()) :: Kino.JS.t()
   def static(vl) when is_struct(vl, VegaLite) do
