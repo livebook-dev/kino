@@ -66,10 +66,6 @@ defmodule Kino.DataTable do
     Kino.Table.new(__MODULE__, opts)
   end
 
-  # TODO: remove in v0.3.0
-  @deprecated "Use Kino.DataTable.new/2 instead"
-  def start(data, opts \\ []), do: new(data, opts)
-
   # Validate data only if we have a whole list upfront
   defp validate_data!(data) when is_list(data) do
     Enum.reduce(data, nil, fn record, type ->
