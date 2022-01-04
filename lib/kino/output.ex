@@ -16,7 +16,6 @@ defmodule Kino.Output do
           | image()
           | js_static()
           | js_dynamic()
-          | table_dynamic()
           | frame_dynamic()
           | input()
           | control()
@@ -123,60 +122,6 @@ defmodule Kino.Output do
                 key: nil | term()
               }
         }
-
-  @typedoc """
-  Interactive data table.
-
-  This output points to a server process that serves data requests,
-  handling filtering, sorting and slicing data as necessary.
-
-  ## Communication protocol
-
-  A client process should connect to the server process by sending:
-
-      {:connect, pid()}
-
-  And expect the following reply:
-
-      @type column :: %{
-        key: term(),
-        label: binary()
-      }
-
-      {:connect_reply, %{
-        name: binary(),
-        columns: list(column()),
-        features: list(:refetch | :pagination | :sorting)
-      }}
-
-  The client may then query for table rows by sending the following requests:
-
-      @type rows_spec :: %{
-        offset: non_neg_integer(),
-        limit: pos_integer(),
-        order_by: nil | term(),
-        order: :asc | :desc,
-      }
-
-      {:get_rows, pid(), rows_spec()}
-
-  To which the server responds with retrieved data:
-
-      @type row :: %{
-        # An identifier, opaque to the client
-        ref: term(),
-        # A string value for every column key
-        fields: list(%{term() => binary()})
-      }
-
-      {:rows, %{
-        rows: list(row()),
-        total_rows: non_neg_integer(),
-        # Possibly an updated columns specification
-        columns: :initial | list(column())
-      }}
-  """
-  @type table_dynamic :: {:table_dynamic, pid()}
 
   @typedoc """
   Animable output.
@@ -396,14 +341,6 @@ defmodule Kino.Output do
   @spec js_dynamic(js_info(), pid()) :: t()
   def js_dynamic(info, pid) when is_map(info) and is_pid(pid) do
     {:js_dynamic, info, pid}
-  end
-
-  @doc """
-  See `t:table_dynamic/0`.
-  """
-  @spec table_dynamic(pid()) :: t()
-  def table_dynamic(pid) when is_pid(pid) do
-    {:table_dynamic, pid}
   end
 
   @doc """

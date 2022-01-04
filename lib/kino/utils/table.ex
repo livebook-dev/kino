@@ -5,64 +5,61 @@ defmodule Kino.Utils.Table do
   # terms as table records.
 
   @doc """
-  Computes table columns that accomodate for all the given records.
+  Computes table column keys that accommodate for all the given records.
   """
-  def columns_for_records(records) do
+  def keys_for_records(records) do
     case Enum.at(records, 0) do
       nil ->
         []
 
       first_record ->
-        first_record_columns = columns_for_record(first_record)
+        first_record_keys = keys_for_record(first_record)
 
-        all_columns =
+        all_keys =
           records
-          |> Enum.reduce(MapSet.new(), fn record, columns ->
+          |> Enum.reduce(MapSet.new(), fn record, keys ->
             record
-            |> columns_for_record()
+            |> keys_for_record()
             |> MapSet.new()
-            |> MapSet.union(columns)
+            |> MapSet.union(keys)
           end)
           |> MapSet.to_list()
-          |> Enum.sort_by(& &1.key)
+          |> Enum.sort()
 
         # If all records have the same structure, keep the order,
-        # otherwise return the sorted accumulated columns
-        if length(first_record_columns) == length(all_columns) do
-          first_record_columns
+        # otherwise return the sorted accumulated keys
+        if length(first_record_keys) == length(all_keys) do
+          first_record_keys
         else
-          all_columns
+          all_keys
         end
     end
   end
 
-  defp columns_for_record(record) when is_tuple(record) do
+  defp keys_for_record(record) when is_tuple(record) do
     record
     |> Tuple.to_list()
     |> Enum.with_index()
     |> Enum.map(&elem(&1, 1))
-    |> keys_to_columns()
   end
 
-  defp columns_for_record(record) when is_map(record) do
+  defp keys_for_record(record) when is_map(record) do
     if schema = ecto_schema(record) do
       schema.__schema__(:fields)
     else
       record |> Map.keys() |> Enum.sort()
     end
-    |> keys_to_columns()
   end
 
-  defp columns_for_record(record) when is_list(record) do
+  defp keys_for_record(record) when is_list(record) do
     record
     |> Keyword.keys()
-    |> keys_to_columns()
   end
 
-  defp columns_for_record(_record) do
+  defp keys_for_record(_record) do
     # If the record is neither of the expected enumerables,
     # we treat it as a single column value
-    keys_to_columns([:item])
+    [:item]
   end
 
   @doc """
@@ -108,8 +105,7 @@ defmodule Kino.Utils.Table do
         {key, inspect(value)}
       end)
 
-    # Note: id is opaque to the client, and we don't need it for now
-    %{id: nil, fields: fields}
+    %{fields: fields}
   end
 
   @doc """
