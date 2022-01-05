@@ -291,7 +291,7 @@ defmodule Kino.EctoTest do
   end
 
   defp await_connect_self() do
-    assert_receive {:connect_reply, %{} = data}
+    assert_receive {:connect_reply, %{} = data, %{}}
     data
   end
 

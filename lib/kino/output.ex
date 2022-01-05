@@ -69,11 +69,11 @@ defmodule Kino.Output do
 
   And expect the following reply:
 
-      {:connect_reply, initial_data}
+      {:connect_reply, initial_data, info :: %{ref: js_output_ref()}}
 
   The server process may then keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term()}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref()}}
 
   The client process may keep sending one of the following events:
 
@@ -85,6 +85,8 @@ defmodule Kino.Output do
 
   @typedoc """
   Data describing a custom JS output component.
+
+    * `:ref` - unique output identifier
 
   ## Assets
 
@@ -109,7 +111,8 @@ defmodule Kino.Output do
     * `:key` - in case the data is a map and only a specific part
       should be exported
   """
-  @type js_info() :: %{
+  @type js_info :: %{
+          ref: js_output_ref(),
           assets: %{
             archive_path: String.t(),
             hash: String.t(),
@@ -122,6 +125,8 @@ defmodule Kino.Output do
                 key: nil | term()
               }
         }
+
+  @type js_output_ref :: String.t()
 
   @typedoc """
   Animable output.

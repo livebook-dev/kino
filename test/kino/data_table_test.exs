@@ -277,12 +277,12 @@ defmodule Kino.DataTableTest do
                       page: 2,
                       max_page: 3,
                       rows: [%{fields: %{"0" => "11"}} | _]
-                    }}
+                    }, %{}}
   end
 
   defp connect_self(widget) do
     send(widget.pid, {:connect, self(), %{origin: self()}})
-    assert_receive {:connect_reply, %{} = data}
+    assert_receive {:connect_reply, %{} = data, %{}}
     data
   end
 end
