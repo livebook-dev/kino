@@ -235,6 +235,7 @@ defmodule Kino.JS.Live do
   def js_info(%__MODULE__{} = widget) do
     %{
       ref: widget.ref,
+      pid: widget.pid,
       assets: widget.module.__assets_info__(),
       export: nil
     }

@@ -14,7 +14,7 @@ defmodule Kino.Output do
           | text_block()
           | markdown()
           | image()
-          | js_dynamic()
+          | js()
           | frame_dynamic()
           | input()
           | control()
@@ -70,12 +70,14 @@ defmodule Kino.Output do
 
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """
-  @type js_dynamic() :: {:js_dynamic, info :: js_info(), pid()}
+  @type js() :: {:js, info :: js_info()}
 
   @typedoc """
   Data describing a custom JS output component.
 
     * `:ref` - unique output identifier
+
+    * `:pid` - the server process holding the data
 
   ## Assets
 
@@ -102,6 +104,7 @@ defmodule Kino.Output do
   """
   @type js_info :: %{
           ref: js_output_ref(),
+          pid: Process.dest(),
           assets: %{
             archive_path: String.t(),
             hash: String.t(),
@@ -322,11 +325,11 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:js_dynamic/0`.
+  See `t:js/0`.
   """
-  @spec js_dynamic(js_info(), Process.dest()) :: t()
-  def js_dynamic(info, pid) when is_map(info) do
-    {:js_dynamic, info, pid}
+  @spec js(js_info()) :: t()
+  def js(info) when is_map(info) do
+    {:js, info}
   end
 
   @doc """

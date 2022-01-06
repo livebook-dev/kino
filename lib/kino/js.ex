@@ -413,6 +413,7 @@ defmodule Kino.JS do
   def js_info(%__MODULE__{} = widget) do
     %{
       ref: widget.ref,
+      pid: Kino.JSDataStore.cross_node_name(),
       assets: widget.module.__assets_info__(),
       export: widget.export
     }
