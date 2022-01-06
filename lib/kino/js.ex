@@ -148,9 +148,9 @@ defmodule Kino.JS do
   interaction, see `Kino.JS.Live` as a next step in our discussion.
   '''
 
-  defstruct [:module, :data, :ref, :export]
+  defstruct [:module, :ref, :export]
 
-  @type t :: %__MODULE__{module: module(), data: term(), ref: String.t(), export: map()}
+  @type t :: %__MODULE__{module: module(), ref: String.t(), export: map()}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -400,7 +400,12 @@ defmodule Kino.JS do
 
     ref = System.unique_integer() |> Integer.to_string()
 
-    %__MODULE__{module: module, data: data, ref: ref, export: export}
+    Kino.JSDataStore.store(ref, data)
+
+    Kino.Bridge.reference_object(ref, self())
+    Kino.Bridge.monitor_object(ref, Kino.JSDataStore, {:remove, ref})
+
+    %__MODULE__{module: module, ref: ref, export: export}
   end
 
   @doc false

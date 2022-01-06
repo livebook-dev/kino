@@ -14,7 +14,6 @@ defmodule Kino.Output do
           | text_block()
           | markdown()
           | image()
-          | js_static()
           | js_dynamic()
           | frame_dynamic()
           | input()
@@ -46,16 +45,6 @@ defmodule Kino.Output do
   @type image :: {:image, content :: binary(), mime_type :: binary()}
 
   @typedoc """
-  JavaScript powered output with static data.
-
-  When rendered, the specified JS is invoked with the given data
-  and can freely manipulate document tree in the output element.
-
-  See `Kino.JS` for more details.
-  """
-  @type js_static() :: {:js_static, info :: js_info(), data :: term()}
-
-  @typedoc """
   JavaScript powered output with dynamic data and events.
 
   This output points to a server process that serves data requests
@@ -65,7 +54,7 @@ defmodule Kino.Output do
 
   A client process should connect to the server process by sending:
 
-      {:connect, pid(), info :: %{origin: term()}}
+      {:connect, pid(), info :: %{ref: js_output_ref(), origin: term()}}
 
   And expect the following reply:
 
@@ -77,7 +66,7 @@ defmodule Kino.Output do
 
   The client process may keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term(), info :: %{origin: term()}}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref(), origin: term()}}
 
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """
@@ -333,18 +322,10 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:js_static/0`.
-  """
-  @spec js_static(js_info(), term()) :: t()
-  def js_static(info, data) when is_map(info) do
-    {:js_static, info, data}
-  end
-
-  @doc """
   See `t:js_dynamic/0`.
   """
-  @spec js_dynamic(js_info(), pid()) :: t()
-  def js_dynamic(info, pid) when is_map(info) and is_pid(pid) do
+  @spec js_dynamic(js_info(), Process.dest()) :: t()
+  def js_dynamic(info, pid) when is_map(info) do
     {:js_dynamic, info, pid}
   end
 
