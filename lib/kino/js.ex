@@ -148,9 +148,9 @@ defmodule Kino.JS do
   interaction, see `Kino.JS.Live` as a next step in our discussion.
   '''
 
-  defstruct [:module, :data, :export]
+  defstruct [:module, :ref, :export]
 
-  @type t :: %__MODULE__{module: module(), data: term()}
+  @type t :: %__MODULE__{module: module(), ref: String.t(), export: map()}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -398,13 +398,22 @@ defmodule Kino.JS do
         %{info_string: info_string, key: export_key}
       end
 
-    %__MODULE__{module: module, data: data, export: export}
+    ref = System.unique_integer() |> Integer.to_string()
+
+    Kino.JSDataStore.store(ref, data)
+
+    Kino.Bridge.reference_object(ref, self())
+    Kino.Bridge.monitor_object(ref, Kino.JSDataStore, {:remove, ref})
+
+    %__MODULE__{module: module, ref: ref, export: export}
   end
 
   @doc false
   @spec js_info(t()) :: Kino.Output.js_info()
   def js_info(%__MODULE__{} = widget) do
     %{
+      ref: widget.ref,
+      pid: Kino.JSDataStore.cross_node_name(),
       assets: widget.module.__assets_info__(),
       export: widget.export
     }

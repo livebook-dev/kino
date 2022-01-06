@@ -16,7 +16,7 @@ defmodule Kino.JS.LiveTest do
       widget = LiveCounter.new(0)
       connect_self(widget)
       LiveCounter.bump(widget, 2)
-      assert_receive {:event, "bump", %{by: 2}}
+      assert_receive {:event, "bump", %{by: 2}, %{}}
     end
 
     test "handle_call/3" do
@@ -43,7 +43,7 @@ defmodule Kino.JS.LiveTest do
 
   defp connect_self(widget) do
     send(widget.pid, {:connect, self(), %{origin: self()}})
-    assert_receive {:connect_reply, data}
+    assert_receive {:connect_reply, data, %{}}
     data
   end
 end

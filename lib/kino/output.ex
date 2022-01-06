@@ -14,8 +14,7 @@ defmodule Kino.Output do
           | text_block()
           | markdown()
           | image()
-          | js_static()
-          | js_dynamic()
+          | js()
           | frame_dynamic()
           | input()
           | control()
@@ -46,16 +45,6 @@ defmodule Kino.Output do
   @type image :: {:image, content :: binary(), mime_type :: binary()}
 
   @typedoc """
-  JavaScript powered output with static data.
-
-  When rendered, the specified JS is invoked with the given data
-  and can freely manipulate document tree in the output element.
-
-  See `Kino.JS` for more details.
-  """
-  @type js_static() :: {:js_static, info :: js_info(), data :: term()}
-
-  @typedoc """
   JavaScript powered output with dynamic data and events.
 
   This output points to a server process that serves data requests
@@ -65,26 +54,30 @@ defmodule Kino.Output do
 
   A client process should connect to the server process by sending:
 
-      {:connect, pid(), info :: %{origin: term()}}
+      {:connect, pid(), info :: %{ref: js_output_ref(), origin: term()}}
 
   And expect the following reply:
 
-      {:connect_reply, initial_data}
+      {:connect_reply, initial_data, info :: %{ref: js_output_ref()}}
 
   The server process may then keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term()}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref()}}
 
   The client process may keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term(), info :: %{origin: term()}}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref(), origin: term()}}
 
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """
-  @type js_dynamic() :: {:js_dynamic, info :: js_info(), pid()}
+  @type js() :: {:js, info :: js_info()}
 
   @typedoc """
   Data describing a custom JS output component.
+
+    * `:ref` - unique output identifier
+
+    * `:pid` - the server process holding the data
 
   ## Assets
 
@@ -109,7 +102,9 @@ defmodule Kino.Output do
     * `:key` - in case the data is a map and only a specific part
       should be exported
   """
-  @type js_info() :: %{
+  @type js_info :: %{
+          ref: js_output_ref(),
+          pid: Process.dest(),
           assets: %{
             archive_path: String.t(),
             hash: String.t(),
@@ -122,6 +117,8 @@ defmodule Kino.Output do
                 key: nil | term()
               }
         }
+
+  @type js_output_ref :: String.t()
 
   @typedoc """
   Animable output.
@@ -328,19 +325,11 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:js_static/0`.
+  See `t:js/0`.
   """
-  @spec js_static(js_info(), term()) :: t()
-  def js_static(info, data) when is_map(info) do
-    {:js_static, info, data}
-  end
-
-  @doc """
-  See `t:js_dynamic/0`.
-  """
-  @spec js_dynamic(js_info(), pid()) :: t()
-  def js_dynamic(info, pid) when is_map(info) and is_pid(pid) do
-    {:js_dynamic, info, pid}
+  @spec js(js_info()) :: t()
+  def js(info) when is_map(info) do
+    {:js, info}
   end
 
   @doc """

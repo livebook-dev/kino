@@ -17,15 +17,16 @@ defmodule Kino.JS.LiveServer do
 
   def broadcast_event(ctx, event, payload) do
     for pid <- ctx.__private__.client_pids do
-      send(pid, {:event, event, payload})
+      send(pid, {:event, event, payload, %{ref: ctx.__private__.ref}})
     end
 
     :ok
   end
 
   @impl true
-  def init({module, init_arg}) do
+  def init({module, init_arg, ref}) do
     ctx = Context.new()
+    ctx = put_in(ctx.__private__[:ref], ref)
 
     {:ok, ctx} =
       if has_function?(module, :init, 2) do
@@ -60,7 +61,7 @@ defmodule Kino.JS.LiveServer do
     {:ok, data, ctx} = state.module.handle_connect(ctx)
     ctx = %{ctx | origin: nil}
 
-    send(pid, {:connect_reply, data})
+    send(pid, {:connect_reply, data, %{ref: state.ctx.__private__.ref}})
 
     {:noreply, %{state | ctx: ctx}}
   end

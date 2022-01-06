@@ -7,6 +7,7 @@ defmodule Kino.Application do
     children = [
       {DynamicSupervisor, strategy: :one_for_one, name: Kino.DynamicSupervisor},
       Kino.SubscriptionManager,
+      Kino.JSDataStore,
       Kino.Terminator
     ]
 

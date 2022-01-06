@@ -127,11 +127,11 @@ defmodule Kino.JS.Live do
   the handler is registered.
   '''
 
-  defstruct [:module, :pid]
+  defstruct [:module, :pid, :ref]
 
   alias Kino.JS.Live.Context
 
-  @type t :: %__MODULE__{module: module(), pid: pid()}
+  @type t :: %__MODULE__{module: module(), pid: pid(), ref: String.t()}
 
   @doc """
   Invoked when the widget server started.
@@ -225,14 +225,17 @@ defmodule Kino.JS.Live do
   """
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
-    {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg}})
-    %__MODULE__{module: module, pid: pid}
+    ref = System.unique_integer() |> Integer.to_string()
+    {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg, ref}})
+    %__MODULE__{module: module, pid: pid, ref: ref}
   end
 
   @doc false
   @spec js_info(t()) :: Kino.Output.js_info()
   def js_info(%__MODULE__{} = widget) do
     %{
+      ref: widget.ref,
+      pid: widget.pid,
       assets: widget.module.__assets_info__(),
       export: nil
     }
