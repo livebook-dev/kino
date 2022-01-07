@@ -1,5 +1,7 @@
 defmodule Kino.JS.LiveTest do
-  use ExUnit.Case, async: true
+  use Kino.LivebookCase, async: true
+
+  import KinoTest.JS.Live
 
   alias Kino.TestModules.LiveCounter
 
@@ -8,15 +10,14 @@ defmodule Kino.JS.LiveTest do
     test "handle_connect/1" do
       widget = LiveCounter.new(0)
       LiveCounter.bump(widget, 1)
-      count = connect_self(widget)
+      count = connect(widget)
       assert count == 1
     end
 
     test "handle_cast/2 with event broadcast" do
       widget = LiveCounter.new(0)
-      connect_self(widget)
       LiveCounter.bump(widget, 2)
-      assert_receive {:event, "bump", %{by: 2}, %{}}
+      assert_broadcast_event(widget, "bump", %{by: 2})
     end
 
     test "handle_call/3" do
@@ -35,15 +36,9 @@ defmodule Kino.JS.LiveTest do
     test "handle_event/3" do
       widget = LiveCounter.new(0)
       # Simulate a client event
-      send(widget.pid, {:event, "bump", %{"by" => 2}, %{origin: self()}})
+      push_event(widget, "bump", %{"by" => 2})
       count = LiveCounter.read(widget)
       assert count == 2
     end
-  end
-
-  defp connect_self(widget) do
-    send(widget.pid, {:connect, self(), %{origin: self()}})
-    assert_receive {:connect_reply, data, %{}}
-    data
   end
 end
