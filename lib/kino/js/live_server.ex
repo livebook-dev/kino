@@ -17,7 +17,7 @@ defmodule Kino.JS.LiveServer do
 
   def broadcast_event(ctx, event, payload) do
     ref = ctx.__private__.ref
-    Kino.Bridge.broadcast("js_live:#{ref}", {:event, event, payload, %{ref: ref}})
+    Kino.Bridge.broadcast("js_live", ref, {:event, event, payload, %{ref: ref}})
     :ok
   end
 

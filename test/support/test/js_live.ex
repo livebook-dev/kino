@@ -15,9 +15,8 @@ defmodule KinoTest.JS.Live do
   defmacro assert_broadcast_event(widget, event, payload, timeout \\ 100) do
     quote do
       %{ref: ref} = unquote(widget)
-      topic = "js_live:#{ref}"
 
-      assert_receive {:runtime_broadcast, ^topic,
+      assert_receive {:runtime_broadcast, "js_live", ^ref,
                       {:event, unquote(event), unquote(payload), %{ref: ^ref}}},
                      unquote(timeout)
     end

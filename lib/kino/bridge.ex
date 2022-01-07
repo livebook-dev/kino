@@ -91,11 +91,11 @@ defmodule Kino.Bridge do
   @doc """
   Broadcasts the given message in Livebook to interested parties.
   """
-  @spec broadcast(String.t(), term()) :: :ok | {:error, request_error()}
-  def broadcast(topic, message) do
+  @spec broadcast(String.t(), String.t(), term()) :: :ok | {:error, request_error()}
+  def broadcast(topic, subtopic, message) do
     with {:ok, reply} <- io_request(:livebook_get_broadcast_target),
          {:ok, pid} <- reply do
-      send(pid, {:runtime_broadcast, topic, message})
+      send(pid, {:runtime_broadcast, topic, subtopic, message})
       :ok
     end
   end
