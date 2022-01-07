@@ -93,15 +93,21 @@ defmodule Kino.Bridge do
   """
   @spec broadcast(String.t(), term()) :: :ok | {:error, request_error()}
   def broadcast(topic, message) do
-    with {:ok, reply} <- io_request({:livebook_broadcast, topic, message}), do: reply
+    with {:ok, reply} <- io_request(:livebook_get_broadcast_target),
+         {:ok, pid} <- reply do
+      send(pid, {:runtime_broadcast, topic, message})
+      :ok
+    end
   end
 
   @doc """
   Sends message to the given Livebook process.
   """
-  @spec send(pid(), term()) :: :ok | {:error, request_error()}
+  @spec send(pid(), term()) :: :ok
   def send(pid, message) do
-    with {:ok, reply} <- io_request({:livebook_send, pid, message}), do: reply
+    # For now we send directly
+    Kernel.send(pid, message)
+    :ok
   end
 
   defp io_request(request) do
