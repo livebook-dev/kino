@@ -42,7 +42,7 @@ defmodule Kino.JSDataStore do
   @impl true
   def handle_info({:connect, pid, %{origin: _origin, ref: ref}}, state) do
     data = state.ref_with_data[ref]
-    send(pid, {:connect_reply, data, %{ref: ref}})
+    Kino.Bridge.send(pid, {:connect_reply, data, %{ref: ref}})
 
     {:noreply, state}
   end

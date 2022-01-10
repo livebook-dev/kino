@@ -1,6 +1,8 @@
 defmodule Kino.EctoTest do
   use ExUnit.Case, async: true
 
+  import KinoTest.JS.Live
+
   import Ecto.Query, only: [from: 2]
 
   describe "new/1" do
@@ -67,9 +69,9 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(User, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{
              content: %{
@@ -89,9 +91,9 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{
              content: %{
@@ -111,9 +113,9 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{content: %{columns: [], rows: []}} = data
   end
@@ -123,9 +125,9 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{features: [:refetch, :pagination, :sorting]} = data
   end
@@ -135,9 +137,9 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{features: [:refetch, :pagination]} = data
   end
@@ -167,9 +169,9 @@ defmodule Kino.EctoTest do
     ]
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, users)
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{
              name: "users",
@@ -199,7 +201,7 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     %{all_query: %{offset: offset, limit: limit}} = resolve_table_queries(MockRepo, [])
 
     assert Macro.to_string(offset.expr) == "^0"
@@ -213,7 +215,7 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     %{all_query: %{order_bys: [order_by]}} = resolve_table_queries(MockRepo, [])
 
     assert Macro.to_string(order_by.expr) == "[asc: &0.name()]"
@@ -224,7 +226,7 @@ defmodule Kino.EctoTest do
     widget = Kino.Ecto.new(query, MockRepo)
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, [])
 
     send(
@@ -244,9 +246,9 @@ defmodule Kino.EctoTest do
     results = [{1, "Amy Santiago"}, {2, "Jake Peralta"}]
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, results)
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{
              content: %{
@@ -269,9 +271,9 @@ defmodule Kino.EctoTest do
     results = ["Amy Santiago", "Jake Peralta"]
 
     MockRepo.subscribe()
-    async_connect_self(widget)
+    async_connect(widget)
     resolve_table_queries(MockRepo, results)
-    data = await_connect_self()
+    data = await_connect(widget)
 
     assert %{
              content: %{
@@ -284,15 +286,6 @@ defmodule Kino.EctoTest do
                ]
              }
            } = data
-  end
-
-  defp async_connect_self(widget) do
-    send(widget.pid, {:connect, self(), %{origin: self()}})
-  end
-
-  defp await_connect_self() do
-    assert_receive {:connect_reply, %{} = data, %{}}
-    data
   end
 
   defp resolve_table_queries(repo, results) do

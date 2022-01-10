@@ -16,10 +16,8 @@ defmodule Kino.JS.LiveServer do
   defdelegate call(pid, term, timeout), to: GenServer
 
   def broadcast_event(ctx, event, payload) do
-    for pid <- ctx.__private__.client_pids do
-      send(pid, {:event, event, payload, %{ref: ctx.__private__.ref}})
-    end
-
+    ref = ctx.__private__.ref
+    Kino.Bridge.broadcast("js_live", ref, {:event, event, payload, %{ref: ref}})
     :ok
   end
 
@@ -35,7 +33,7 @@ defmodule Kino.JS.LiveServer do
         {:ok, ctx}
       end
 
-    {:ok, %{module: module, client_monitor_refs: [], ctx: ctx}}
+    {:ok, %{module: module, ctx: ctx}}
   end
 
   @impl true
@@ -52,16 +50,11 @@ defmodule Kino.JS.LiveServer do
 
   @impl true
   def handle_info({:connect, pid, %{origin: origin}}, state) do
-    ref = Process.monitor(pid)
-
-    state = update_in(state.ctx.__private__.client_pids, &[pid | &1])
-    state = update_in(state.client_monitor_refs, &[ref | &1])
-
     ctx = %{state.ctx | origin: origin}
     {:ok, data, ctx} = state.module.handle_connect(ctx)
     ctx = %{ctx | origin: nil}
 
-    send(pid, {:connect_reply, data, %{ref: state.ctx.__private__.ref}})
+    Kino.Bridge.send(pid, {:connect_reply, data, %{ref: state.ctx.__private__.ref}})
 
     {:noreply, %{state | ctx: ctx}}
   end
@@ -72,16 +65,6 @@ defmodule Kino.JS.LiveServer do
     ctx = %{ctx | origin: nil}
 
     {:noreply, %{state | ctx: ctx}}
-  end
-
-  def handle_info({:DOWN, ref, :process, pid, _reason} = msg, state) do
-    if ref in state.client_monitor_refs do
-      state = update_in(state.ctx.__private__.client_pids, &List.delete(&1, pid))
-      state = update_in(state.client_monitor_refs, &List.delete(&1, ref))
-      {:noreply, state}
-    else
-      apply_handle_info(msg, state)
-    end
   end
 
   def handle_info(msg, state) do

@@ -1,5 +1,7 @@
 defmodule Kino.ETSTest do
-  use ExUnit.Case, async: true
+  use Kino.LivebookCase, async: true
+
+  import KinoTest.JS.Live
 
   describe "new/1" do
     test "raises an error when private table is given" do
@@ -28,7 +30,7 @@ defmodule Kino.ETSTest do
     tid = :ets.new(:users, [:set, :public])
 
     widget = Kino.ETS.new(tid)
-    data = connect_self(widget)
+    data = connect(widget)
 
     assert %{name: "ETS :users", features: [:refetch, :pagination]} = data
   end
@@ -37,7 +39,7 @@ defmodule Kino.ETSTest do
     tid = :ets.new(:users, [:set, :public])
 
     widget = Kino.ETS.new(tid)
-    data = connect_self(widget)
+    data = connect(widget)
 
     assert %{
              content: %{
@@ -55,7 +57,7 @@ defmodule Kino.ETSTest do
     :ets.insert(tid, {3, "Amy Santiago"})
 
     widget = Kino.ETS.new(tid)
-    data = connect_self(widget)
+    data = connect(widget)
 
     assert %{
              content: %{
@@ -85,7 +87,7 @@ defmodule Kino.ETSTest do
     :ets.insert(tid, {4})
 
     widget = Kino.ETS.new(tid)
-    data = connect_self(widget)
+    data = connect(widget)
 
     assert %{
              content: %{
@@ -105,7 +107,7 @@ defmodule Kino.ETSTest do
     for n <- 1..25, do: :ets.insert(tid, {n})
 
     widget = Kino.ETS.new(tid)
-    data = connect_self(widget)
+    data = connect(widget)
 
     assert %{
              content: %{
@@ -115,19 +117,12 @@ defmodule Kino.ETSTest do
              }
            } = data
 
-    send(widget.pid, {:event, "show_page", %{"page" => 2}, %{origin: self()}})
+    push_event(widget, "show_page", %{"page" => 2})
 
-    assert_receive {:event, "update_content",
-                    %{
-                      page: 2,
-                      max_page: 3,
-                      rows: [%{fields: %{"0" => "11"}} | _]
-                    }, %{}}
-  end
-
-  defp connect_self(widget) do
-    send(widget.pid, {:connect, self(), %{origin: self()}})
-    assert_receive {:connect_reply, %{} = data, %{}}
-    data
+    assert_broadcast_event(widget, "update_content", %{
+      page: 2,
+      max_page: 3,
+      rows: [%{fields: %{"0" => "11"}} | _]
+    })
   end
 end

@@ -1,6 +1,8 @@
 defmodule Kino.Bridge do
   @moduledoc false
 
+  import Kernel, except: [send: 2]
+
   # This module encapsulates the communication with Livebook
   # achieved via the group leader. For the implementation of
   # that group leader see Livebook.Evaluator.IOProxy
@@ -86,11 +88,33 @@ defmodule Kino.Bridge do
     end
   end
 
+  @doc """
+  Broadcasts the given message in Livebook to interested parties.
+  """
+  @spec broadcast(String.t(), String.t(), term()) :: :ok | {:error, request_error()}
+  def broadcast(topic, subtopic, message) do
+    with {:ok, reply} <- io_request(:livebook_get_broadcast_target),
+         {:ok, pid} <- reply do
+      send(pid, {:runtime_broadcast, topic, subtopic, message})
+      :ok
+    end
+  end
+
+  @doc """
+  Sends message to the given Livebook process.
+  """
+  @spec send(pid(), term()) :: :ok
+  def send(pid, message) do
+    # For now we send directly
+    Kernel.send(pid, message)
+    :ok
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
 
-    send(gl, {:io_request, self(), ref, request})
+    Kernel.send(gl, {:io_request, self(), ref, request})
 
     result =
       receive do

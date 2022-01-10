@@ -19,7 +19,7 @@ defmodule Kino.JS.Live.Context do
 
   @doc false
   def new() do
-    %__MODULE__{assigns: %{}, origin: nil, __private__: %{client_pids: []}}
+    %__MODULE__{assigns: %{}, origin: nil, __private__: %{}}
   end
 
   @doc """
