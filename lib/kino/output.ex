@@ -15,7 +15,7 @@ defmodule Kino.Output do
           | markdown()
           | image()
           | js()
-          | frame_dynamic()
+          | frame()
           | input()
           | control()
 
@@ -119,25 +119,19 @@ defmodule Kino.Output do
         }
 
   @typedoc """
-  Animable output.
+  Outputs placeholder.
 
-  This output points to a server process that clients can talk to.
-
-  ## Communication protocol
-
-  A client process should connect to the server process by sending:
-
-      {:connect, pid()}
-
-  And expect the following reply:
-
-      {:connect_reply, %{output: Kino.Output.t() | nil}}
-
-  The server process may then keep sending one of the following events:
-
-      {:render, %{output: Kino.Output.t()}}
+  Frame with type `:default` includes the initial list of outputs.
+  Other types can be used to update outputs within the given frame.
   """
-  @type frame_dynamic :: {:frame_dynamic, pid()}
+  @type frame :: {:frame, outputs :: list(t()), frame_info()}
+
+  @type frame_info :: %{
+          ref: frame_ref(),
+          type: :default | :replace | :append
+        }
+
+  @type frame_ref :: String.t()
 
   @typedoc """
   An input field.
@@ -330,11 +324,11 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:frame_dynamic/0`.
+  See `t:frame/0`.
   """
-  @spec frame_dynamic(pid()) :: t()
-  def frame_dynamic(pid) when is_pid(pid) do
-    {:frame_dynamic, pid}
+  @spec frame(list(t()), frame_info()) :: t()
+  def frame(outputs, info) when is_list(outputs) and is_map(info) do
+    {:frame, outputs, info}
   end
 
   @doc """
