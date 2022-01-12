@@ -35,7 +35,7 @@ defmodule Kino.Control do
   @type t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
 
   defp new(attrs) do
-    ref = make_ref()
+    ref = Kino.Output.random_ref()
     subscription_manager = Kino.SubscriptionManager.cross_node_name()
 
     attrs = Map.merge(attrs, %{ref: ref, destination: subscription_manager})

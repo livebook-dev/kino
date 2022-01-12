@@ -23,7 +23,7 @@ defmodule Kino.Input do
     token = Kino.Bridge.generate_token()
     persistent_id = {token, attrs} |> :erlang.phash2() |> Integer.to_string()
 
-    ref = make_ref()
+    ref = Kino.Output.random_ref()
     subscription_manager = Kino.SubscriptionManager.cross_node_name()
 
     attrs =

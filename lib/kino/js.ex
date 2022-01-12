@@ -150,7 +150,7 @@ defmodule Kino.JS do
 
   defstruct [:module, :ref, :export]
 
-  @type t :: %__MODULE__{module: module(), ref: String.t(), export: map()}
+  @type t :: %__MODULE__{module: module(), ref: Kino.Output.ref(), export: map()}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -398,7 +398,7 @@ defmodule Kino.JS do
         %{info_string: info_string, key: export_key}
       end
 
-    ref = System.unique_integer() |> Integer.to_string()
+    ref = Kino.Output.random_ref()
 
     Kino.JSDataStore.store(ref, data)
 
