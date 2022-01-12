@@ -23,7 +23,7 @@ defmodule Kino.MixProject do
   def application do
     [
       mod: {Kino.Application, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger, :crypto]
     ]
   end
 
