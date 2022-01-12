@@ -54,19 +54,19 @@ defmodule Kino.Output do
 
   A client process should connect to the server process by sending:
 
-      {:connect, pid(), info :: %{ref: js_output_ref(), origin: term()}}
+      {:connect, pid(), info :: %{ref: ref(), origin: term()}}
 
   And expect the following reply:
 
-      {:connect_reply, initial_data, info :: %{ref: js_output_ref()}}
+      {:connect_reply, initial_data, info :: %{ref: ref()}}
 
   The server process may then keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref()}}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: ref()}}
 
   The client process may keep sending one of the following events:
 
-      {:event, event :: String.t(), payload :: term(), info :: %{ref: js_output_ref(), origin: term()}}
+      {:event, event :: String.t(), payload :: term(), info :: %{ref: ref(), origin: term()}}
 
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """
@@ -103,7 +103,7 @@ defmodule Kino.Output do
       should be exported
   """
   @type js_info :: %{
-          ref: js_output_ref(),
+          ref: ref(),
           pid: Process.dest(),
           assets: %{
             archive_path: String.t(),
@@ -117,8 +117,6 @@ defmodule Kino.Output do
                 key: nil | term()
               }
         }
-
-  @type js_output_ref :: String.t()
 
   @typedoc """
   Animable output.
@@ -162,13 +160,12 @@ defmodule Kino.Output do
   """
   @type input :: {:input, attrs :: input_attrs()}
 
-  @type input_ref :: reference()
   @type input_id :: String.t()
 
   @type input_attrs ::
           %{
             type: :text,
-            ref: input_ref(),
+            ref: ref(),
             id: input_id(),
             label: String.t(),
             default: String.t(),
@@ -176,7 +173,7 @@ defmodule Kino.Output do
           }
           | %{
               type: :textarea,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -184,7 +181,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :password,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -192,7 +189,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :number,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: number() | nil,
@@ -200,7 +197,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :url,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: String.t() | nil,
@@ -208,7 +205,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :select,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: term(),
@@ -217,7 +214,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :checkbox,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: boolean(),
@@ -225,7 +222,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :range,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: number(),
@@ -236,7 +233,7 @@ defmodule Kino.Output do
             }
           | %{
               type: :color,
-              ref: input_ref(),
+              ref: ref(),
               id: input_id(),
               label: String.t(),
               default: String.t(),
@@ -265,24 +262,22 @@ defmodule Kino.Output do
   """
   @type control :: {:control, attrs :: control_attrs()}
 
-  @type control_ref :: reference()
-
   @type control_attrs ::
           %{
             type: :keyboard,
-            ref: control_ref(),
+            ref: ref(),
             destination: Process.dest(),
             events: list(:keyup | :keydown | :status)
           }
           | %{
               type: :button,
-              ref: control_ref(),
+              ref: ref(),
               destination: Process.dest(),
               label: String.t()
             }
           | %{
               type: :form,
-              ref: control_ref(),
+              ref: ref(),
               destination: Process.dest(),
               fields: list({field :: atom(), input_attrs()}),
               submit: String.t() | nil,
@@ -291,6 +286,8 @@ defmodule Kino.Output do
               report_changes: %{(field :: atom()) => true},
               reset_on_submit: list(field :: atom())
             }
+
+  @type ref :: String.t()
 
   @doc """
   See `t:text_inline/0`.
@@ -384,5 +381,13 @@ defmodule Kino.Output do
       string: :green,
       reset: :reset
     ]
+  end
+
+  @doc """
+  Generates a random binary identifier.
+  """
+  @spec random_ref() :: ref()
+  def random_ref() do
+    :crypto.strong_rand_bytes(20) |> Base.encode32(case: :lower)
   end
 end

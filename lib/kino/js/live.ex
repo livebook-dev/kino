@@ -131,7 +131,7 @@ defmodule Kino.JS.Live do
 
   alias Kino.JS.Live.Context
 
-  @type t :: %__MODULE__{module: module(), pid: pid(), ref: String.t()}
+  @type t :: %__MODULE__{module: module(), pid: pid(), ref: Kino.Output.ref()}
 
   @doc """
   Invoked when the widget server started.
@@ -225,7 +225,7 @@ defmodule Kino.JS.Live do
   """
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
-    ref = System.unique_integer() |> Integer.to_string()
+    ref = Kino.Output.random_ref()
     {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg, ref}})
     %__MODULE__{module: module, pid: pid, ref: ref}
   end
