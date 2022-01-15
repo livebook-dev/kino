@@ -10,8 +10,8 @@ defmodule Kino.Output do
   """
   @type t ::
           ignored()
-          | text_inline()
-          | text_block()
+          | stdout()
+          | text()
           | markdown()
           | image()
           | js()
@@ -25,14 +25,14 @@ defmodule Kino.Output do
   @type ignored :: :ignored
 
   @typedoc """
-  Regular text, adjacent such outputs can be treated as a whole.
+  IO text output, adjacent such outputs are treated as a whole
   """
-  @type text_inline :: binary()
+  @type stdout :: {:stdout, binary()}
 
   @typedoc """
   Standalone text block.
   """
-  @type text_block :: {:text, binary()}
+  @type text :: {:text, binary()}
 
   @typedoc """
   Markdown content.
@@ -284,18 +284,10 @@ defmodule Kino.Output do
   @type ref :: String.t()
 
   @doc """
-  See `t:text_inline/0`.
+  See `t:text/0`.
   """
-  @spec text_inline(binary()) :: t()
-  def text_inline(text) when is_binary(text) do
-    text
-  end
-
-  @doc """
-  See `t:text_block/0`.
-  """
-  @spec text_block(binary()) :: t()
-  def text_block(text) when is_binary(text) do
+  @spec text(binary()) :: t()
+  def text(text) when is_binary(text) do
     {:text, text}
   end
 
@@ -348,12 +340,12 @@ defmodule Kino.Output do
   end
 
   @doc """
-  Returns `t:text_block/0` with the inspected term.
+  Returns `t:text/0` with the inspected term.
   """
   @spec inspect(term(), keyword()) :: t()
   def inspect(term, opts \\ []) do
     inspected = Kernel.inspect(term, inspect_opts(opts))
-    text_block(inspected)
+    text(inspected)
   end
 
   defp inspect_opts(opts) do
