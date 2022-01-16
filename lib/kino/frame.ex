@@ -118,7 +118,7 @@ defmodule Kino.Frame do
   def handle_cast({:append, term}, state) do
     output = Kino.Render.to_livebook(term)
     put_update(state.ref, [output], :append)
-    state = %{state | outputs: state.outputs ++ [output]}
+    state = %{state | outputs: [output | state.outputs]}
     {:noreply, state}
   end
 

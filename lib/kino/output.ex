@@ -123,6 +123,9 @@ defmodule Kino.Output do
 
   Frame with type `:default` includes the initial list of outputs.
   Other types can be used to update outputs within the given frame.
+
+  In all cases the outputs order is reversed, that is, most recent
+  outputs are at the top of the stack.
   """
   @type frame :: {:frame, outputs :: list(t()), frame_info()}
 
