@@ -10,12 +10,12 @@ defmodule Kino.Output do
   """
   @type t ::
           ignored()
-          | text_inline()
-          | text_block()
+          | stdout()
+          | text()
           | markdown()
           | image()
           | js()
-          | frame_dynamic()
+          | frame()
           | input()
           | control()
 
@@ -25,14 +25,14 @@ defmodule Kino.Output do
   @type ignored :: :ignored
 
   @typedoc """
-  Regular text, adjacent such outputs can be treated as a whole.
+  IO text output, adjacent such outputs are treated as a whole
   """
-  @type text_inline :: binary()
+  @type stdout :: {:stdout, binary()}
 
   @typedoc """
   Standalone text block.
   """
-  @type text_block :: {:text, binary()}
+  @type text :: {:text, binary()}
 
   @typedoc """
   Markdown content.
@@ -119,25 +119,22 @@ defmodule Kino.Output do
         }
 
   @typedoc """
-  Animable output.
+  Outputs placeholder.
 
-  This output points to a server process that clients can talk to.
+  Frame with type `:default` includes the initial list of outputs.
+  Other types can be used to update outputs within the given frame.
 
-  ## Communication protocol
-
-  A client process should connect to the server process by sending:
-
-      {:connect, pid()}
-
-  And expect the following reply:
-
-      {:connect_reply, %{output: Kino.Output.t() | nil}}
-
-  The server process may then keep sending one of the following events:
-
-      {:render, %{output: Kino.Output.t()}}
+  In all cases the outputs order is reversed, that is, most recent
+  outputs are at the top of the stack.
   """
-  @type frame_dynamic :: {:frame_dynamic, pid()}
+  @type frame :: {:frame, outputs :: list(t()), frame_info()}
+
+  @type frame_info :: %{
+          ref: frame_ref(),
+          type: :default | :replace | :append
+        }
+
+  @type frame_ref :: String.t()
 
   @typedoc """
   An input field.
@@ -290,18 +287,10 @@ defmodule Kino.Output do
   @type ref :: String.t()
 
   @doc """
-  See `t:text_inline/0`.
+  See `t:text/0`.
   """
-  @spec text_inline(binary()) :: t()
-  def text_inline(text) when is_binary(text) do
-    text
-  end
-
-  @doc """
-  See `t:text_block/0`.
-  """
-  @spec text_block(binary()) :: t()
-  def text_block(text) when is_binary(text) do
+  @spec text(binary()) :: t()
+  def text(text) when is_binary(text) do
     {:text, text}
   end
 
@@ -330,11 +319,11 @@ defmodule Kino.Output do
   end
 
   @doc """
-  See `t:frame_dynamic/0`.
+  See `t:frame/0`.
   """
-  @spec frame_dynamic(pid()) :: t()
-  def frame_dynamic(pid) when is_pid(pid) do
-    {:frame_dynamic, pid}
+  @spec frame(list(t()), frame_info()) :: t()
+  def frame(outputs, info) when is_list(outputs) and is_map(info) do
+    {:frame, outputs, info}
   end
 
   @doc """
@@ -354,12 +343,12 @@ defmodule Kino.Output do
   end
 
   @doc """
-  Returns `t:text_block/0` with the inspected term.
+  Returns `t:text/0` with the inspected term.
   """
   @spec inspect(term(), keyword()) :: t()
   def inspect(term, opts \\ []) do
     inspected = Kernel.inspect(term, inspect_opts(opts))
-    text_block(inspected)
+    text(inspected)
   end
 
   defp inspect_opts(opts) do

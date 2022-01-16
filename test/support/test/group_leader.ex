@@ -34,6 +34,11 @@ defmodule KinoTest.GroupLeader do
     {:noreply, state}
   end
 
+  defp io_request({:livebook_put_output, output}, state) do
+    send(state.target, {:livebook_put_output, output})
+    :ok
+  end
+
   defp io_request(:livebook_get_broadcast_target, state) do
     {:ok, state.target}
   end

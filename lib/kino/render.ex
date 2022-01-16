@@ -51,7 +51,8 @@ end
 defimpl Kino.Render, for: Kino.Frame do
   def to_livebook(widget) do
     Kino.Bridge.reference_object(widget.pid, self())
-    Kino.Output.frame_dynamic(widget.pid)
+    outputs = Kino.Frame.get_outputs(widget)
+    Kino.Output.frame(outputs, %{ref: widget.ref, type: :default})
   end
 end
 
@@ -82,15 +83,15 @@ defimpl Kino.Render, for: Reference do
     end
   end
 
-  defp accessible_ets_table?(reference) when is_reference(reference) do
+  defp accessible_ets_table?(tid) do
     try do
-      case :ets.info(reference, :protection) do
+      case :ets.info(tid, :protection) do
         :undefined -> false
         :private -> false
         _ -> true
       end
     rescue
-      # When the reference is not a valid table identifier
+      # When the tid is not a valid table identifier
       ArgumentError -> false
     end
   end

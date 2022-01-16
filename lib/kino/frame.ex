@@ -1,9 +1,9 @@
 defmodule Kino.Frame do
   @moduledoc """
-  A widget wrapping a static output.
+  A placeholder for outputs.
 
-  This widget serves as a placeholder for a regular output,
-  so that it can be dynamically replaced at any time.
+  A frame wraps outputs that can be dynamically updated at
+  any time.
 
   Also see `Kino.animate/3` which offers a convenience on
   top of this widget.
@@ -30,23 +30,21 @@ defmodule Kino.Frame do
   @doc false
   use GenServer, restart: :temporary
 
-  defstruct [:pid]
+  defstruct [:ref, :pid]
 
-  @type t :: %__MODULE__{pid: pid()}
+  @type t :: %__MODULE__{ref: String.t(), pid: pid()}
 
   @typedoc false
-  @type state :: %{
-          client_pids: list(pid()),
-          output: Kino.Output.t() | nil
-        }
+  @type state :: %{outputs: list(Kino.Output.t())}
 
   @doc """
   Starts a widget process.
   """
   @spec new() :: t()
   def new() do
-    {:ok, pid} = Kino.start_child(__MODULE__)
-    %__MODULE__{pid: pid}
+    ref = System.unique_integer() |> Integer.to_string()
+    {:ok, pid} = Kino.start_child({__MODULE__, ref})
+    %__MODULE__{ref: ref, pid: pid}
   end
 
   @doc false
@@ -57,12 +55,28 @@ defmodule Kino.Frame do
   @doc """
   Renders the given term within the frame.
 
-  This works similarly to `Kino.render/1`, but the frame
-  widget only shows the last rendered result.
+  This works similarly to `Kino.render/1`, but the rendered
+  output replaces existing frame contents.
   """
   @spec render(t(), term()) :: :ok
   def render(widget, term) do
     GenServer.cast(widget.pid, {:render, term})
+  end
+
+  @doc """
+  Renders and appends the given term to the frame.
+  """
+  @spec append(t(), term()) :: :ok
+  def append(widget, term) do
+    GenServer.cast(widget.pid, {:append, term})
+  end
+
+  @doc """
+  Removes all outputs within the given frame.
+  """
+  @spec clear(t()) :: :ok
+  def clear(widget) do
+    GenServer.cast(widget.pid, :clear)
   end
 
   @doc """
@@ -82,21 +96,35 @@ defmodule Kino.Frame do
     GenServer.cast(widget.pid, {:periodically, interval_ms, acc, fun})
   end
 
+  @doc false
+  @spec get_outputs(t()) :: list(Kino.Output.t())
+  def get_outputs(widget) do
+    GenServer.call(widget.pid, :get_outputs)
+  end
+
   @impl true
-  def init(_opts) do
-    {:ok, %{client_pids: [], output: nil}}
+  def init(ref) do
+    {:ok, %{ref: ref, outputs: []}}
   end
 
   @impl true
   def handle_cast({:render, term}, state) do
     output = Kino.Render.to_livebook(term)
+    put_update(state.ref, [output], :replace)
+    state = %{state | outputs: [output]}
+    {:noreply, state}
+  end
 
-    for pid <- state.client_pids do
-      send(pid, {:render, %{output: output}})
-    end
+  def handle_cast({:append, term}, state) do
+    output = Kino.Render.to_livebook(term)
+    put_update(state.ref, [output], :append)
+    state = %{state | outputs: [output | state.outputs]}
+    {:noreply, state}
+  end
 
-    state = %{state | output: output}
-
+  def handle_cast(:clear, state) do
+    put_update(state.ref, [], :replace)
+    state = %{state | outputs: []}
     {:noreply, state}
   end
 
@@ -106,21 +134,14 @@ defmodule Kino.Frame do
   end
 
   @impl true
-  def handle_info({:connect, pid}, state) do
-    Process.monitor(pid)
-
-    send(pid, {:connect_reply, %{output: state.output}})
-
-    {:noreply, %{state | client_pids: [pid | state.client_pids]}}
+  def handle_call(:get_outputs, _from, state) do
+    {:reply, state.outputs, state}
   end
 
+  @impl true
   def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
     periodically_iter(interval_ms, acc, fun)
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {:noreply, %{state | client_pids: List.delete(state.client_pids, pid)}}
   end
 
   defp periodically_iter(interval_ms, acc, fun) do
@@ -131,5 +152,10 @@ defmodule Kino.Frame do
       :halt ->
         :ok
     end
+  end
+
+  defp put_update(ref, outputs, type) do
+    output = Kino.Output.frame(outputs, %{ref: ref, type: type})
+    Kino.Bridge.put_output(output)
   end
 end
