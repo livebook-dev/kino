@@ -1,6 +1,22 @@
 defmodule Kino.InputTest do
   use ExUnit.Case, async: true
 
+  describe "text/2" do
+    test "converts the default value to string" do
+      assert %{attrs: %{default: "10"}} = Kino.Input.text("Message", default: 10)
+    end
+  end
+
+  describe "number/2" do
+    test "raises an error on invalid default value" do
+      assert_raise ArgumentError,
+                   ~s/expected :default to be either number or nil, got: "10"/,
+                   fn ->
+                     Kino.Input.number("Message", default: "10")
+                   end
+    end
+  end
+
   describe "select/3" do
     test "raises an error for empty option list" do
       assert_raise ArgumentError, "expected at least one option, got: []", fn ->
