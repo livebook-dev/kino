@@ -50,4 +50,15 @@ defmodule Kino.SubscriptionManagerTest do
     events = "topic1" |> SubscriptionManager.stream() |> Enum.take(2)
     assert events == [{:ping, 1}, {:ping, 2}]
   end
+
+  test "stream/1 halts when the topic is cleared" do
+    spawn(fn ->
+      Process.sleep(1)
+      send(SubscriptionManager, {:event, "topic1", {:ping, 1}})
+      send(SubscriptionManager, {:clear_topic, "topic1"})
+    end)
+
+    events = "topic1" |> SubscriptionManager.stream() |> Enum.to_list()
+    assert events == [{:ping, 1}]
+  end
 end

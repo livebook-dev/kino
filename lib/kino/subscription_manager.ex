@@ -60,6 +60,7 @@ defmodule Kino.SubscriptionManager do
       fn ref ->
         receive do
           {^ref, event} -> {[event], ref}
+          {:__topic_cleared__, ^topic, ^ref} -> {:halt, ref}
         end
       end,
       fn _ref -> unsubscribe(topic, self()) end
@@ -112,7 +113,8 @@ defmodule Kino.SubscriptionManager do
     {subscribers, state} = pop_in(state.topic_with_subscribers[topic])
 
     state =
-      Enum.reduce(subscribers || [], state, fn {pid, _tag}, state ->
+      Enum.reduce(subscribers || [], state, fn {pid, tag}, state ->
+        send(pid, {:__topic_cleared__, topic, tag})
         remove_pid_topic(state, pid, topic)
       end)
 
