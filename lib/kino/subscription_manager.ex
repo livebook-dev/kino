@@ -46,6 +46,26 @@ defmodule Kino.SubscriptionManager do
     GenServer.cast(@name, {:unsubscribe, topic, pid})
   end
 
+  @doc """
+  Returns a `Stream` of events under `topic`.
+  """
+  @spec stream(term()) :: Enumerable.t()
+  def stream(topic) do
+    Stream.resource(
+      fn ->
+        ref = make_ref()
+        subscribe(topic, self(), ref)
+        ref
+      end,
+      fn ref ->
+        receive do
+          {^ref, event} -> {[event], ref}
+        end
+      end,
+      fn _ref -> unsubscribe(topic, self()) end
+    )
+  end
+
   @impl true
   def init(_opts) do
     {:ok, %{topic_with_subscribers: %{}, pid_with_topics: %{}}}
