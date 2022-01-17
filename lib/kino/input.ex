@@ -289,9 +289,21 @@ defmodule Kino.Input do
 
   @doc """
   Unsubscribes the calling process from input events.
+
+  See `Kino.Control.unsubscribe/1` for more details.
   """
   @spec unsubscribe(t()) :: :ok
   def unsubscribe(%Kino.Input{} = input) do
     Kino.SubscriptionManager.unsubscribe(input.attrs.ref, self())
+  end
+
+  @doc """
+  Returns a `Stream` of input events.
+
+  See `Kino.Control.stream/1` for more details.
+  """
+  @spec stream(t()) :: Enumerable.t()
+  def stream(%Kino.Input{} = input) do
+    Kino.SubscriptionManager.stream(input.attrs.ref)
   end
 end

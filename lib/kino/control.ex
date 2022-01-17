@@ -248,4 +248,15 @@ defmodule Kino.Control do
   def unsubscribe(%Kino.Control{} = control) do
     Kino.SubscriptionManager.unsubscribe(control.attrs.ref, self())
   end
+
+  @doc """
+  Returns a `Stream` of control events.
+
+  This is an alternative API to `subscribe/2`, such that event
+  messages are consume via stream instead of process messages.
+  """
+  @spec stream(t()) :: Enumerable.t()
+  def stream(%Kino.Control{} = control) do
+    Kino.SubscriptionManager.stream(control.attrs.ref)
+  end
 end

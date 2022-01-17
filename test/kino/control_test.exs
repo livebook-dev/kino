@@ -66,4 +66,25 @@ defmodule Kino.ControlTest do
       assert_receive {:name, ^info}
     end
   end
+
+  describe "stream/1" do
+    test "returns control event feed" do
+      button = Kino.Control.button("Name")
+
+      pid =
+        spawn(fn ->
+          Process.sleep(1)
+          info = %{origin: self()}
+          send(button.attrs.destination, {:event, button.attrs.ref, info})
+          send(button.attrs.destination, {:event, button.attrs.ref, info})
+        end)
+
+      events =
+        button
+        |> Kino.Control.stream()
+        |> Enum.take(2)
+
+      assert events == [%{origin: pid}, %{origin: pid}]
+    end
+  end
 end

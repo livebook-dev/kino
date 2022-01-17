@@ -46,6 +46,27 @@ defmodule Kino.SubscriptionManager do
     GenServer.cast(@name, {:unsubscribe, topic, pid})
   end
 
+  @doc """
+  Returns a `Stream` of events under `topic`.
+  """
+  @spec stream(term()) :: Enumerable.t()
+  def stream(topic) do
+    Stream.resource(
+      fn ->
+        tag = {:__stream__, make_ref()}
+        subscribe(topic, self(), tag)
+        tag
+      end,
+      fn tag ->
+        receive do
+          {^tag, event} -> {[event], tag}
+          {^tag, :__topic_cleared__, ^topic} -> {:halt, tag}
+        end
+      end,
+      fn _ref -> unsubscribe(topic, self()) end
+    )
+  end
+
   @impl true
   def init(_opts) do
     {:ok, %{topic_with_subscribers: %{}, pid_with_topics: %{}}}
@@ -92,7 +113,11 @@ defmodule Kino.SubscriptionManager do
     {subscribers, state} = pop_in(state.topic_with_subscribers[topic])
 
     state =
-      Enum.reduce(subscribers || [], state, fn {pid, _tag}, state ->
+      Enum.reduce(subscribers || [], state, fn {pid, tag}, state ->
+        with {:__stream__, _ref} <- tag do
+          send(pid, {tag, :__topic_cleared__, topic})
+        end
+
         remove_pid_topic(state, pid, topic)
       end)
 
