@@ -53,14 +53,14 @@ defmodule Kino.SubscriptionManager do
   def stream(topic) do
     Stream.resource(
       fn ->
-        ref = make_ref()
-        subscribe(topic, self(), ref)
-        ref
+        tag = {:__stream__, make_ref()}
+        subscribe(topic, self(), tag)
+        tag
       end,
-      fn ref ->
+      fn tag ->
         receive do
-          {^ref, event} -> {[event], ref}
-          {:__topic_cleared__, ^topic, ^ref} -> {:halt, ref}
+          {^tag, event} -> {[event], tag}
+          {^tag, :__topic_cleared__, ^topic} -> {:halt, tag}
         end
       end,
       fn _ref -> unsubscribe(topic, self()) end
@@ -114,7 +114,10 @@ defmodule Kino.SubscriptionManager do
 
     state =
       Enum.reduce(subscribers || [], state, fn {pid, tag}, state ->
-        send(pid, {:__topic_cleared__, topic, tag})
+        with {:__stream__, _ref} <- tag do
+          send(pid, {tag, :__topic_cleared__, topic})
+        end
+
         remove_pid_topic(state, pid, topic)
       end)
 
