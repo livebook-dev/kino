@@ -55,15 +55,8 @@ defmodule Kino.Input do
   """
   @spec text(String.t(), keyword()) :: t()
   def text(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    default = Keyword.get(opts, :default, "")
-    assert_default_value!(default, "be a string", &is_binary/1)
+    default = opts |> Keyword.get(:default, "") |> to_string()
     new(%{type: :text, label: label, default: default})
-  end
-
-  defp assert_default_value!(value, message, check) do
-    unless check.(value) do
-      raise ArgumentError, "expected :default to #{message}, got: #{inspect(value)}"
-    end
   end
 
   @doc """
@@ -75,8 +68,7 @@ defmodule Kino.Input do
   """
   @spec textarea(String.t(), keyword()) :: t()
   def textarea(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    default = Keyword.get(opts, :default, "")
-    assert_default_value!(default, "be a string", &is_binary/1)
+    default = opts |> Keyword.get(:default, "") |> to_string()
     new(%{type: :textarea, label: label, default: default})
   end
 
@@ -92,8 +84,7 @@ defmodule Kino.Input do
   """
   @spec password(String.t(), keyword()) :: t()
   def password(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    default = Keyword.get(opts, :default, "")
-    assert_default_value!(default, "be a string", &is_binary/1)
+    default = opts |> Keyword.get(:default, "") |> to_string()
     new(%{type: :password, label: label, default: default})
   end
 
@@ -115,6 +106,12 @@ defmodule Kino.Input do
     end)
 
     new(%{type: :number, label: label, default: default})
+  end
+
+  defp assert_default_value!(value, message, check) do
+    unless check.(value) do
+      raise ArgumentError, "expected :default to #{message}, got: #{inspect(value)}"
+    end
   end
 
   @doc """
