@@ -40,25 +40,14 @@ defmodule Kino.SubscriptionManagerTest do
     refute_received {:tag1, ^event}
   end
 
-  test "stream/1 returns event feed" do
-    spawn(fn ->
-      Process.sleep(1)
-      send(SubscriptionManager, {:event, "topic1", {:ping, 1}})
-      send(SubscriptionManager, {:event, "topic1", {:ping, 2}})
-    end)
+  test "subscribe/3 with :notify_clear" do
+    SubscriptionManager.subscribe("topic1", self(), :tag1, notify_clear: true)
+    SubscriptionManager.subscribe("topic2", self(), :tag2)
 
-    events = "topic1" |> SubscriptionManager.stream() |> Enum.take(2)
-    assert events == [{:ping, 1}, {:ping, 2}]
-  end
+    send(SubscriptionManager, {:clear_topic, "topic1"})
+    send(SubscriptionManager, {:clear_topic, "topic2"})
 
-  test "stream/1 halts when the topic is cleared" do
-    spawn(fn ->
-      Process.sleep(1)
-      send(SubscriptionManager, {:event, "topic1", {:ping, 1}})
-      send(SubscriptionManager, {:clear_topic, "topic1"})
-    end)
-
-    events = "topic1" |> SubscriptionManager.stream() |> Enum.to_list()
-    assert events == [{:ping, 1}]
+    assert_receive {:tag1, :topic_cleared, "topic1"}
+    refute_receive {:tag2, :topic_cleared, "topic2"}
   end
 end

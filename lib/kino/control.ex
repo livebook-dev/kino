@@ -32,7 +32,9 @@ defmodule Kino.Control do
 
   defstruct [:attrs]
 
-  @type t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
+  @opaque t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
+
+  @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
   defp new(attrs) do
     ref = Kino.Output.random_ref()
@@ -81,7 +83,7 @@ defmodule Kino.Control do
 
   Create the widget:
 
-      keyboard = Kino.Control.keyboard([:keyup, :keydown])
+      keyboard = Kino.Control.keyboard([:keyup, :keydown, :status])
 
   Subscribe to events:
 
@@ -90,6 +92,7 @@ defmodule Kino.Control do
   As the user types events are streamed:
 
       IEx.Helpers.flush()
+      #=> {:keyboard, %{enabled: true, origin: #PID<10895.9854.0>, type: :status}
       #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keydown}}
       #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keydown}}
       #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
@@ -230,23 +233,39 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Subscribes the calling process to control events.
+  Subscribes the calling process to control or input events.
 
   The events are sent as `{tag, info}`, where info is a map with
   event details. In particular, it always includes `:origin`, which
   is an opaque identifier of the client that triggered the event.
   """
-  @spec subscribe(t(), term()) :: :ok
-  def subscribe(%Kino.Control{} = control, tag) do
-    Kino.SubscriptionManager.subscribe(control.attrs.ref, self(), tag)
+  @spec subscribe(t() | Kino.Input.t(), term()) :: :ok
+  def subscribe(source, tag)
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
+    Kino.SubscriptionManager.subscribe(source.attrs.ref, self(), tag)
   end
 
   @doc """
-  Unsubscribes the calling process from control events.
+  Unsubscribes the calling process from control or input events.
   """
-  @spec unsubscribe(t()) :: :ok
-  def unsubscribe(%Kino.Control{} = control) do
-    Kino.SubscriptionManager.unsubscribe(control.attrs.ref, self())
+  @spec unsubscribe(t() | Kino.Input.t()) :: :ok
+  def unsubscribe(source)
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
+    Kino.SubscriptionManager.unsubscribe(source.attrs.ref, self())
+  end
+
+  @doc """
+  Returns a new interval event source.
+
+  This can be used as event source for `stream/1` and `tagged_stream/1`.
+  The events are emitted periodically with an increasing value, starting
+  from 0 and have the form:
+
+      %{type: :interval, iteration: non_neg_integer()}
+  """
+  @spec interval(non_neg_integer()) :: interval()
+  def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do
+    {:interval, milliseconds}
   end
 
   @doc """
@@ -254,9 +273,131 @@ defmodule Kino.Control do
 
   This is an alternative API to `subscribe/2`, such that event
   messages are consume via stream instead of process messages.
+
+  It accepts a single source or a list of sources, where each
+  source is either of:
+
+    * `Kino.Control` - emitting value on relevant interaction
+
+    * `Kino.Input` - emitting value on value change
+
+  ## Example
+
+      button = Kino.Control.button("Hello")
+
+      for event <- Kino.Control.stream(button) do
+        IO.inspect(event)
+      end
+      #=> %{origin: #PID<10895.9854.0>, type: :click}
+      #=> %{origin: #PID<10895.9854.0>, type: :click}
+
+  Or with multiple sources:
+
+      button = Kino.Control.button("Hello")
+      input = Kino.Input.checkbox("Check")
+      interval = Kino.Control.interval(1000)
+
+      for event <- Kino.Control.stream([button, input, interval]) do
+        IO.inspect(event)
+      end
+      #=> %{type: :interval, iteration: 0}
+      #=> %{origin: #PID<10895.9854.0>, type: :click}
+      #=> %{origin: #PID<10895.9854.0>, type: :change, value: true}
   """
-  @spec stream(t()) :: Enumerable.t()
-  def stream(%Kino.Control{} = control) do
-    Kino.SubscriptionManager.stream(control.attrs.ref)
+  @spec stream(source | list(source)) :: Enumerable.t()
+        when source: t() | Kino.Input.t() | interval()
+  def stream(sources) when is_list(sources) do
+    for source <- sources, do: assert_stream_source!(source)
+
+    tagged_topics = for %{attrs: %{ref: ref}} <- sources, do: {nil, ref}
+    tagged_intervals = for {:interval, ms} <- sources, do: {nil, ms}
+
+    build_stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
+  end
+
+  def stream(source) do
+    stream([source])
+  end
+
+  @doc """
+  Same as `stream/1`, but attaches custom tag to every stream item.
+
+  ## Example
+
+      button = Kino.Control.button("Hello")
+      input = Kino.Input.checkbox("Check")
+
+      for event <- Kino.Control.tagged_stream([hello: button, check: input]) do
+        IO.inspect(event)
+      end
+      #=> {:hello, %{origin: #PID<10895.9854.0>, type: :click}}
+      #=> {:check, %{origin: #PID<10895.9854.0>, type: :change, value: true}}
+  """
+  def tagged_stream(entries) when is_list(entries) do
+    for entry <- entries do
+      case entry do
+        {tag, source} when is_atom(tag) ->
+          assert_stream_source!(source)
+
+        _other ->
+          raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+      end
+    end
+
+    tagged_topics = for {tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}
+    tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
+
+    build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
+  end
+
+  defp assert_stream_source!(%Kino.Control{}), do: :ok
+  defp assert_stream_source!(%Kino.Input{}), do: :ok
+  defp assert_stream_source!({:interval, ms}) when is_number(ms) and ms > 0, do: :ok
+
+  defp assert_stream_source!(item) do
+    raise ArgumentError,
+          "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: #{inspect(item)}"
+  end
+
+  defp build_stream(tagged_topics, tagged_intervals, mapper) do
+    Stream.resource(
+      fn ->
+        ref = make_ref()
+
+        for {tag, topic} <- tagged_topics do
+          Kino.SubscriptionManager.subscribe(topic, self(), {ref, tag}, notify_clear: true)
+        end
+
+        for {tag, ms} <- tagged_intervals do
+          Process.send_after(self(), {{ref, tag}, :__interval__, ms, 0}, ms)
+        end
+
+        topics = Enum.map(tagged_topics, &elem(&1, 1))
+
+        {ref, topics}
+      end,
+      fn {ref, topics} ->
+        receive do
+          {{^ref, tag}, event} ->
+            {[mapper.(tag, event)], {ref, topics}}
+
+          {{^ref, _tag}, :topic_cleared, topic} ->
+            case topics -- [topic] do
+              [] -> {:halt, {ref, []}}
+              topics -> {[], {ref, topics}}
+            end
+
+          {{^ref, tag}, :__interval__, ms, i} ->
+            Process.send_after(self(), {{ref, tag}, :__interval__, ms, i + 1}, ms)
+            event = %{type: :interval, iteration: i}
+            {[mapper.(tag, event)], {ref, topics}}
+        end
+      end,
+      fn {_ref, topics} ->
+        for topic <- topics do
+          Kino.SubscriptionManager.unsubscribe(topic, self())
+        end
+      end
+    )
   end
 end

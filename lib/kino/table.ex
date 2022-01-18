@@ -44,8 +44,6 @@ defmodule Kino.Table do
   use Kino.JS, assets_path: "lib/assets/data_table"
   use Kino.JS.Live
 
-  @type t :: Kino.JS.Live.t()
-
   @limit 10
 
   def new(module, init_arg) do

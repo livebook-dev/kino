@@ -13,11 +13,17 @@ defmodule Kino.Input do
   Then read the value at any later point:
 
       name = Kino.Input.read(input)
+
+  ## Async API
+
+  You can subscribe to input changes or use the `Stream`
+  API for event feed. See the `Kino.Control` module for
+  more details.
   """
 
   defstruct [:attrs]
 
-  @type t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
+  @opaque t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
 
   defp new(attrs) do
     token = Kino.Bridge.generate_token()
@@ -273,37 +279,5 @@ defmodule Kino.Input do
       {:error, reason} ->
         raise "failed to read input value, reason: #{inspect(reason)}"
     end
-  end
-
-  @doc """
-  Subscribes the calling process to input changes.
-
-  The events are sent as `{tag, info}`.
-
-  See `Kino.Control.subscribe/2` for more details.
-  """
-  @spec subscribe(t(), term()) :: :ok
-  def subscribe(%Kino.Input{} = input, tag) do
-    Kino.SubscriptionManager.subscribe(input.attrs.ref, self(), tag)
-  end
-
-  @doc """
-  Unsubscribes the calling process from input events.
-
-  See `Kino.Control.unsubscribe/1` for more details.
-  """
-  @spec unsubscribe(t()) :: :ok
-  def unsubscribe(%Kino.Input{} = input) do
-    Kino.SubscriptionManager.unsubscribe(input.attrs.ref, self())
-  end
-
-  @doc """
-  Returns a `Stream` of input events.
-
-  See `Kino.Control.stream/1` for more details.
-  """
-  @spec stream(t()) :: Enumerable.t()
-  def stream(%Kino.Input{} = input) do
-    Kino.SubscriptionManager.stream(input.attrs.ref)
   end
 end

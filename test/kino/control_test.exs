@@ -68,6 +68,14 @@ defmodule Kino.ControlTest do
   end
 
   describe "stream/1" do
+    test "raises on invalid argument" do
+      assert_raise ArgumentError,
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   fn ->
+                     Kino.Control.stream(10)
+                   end
+    end
+
     test "returns control event feed" do
       button = Kino.Control.button("Name")
 
@@ -79,12 +87,90 @@ defmodule Kino.ControlTest do
           send(button.attrs.destination, {:event, button.attrs.ref, info})
         end)
 
-      events =
-        button
-        |> Kino.Control.stream()
-        |> Enum.take(2)
+      events = button |> Kino.Control.stream() |> Enum.take(2)
 
       assert events == [%{origin: pid}, %{origin: pid}]
+    end
+
+    test "supports interval" do
+      events = 1 |> Kino.Control.interval() |> Kino.Control.stream() |> Enum.take(2)
+      assert events == [%{type: :interval, iteration: 0}, %{type: :interval, iteration: 1}]
+    end
+
+    test "halts when the topic is cleared" do
+      button = Kino.Control.button("Name")
+
+      pid =
+        spawn(fn ->
+          Process.sleep(1)
+          info = %{origin: self()}
+          send(button.attrs.destination, {:event, button.attrs.ref, info})
+          send(button.attrs.destination, {:clear_topic, button.attrs.ref})
+        end)
+
+      events = button |> Kino.Control.stream() |> Enum.to_list()
+      assert events == [%{origin: pid}]
+    end
+  end
+
+  describe "stream/1 with a list of sources" do
+    test "raises on invalid source" do
+      assert_raise ArgumentError,
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   fn ->
+                     Kino.Control.stream([10])
+                   end
+    end
+
+    test "returns combined event feed for the given sources" do
+      button = Kino.Control.button("Click")
+      input = Kino.Input.text("Name")
+
+      pid =
+        spawn(fn ->
+          Process.sleep(1)
+          info = %{origin: self()}
+          send(button.attrs.destination, {:event, button.attrs.ref, info})
+          send(button.attrs.destination, {:event, input.attrs.ref, info})
+        end)
+
+      events = [button, input] |> Kino.Control.stream() |> Enum.take(2)
+
+      assert events == [%{origin: pid}, %{origin: pid}]
+    end
+  end
+
+  describe "tagged_stream/1" do
+    test "raises on invalid argument" do
+      assert_raise ArgumentError, "expected a keyword list, got: [0]", fn ->
+        Kino.Control.tagged_stream([0])
+      end
+
+      assert_raise ArgumentError,
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   fn ->
+                     Kino.Control.tagged_stream(name: 10)
+                   end
+    end
+
+    test "returns tagged event feed for the given sources" do
+      button = Kino.Control.button("Click")
+      input = Kino.Input.text("Name")
+
+      pid =
+        spawn(fn ->
+          Process.sleep(1)
+          info = %{origin: self()}
+          send(button.attrs.destination, {:event, button.attrs.ref, info})
+          send(button.attrs.destination, {:event, input.attrs.ref, info})
+        end)
+
+      events =
+        [click: button, name: input]
+        |> Kino.Control.tagged_stream()
+        |> Enum.take(2)
+
+      assert events == [{:click, %{origin: pid}}, {:name, %{origin: pid}}]
     end
   end
 end
