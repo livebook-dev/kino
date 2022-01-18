@@ -14,7 +14,7 @@ defmodule Kino.ETS do
 
   alias Kino.Utils
 
-  @type t :: Kino.Table.t()
+  @type t :: Kino.JS.Live.t()
 
   @doc """
   Starts a widget process representing the given ETS table.

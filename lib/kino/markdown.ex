@@ -37,7 +37,7 @@ defmodule Kino.Markdown do
 
   defstruct [:content]
 
-  @type t :: %__MODULE__{
+  @opaque t :: %__MODULE__{
           content: binary()
         }
 

@@ -23,7 +23,7 @@ defmodule Kino.Input do
 
   defstruct [:attrs]
 
-  @type t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
+  @opaque t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
 
   defp new(attrs) do
     token = Kino.Bridge.generate_token()

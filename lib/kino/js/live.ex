@@ -131,7 +131,7 @@ defmodule Kino.JS.Live do
 
   alias Kino.JS.Live.Context
 
-  @type t :: %__MODULE__{module: module(), pid: pid(), ref: Kino.Output.ref()}
+  @opaque t :: %__MODULE__{module: module(), pid: pid(), ref: Kino.Output.ref()}
 
   @doc """
   Invoked when the widget server started.

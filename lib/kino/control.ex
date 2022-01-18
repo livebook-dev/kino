@@ -32,9 +32,9 @@ defmodule Kino.Control do
 
   defstruct [:attrs]
 
-  @type t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
+  @opaque t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
 
-  @type interval :: {:interval, milliseconds :: non_neg_integer()}
+  @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
   defp new(attrs) do
     ref = Kino.Output.random_ref()
@@ -256,7 +256,7 @@ defmodule Kino.Control do
   @doc """
   Returns a new interval event source.
 
-  This can be used as event source for `stream/1` and `tagged_stream/1`.`
+  This can be used as event source for `stream/1` and `tagged_stream/1`.
   """
   @spec interval(non_neg_integer()) :: interval()
   def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do

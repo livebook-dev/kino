@@ -15,7 +15,7 @@ defmodule Kino.Image do
 
   defstruct [:content, :mime_type]
 
-  @type t :: %__MODULE__{
+  @opaque t :: %__MODULE__{
           content: binary(),
           mime_type: mime_type()
         }

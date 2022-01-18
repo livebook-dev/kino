@@ -32,7 +32,7 @@ defmodule Kino.Frame do
 
   defstruct [:ref, :pid]
 
-  @type t :: %__MODULE__{ref: String.t(), pid: pid()}
+  @opaque t :: %__MODULE__{ref: String.t(), pid: pid()}
 
   @typedoc false
   @type state :: %{outputs: list(Kino.Output.t())}

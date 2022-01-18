@@ -150,7 +150,7 @@ defmodule Kino.JS do
 
   defstruct [:module, :ref, :export]
 
-  @type t :: %__MODULE__{module: module(), ref: Kino.Output.ref(), export: map()}
+  @opaque t :: %__MODULE__{module: module(), ref: Kino.Output.ref(), export: map()}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do

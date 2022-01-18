@@ -23,7 +23,7 @@ defmodule Kino.Ecto do
 
   alias Kino.Utils
 
-  @type t :: Kino.Table.t()
+  @type t :: Kino.JS.Live.t()
 
   @doc """
   Starts a widget process with the given queryable as
