@@ -16,9 +16,9 @@ defmodule Kino.Image do
   defstruct [:content, :mime_type]
 
   @opaque t :: %__MODULE__{
-          content: binary(),
-          mime_type: mime_type()
-        }
+            content: binary(),
+            mime_type: mime_type()
+          }
 
   @type mime_type :: binary()
   @type common_image_type :: :jpeg | :png | :gif | :svg

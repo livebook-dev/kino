@@ -38,8 +38,8 @@ defmodule Kino.Markdown do
   defstruct [:content]
 
   @opaque t :: %__MODULE__{
-          content: binary()
-        }
+            content: binary()
+          }
 
   @doc """
   Wraps the given binary content into the markdown struct.

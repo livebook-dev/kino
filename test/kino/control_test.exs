@@ -93,8 +93,8 @@ defmodule Kino.ControlTest do
     end
 
     test "supports interval" do
-      events = 1 |> Kino.Control.interval() |> Kino.Control.stream() |> Enum.take(3)
-      assert events == [0, 1, 2]
+      events = 1 |> Kino.Control.interval() |> Kino.Control.stream() |> Enum.take(2)
+      assert events == [%{type: :interval, iteration: 0}, %{type: :interval, iteration: 1}]
     end
 
     test "halts when the topic is cleared" do

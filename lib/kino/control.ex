@@ -83,7 +83,7 @@ defmodule Kino.Control do
 
   Create the widget:
 
-      keyboard = Kino.Control.keyboard([:keyup, :keydown])
+      keyboard = Kino.Control.keyboard([:keyup, :keydown, :status])
 
   Subscribe to events:
 
@@ -92,6 +92,7 @@ defmodule Kino.Control do
   As the user types events are streamed:
 
       IEx.Helpers.flush()
+      #=> {:keyboard, %{enabled: true, origin: #PID<10895.9854.0>, type: :status}
       #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keydown}}
       #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keydown}}
       #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
@@ -257,6 +258,10 @@ defmodule Kino.Control do
   Returns a new interval event source.
 
   This can be used as event source for `stream/1` and `tagged_stream/1`.
+  The events are emitted periodically with an increasing value, starting
+  from 0 and have the form:
+
+      %{type: :interval, iteration: 0}
   """
   @spec interval(non_neg_integer()) :: interval()
   def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do
@@ -269,15 +274,12 @@ defmodule Kino.Control do
   This is an alternative API to `subscribe/2`, such that event
   messages are consume via stream instead of process messages.
 
-  Accepts a single source or a list of sources, where each source
-  is either of:
+  It accepts a single source or a list of sources, where each
+  source is either of:
 
     * `Kino.Control` - emitting value on relevant interaction
 
     * `Kino.Input` - emitting value on value change
-
-    * `Kino.Control.interval(n)` - periodically emitting an
-      increasing value, starting from 0
 
   ## Example
 
@@ -298,7 +300,7 @@ defmodule Kino.Control do
       for event <- Kino.Control.stream([button, input, interval]) do
         IO.inspect(event)
       end
-      #=> 0
+      #=> %{type: :interval, iteration: 0}
       #=> %{origin: #PID<10895.9854.0>, type: :click}
       #=> %{origin: #PID<10895.9854.0>, type: :change, value: true}
   """
@@ -325,7 +327,7 @@ defmodule Kino.Control do
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
 
-      for event <- Kino.Control.stream([hello: button, check: input]) do
+      for event <- Kino.Control.tagged_stream([hello: button, check: input]) do
         IO.inspect(event)
       end
       #=> {:hello, %{origin: #PID<10895.9854.0>, type: :click}}
@@ -385,9 +387,10 @@ defmodule Kino.Control do
               topics -> {[], {ref, topics}}
             end
 
-          {{^ref, tag}, :__interval__, ms, n} ->
-            Process.send_after(self(), {{ref, tag}, :__interval__, ms, n + 1}, ms)
-            {[mapper.(tag, n)], {ref, topics}}
+          {{^ref, tag}, :__interval__, ms, i} ->
+            Process.send_after(self(), {{ref, tag}, :__interval__, ms, i + 1}, ms)
+            event = %{type: :interval, iteration: i}
+            {[mapper.(tag, event)], {ref, topics}}
         end
       end,
       fn {_ref, topics} ->
