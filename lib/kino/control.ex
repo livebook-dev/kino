@@ -261,7 +261,7 @@ defmodule Kino.Control do
   The events are emitted periodically with an increasing value, starting
   from 0 and have the form:
 
-      %{type: :interval, iteration: 0}
+      %{type: :interval, iteration: non_neg_integer()}
   """
   @spec interval(non_neg_integer()) :: interval()
   def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do
