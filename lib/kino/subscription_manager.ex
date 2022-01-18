@@ -9,12 +9,12 @@ defmodule Kino.SubscriptionManager do
   @name __MODULE__
 
   @type state :: %{
-          topic_with_subscribers: %{topic() => list({pid(), tag()})},
+          topic_with_subscribers: %{topic() => list({pid(), info()})},
           pid_with_topics: %{pid() => list(topic())}
         }
 
   @type topic :: term()
-  @type tag :: term()
+  @type info :: %{tag: term(), notify_clear: boolean()}
 
   def cross_node_name() do
     {@name, node()}
@@ -32,10 +32,17 @@ defmodule Kino.SubscriptionManager do
 
   All events are sent as `{tag, info}`, where `tag` is
   the given term used for identifying the messages.
+
+  ## Options
+
+    * `:notify_clear` - when set to true, sends
+      `{tag, :topic_cleared, topic}` when topic is removed
   """
-  @spec subscribe(term(), pid(), term()) :: :ok
-  def subscribe(topic, pid, tag) do
-    GenServer.cast(@name, {:subscribe, topic, pid, tag})
+  @spec subscribe(term(), pid(), term(), keyword()) :: :ok
+  def subscribe(topic, pid, tag, opts \\ []) do
+    notify_clear = Keyword.get(opts, :notify_clear, false)
+    info = %{tag: tag, notify_clear: notify_clear}
+    GenServer.cast(@name, {:subscribe, topic, pid, info})
   end
 
   @doc """
@@ -46,40 +53,19 @@ defmodule Kino.SubscriptionManager do
     GenServer.cast(@name, {:unsubscribe, topic, pid})
   end
 
-  @doc """
-  Returns a `Stream` of events under `topic`.
-  """
-  @spec stream(term()) :: Enumerable.t()
-  def stream(topic) do
-    Stream.resource(
-      fn ->
-        tag = {:__stream__, make_ref()}
-        subscribe(topic, self(), tag)
-        tag
-      end,
-      fn tag ->
-        receive do
-          {^tag, event} -> {[event], tag}
-          {^tag, :__topic_cleared__, ^topic} -> {:halt, tag}
-        end
-      end,
-      fn _ref -> unsubscribe(topic, self()) end
-    )
-  end
-
   @impl true
   def init(_opts) do
     {:ok, %{topic_with_subscribers: %{}, pid_with_topics: %{}}}
   end
 
   @impl true
-  def handle_cast({:subscribe, topic, pid, tag}, state) do
+  def handle_cast({:subscribe, topic, pid, info}, state) do
     Process.monitor(pid)
 
     state =
       update_in(state.topic_with_subscribers[topic], fn
-        nil -> [{pid, tag}]
-        subscribers -> [{pid, tag} | remove_pid(subscribers, pid)]
+        nil -> [{pid, info}]
+        subscribers -> [{pid, info} | remove_pid(subscribers, pid)]
       end)
 
     state =
@@ -102,8 +88,8 @@ defmodule Kino.SubscriptionManager do
 
   @impl true
   def handle_info({:event, topic, event}, state) do
-    for {pid, tag} <- state.topic_with_subscribers[topic] || [] do
-      send(pid, {tag, event})
+    for {pid, info} <- state.topic_with_subscribers[topic] || [] do
+      send(pid, {info.tag, event})
     end
 
     {:noreply, state}
@@ -113,9 +99,9 @@ defmodule Kino.SubscriptionManager do
     {subscribers, state} = pop_in(state.topic_with_subscribers[topic])
 
     state =
-      Enum.reduce(subscribers || [], state, fn {pid, tag}, state ->
-        with {:__stream__, _ref} <- tag do
-          send(pid, {tag, :__topic_cleared__, topic})
+      Enum.reduce(subscribers || [], state, fn {pid, info}, state ->
+        if info.notify_clear do
+          send(pid, {info.tag, :topic_cleared, topic})
         end
 
         remove_pid_topic(state, pid, topic)
@@ -157,6 +143,6 @@ defmodule Kino.SubscriptionManager do
   end
 
   defp remove_pid(subscribers, pid) do
-    Enum.reject(subscribers, &match?({^pid, _tag}, &1))
+    Enum.reject(subscribers, &match?({^pid, _info}, &1))
   end
 end

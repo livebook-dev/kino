@@ -50,17 +50,4 @@ defmodule Kino.InputTest do
       end
     end
   end
-
-  describe "subscribe/2" do
-    test "subscribes to input events" do
-      input = Kino.Input.text("Name")
-
-      Kino.Input.subscribe(input, :name)
-
-      info = %{origin: self(), value: "Jake"}
-      send(input.attrs.destination, {:event, input.attrs.ref, info})
-
-      assert_receive {:name, ^info}
-    end
-  end
 end
