@@ -93,7 +93,7 @@ defmodule Kino.ControlTest do
     end
 
     test "supports interval" do
-      events = {:interval, 1} |> Kino.Control.stream() |> Enum.take(3)
+      events = 1 |> Kino.Control.interval() |> Kino.Control.stream() |> Enum.take(3)
       assert events == [0, 1, 2]
     end
 

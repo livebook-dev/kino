@@ -254,6 +254,16 @@ defmodule Kino.Control do
   end
 
   @doc """
+  Returns a new interval event source.
+
+  This can be used as event source for `stream/1` and `tagged_stream/1`.`
+  """
+  @spec interval(non_neg_integer()) :: interval()
+  def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do
+    {:interval, milliseconds}
+  end
+
+  @doc """
   Returns a `Stream` of control events.
 
   This is an alternative API to `subscribe/2`, such that event
@@ -266,7 +276,7 @@ defmodule Kino.Control do
 
     * `Kino.Input` - emitting value on value change
 
-    * `{:interval, milliseconds}` - periodically emitting an
+    * `Kino.Control.interval(n)` - periodically emitting an
       increasing value, starting from 0
 
   ## Example
@@ -283,8 +293,9 @@ defmodule Kino.Control do
 
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
+      interval = Kino.Control.interval(1000)
 
-      for event <- Kino.Control.stream([button, input, {:interval, 1000}]) do
+      for event <- Kino.Control.stream([button, input, interval]) do
         IO.inspect(event)
       end
       #=> 0
@@ -339,7 +350,7 @@ defmodule Kino.Control do
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok
   defp assert_stream_source!(%Kino.Input{}), do: :ok
-  defp assert_stream_source!({:interval, ms}) when ms > 0, do: :ok
+  defp assert_stream_source!({:interval, ms}) when is_number(ms) and ms > 0, do: :ok
 
   defp assert_stream_source!(item) do
     raise ArgumentError,
