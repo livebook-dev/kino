@@ -118,8 +118,8 @@ defmodule Kino.Table do
 
   defp broadcast_update(ctx) do
     {content, ctx} = get_content(ctx)
-    ctx = assign(ctx, content: content)
     broadcast_event(ctx, "update_content", content)
+    assign(ctx, content: content)
   end
 
   defp get_content(ctx) do
