@@ -135,10 +135,10 @@ defmodule Kino.VegaLite do
 
   @impl true
   def handle_cast({:push, dataset, data, window}, ctx) do
+    broadcast_event(ctx, "push", %{data: data, dataset: dataset, window: window})
+
     ctx =
-      ctx
-      |> broadcast_event("push", %{data: data, dataset: dataset, window: window})
-      |> update(:datasets, fn datasets ->
+      update(ctx, :datasets, fn datasets ->
         {current_data, datasets} = Map.pop(datasets, dataset, [])
 
         new_data =
@@ -155,11 +155,8 @@ defmodule Kino.VegaLite do
   end
 
   def handle_cast({:clear, dataset}, ctx) do
-    ctx =
-      ctx
-      |> broadcast_event("push", %{data: [], dataset: dataset, window: 0})
-      |> update(:datasets, &Map.delete(&1, dataset))
-
+    broadcast_event(ctx, "push", %{data: [], dataset: dataset, window: 0})
+    ctx = update(ctx, :datasets, &Map.delete(&1, dataset))
     {:noreply, ctx}
   end
 

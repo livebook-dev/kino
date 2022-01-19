@@ -46,9 +46,8 @@ defmodule Kino.TestModules.LiveCounter do
   end
 
   defp bump_count(ctx, by) do
-    ctx
-    |> broadcast_event("bump", %{by: by})
-    |> update(:count, &(&1 + by))
+    broadcast_event(ctx, "bump", %{by: by})
+    update(ctx, :count, &(&1 + by))
   end
 
   asset "main.js" do

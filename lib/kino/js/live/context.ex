@@ -62,9 +62,8 @@ defmodule Kino.JS.Live.Context do
 
       broadcast_event(ctx, "new_point", %{x: 10, y: 10})
   """
-  @spec broadcast_event(t(), String.t(), term()) :: t()
+  @spec broadcast_event(t(), String.t(), term()) :: :ok
   def broadcast_event(%__MODULE__{} = ctx, event, payload \\ nil) when is_binary(event) do
     Kino.JS.LiveServer.broadcast_event(ctx, event, payload)
-    ctx
   end
 end

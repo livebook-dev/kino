@@ -43,7 +43,8 @@ defmodule Kino.JS.Live do
 
         @impl true
         def handle_cast({:replace, html}, ctx) do
-          {:noreply, ctx |> broadcast_event("replace", html) |> assign(html: html)}
+          broadcast_event(ctx, "replace", html)
+          {:noreply, assign(ctx, html: html)}
         end
 
         asset "main.js" do
