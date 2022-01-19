@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/livebook-dev/kino)
+
+This release primarily introduces `Kino.JS` and `Kino.JS.Live`, which
+enable creating custom Livebook widgets with JavaScript. Other than a few
+other additions, the APIs did not change significantly, but a lot of the
+internals were reworked to align with Livebook changes, so make sure to
+update Livebook to 0.5.0 or later.
+
+### Added
+
+* Added `Add Kino.Control.form/2` for aggregated input events ([#62](https://github.com/livebook-dev/kino/issues/62))
+* Added support for defining custom JavaScript widgets ([#64](https://github.com/livebook-dev/kino/issues/64))
+* Added type validations for default input value ([#77](https://github.com/livebook-dev/kino/issues/77))
+* Added stream API for control and input events ([#76](https://github.com/livebook-dev/kino/issues/76) and [#78](https://github.com/livebook-dev/kino/issues/78))
+
+## Changed
+
+* Changed the internal implementation of most widgets to align with changes in Livebook 0.5.0 ([#68](https://github.com/livebook-dev/kino/issues/68), [#71](https://github.com/livebook-dev/kino/issues/71) and [#75](https://github.com/livebook-dev/kino/issues/75))
+
+## Removed
+
+* Removed the deprecated `start/*` widget functions ([#69](https://github.com/livebook-dev/kino/issues/69))
+* Removed `Kino.Input.subscribe/1` and `Kino.Input.unsubscribe/1` in favour of `Kino.Control` counterparts ([#78](https://github.com/livebook-dev/kino/pull/78/files))
+
 ## [v0.4.1](https://github.com/livebook-dev/kino/tree/v0.4.1) (2021-12-05)
 
 ### Added
