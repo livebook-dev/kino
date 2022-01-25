@@ -284,16 +284,17 @@ defmodule Kino.JS do
     assets = Enum.uniq_by(assets, &elem(&1, 0))
 
     dir = dir_for_module(env.module)
-
     File.rm_rf!(dir)
     File.mkdir_p!(dir)
 
-    {archive_path, hash} = package_assets!(dir, assets)
+    hash = assets_hash(assets)
+    archive_path = __assets_archive_path__(env.module, hash)
+    package_assets!(assets, archive_path)
 
     quote do
       def __assets_info__() do
         %{
-          archive_path: unquote(archive_path),
+          archive_path: Kino.JS.__assets_archive_path__(__MODULE__, unquote(hash)),
           js_path: "main.js",
           hash: unquote(hash)
         }
@@ -317,16 +318,11 @@ defmodule Kino.JS do
     |> Enum.sort()
   end
 
-  defp package_assets!(dir_path, assets) do
-    hash = assets_hash(assets)
-    archive_path = Path.join(dir_path, hash <> ".tar.gz")
-
+  defp package_assets!(assets, archive_path) do
     archive_content =
       for {filename, content} <- assets, do: {String.to_charlist(filename), content}
 
     :ok = :erl_tar.create(archive_path, archive_content, [:compressed])
-
-    {archive_path, hash}
   end
 
   defp assets_hash(assets) do
@@ -337,6 +333,11 @@ defmodule Kino.JS do
       |> :erlang.md5()
 
     Base.encode32(md5_hash, case: :lower, padding: false)
+  end
+
+  def __assets_archive_path__(module, hash) do
+    dir = dir_for_module(module)
+    Path.join(dir, hash <> ".tar.gz")
   end
 
   defp dir_for_module(module) do
