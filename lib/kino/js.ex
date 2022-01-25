@@ -203,7 +203,7 @@ defmodule Kino.JS do
     loaded_assets =
       for path <- asset_paths do
         abs_path = Path.join(assets_path, path)
-        Module.put_attribute(env.module, :external_resources, Path.relative_to_cwd(abs_path))
+        Module.put_attribute(env.module, :external_resource, Path.relative_to_cwd(abs_path))
         content = File.read!(abs_path)
         {path, content}
       end
