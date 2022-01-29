@@ -3,7 +3,7 @@ defmodule Kino.Control do
   Various widgets for user interactions.
 
   Each widget is a UI control element that the user interacts
-  with, consequenty producing an event stream.
+  with, consequently producing an event stream.
 
   Those widgets are often useful paired with `Kino.Frame` for
   presenting content that changes upon user interactions.
