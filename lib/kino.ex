@@ -94,7 +94,7 @@ defmodule Kino do
 
   ### Kino.Frame
 
-  `Kino.Frame` is a placeholder for static outptus that can
+  `Kino.Frame` is a placeholder for static outputs that can
   be dynamically updated.
 
       widget = Kino.Frame.new() |> Kino.render()
