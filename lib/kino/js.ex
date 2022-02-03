@@ -74,6 +74,13 @@ defmodule Kino.JS do
   This will correctly point to the `images/cat.jpeg` file in your
   assets.
 
+  ### Security
+
+  Note that all assets are assumed public and Livebook doesn't
+  enforce authentication when loading them. Therefore, never
+  include any sensitive credentials in the assets source, instead
+  pass them as arguments from your Elixir code.
+
   ## JavaScript API
 
   In the example we briefly introduced the `ctx` (context) object
