@@ -130,6 +130,7 @@ defmodule Kino.Table do
       limit: ctx.assigns.limit,
       order_by: ctx.assigns.order_by,
       order: ctx.assigns.order,
+      ordered_by: ctx.assigns.ordered_by
     }
 
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
