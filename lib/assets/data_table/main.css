@@ -50,7 +50,7 @@
   align-items: center;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--gray-400);
+  color: var(--gray-500);
 }
 
 .pagination__button:hover {
@@ -68,10 +68,10 @@
 
 .pagination__info {
   padding: 6px 12px;
-  border: 1px solid var(--gray-300);
+  border: 1px solid var(--gray-400);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--gray-400);
+  color: var(--gray-500);
   border-radius: 8px;
 }
 
