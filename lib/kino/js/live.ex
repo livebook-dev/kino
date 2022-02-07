@@ -126,6 +126,61 @@ defmodule Kino.JS.Live do
 
   In such case all incoming events are buffered and dispatched once
   the handler is registered.
+
+  ## Binary payloads
+
+  The client-server communication supports binary data, both on
+  initialization and on custom events. On the server side, a binary
+  payload has the form of `{:binary, info, binary}`, where `info`
+  is regular JSON-serializable data that can be sent alongside
+  the plain binary.
+
+  On the client side, a binary payload is represented as `[info, buffer]`,
+  where `info` is the additional data and `buffer` is the binary
+  as `ArrayBuffer`.
+
+  The following example showcases how to send and receive events
+  with binary payloads.
+
+      defmodule Kino.Binary do
+        use Kino.JS
+        use Kino.JS.Live
+
+        def new() do
+          Kino.JS.Live.new(__MODULE__, nil)
+        end
+
+        @impl true
+        def handle_connect(ctx) do
+          payload = {:binary, %{message: "hello"}, <<1, 2>>}
+          {:ok, payload, ctx}
+        end
+
+        @impl true
+        def handle_event("ping", {:binary, _info, binary}, ctx) do
+          reply_payload = {:binary, %{message: "pong"}, <<1, 2, binary::binary>>}
+          broadcast_event(ctx, "pong", reply_payload)
+          {:noreply, ctx}
+        end
+
+        asset "main.js" do
+          """
+          export function init(ctx, payload) {
+            console.log("initial data", payload);
+
+            ctx.handleEvent("pong", ([info, buffer]) => {
+              console.log("event data", [info, buffer])
+            });
+
+            const buffer = new ArrayBuffer(2);
+            const bytes = new Uint8Array(buffer);
+            bytes[0] = 4;
+            bytes[1] = 250;
+            ctx.pushEvent("ping", [{ message: "ping" }, buffer]);
+          }
+          """
+        end
+      end
   '''
 
   defstruct [:module, :pid, :ref]
@@ -133,6 +188,8 @@ defmodule Kino.JS.Live do
   alias Kino.JS.Live.Context
 
   @opaque t :: %__MODULE__{module: module(), pid: pid(), ref: Kino.Output.ref()}
+
+  @type payload :: term() | {:binary, info :: term(), binary()}
 
   @doc """
   Invoked when the widget server started.
@@ -147,12 +204,12 @@ defmodule Kino.JS.Live do
   The returned data is passed to the JavaScript `init` function
   of the connecting client.
   """
-  @callback handle_connect(ctx :: Context.t()) :: {:ok, data :: term(), ctx :: Context.t()}
+  @callback handle_connect(ctx :: Context.t()) :: {:ok, payload(), ctx :: Context.t()}
 
   @doc """
   Invoked to handle client events.
   """
-  @callback handle_event(event :: String.t(), payload :: term(), ctx :: Context.t()) ::
+  @callback handle_event(event :: String.t(), payload(), ctx :: Context.t()) ::
               {:noreply, ctx :: Context.t()}
 
   @doc """
