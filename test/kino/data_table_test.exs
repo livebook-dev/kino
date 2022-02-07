@@ -69,13 +69,15 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
                ],
                order: :asc,
-               order_by: nil
+               order_by: nil,
+               ordered_by: nil
              }
            } = data
 
     send(
       widget.pid,
-      {:event, "order_by", %{"key" => "0", "order" => "desc"}, %{origin: self()}}
+      {:event, "order_by", %{"key" => "0", "order" => "desc", "label" => ":id"},
+       %{origin: self()}}
     )
 
     data = connect(widget)
@@ -239,7 +241,7 @@ defmodule Kino.DataTableTest do
     # Get initial data to populate the key-string mapping
     connect(widget)
 
-    push_event(widget, "order_by", %{"key" => "1", "order" => "desc"})
+    push_event(widget, "order_by", %{"key" => "1", "order" => "desc", "label" => ":name"})
 
     assert_broadcast_event(widget, "update_content", %{
       columns: [
@@ -252,7 +254,8 @@ defmodule Kino.DataTableTest do
         %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}}
       ],
       order: :desc,
-      order_by: "1"
+      order_by: "1",
+      ordered_by: ":name"
     })
   end
 
