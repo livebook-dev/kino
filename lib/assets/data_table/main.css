@@ -50,7 +50,7 @@
   align-items: center;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--gray-400);
+  color: var(--gray-500);
 }
 
 .pagination__button:hover {
@@ -68,10 +68,10 @@
 
 .pagination__info {
   padding: 6px 12px;
-  border: 1px solid var(--gray-300);
+  border: 1px solid var(--gray-400);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--gray-400);
+  color: var(--gray-500);
   border-radius: 8px;
 }
 
@@ -184,4 +184,16 @@
 
 .tiny-scrollbar::-webkit-scrollbar-track {
   background-color: var(--gray-100);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
