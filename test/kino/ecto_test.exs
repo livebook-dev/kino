@@ -191,8 +191,7 @@ defmodule Kino.EctoTest do
                page: 1,
                max_page: 1,
                order_by: nil,
-               order: :asc,
-               ordered_by: nil
+               order: :asc
              }
            } = data
   end
@@ -232,8 +231,7 @@ defmodule Kino.EctoTest do
 
     send(
       widget.pid,
-      {:event, "order_by", %{"key" => "0", "order" => "desc", "label" => ":id"},
-       %{origin: self()}}
+      {:event, "order_by", %{"key" => "0", "order" => "desc"}, %{origin: self()}}
     )
 
     %{all_query: %{order_bys: [order_by]}} = resolve_table_queries(MockRepo, [])

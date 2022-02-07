@@ -10,8 +10,7 @@ defmodule Kino.Table do
           offset: non_neg_integer(),
           limit: pos_integer(),
           order_by: nil | term(),
-          order: :asc | :desc,
-          ordered_by: nil | binary()
+          order: :asc | :desc
         }
 
   @type column :: %{
@@ -66,8 +65,7 @@ defmodule Kino.Table do
        page: 1,
        limit: @limit,
        order_by: nil,
-       order: :asc,
-       ordered_by: nil
+       order: :asc
      )}
   end
 
@@ -99,7 +97,7 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("order_by", %{"key" => key_string, "order" => order, "label" => label}, ctx) do
+  def handle_event("order_by", %{"key" => key_string, "order" => order}, ctx) do
     order = String.to_existing_atom(order)
 
     ctx =
@@ -108,11 +106,11 @@ defmodule Kino.Table do
         ctx.assigns.key_to_string
         |> Enum.find(&match?({_key, ^key_string}, &1))
         |> case do
-          {key, _key_string} -> assign(ctx, order_by: key, order: order, ordered_by: label)
+          {key, _key_string} -> assign(ctx, order_by: key, order: order)
           _ -> ctx
         end
       else
-        assign(ctx, order_by: nil, order: :asc, ordered_by: nil)
+        assign(ctx, order_by: nil, order: :asc)
       end
 
     {:noreply, broadcast_update(ctx)}
@@ -129,8 +127,7 @@ defmodule Kino.Table do
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
       order_by: ctx.assigns.order_by,
-      order: ctx.assigns.order,
-      ordered_by: ctx.assigns.ordered_by
+      order: ctx.assigns.order
     }
 
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
@@ -146,8 +143,7 @@ defmodule Kino.Table do
       page: ctx.assigns.page,
       max_page: ceil(total_rows / ctx.assigns.limit),
       order: ctx.assigns.order,
-      order_by: key_to_string[ctx.assigns.order_by],
-      ordered_by: ctx.assigns.ordered_by
+      order_by: key_to_string[ctx.assigns.order_by]
     }
 
     {content, ctx}
