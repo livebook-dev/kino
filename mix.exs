@@ -34,6 +34,7 @@ defmodule Kino.MixProject do
     [
       {:vega_lite, "~> 0.1.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
+      {:explorer, "~> 0.1.0-dev", github: "elixir-nx/explorer", optional: true},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
   end
