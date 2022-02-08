@@ -14,7 +14,7 @@
 }
 
 .navigation {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
 }
@@ -23,10 +23,21 @@
   margin-left: 12px;
 }
 
+.navigation__info {
+  display: flex;
+  align-items: flex-end;
+}
+
 .navigation__name {
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--gray-800);
+}
+
+.navigation__details {
+  margin-left: 8px;
+  font-size: 0.875rem;
 }
 
 .navigation__space {
