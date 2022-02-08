@@ -43,7 +43,7 @@ defmodule Kino.ETSTest do
 
     assert %{
              content: %{
-               columns: [],
+               columns: [%{key: "0", label: "row", type: "tuple"}],
                rows: []
              }
            } = data
@@ -62,7 +62,7 @@ defmodule Kino.ETSTest do
     assert %{
              content: %{
                columns: [
-                 %{key: "0", label: "rows"}
+                 %{key: "0", label: "row", type: "tuple"}
                ],
                rows: [
                  %{fields: %{"0" => "{1, \"Jake Peralta\"}"}},
@@ -91,7 +91,7 @@ defmodule Kino.ETSTest do
     assert %{
              content: %{
                columns: [
-                 %{key: "0", label: "rows"}
+                 %{key: "0", label: "row", type: "tuple"}
                ]
              }
            } = data
