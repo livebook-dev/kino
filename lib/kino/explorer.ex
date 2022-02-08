@@ -12,11 +12,17 @@ defmodule Kino.Explorer do
 
   @type t :: Kino.JS.Live.t()
 
+  @compile {:no_warn_undefined, Explorer.DataFrame}
+
   @doc """
   Starts a widget process representing the given data frame.
   """
   @spec new(Explorer.DataFrame.t()) :: t()
   def new(df) do
+    unless Code.ensure_loaded?(Explorer.DataFrame) do
+      raise "Explorer is missing"
+    end
+
     Kino.Table.new(__MODULE__, {df})
   end
 
