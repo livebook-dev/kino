@@ -1,6 +1,9 @@
-.app {
-  font-family: "Inter";
+html {
+  font-size: 87.5%;
+}
 
+.app {
+  font-family: "JetBrains Mono", monospace;
   padding: 0px 12px 12px 12px;
 
   --gray-50: #f8fafc;
@@ -31,6 +34,7 @@
 .navigation__name {
   margin: 0;
   font-size: 1rem;
+  line-height: 1;
   font-weight: 600;
   color: var(--gray-800);
 }
@@ -38,6 +42,7 @@
 .navigation__details {
   margin-left: 8px;
   font-size: 0.875rem;
+  line-height: 1;
 }
 
 .navigation__space {
@@ -78,7 +83,7 @@
 }
 
 .pagination__info {
-  padding: 6px 12px;
+  padding: 4px 8px;
   border: 1px solid var(--gray-400);
   font-size: 0.875rem;
   font-weight: 500;
@@ -126,7 +131,7 @@
 
 .table__head .table__cell {
   color: var(--gray-700);
-  font-width: 600;
+  font-weight: 600;
 }
 
 .table__cell--clickable {
@@ -196,7 +201,7 @@
 .ri {
   font-size: 1.25rem;
   vertical-align: middle;
-  line-size: 1;
+  line-height: 1;
 }
 
 .tiny-scrollbar::-webkit-scrollbar {
