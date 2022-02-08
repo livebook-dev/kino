@@ -72,7 +72,7 @@ defmodule Kino.DataTable do
       case record_type(record) do
         :other ->
           raise ArgumentError,
-                "expected record to be either map, struct, tuple or keyword list, got: #{inspect(record)}"
+                "expected record to be either map, struct or keyword list, got: #{inspect(record)}"
 
         first_type when type == nil ->
           first_type
@@ -93,7 +93,6 @@ defmodule Kino.DataTable do
     cond do
       is_struct(record) -> :struct
       is_map(record) -> :map
-      is_tuple(record) -> :tuple
       Keyword.keyword?(record) -> :keyword_list
       true -> :other
     end
