@@ -14,13 +14,14 @@ defmodule Kino.Table do
         }
 
   @type column :: %{
-          key: term(),
-          label: binary()
+          :key => term(),
+          :label => String.t(),
+          optional(:type) => String.t()
         }
 
   @type row :: %{
           # A string value for every column key
-          fields: list(%{term() => binary()})
+          fields: list(%{term() => String.t()})
         }
 
   @type state :: term()
