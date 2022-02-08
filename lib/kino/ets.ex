@@ -12,8 +12,6 @@ defmodule Kino.ETS do
 
   @behaviour Kino.Table
 
-  alias Kino.Utils
-
   @type t :: Kino.JS.Live.t()
 
   @doc """
@@ -51,9 +49,9 @@ defmodule Kino.ETS do
   @impl true
   def get_data(rows_spec, state) do
     records = get_records(state.tid, rows_spec)
-    rows = Enum.map(records, &record_to_row/1)
+    rows = Enum.map(records, fn record -> %{fields: %{0 => inspect(record)}} end)
     total_rows = :ets.info(state.tid, :size)
-    columns = records |> Utils.Table.keys_for_records() |> Utils.Table.keys_to_columns()
+    columns = [%{key: 0, label: "row", type: "tuple"}]
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state}
   end
 
@@ -68,15 +66,5 @@ defmodule Kino.ETS do
     records = :qlc.next_answers(cursor, rows_spec.limit)
     :qlc.delete_cursor(cursor)
     records
-  end
-
-  defp record_to_row(record) do
-    fields =
-      record
-      |> Tuple.to_list()
-      |> Enum.with_index()
-      |> Map.new(fn {val, idx} -> {idx, inspect(val)} end)
-
-    %{fields: fields}
   end
 end
