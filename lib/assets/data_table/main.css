@@ -28,12 +28,12 @@ html {
 
 .navigation__info {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
 }
 
 .navigation__name {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.125rem;
   line-height: 1;
   font-weight: 600;
   color: var(--gray-800);
