@@ -62,9 +62,12 @@ defmodule Kino.Utils.Table do
   def columns_for_schema(schema) do
     for field <- schema.__schema__(:fields) do
       type = schema.__schema__(:type, field)
-      %{key: field, label: inspect(field), type: inspect(type)}
+      %{key: field, label: inspect(field), type: ecto_type_to_string(type)}
     end
   end
+
+  defp ecto_type_to_string({:parameterized, module, _info}), do: inspect(module)
+  defp ecto_type_to_string(type), do: inspect(type)
 
   @doc """
   Looks up record field value by key.
