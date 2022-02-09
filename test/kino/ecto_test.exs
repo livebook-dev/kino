@@ -76,10 +76,10 @@ defmodule Kino.EctoTest do
     assert %{
              content: %{
                columns: [
-                 %{key: "0", label: ":id", type: "id"},
-                 %{key: "1", label: ":name", type: "string"},
-                 %{key: "2", label: ":inserted_at", type: "naive_datetime"},
-                 %{key: "3", label: ":updated_at", type: "naive_datetime"}
+                 %{key: "0", label: ":id", type: ":id"},
+                 %{key: "1", label: ":name", type: ":string"},
+                 %{key: "2", label: ":inserted_at", type: ":naive_datetime"},
+                 %{key: "3", label: ":updated_at", type: ":naive_datetime"}
                ],
                rows: []
              }

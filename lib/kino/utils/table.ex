@@ -62,7 +62,7 @@ defmodule Kino.Utils.Table do
   def columns_for_schema(schema) do
     for field <- schema.__schema__(:fields) do
       type = schema.__schema__(:type, field)
-      %{key: field, label: inspect(field), type: to_string(type)}
+      %{key: field, label: inspect(field), type: inspect(type)}
     end
   end
 
