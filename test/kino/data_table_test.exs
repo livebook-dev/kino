@@ -6,7 +6,7 @@ defmodule Kino.DataTableTest do
   describe "new/1" do
     test "raises an error when records have invalid data type" do
       assert_raise ArgumentError,
-                   "expected record to be either map, struct, tuple or keyword list, got: \"value\"",
+                   "expected record to be either map, struct or keyword list, got: \"value\"",
                    fn ->
                      Kino.DataTable.new(["value"])
                    end
@@ -14,9 +14,9 @@ defmodule Kino.DataTableTest do
 
     test "raises an error when records have mixed data type" do
       assert_raise ArgumentError,
-                   "expected records to have the same data type, found map and tuple",
+                   "expected records to have the same data type, found map and keyword_list",
                    fn ->
-                     Kino.DataTable.new([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
+                     Kino.DataTable.new([%{id: 1, name: "Grumpy"}, [name: "Lil Bub"]])
                    end
     end
 
@@ -172,28 +172,6 @@ defmodule Kino.DataTableTest do
                  %{key: "1", label: ":__struct__"},
                  %{key: "2", label: ":id"},
                  %{key: "3", label: ":name"}
-               ]
-             }
-           } = data
-  end
-
-  test "columns accommodate for the longest record when records are tuples of mixed length" do
-    entries = [
-      {1, "Sherlock Holmes", 100},
-      {2, "John Watson", 150, :doctor},
-      {3}
-    ]
-
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
-
-    assert %{
-             content: %{
-               columns: [
-                 %{key: "0", label: "0"},
-                 %{key: "1", label: "1"},
-                 %{key: "2", label: "2"},
-                 %{key: "3", label: "3"}
                ]
              }
            } = data

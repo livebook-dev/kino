@@ -3,7 +3,7 @@ defmodule Kino.DataTable do
   A widget for interactively viewing enumerable data.
 
   The data must be an enumerable of records, where each
-  record is either map, struct, keyword list or tuple.
+  record is either map, struct or keyword list.
 
   ## Examples
 
@@ -37,8 +37,7 @@ defmodule Kino.DataTable do
   ## Options
 
     * `:keys` - a list of keys to include in the table for each record.
-      The order is reflected in the rendered table. For tuples use 0-based
-      indices. Optional.
+      The order is reflected in the rendered table. Optional.
 
     * `:sorting_enabled` - whether the widget should support sorting the data.
       Sorting requires traversal of the whole enumerable, so it may not be
@@ -72,7 +71,7 @@ defmodule Kino.DataTable do
       case record_type(record) do
         :other ->
           raise ArgumentError,
-                "expected record to be either map, struct, tuple or keyword list, got: #{inspect(record)}"
+                "expected record to be either map, struct or keyword list, got: #{inspect(record)}"
 
         first_type when type == nil ->
           first_type
@@ -93,7 +92,6 @@ defmodule Kino.DataTable do
     cond do
       is_struct(record) -> :struct
       is_map(record) -> :map
-      is_tuple(record) -> :tuple
       Keyword.keyword?(record) -> :keyword_list
       true -> :other
     end
