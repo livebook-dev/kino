@@ -65,8 +65,22 @@ defmodule Kino.EctoTest do
     end
   end
 
-  test "content contains columns definition if a schema is given" do
-    widget = Kino.Ecto.new(User, MockRepo)
+  defmodule UserWithManyTypes do
+    use Ecto.Schema
+
+    schema "users" do
+      field(:name, :string)
+      field(:mood, Ecto.Enum, values: [:good, :bad])
+      field(:numbers, {:array, :integer})
+      field(:plain_map, :map)
+      field(:integer_map, {:map, :integer})
+
+      timestamps()
+    end
+  end
+
+  test "content contains typed columns definition if a schema is given" do
+    widget = Kino.Ecto.new(UserWithManyTypes, MockRepo)
 
     MockRepo.subscribe()
     async_connect(widget)
@@ -76,17 +90,21 @@ defmodule Kino.EctoTest do
     assert %{
              content: %{
                columns: [
-                 %{key: "0", label: ":id"},
-                 %{key: "1", label: ":name"},
-                 %{key: "2", label: ":inserted_at"},
-                 %{key: "3", label: ":updated_at"}
+                 %{key: "0", label: ":id", type: ":id"},
+                 %{key: "1", label: ":name", type: ":string"},
+                 %{key: "2", label: ":mood", type: "Ecto.Enum"},
+                 %{key: "3", label: ":numbers", type: "{:array, :integer}"},
+                 %{key: "4", label: ":plain_map", type: ":map"},
+                 %{key: "5", label: ":integer_map", type: "{:map, :integer}"},
+                 %{key: "6", label: ":inserted_at", type: ":naive_datetime"},
+                 %{key: "7", label: ":updated_at", type: ":naive_datetime"}
                ],
                rows: []
              }
            } = data
   end
 
-  test "connect contains columns definition if a query with schema source is given" do
+  test "connect contains typed columns definition if a query with schema source is given" do
     query = from(u in User, where: like(u.name, "%Jake%"))
     widget = Kino.Ecto.new(query, MockRepo)
 
@@ -98,10 +116,10 @@ defmodule Kino.EctoTest do
     assert %{
              content: %{
                columns: [
-                 %{key: "0", label: ":id"},
-                 %{key: "1", label: ":name"},
-                 %{key: "2", label: ":inserted_at"},
-                 %{key: "3", label: ":updated_at"}
+                 %{key: "0", label: ":id", type: ":id"},
+                 %{key: "1", label: ":name", type: ":string"},
+                 %{key: "2", label: ":inserted_at", type: ":naive_datetime"},
+                 %{key: "3", label: ":updated_at", type: ":naive_datetime"}
                ],
                rows: []
              }

@@ -113,7 +113,7 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
-  test "columns include all attributes when records with mixed attributes are given" do
+  test "columns include only attributes from the first record" do
     entries = [
       %{b: 1, a: 1},
       %{b: 2, c: 2}
@@ -126,8 +126,7 @@ defmodule Kino.DataTableTest do
              content: %{
                columns: [
                  %{key: "0", label: ":a"},
-                 %{key: "1", label: ":b"},
-                 %{key: "2", label: ":c"}
+                 %{key: "1", label: ":b"}
                ]
              }
            } = data

@@ -65,15 +65,13 @@ defmodule Kino.Ecto do
   def get_data(rows_spec, state) do
     {total_rows, records} = get_records(state.repo, state.queryable, rows_spec)
 
-    keys =
-      case keys_from_queryable(state.queryable) do
-        [] -> Utils.Table.keys_for_records(records)
-        keys -> keys
+    columns =
+      case columns_for_queryable(state.queryable) do
+        [] -> Utils.Table.columns_for_records(records)
+        columns -> columns
       end
 
-    columns = Utils.Table.keys_to_columns(keys)
-
-    rows = Enum.map(records, &Utils.Table.record_to_row(&1, keys))
+    rows = Utils.Table.records_to_rows(records, columns)
 
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state}
   end
@@ -95,11 +93,11 @@ defmodule Kino.Ecto do
     query.select == nil
   end
 
-  defp keys_from_queryable(queryable) do
+  defp columns_for_queryable(queryable) do
     schema = Utils.Table.ecto_schema(queryable)
 
     if schema != nil and default_select_query?(queryable) do
-      schema.__schema__(:fields)
+      Utils.Table.columns_for_schema(schema)
     else
       []
     end
