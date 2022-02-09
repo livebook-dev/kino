@@ -114,7 +114,7 @@ defmodule Kino.DataTable do
      %{
        data: data,
        total_rows: total_rows,
-       keys: keys,
+       columns: keys && Utils.Table.keys_to_columns(keys),
        show_underscored: show_underscored
      }}
   end
@@ -123,22 +123,20 @@ defmodule Kino.DataTable do
   def get_data(rows_spec, state) do
     records = get_records(state.data, rows_spec)
 
-    keys =
-      if keys = state.keys do
-        keys
+    columns =
+      if columns = state.columns do
+        columns
       else
-        keys = Utils.Table.keys_for_records(records)
+        columns = Utils.Table.columns_for_records(records)
 
         if state.show_underscored do
-          keys
+          columns
         else
-          Enum.reject(keys, &underscored?/1)
+          Enum.reject(columns, &underscored?(&1.key))
         end
       end
 
-    columns = Utils.Table.keys_to_columns(keys)
-
-    rows = Enum.map(records, &Utils.Table.record_to_row(&1, keys))
+    rows = Utils.Table.records_to_rows(records, columns)
 
     {:ok, %{columns: columns, rows: rows, total_rows: state.total_rows}, state}
   end
