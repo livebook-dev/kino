@@ -44,7 +44,7 @@ defmodule Kino.JS.Live.Context do
 
   ## Examples
 
-      assign(ctx, count: 1, timestamp: DateTime.utc_now())
+      update(ctx, :count, &(&1 + 1))
   """
   @spec update(t(), term(), (term() -> term())) :: t()
   def update(%__MODULE__{} = ctx, key, fun) when is_function(fun, 1) do
