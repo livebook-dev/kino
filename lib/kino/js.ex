@@ -60,6 +60,40 @@ defmodule Kino.JS do
 
       use Kino.JS, assets_path: "lib/assets/html"
 
+  ### Stylesheets
+
+  The `ctx.importCSS(url)` function allows us to load CSS from the given
+  URL into the page. The stylesheet can be an external resource, such as
+  a font from Google Fonts or a custom asset (as outlined above). Here's
+  an example of both:
+
+      defmodule Kino.HTML do
+        use Kino.JS
+
+        def new(html) do
+          Kino.JS.new(__MODULE__, html)
+        end
+
+        asset "main.js" do
+          """
+          export function init(ctx, html) {
+            ctx.importCSS("https://fonts.googleapis.com/css?family=Sofia")
+            ctx.importCSS("main.css")
+
+            ctx.root.innerHTML = html;
+          }
+          """
+        end
+
+        asset "main.css" do
+          """
+          body {
+            font-family: "Sofia", sans-serif;
+          }
+          """
+        end
+      end
+
   ### URLs
 
   When using multiple asset files, make sure to use relative URLs.
