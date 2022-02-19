@@ -63,11 +63,9 @@ defmodule Kino.JS do
   ### Stylesheets
 
   The `ctx.importCSS(url)` function allows us to load CSS from the given
-  URL into the page. The stylesheet can be from an external URL or
-  defined through the `asset/2` macro.
-
-  Here's how we would define a widget that loads and applies a google font,
-  to the body of the embedded html.
+  URL into the page. The stylesheet can be an external resource, such as
+  a font from Google Fonts or a custom asset (as outlined above). Here's
+  an example of both:
 
       defmodule Kino.HTML do
         use Kino.JS
@@ -81,6 +79,7 @@ defmodule Kino.JS do
           export function init(ctx, html) {
             ctx.importCSS("https://fonts.googleapis.com/css?family=Sofia")
             ctx.importCSS("main.css")
+
             ctx.root.innerHTML = html;
           }
           """
