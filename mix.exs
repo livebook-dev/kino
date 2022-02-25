@@ -61,7 +61,8 @@ defmodule Kino.MixProject do
         Custom: [
           Kino.JS,
           Kino.JS.Live,
-          Kino.JS.Live.Context
+          Kino.JS.Live.Context,
+          Kino.SmartCell
         ],
         Internal: [
           Kino.Render,

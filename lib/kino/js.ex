@@ -442,10 +442,10 @@ defmodule Kino.JS do
 
     ref = Kino.Output.random_ref()
 
-    Kino.JSDataStore.store(ref, data)
+    Kino.JS.DataStore.store(ref, data)
 
     Kino.Bridge.reference_object(ref, self())
-    Kino.Bridge.monitor_object(ref, Kino.JSDataStore, {:remove, ref})
+    Kino.Bridge.monitor_object(ref, Kino.JS.DataStore, {:remove, ref})
 
     %__MODULE__{module: module, ref: ref, export: export}
   end
@@ -454,9 +454,11 @@ defmodule Kino.JS do
   @spec js_info(t()) :: Kino.Output.js_info()
   def js_info(%__MODULE__{} = widget) do
     %{
-      ref: widget.ref,
-      pid: Kino.JSDataStore.cross_node_name(),
-      assets: widget.module.__assets_info__(),
+      js_view: %{
+        ref: widget.ref,
+        pid: Kino.JS.DataStore.cross_node_name(),
+        assets: widget.module.__assets_info__()
+      },
       export: widget.export
     }
   end

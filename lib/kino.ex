@@ -276,7 +276,7 @@ defmodule Kino do
   @doc false
   def __start_override__({mod, fun, args}, parent, gl) do
     # We switch the group leader, so that the newly started
-    # process gets the same group leder as the caller
+    # process gets the same group leader as the caller
     initial_gl = Process.group_leader()
 
     Process.group_leader(self(), gl)

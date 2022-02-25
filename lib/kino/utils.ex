@@ -18,4 +18,14 @@ defmodule Kino.Utils do
     |> Enum.filter(&elem(&1, 1))
     |> Keyword.keys()
   end
+
+  @doc """
+  Checks if the given module exports the given function.
+
+  Loads the module if not loaded.
+  """
+  @spec has_function?(module(), atom(), arity()) :: boolean()
+  def has_function?(module, function, arity) do
+    Code.ensure_loaded?(module) and function_exported?(module, function, arity)
+  end
 end

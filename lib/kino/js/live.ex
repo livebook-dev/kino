@@ -192,7 +192,7 @@ defmodule Kino.JS.Live do
   @type payload :: term() | {:binary, info :: term(), binary()}
 
   @doc """
-  Invoked when the widget server started.
+  Invoked when the server is started.
 
   See `c:GenServer.init/1` for more details.
   """
@@ -249,8 +249,8 @@ defmodule Kino.JS.Live do
                       handle_info: 2,
                       terminate: 2
 
-  defmacro __using__(opts) do
-    quote location: :keep, bind_quoted: [opts: opts] do
+  defmacro __using__(_opts) do
+    quote location: :keep do
       @behaviour Kino.JS.Live
 
       import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3]
@@ -284,7 +284,7 @@ defmodule Kino.JS.Live do
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
     ref = Kino.Output.random_ref()
-    {:ok, pid} = Kino.start_child({Kino.JS.LiveServer, {module, init_arg, ref}})
+    {:ok, pid} = Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref}})
     %__MODULE__{module: module, pid: pid, ref: ref}
   end
 
@@ -292,9 +292,11 @@ defmodule Kino.JS.Live do
   @spec js_info(t()) :: Kino.Output.js_info()
   def js_info(%__MODULE__{} = widget) do
     %{
-      ref: widget.ref,
-      pid: widget.pid,
-      assets: widget.module.__assets_info__(),
+      js_view: %{
+        ref: widget.ref,
+        pid: widget.pid,
+        assets: widget.module.__assets_info__()
+      },
       export: nil
     }
   end
@@ -306,7 +308,7 @@ defmodule Kino.JS.Live do
   """
   @spec cast(t(), term()) :: :ok
   def cast(widget, term) do
-    Kino.JS.LiveServer.cast(widget.pid, term)
+    Kino.JS.Live.Server.cast(widget.pid, term)
   end
 
   @doc """
@@ -317,6 +319,6 @@ defmodule Kino.JS.Live do
   """
   @spec call(t(), term(), timeout()) :: term()
   def call(widget, term, timeout \\ 5_000) do
-    Kino.JS.LiveServer.call(widget.pid, term, timeout)
+    Kino.JS.Live.Server.call(widget.pid, term, timeout)
   end
 end

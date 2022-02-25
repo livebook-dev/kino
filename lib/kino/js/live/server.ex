@@ -1,9 +1,11 @@
-defmodule Kino.JS.LiveServer do
+defmodule Kino.JS.Live.Server do
   @moduledoc false
 
-  use GenServer
+  use GenServer, restart: :temporary
 
   require Logger
+
+  import Kino.Utils, only: [has_function?: 3]
 
   alias Kino.JS.Live.Context
 
@@ -93,9 +95,5 @@ defmodule Kino.JS.LiveServer do
       end
 
     {:noreply, %{state | ctx: ctx}}
-  end
-
-  defp has_function?(module, function, arity) do
-    Code.ensure_loaded?(module) and function_exported?(module, function, arity)
   end
 end
