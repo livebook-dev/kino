@@ -177,12 +177,11 @@ defmodule Kino.SmartCell do
 
     quote do
       def child_spec(%{ref: ref, attrs: attrs, target_pid: target_pid}) do
-        spec = %{
+        %{
           id: __MODULE__,
-          start: {Kino.SmartCell.Server, :start_link, [__MODULE__, ref, attrs, target_pid]}
+          start: {Kino.SmartCell.Server, :start_link, [__MODULE__, ref, attrs, target_pid]},
+          restart: :temporary
         }
-
-        Supervisor.child_spec(spec, restart: :temporary)
       end
 
       def __smart_definition__() do
