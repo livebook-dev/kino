@@ -12,8 +12,8 @@ defmodule Kino.SmartCell.DBConnectionTest do
 
       assert source ==
                """
-               {:ok, conn} =
-                 Postgrex.start_link(hostname: "", port: 5432, username: "", password: "", database: "")\
+               opts = [hostname: "", port: 5432, username: "", password: "", database: ""]
+               {:ok, conn} = Kino.start_child({Postgrex, opts})\
                """
     end
 
@@ -32,14 +32,15 @@ defmodule Kino.SmartCell.DBConnectionTest do
 
       assert source ==
                """
-               {:ok, db} =
-                 MyXQL.start_link(
-                   hostname: "localhost",
-                   port: 4444,
-                   username: "admin",
-                   password: "pass",
-                   database: "default"
-                 )\
+               opts = [
+                 hostname: "localhost",
+                 port: 4444,
+                 username: "admin",
+                 password: "pass",
+                 database: "default"
+               ]
+
+               {:ok, db} = Kino.start_child({MyXQL, opts})\
                """
     end
   end
@@ -52,8 +53,8 @@ defmodule Kino.SmartCell.DBConnectionTest do
     assert_broadcast_event(widget, "update", %{"fields" => %{"hostname" => "localhost"}})
 
     assert_source_update(widget, %{"hostname" => "localhost"}, """
-    {:ok, conn} =
-      Postgrex.start_link(hostname: "localhost", port: 5432, username: "", password: "", database: "")\
+    opts = [hostname: "localhost", port: 5432, username: "", password: "", database: ""]
+    {:ok, conn} = Kino.start_child({Postgrex, opts})\
     """)
   end
 
@@ -73,7 +74,8 @@ defmodule Kino.SmartCell.DBConnectionTest do
     assert_broadcast_event(widget, "update", %{"fields" => %{"type" => "mysql", "port" => 3306}})
 
     assert_source_update(widget, %{"type" => "mysql", "port" => 3306}, """
-    {:ok, conn} = MyXQL.start_link(hostname: "", port: 3306, username: "", password: "", database: "")\
+    opts = [hostname: "", port: 3306, username: "", password: "", database: ""]
+    {:ok, conn} = Kino.start_child({MyXQL, opts})\
     """)
   end
 end

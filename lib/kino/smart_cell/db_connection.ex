@@ -93,34 +93,33 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp to_quoted(%{"type" => "postgres"} = attrs) do
-    quote do
-      {:ok, unquote({String.to_atom(attrs["variable"]), [], nil})} =
-        Postgrex.start_link(
-          hostname: unquote(attrs["hostname"]),
-          port: unquote(attrs["port"]),
-          username: unquote(attrs["username"]),
-          password: unquote(attrs["password"]),
-          database: unquote(attrs["database"])
-        )
-    end
+    to_quoted(quote(do: Postgrex), attrs)
   end
 
   defp to_quoted(%{"type" => "mysql"} = attrs) do
-    quote do
-      {:ok, unquote({String.to_atom(attrs["variable"]), [], nil})} =
-        MyXQL.start_link(
-          hostname: unquote(attrs["hostname"]),
-          port: unquote(attrs["port"]),
-          username: unquote(attrs["username"]),
-          password: unquote(attrs["password"]),
-          database: unquote(attrs["database"])
-        )
-    end
+    to_quoted(quote(do: MyXQL), attrs)
   end
 
   defp to_quoted(_ctx) do
     quote do: []
   end
+
+  defp to_quoted(quoted_module, attrs) do
+    quote do
+      opts = [
+        hostname: unquote(attrs["hostname"]),
+        port: unquote(attrs["port"]),
+        username: unquote(attrs["username"]),
+        password: unquote(attrs["password"]),
+        database: unquote(attrs["database"])
+      ]
+
+      {:ok, unquote(quoted_var(attrs["variable"]))} =
+        Kino.start_child({unquote(quoted_module), opts})
+    end
+  end
+
+  defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp missing_dep(%{"type" => "postgres"}) do
     unless Code.ensure_loaded?(Postgrex) do
