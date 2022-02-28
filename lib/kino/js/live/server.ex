@@ -25,16 +25,7 @@ defmodule Kino.JS.Live.Server do
 
   @impl true
   def init({module, init_arg, ref}) do
-    ctx = Context.new()
-    ctx = put_in(ctx.__private__[:ref], ref)
-
-    {:ok, ctx} =
-      if has_function?(module, :init, 2) do
-        module.init(init_arg, ctx)
-      else
-        {:ok, ctx}
-      end
-
+    {:ok, ctx} = call_init(module, init_arg, ref)
     {:ok, %{module: module, ctx: ctx}}
   end
 
@@ -51,49 +42,69 @@ defmodule Kino.JS.Live.Server do
   end
 
   @impl true
-  def handle_info({:connect, pid, %{origin: origin}}, state) do
-    ctx = %{state.ctx | origin: origin}
-    {:ok, data, ctx} = state.module.handle_connect(ctx)
-    ctx = %{ctx | origin: nil}
-
-    Kino.Bridge.send(pid, {:connect_reply, data, %{ref: state.ctx.__private__.ref}})
-
-    {:noreply, %{state | ctx: ctx}}
-  end
-
-  def handle_info({:event, event, payload, %{origin: origin}}, state) do
-    ctx = %{state.ctx | origin: origin}
-    {:noreply, ctx} = state.module.handle_event(event, payload, ctx)
-    ctx = %{ctx | origin: nil}
-
-    {:noreply, %{state | ctx: ctx}}
-  end
-
   def handle_info(msg, state) do
-    apply_handle_info(msg, state)
+    case call_handle_info(msg, state.module, state.ctx) do
+      {:ok, ctx} -> {:noreply, %{state | ctx: ctx}}
+      :error -> {:noreply, state}
+    end
   end
 
   @impl true
   def terminate(reason, state) do
-    if has_function?(state.module, :terminate, 2) do
-      state.module.terminate(reason, state.ctx)
+    call_terminate(reason, state.module, state.ctx)
+  end
+
+  # Handlers shared with Kino.SmartCell.Server
+
+  def call_init(module, init_arg, ref) do
+    ctx = Context.new()
+    ctx = put_in(ctx.__private__[:ref], ref)
+
+    if has_function?(module, :init, 2) do
+      module.init(init_arg, ctx)
+    else
+      {:ok, ctx}
+    end
+  end
+
+  def call_handle_info(msg, module, ctx)
+
+  def call_handle_info({:connect, pid, %{origin: origin}}, module, ctx) do
+    ctx = %{ctx | origin: origin}
+    {:ok, data, ctx} = module.handle_connect(ctx)
+    ctx = %{ctx | origin: nil}
+
+    Kino.Bridge.send(pid, {:connect_reply, data, %{ref: ctx.__private__.ref}})
+
+    {:ok, ctx}
+  end
+
+  def call_handle_info({:event, event, payload, %{origin: origin}}, module, ctx) do
+    ctx = %{ctx | origin: origin}
+    {:noreply, ctx} = module.handle_event(event, payload, ctx)
+    ctx = %{ctx | origin: nil}
+
+    {:ok, ctx}
+  end
+
+  def call_handle_info(msg, module, ctx) do
+    if has_function?(module, :handle_info, 2) do
+      {:noreply, ctx} = module.handle_info(msg, ctx)
+      {:ok, ctx}
+    else
+      Logger.error(
+        "received message in #{inspect(__MODULE__)}, but no handle_info/2 was defined in #{inspect(module)}"
+      )
+
+      :error
+    end
+  end
+
+  def call_terminate(reason, module, ctx) do
+    if has_function?(module, :terminate, 2) do
+      module.terminate(reason, ctx)
     end
 
     :ok
-  end
-
-  defp apply_handle_info(msg, state) do
-    {:noreply, ctx} =
-      if has_function?(state.module, :handle_info, 2) do
-        state.module.handle_info(msg, state.ctx)
-      else
-        Logger.error(
-          "received message in #{inspect(__MODULE__)}, but no handle_info/2 was defined in #{inspect(state.module)}"
-        )
-
-        {:noreply, state.ctx}
-      end
-
-    {:noreply, %{state | ctx: ctx}}
   end
 end
