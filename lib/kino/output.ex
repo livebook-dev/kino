@@ -47,49 +47,12 @@ defmodule Kino.Output do
   @typedoc """
   JavaScript powered output with dynamic data and events.
 
-  This output points to a server process that serves data requests
-  and sends custom events.
-
-  ## Communication protocol
-
-  A client process should connect to the server process by sending:
-
-      {:connect, pid(), info :: %{ref: ref(), origin: term()}}
-
-  And expect the following reply:
-
-      {:connect_reply, initial_data, info :: %{ref: ref()}}
-
-  The server process may then keep sending one of the following events:
-
-      {:event, event :: String.t(), payload :: term(), info :: %{ref: ref()}}
-
-  The client process may keep sending one of the following events:
-
-      {:event, event :: String.t(), payload :: term(), info :: %{ref: ref(), origin: term()}}
-
   See `Kino.JS` and `Kino.JS.Live` for more details.
   """
   @type js() :: {:js, info :: js_info()}
 
   @typedoc """
-  Data describing a custom JS output component.
-
-    * `:ref` - unique output identifier
-
-    * `:pid` - the server process holding the data
-
-  ## Assets
-
-  The `:assets` map includes information about the relevant files.
-
-    * `:archive_path` - an absolute path to a `.tar.gz` archive
-      with all the assets
-
-    * `:hash` - a checksum of all assets in the archive
-
-    * `:js_path` - a relative asset path pointing to the JavaScript
-      entrypoint module
+  Data describing a JS output.
 
   ## Export
 
@@ -103,19 +66,64 @@ defmodule Kino.Output do
       should be exported
   """
   @type js_info :: %{
-          ref: ref(),
-          pid: Process.dest(),
-          assets: %{
-            archive_path: String.t(),
-            hash: String.t(),
-            js_path: String.t()
-          },
+          js_view: js_view(),
           export:
             nil
             | %{
                 info_string: String.t(),
                 key: nil | term()
               }
+        }
+
+  @typedoc """
+  A JavaScript view definition.
+
+  JS view is a component rendered on the client side and possibly
+  interacting with a server process within the runtime.
+
+    * `:ref` - unique identifier
+
+    * `:pid` - the server process holding the data and handling
+      interactions
+
+  ## Assets
+
+  The `:assets` map includes information about the relevant files.
+
+    * `:archive_path` - an absolute path to a `.tar.gz` archive with
+      all the assets
+
+    * `:hash` - a checksum of all assets in the archive
+
+    * `:js_path` - a relative asset path pointing to the JavaScript
+      entrypoint module
+
+  ## Communication protocol
+
+  A client process should connect to the server process by sending:
+
+      {:connect, pid(), info :: %{ref: ref(), origin: term()}}
+
+  And expect the following reply:
+
+      {:connect_reply, payload, info :: %{ref: ref()}}
+
+  The server process may then keep sending one of the following events:
+
+      {:event, event :: String.t(), payload, info :: %{ref: ref()}}
+
+  The client process may keep sending one of the following events:
+
+      {:event, event :: String.t(), payload, info :: %{ref: ref(), origin: term()}}
+  """
+  @type js_view :: %{
+          ref: ref(),
+          pid: Process.dest(),
+          assets: %{
+            archive_path: String.t(),
+            hash: String.t(),
+            js_path: String.t()
+          }
         }
 
   @typedoc """

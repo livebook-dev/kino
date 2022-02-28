@@ -10,7 +10,7 @@ defmodule Kino.MixProject do
       version: @version,
       description: @description,
       name: "Kino",
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -61,7 +61,8 @@ defmodule Kino.MixProject do
         Custom: [
           Kino.JS,
           Kino.JS.Live,
-          Kino.JS.Live.Context
+          Kino.JS.Live.Context,
+          Kino.SmartCell
         ],
         Internal: [
           Kino.Render,

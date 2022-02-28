@@ -1,4 +1,4 @@
-defmodule Kino.JSDataStore do
+defmodule Kino.JS.DataStore do
   @moduledoc false
 
   # Process responsible for keeping the data for static
