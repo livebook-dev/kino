@@ -160,6 +160,31 @@ defmodule Kino.SmartCell do
   """
   @callback to_source(attrs()) :: String.t()
 
+  @doc """
+  Invoked whenever the base evaluation context changes.
+
+  This callback receives the binding and environment available to the
+  smart cell code.
+
+  Note that this callback runs asynchronously and the result is then
+  handled with `c:scan_binding_continue/2` where the server state can
+  be updated accordingly.
+
+  **Important:** the return value is copied between processes, so
+  avoid returning large data structures. In particular, when looking
+  at variables, instead of returning their values, extract and return
+  only the relevant metadata.
+  """
+  @callback scan_binding(Code.binding(), Macro.Env.t()) :: data :: term()
+
+  @doc """
+  Invoked with the result of `c:scan_binding/2` to update the server
+  state.
+  """
+  @callback scan_binding_continue(data :: term(), ctx :: Context.t()) :: ctx :: Context.t()
+
+  @optional_callbacks scan_binding: 2, scan_binding_continue: 2
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Kino.SmartCell
