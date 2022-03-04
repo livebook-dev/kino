@@ -174,6 +174,9 @@ defmodule Kino.SmartCell do
   avoid returning large data structures. In particular, when looking
   at variables, instead of returning their values, extract and return
   only the relevant metadata.
+
+  **Important:** avoid any heavy work in this callback, as it runs in
+  the same process that evaluates code, so we don't want to block it.
   """
   @callback scan_binding(Code.binding(), Macro.Env.t()) :: data :: term()
 
