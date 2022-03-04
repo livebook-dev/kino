@@ -19,7 +19,7 @@ defmodule Kino.SmartCell.Server do
              assets: module.__assets_info__()
            },
            source: source,
-           scan_binding: if(has_function?(module, :scan_binding, 2), do: &module.scan_binding/2)
+           scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3)
          }}
     end
   end
@@ -34,36 +34,9 @@ defmodule Kino.SmartCell.Server do
 
     :proc_lib.init_ack({:ok, self(), source})
 
-    state = %{
-      module: module,
-      ctx: ctx,
-      target_pid: target_pid,
-      attrs: attrs,
-      scan_binding_version: -1
-    }
+    state = %{module: module, ctx: ctx, target_pid: target_pid, attrs: attrs}
 
     :gen_server.enter_loop(__MODULE__, [], state)
-  end
-
-  def handle_info({:scan_binding_result, version, result}, state) do
-    state =
-      case result do
-        _ignore when version <= state.scan_binding_version ->
-          state
-
-        {:error, error} ->
-          Logger.error(
-            "got error when running #{inspect(state.module)}.scan_binding/2, #{inspect(error)}"
-          )
-
-          state
-
-        {:ok, data} ->
-          ctx = state.module.scan_binding_continue(data, state.ctx)
-          maybe_send_update(%{state | ctx: ctx, scan_binding_version: version})
-      end
-
-    {:noreply, state}
   end
 
   def handle_info(msg, state) do

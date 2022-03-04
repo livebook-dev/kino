@@ -166,27 +166,21 @@ defmodule Kino.SmartCell do
   This callback receives the binding and environment available to the
   smart cell code.
 
-  Note that this callback runs asynchronously and the result is then
-  handled with `c:scan_binding_continue/2` where the server state can
-  be updated accordingly.
+  Note that this callback runs asynchronously and it receives the PID
+  of the smart cell server, so the result needs to be sent explicitly
+  and handled using `c:Kino.JS.Live.handle_info/2`.
 
-  **Important:** the return value is copied between processes, so
-  avoid returning large data structures. In particular, when looking
-  at variables, instead of returning their values, extract and return
+  **Important:** remember that data sent between processes is copied,
+  so avoid sending large data structures. In particular, when looking
+  at variables, instead of sending their values, extract and send
   only the relevant metadata.
 
   **Important:** avoid any heavy work in this callback, as it runs in
   the same process that evaluates code, so we don't want to block it.
   """
-  @callback scan_binding(Code.binding(), Macro.Env.t()) :: data :: term()
+  @callback scan_binding(server :: pid(), Code.binding(), Macro.Env.t()) :: any()
 
-  @doc """
-  Invoked with the result of `c:scan_binding/2` to update the server
-  state.
-  """
-  @callback scan_binding_continue(data :: term(), ctx :: Context.t()) :: ctx :: Context.t()
-
-  @optional_callbacks scan_binding: 2, scan_binding_continue: 2
+  @optional_callbacks scan_binding: 3
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
