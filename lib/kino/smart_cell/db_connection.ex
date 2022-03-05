@@ -101,7 +101,8 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp to_quoted(_ctx) do
-    quote do: []
+    quote do
+    end
   end
 
   defp to_quoted(quoted_module, attrs) do

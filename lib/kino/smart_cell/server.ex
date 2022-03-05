@@ -3,6 +3,8 @@ defmodule Kino.SmartCell.Server do
 
   require Logger
 
+  import Kino.Utils, only: [has_function?: 3]
+
   def start_link(module, ref, attrs, target_pid) do
     case :proc_lib.start_link(__MODULE__, :init, [module, ref, attrs, target_pid]) do
       {:error, error} ->
@@ -16,7 +18,8 @@ defmodule Kino.SmartCell.Server do
              pid: pid,
              assets: module.__assets_info__()
            },
-           source: source
+           source: source,
+           scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3)
          }}
     end
   end
@@ -32,6 +35,7 @@ defmodule Kino.SmartCell.Server do
     :proc_lib.init_ack({:ok, self(), source})
 
     state = %{module: module, ctx: ctx, target_pid: target_pid, attrs: attrs}
+
     :gen_server.enter_loop(__MODULE__, [], state)
   end
 

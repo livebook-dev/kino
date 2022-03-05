@@ -160,6 +160,28 @@ defmodule Kino.SmartCell do
   """
   @callback to_source(attrs()) :: String.t()
 
+  @doc """
+  Invoked whenever the base evaluation context changes.
+
+  This callback receives the binding and environment available to the
+  smart cell code.
+
+  Note that this callback runs asynchronously and it receives the PID
+  of the smart cell server, so the result needs to be sent explicitly
+  and handled using `c:Kino.JS.Live.handle_info/2`.
+
+  **Important:** remember that data sent between processes is copied,
+  so avoid sending large data structures. In particular, when looking
+  at variables, instead of sending their values, extract and send
+  only the relevant metadata.
+
+  **Important:** avoid any heavy work in this callback, as it runs in
+  the same process that evaluates code, so we don't want to block it.
+  """
+  @callback scan_binding(server :: pid(), Code.binding(), Macro.Env.t()) :: any()
+
+  @optional_callbacks scan_binding: 3
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Kino.SmartCell
