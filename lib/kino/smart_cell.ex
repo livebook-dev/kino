@@ -180,7 +180,22 @@ defmodule Kino.SmartCell do
   """
   @callback scan_binding(server :: pid(), Code.binding(), Macro.Env.t()) :: any()
 
-  @optional_callbacks scan_binding: 3
+  @doc """
+  Invoked when the smart cell code is evaluated.
+
+  This callback receives the result of an evaluation, either the
+  return value or an exception if raised.
+
+  This callback runs asynchronously and has the same characteristics
+  as `c:scan_binding/3`.
+  """
+  @callback scan_eval_result(server :: pid(), eval_result()) :: any()
+
+  @type eval_result ::
+          {:ok, result :: any()}
+          | {:error, Exception.kind(), error :: any(), Exception.stacktrace()}
+
+  @optional_callbacks scan_binding: 3, scan_eval_result: 2
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
