@@ -19,7 +19,9 @@ defmodule Kino.SmartCell.Server do
              assets: module.__assets_info__()
            },
            source: source,
-           scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3)
+           scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3),
+           scan_eval_result:
+             if(has_function?(module, :scan_eval_result, 2), do: &module.scan_eval_result/2)
          }}
     end
   end
