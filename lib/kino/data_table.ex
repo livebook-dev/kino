@@ -54,10 +54,12 @@ defmodule Kino.DataTable do
     keys = opts[:keys]
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
     show_underscored = Keyword.get(opts, :show_underscored, false)
+    name = Keyword.get(opts, :name, "Data")
 
     opts = %{
       data: data,
       keys: keys,
+      name: name,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
     }
@@ -102,12 +104,13 @@ defmodule Kino.DataTable do
     %{
       data: data,
       keys: keys,
+      name: name,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
     } = opts
 
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
-    info = %{name: "Data", features: features}
+    info = %{name: name, features: features}
     total_rows = Enum.count(data)
 
     {:ok, info,
