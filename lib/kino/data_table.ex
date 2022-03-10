@@ -52,9 +52,9 @@ defmodule Kino.DataTable do
     validate_data!(data)
 
     keys = opts[:keys]
+    name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
     show_underscored = Keyword.get(opts, :show_underscored, false)
-    name = Keyword.get(opts, :name, "Data")
 
     opts = %{
       data: data,
