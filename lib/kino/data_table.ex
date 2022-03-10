@@ -39,6 +39,8 @@ defmodule Kino.DataTable do
     * `:keys` - a list of keys to include in the table for each record.
       The order is reflected in the rendered table. Optional.
 
+    * `:name` - The displayed name of the table. Defaults to `"Data"`.
+
     * `:sorting_enabled` - whether the widget should support sorting the data.
       Sorting requires traversal of the whole enumerable, so it may not be
       desirable for lazy enumerables. Defaults to `true` if data is a list
