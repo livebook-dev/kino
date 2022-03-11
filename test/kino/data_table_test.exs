@@ -255,4 +255,16 @@ defmodule Kino.DataTableTest do
       rows: [%{fields: %{"0" => "11"}} | _]
     })
   end
+
+  test "default table name is Data" do
+    widget = Kino.DataTable.new([])
+    data = connect(widget)
+    assert %{name: "Data"} = data
+  end
+
+  test "supports setting table name" do
+    widget = Kino.DataTable.new([], name: "Example")
+    data = connect(widget)
+    assert %{name: "Example"} = data
+  end
 end

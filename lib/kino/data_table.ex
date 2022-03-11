@@ -39,6 +39,8 @@ defmodule Kino.DataTable do
     * `:keys` - a list of keys to include in the table for each record.
       The order is reflected in the rendered table. Optional.
 
+    * `:name` - The displayed name of the table. Defaults to `"Data"`.
+
     * `:sorting_enabled` - whether the widget should support sorting the data.
       Sorting requires traversal of the whole enumerable, so it may not be
       desirable for lazy enumerables. Defaults to `true` if data is a list
@@ -52,12 +54,14 @@ defmodule Kino.DataTable do
     validate_data!(data)
 
     keys = opts[:keys]
+    name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, is_list(data))
     show_underscored = Keyword.get(opts, :show_underscored, false)
 
     opts = %{
       data: data,
       keys: keys,
+      name: name,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
     }
@@ -102,12 +106,13 @@ defmodule Kino.DataTable do
     %{
       data: data,
       keys: keys,
+      name: name,
       sorting_enabled: sorting_enabled,
       show_underscored: show_underscored
     } = opts
 
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
-    info = %{name: "Data", features: features}
+    info = %{name: name, features: features}
     total_rows = Enum.count(data)
 
     {:ok, info,
