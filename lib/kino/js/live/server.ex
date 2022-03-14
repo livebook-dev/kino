@@ -25,7 +25,7 @@ defmodule Kino.JS.Live.Server do
 
   @impl true
   def init({module, init_arg, ref}) do
-    {:ok, ctx} = call_init(module, init_arg, ref)
+    {:ok, ctx, _opts} = call_init(module, init_arg, ref)
     {:ok, %{module: module, ctx: ctx}}
   end
 
@@ -61,9 +61,12 @@ defmodule Kino.JS.Live.Server do
     ctx = put_in(ctx.__private__[:ref], ref)
 
     if has_function?(module, :init, 2) do
-      module.init(init_arg, ctx)
+      case module.init(init_arg, ctx) do
+        {:ok, ctx} -> {:ok, ctx, []}
+        {:ok, ctx, opts} -> {:ok, ctx, opts}
+      end
     else
-      {:ok, ctx}
+      {:ok, ctx, []}
     end
   end
 

@@ -135,7 +135,14 @@ defmodule Kino.SmartCell do
   syntax highlighting and collaborative editing, similarly to the
   built-in cells.
 
-  To enable the editor, we need to pass `:editor` with several options.
+  To enable the editor, we need to include `:editor` configuration in
+  options returned from the `c:Kino.JS.Live.init/2` callback.
+
+      @impl true
+      def init(attrs, ctx) do
+        # ...
+        {:ok, ctx, editor: [attribute: "code", language: "elixir"]}
+      end
 
   ### Options
 
@@ -230,7 +237,7 @@ defmodule Kino.SmartCell do
   defmacro __before_compile__(env) do
     opts = Module.get_attribute(env.module, :smart_opts)
 
-    {name, editor_opts} = validate_opts!(opts)
+    name = Keyword.fetch!(opts, :name)
 
     quote do
       def child_spec(%{ref: ref, attrs: attrs, target_pid: target_pid}) do
@@ -248,35 +255,7 @@ defmodule Kino.SmartCell do
           name: unquote(name)
         }
       end
-
-      def __editor_opts__() do
-        unquote(editor_opts)
-      end
     end
-  end
-
-  defp validate_opts!(opts) do
-    opts = Keyword.validate!(opts, [:name, :editor])
-
-    name = Keyword.fetch!(opts, :name)
-
-    editor_opts =
-      if editor_opts = opts[:editor] do
-        editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
-
-        unless Keyword.has_key?(editor_opts, :attribute) do
-          raise ArgumentError, "missing editor option :attribute"
-        end
-
-        unless editor_opts[:placement] in [:top, :bottom] do
-          raise ArgumentError,
-                "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
-        end
-
-        editor_opts
-      end
-
-    {name, editor_opts}
   end
 
   @doc """

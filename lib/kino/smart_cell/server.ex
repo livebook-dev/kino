@@ -10,11 +10,16 @@ defmodule Kino.SmartCell.Server do
       {:error, error} ->
         {:error, error}
 
-      {:ok, pid, source} ->
+      {:ok, pid, source, editor_opts} ->
         editor =
-          if opts = module.__editor_opts__() do
-            source = attrs[opts[:attribute]] || ""
-            %{language: opts[:language], placement: opts[:placement], source: source}
+          if editor_opts do
+            source = attrs[editor_opts[:attribute]] || ""
+
+            %{
+              language: editor_opts[:language],
+              placement: editor_opts[:placement],
+              source: source
+            }
           end
 
         {:ok, pid,
@@ -34,11 +39,12 @@ defmodule Kino.SmartCell.Server do
   end
 
   def init(module, ref, initial_attrs, target_pid) do
-    {:ok, ctx} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
+    {:ok, ctx, opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
+    {editor_opts} = validate_init_opts!(opts)
 
     attrs = module.to_attrs(ctx)
 
-    editor_source_attr = get_in(module.__editor_opts__(), [:attribute])
+    editor_source_attr = editor_opts && editor_opts[:attribute]
 
     attrs =
       if editor_source_attr do
@@ -50,7 +56,7 @@ defmodule Kino.SmartCell.Server do
 
     source = module.to_source(attrs)
 
-    :proc_lib.init_ack({:ok, self(), source})
+    :proc_lib.init_ack({:ok, self(), source, editor_opts})
 
     state = %{
       module: module,
@@ -61,6 +67,28 @@ defmodule Kino.SmartCell.Server do
     }
 
     :gen_server.enter_loop(__MODULE__, [], state)
+  end
+
+  defp validate_init_opts!(opts) do
+    opts = Keyword.validate!(opts, [:editor])
+
+    editor_opts =
+      if editor_opts = opts[:editor] do
+        editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
+
+        unless Keyword.has_key?(editor_opts, :attribute) do
+          raise ArgumentError, "missing editor option :attribute"
+        end
+
+        unless editor_opts[:placement] in [:top, :bottom] do
+          raise ArgumentError,
+                "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
+        end
+
+        editor_opts
+      end
+
+    {editor_opts}
   end
 
   def handle_info({:editor_source, source}, state) do
