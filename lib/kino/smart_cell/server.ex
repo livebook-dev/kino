@@ -10,9 +10,9 @@ defmodule Kino.SmartCell.Server do
       {:error, error} ->
         {:error, error}
 
-      {:ok, pid, source, editor_opts} ->
+      {:ok, pid, source, init_opts} ->
         editor =
-          if editor_opts do
+          if editor_opts = init_opts[:editor] do
             source = attrs[editor_opts[:attribute]] || ""
 
             %{
@@ -39,12 +39,12 @@ defmodule Kino.SmartCell.Server do
   end
 
   def init(module, ref, initial_attrs, target_pid) do
-    {:ok, ctx, opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
-    {editor_opts} = validate_init_opts!(opts)
+    {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
+    init_opts = validate_init_opts!(init_opts)
 
     attrs = module.to_attrs(ctx)
 
-    editor_source_attr = editor_opts && editor_opts[:attribute]
+    editor_source_attr = get_in(init_opts, [:editor, :attribute])
 
     attrs =
       if editor_source_attr do
@@ -56,7 +56,7 @@ defmodule Kino.SmartCell.Server do
 
     source = module.to_source(attrs)
 
-    :proc_lib.init_ack({:ok, self(), source, editor_opts})
+    :proc_lib.init_ack({:ok, self(), source, init_opts})
 
     state = %{
       module: module,
@@ -70,25 +70,22 @@ defmodule Kino.SmartCell.Server do
   end
 
   defp validate_init_opts!(opts) do
-    opts = Keyword.validate!(opts, [:editor])
+    opts
+    |> Keyword.validate!([:editor])
+    |> Keyword.update(:editor, nil, fn editor_opts ->
+      editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
 
-    editor_opts =
-      if editor_opts = opts[:editor] do
-        editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
-
-        unless Keyword.has_key?(editor_opts, :attribute) do
-          raise ArgumentError, "missing editor option :attribute"
-        end
-
-        unless editor_opts[:placement] in [:top, :bottom] do
-          raise ArgumentError,
-                "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
-        end
-
-        editor_opts
+      unless Keyword.has_key?(editor_opts, :attribute) do
+        raise ArgumentError, "missing editor option :attribute"
       end
 
-    {editor_opts}
+      unless editor_opts[:placement] in [:top, :bottom] do
+        raise ArgumentError,
+              "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
+      end
+
+      editor_opts
+    end)
   end
 
   def handle_info({:editor_source, source}, state) do
