@@ -127,6 +127,26 @@ defmodule Kino.SmartCell do
   And then we would register it as
 
       Kino.SmartCell.register(Kino.SmartCell.Plain)
+
+  ## Collaborative editor
+
+  If a smart cell requires editing some code (like SQL), it may use
+  a dedicated editor instance managed by Livebook. The editor handles
+  syntax highlighting and collaborative editing, similarly to the
+  built-in cells.
+
+  To enable the editor, we need to pass `:editor` with several options.
+
+  ### Options
+
+    * `:attribute` - the key to put the source text under in `attrs`.
+      Required
+
+    * `:language` - the editor language, used for syntax highlighting.
+      Defaults to `nil`
+
+    * `:placement` - editor placement within the smart cell, either
+      `:top` or `:bottom`. Defaults to `:bottom`
   '''
 
   require Logger
@@ -210,7 +230,7 @@ defmodule Kino.SmartCell do
   defmacro __before_compile__(env) do
     opts = Module.get_attribute(env.module, :smart_opts)
 
-    name = Keyword.fetch!(opts, :name)
+    {name, editor_opts} = validate_opts!(opts)
 
     quote do
       def child_spec(%{ref: ref, attrs: attrs, target_pid: target_pid}) do
@@ -228,7 +248,35 @@ defmodule Kino.SmartCell do
           name: unquote(name)
         }
       end
+
+      def __editor_opts__() do
+        unquote(editor_opts)
+      end
     end
+  end
+
+  defp validate_opts!(opts) do
+    opts = Keyword.validate!(opts, [:name, :editor])
+
+    name = Keyword.fetch!(opts, :name)
+
+    editor_opts =
+      if editor_opts = opts[:editor] do
+        editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
+
+        unless Keyword.has_key?(editor_opts, :attribute) do
+          raise ArgumentError, "missing editor option :attribute"
+        end
+
+        unless editor_opts[:placement] in [:top, :bottom] do
+          raise ArgumentError,
+                "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
+        end
+
+        editor_opts
+      end
+
+    {name, editor_opts}
   end
 
   @doc """
