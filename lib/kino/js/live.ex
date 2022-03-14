@@ -196,7 +196,8 @@ defmodule Kino.JS.Live do
 
   See `c:GenServer.init/1` for more details.
   """
-  @callback init(arg :: term(), ctx :: Context.t()) :: {:ok, ctx :: Context.t()}
+  @callback init(arg :: term(), ctx :: Context.t()) ::
+              {:ok, ctx :: Context.t()} | {:ok, ctx :: Context.t(), opts :: keyword()}
 
   @doc """
   Invoked whenever a new client connects to the server.

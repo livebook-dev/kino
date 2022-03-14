@@ -127,6 +127,33 @@ defmodule Kino.SmartCell do
   And then we would register it as
 
       Kino.SmartCell.register(Kino.SmartCell.Plain)
+
+  ## Collaborative editor
+
+  If a smart cell requires editing some code (like SQL), it may use
+  a dedicated editor instance managed by Livebook. The editor handles
+  syntax highlighting and collaborative editing, similarly to the
+  built-in cells.
+
+  To enable the editor, we need to include `:editor` configuration in
+  options returned from the `c:Kino.JS.Live.init/2` callback.
+
+      @impl true
+      def init(attrs, ctx) do
+        # ...
+        {:ok, ctx, editor: [attribute: "code", language: "elixir"]}
+      end
+
+  ### Options
+
+    * `:attribute` - the key to put the source text under in `attrs`.
+      Required
+
+    * `:language` - the editor language, used for syntax highlighting.
+      Defaults to `nil`
+
+    * `:placement` - editor placement within the smart cell, either
+      `:top` or `:bottom`. Defaults to `:bottom`
   '''
 
   require Logger

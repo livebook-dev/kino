@@ -10,15 +10,27 @@ defmodule Kino.SmartCell.Server do
       {:error, error} ->
         {:error, error}
 
-      {:ok, pid, source} ->
+      {:ok, pid, source, init_opts} ->
+        editor =
+          if editor_opts = init_opts[:editor] do
+            source = attrs[editor_opts[:attribute]] || ""
+
+            %{
+              language: editor_opts[:language],
+              placement: editor_opts[:placement],
+              source: source
+            }
+          end
+
         {:ok, pid,
          %{
+           source: source,
            js_view: %{
              ref: ref,
              pid: pid,
              assets: module.__assets_info__()
            },
-           source: source,
+           editor: editor,
            scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3),
            scan_eval_result:
              if(has_function?(module, :scan_eval_result, 2), do: &module.scan_eval_result/2)
@@ -26,24 +38,64 @@ defmodule Kino.SmartCell.Server do
     end
   end
 
-  def init(module, ref, attrs, target_pid) do
-    {:ok, ctx} = Kino.JS.Live.Server.call_init(module, attrs, ref)
+  def init(module, ref, initial_attrs, target_pid) do
+    {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
+    init_opts = validate_init_opts!(init_opts)
 
     attrs = module.to_attrs(ctx)
+
+    editor_source_attr = get_in(init_opts, [:editor, :attribute])
+
+    attrs =
+      if editor_source_attr do
+        source = initial_attrs[editor_source_attr] || ""
+        Map.put(attrs, editor_source_attr, source)
+      else
+        attrs
+      end
+
     source = module.to_source(attrs)
 
-    ctx = put_in(ctx.__private__[:attrs], attrs)
+    :proc_lib.init_ack({:ok, self(), source, init_opts})
 
-    :proc_lib.init_ack({:ok, self(), source})
-
-    state = %{module: module, ctx: ctx, target_pid: target_pid, attrs: attrs}
+    state = %{
+      module: module,
+      ctx: ctx,
+      target_pid: target_pid,
+      attrs: attrs,
+      editor_source_attr: editor_source_attr
+    }
 
     :gen_server.enter_loop(__MODULE__, [], state)
   end
 
+  defp validate_init_opts!(opts) do
+    opts
+    |> Keyword.validate!([:editor])
+    |> Keyword.update(:editor, nil, fn editor_opts ->
+      editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
+
+      unless Keyword.has_key?(editor_opts, :attribute) do
+        raise ArgumentError, "missing editor option :attribute"
+      end
+
+      unless editor_opts[:placement] in [:top, :bottom] do
+        raise ArgumentError,
+              "editor :placement must be either :top or :bottom, got #{inspect(editor_opts[:placement])}"
+      end
+
+      editor_opts
+    end)
+  end
+
+  def handle_info({:editor_source, source}, state) do
+    attrs = Map.put(state.attrs, state.editor_source_attr, source)
+    {:noreply, set_attrs(state, attrs)}
+  end
+
   def handle_info(msg, state) do
     case Kino.JS.Live.Server.call_handle_info(msg, state.module, state.ctx) do
-      {:ok, ctx} -> {:noreply, maybe_send_update(%{state | ctx: ctx})}
+      {:ok, ctx} -> {:noreply, recompute_attrs(%{state | ctx: ctx})}
       :error -> {:noreply, state}
     end
   end
@@ -52,20 +104,29 @@ defmodule Kino.SmartCell.Server do
     Kino.JS.Live.Server.call_terminate(reason, state.module, state.ctx)
   end
 
-  defp maybe_send_update(state) do
+  defp recompute_attrs(state) do
     attrs = state.module.to_attrs(state.ctx)
 
-    if attrs == state.attrs do
-      state
-    else
-      source = state.module.to_source(attrs)
+    attrs =
+      if state.editor_source_attr do
+        Map.put(attrs, state.editor_source_attr, state.attrs[state.editor_source_attr])
+      else
+        attrs
+      end
 
-      send(
-        state.target_pid,
-        {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source}
-      )
+    set_attrs(state, attrs)
+  end
 
-      %{state | attrs: attrs}
-    end
+  defp set_attrs(%{attrs: attrs} = state, attrs), do: state
+
+  defp set_attrs(state, attrs) do
+    source = state.module.to_source(attrs)
+
+    send(
+      state.target_pid,
+      {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source}
+    )
+
+    %{state | attrs: attrs}
   end
 end
