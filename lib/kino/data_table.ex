@@ -3,7 +3,7 @@ defmodule Kino.DataTable do
   A widget for interactively viewing enumerable data.
 
   The data must be an enumerable of records, where each
-  record is either map, struct or keyword list.
+  record is either map, struct or key-value list.
 
   ## Examples
 
@@ -75,7 +75,7 @@ defmodule Kino.DataTable do
       case record_type(record) do
         :other ->
           raise ArgumentError,
-                "expected record to be either map, struct or keyword list, got: #{inspect(record)}"
+                "expected record to be either map, struct or key-value list, got: #{inspect(record)}"
 
         first_type when type == nil ->
           first_type
@@ -96,10 +96,14 @@ defmodule Kino.DataTable do
     cond do
       is_struct(record) -> :struct
       is_map(record) -> :map
-      Keyword.keyword?(record) -> :keyword_list
+      key_value_list?(record) -> :key_value_list
       true -> :other
     end
   end
+
+  def key_value_list?([{_key, _value} | rest]), do: key_value_list?(rest)
+  def key_value_list?([]), do: true
+  def key_value_list?(_other), do: false
 
   @impl true
   def init(opts) do
