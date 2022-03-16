@@ -38,7 +38,7 @@ defmodule Kino.Utils.Table do
   end
 
   defp columns_for_record(record) when is_list(record) do
-    record |> Keyword.keys() |> keys_to_columns()
+    record |> Enum.map(&elem(&1, 0)) |> keys_to_columns()
   end
 
   defp columns_for_record(_record) do
@@ -84,7 +84,9 @@ defmodule Kino.Utils.Table do
   end
 
   def get_field(record, key) when is_list(record) do
-    record[key]
+    with {^key, value} <- List.keyfind(record, key, 0) do
+      value
+    end
   end
 
   def get_field(record, key) when is_map(record) do

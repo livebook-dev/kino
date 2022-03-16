@@ -6,7 +6,7 @@ defmodule Kino.DataTableTest do
   describe "new/1" do
     test "raises an error when records have invalid data type" do
       assert_raise ArgumentError,
-                   "expected record to be either map, struct or keyword list, got: \"value\"",
+                   "expected record to be either map, struct or key-value list, got: \"value\"",
                    fn ->
                      Kino.DataTable.new(["value"])
                    end
@@ -14,7 +14,7 @@ defmodule Kino.DataTableTest do
 
     test "raises an error when records have mixed data type" do
       assert_raise ArgumentError,
-                   "expected records to have the same data type, found map and keyword_list",
+                   "expected records to have the same data type, found map and key_value_list",
                    fn ->
                      Kino.DataTable.new([%{id: 1, name: "Grumpy"}, [name: "Lil Bub"]])
                    end
@@ -97,7 +97,7 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
-  test "columns preserve attributes order when records are compatible keyword lists" do
+  test "columns preserve attributes order when records are key-value lists" do
     entries = [
       [b: 1, a: 1],
       [b: 2, a: 2]
@@ -109,6 +109,22 @@ defmodule Kino.DataTableTest do
     assert %{
              content: %{
                columns: [%{key: "0", label: ":b"}, %{key: "1", label: ":a"}]
+             }
+           } = data
+  end
+
+  test "supports key-value lists with string keys" do
+    entries = [
+      [{"b", 1}, {"a", 1}],
+      [{"b", 2}, {"a", 2}]
+    ]
+
+    widget = Kino.DataTable.new(entries)
+    data = connect(widget)
+
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: ~s/"b"/}, %{key: "1", label: ~s/"a"/}]
              }
            } = data
   end
