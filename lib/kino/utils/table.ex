@@ -84,10 +84,9 @@ defmodule Kino.Utils.Table do
   end
 
   def get_field(record, key) when is_list(record) do
-    Enum.find_value(record, fn
-      {^key, value} -> value
-      _other -> nil
-    end)
+    with {^key, value} <- List.keyfind(record, key, 0) do
+      value
+    end
   end
 
   def get_field(record, key) when is_map(record) do
