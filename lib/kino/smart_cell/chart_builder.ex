@@ -1,5 +1,4 @@
 defmodule Kino.SmartCell.ChartBuilder do
-
   use Kino.JS, assets_path: "lib/assets/chart_builder"
   use Kino.JS.Live
   use Kino.SmartCell, name: "Chart builder"
