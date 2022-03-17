@@ -100,7 +100,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     |> IO.iodata_to_binary()
   end
 
-  defp to_quoted(%{"data" => nil}), do: nil
+  defp to_quoted(%{"data" => ""}), do: nil
 
   defp to_quoted(attrs) do
     data = if attrs["data"], do: String.to_atom(attrs["data"]), else: nil
