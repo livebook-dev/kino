@@ -34,6 +34,8 @@ defmodule Kino.MixProject do
     [
       {:vega_lite, "~> 0.1.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
+      {:postgrex, "~> 0.16", optional: true},
+      {:myxql, "~> 0.6", optional: true},
       {:db_connection, "~> 2.4.2", optional: true},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
