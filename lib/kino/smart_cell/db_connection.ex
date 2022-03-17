@@ -67,7 +67,7 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp to_updates(fields, "variable", value) do
-    if valid_variable_name?(value) do
+    if Kino.Utils.Code.valid_variable_name?(value) do
       %{"variable" => value}
     else
       %{"variable" => fields["variable"]}
@@ -83,21 +83,15 @@ defmodule Kino.SmartCell.DBConnection do
 
   @impl true
   def to_source(attrs) do
-    attrs
-    |> to_quoted()
-    |> Macro.to_string()
-    # TODO: remove reformatting on Elixir v1.14 (before v1.13.1
-    # Macro.to_string/1 formats with line length of :infinity)
-    |> Code.format_string!()
-    |> IO.iodata_to_binary()
+    attrs |> to_quoted() |> Kino.Utils.Code.quoted_to_string()
   end
 
   defp to_quoted(%{"type" => "postgres"} = attrs) do
-    to_quoted(quote(do: Postgrex), attrs)
+    to_quoted(attrs, quote(do: Postgrex))
   end
 
   defp to_quoted(%{"type" => "mysql"} = attrs) do
-    to_quoted(quote(do: MyXQL), attrs)
+    to_quoted(attrs, quote(do: MyXQL))
   end
 
   defp to_quoted(_ctx) do
@@ -105,7 +99,7 @@ defmodule Kino.SmartCell.DBConnection do
     end
   end
 
-  defp to_quoted(quoted_module, attrs) do
+  defp to_quoted(attrs, quoted_module) do
     quote do
       opts = [
         hostname: unquote(attrs["hostname"]),
@@ -135,75 +129,4 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp missing_dep(_ctx), do: nil
-
-  defp valid_variable_name?(string) do
-    atom = String.to_atom(string)
-    macro_classify_atom(atom) == :identifier
-  end
-
-  # ---
-
-  # TODO: use Macro.classify_atom/1 on Elixir 1.14
-
-  def macro_classify_atom(atom) do
-    case macro_inner_classify(atom) do
-      :alias -> :alias
-      :identifier -> :identifier
-      type when type in [:unquoted_operator, :not_callable] -> :unquoted
-      _ -> :quoted
-    end
-  end
-
-  defp macro_inner_classify(atom) when is_atom(atom) do
-    cond do
-      atom in [:%, :%{}, :{}, :<<>>, :..., :.., :., :"..//", :->] ->
-        :not_callable
-
-      atom in [:"::"] ->
-        :quoted_operator
-
-      Macro.operator?(atom, 1) or Macro.operator?(atom, 2) ->
-        :unquoted_operator
-
-      true ->
-        charlist = Atom.to_charlist(atom)
-
-        if macro_valid_alias?(charlist) do
-          :alias
-        else
-          case :elixir_config.identifier_tokenizer().tokenize(charlist) do
-            {kind, _acc, [], _, _, special} ->
-              if kind == :identifier and not :lists.member(?@, special) do
-                :identifier
-              else
-                :not_callable
-              end
-
-            _ ->
-              :other
-          end
-        end
-    end
-  end
-
-  defp macro_valid_alias?('Elixir' ++ rest), do: macro_valid_alias_piece?(rest)
-  defp macro_valid_alias?(_other), do: false
-
-  defp macro_valid_alias_piece?([?., char | rest]) when char >= ?A and char <= ?Z,
-    do: macro_valid_alias_piece?(macro_trim_leading_while_valid_identifier(rest))
-
-  defp macro_valid_alias_piece?([]), do: true
-  defp macro_valid_alias_piece?(_other), do: false
-
-  defp macro_trim_leading_while_valid_identifier([char | rest])
-       when char >= ?a and char <= ?z
-       when char >= ?A and char <= ?Z
-       when char >= ?0 and char <= ?9
-       when char == ?_ do
-    macro_trim_leading_while_valid_identifier(rest)
-  end
-
-  defp macro_trim_leading_while_valid_identifier(other) do
-    other
-  end
 end

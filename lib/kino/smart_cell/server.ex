@@ -13,7 +13,7 @@ defmodule Kino.SmartCell.Server do
       {:ok, pid, source, init_opts} ->
         editor =
           if editor_opts = init_opts[:editor] do
-            source = attrs[editor_opts[:attribute]] || ""
+            source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
 
             %{
               language: editor_opts[:language],
@@ -48,7 +48,7 @@ defmodule Kino.SmartCell.Server do
 
     attrs =
       if editor_source_attr do
-        source = initial_attrs[editor_source_attr] || ""
+        source = initial_attrs[editor_source_attr] || init_opts[:editor][:default_source]
         Map.put(attrs, editor_source_attr, source)
       else
         attrs
@@ -73,7 +73,13 @@ defmodule Kino.SmartCell.Server do
     opts
     |> Keyword.validate!([:editor])
     |> Keyword.update(:editor, nil, fn editor_opts ->
-      editor_opts = Keyword.validate!(editor_opts, [:attribute, :language, placement: :bottom])
+      editor_opts =
+        Keyword.validate!(editor_opts, [
+          :attribute,
+          :language,
+          placement: :bottom,
+          default_source: ""
+        ])
 
       unless Keyword.has_key?(editor_opts, :attribute) do
         raise ArgumentError, "missing editor option :attribute"
