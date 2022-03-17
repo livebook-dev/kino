@@ -113,13 +113,7 @@ defmodule Kino.SmartCell.SQL do
 
   @impl true
   def to_source(attrs) do
-    attrs
-    |> to_quoted()
-    |> Macro.to_string()
-    # TODO: remove reformatting on Elixir v1.14 (before v1.13.1
-    # Macro.to_string/1 formats with line length of :infinity)
-    |> Code.format_string!()
-    |> IO.iodata_to_binary()
+    attrs |> to_quoted() |> Kino.Utils.Code.quoted_to_string()
   end
 
   defp to_quoted(%{"connection" => %{"type" => "postgres"}} = attrs) do

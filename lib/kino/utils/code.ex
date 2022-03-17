@@ -10,6 +10,17 @@ defmodule Kino.Utils.Code do
     macro_classify_atom(atom) == :identifier
   end
 
+  @doc """
+  Converts the given AST to formatted code string.
+  """
+  @spec quoted_to_string(Macro.t()) :: String.t()
+  def quoted_to_string(quoted) do
+    quoted
+    |> Code.quoted_to_algebra()
+    |> Inspect.Algebra.format(90)
+    |> IO.iodata_to_binary()
+  end
+
   # ---
 
   # TODO: use Macro.classify_atom/1 on Elixir 1.14

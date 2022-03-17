@@ -126,7 +126,10 @@ defmodule Kino.SmartCell.SQLTest do
 
       assert SQL.to_source(put_in(attrs["connection"]["type"], "mysql")) == ~s'''
              result =
-               MyXQL.query!(conn, "SELECT id FROM users WHERE id ? AND name LIKE ?", [user_id, search <> "%"])\
+               MyXQL.query!(conn, "SELECT id FROM users WHERE id ? AND name LIKE ?", [
+                 user_id,
+                 search <> "%"
+               ])\
              '''
     end
 
