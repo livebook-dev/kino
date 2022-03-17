@@ -154,6 +154,8 @@ defmodule Kino.SmartCell do
 
     * `:placement` - editor placement within the smart cell, either
       `:top` or `:bottom`. Defaults to `:bottom`
+
+    * `:default_source` - the initial editor source. Defaults to `""`
   '''
 
   require Logger

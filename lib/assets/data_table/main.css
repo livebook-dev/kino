@@ -172,12 +172,12 @@ html {
   align-items: center;
   justify-content: center;
   border-radius: 100%;
-  color: var(--gray-400);
+  color: var(--gray-500);
   line-height: 1;
 }
 
 .icon-button:hover {
-  color: var(--gray-800);
+  color: var(--gray-900);
 }
 
 .icon-button:focus {

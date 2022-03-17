@@ -5,6 +5,7 @@ defmodule Kino.Application do
 
   def start(_type, _args) do
     Kino.SmartCell.register(Kino.SmartCell.DBConnection)
+    Kino.SmartCell.register(Kino.SmartCell.SQL)
     Kino.SmartCell.register(Kino.SmartCell.ChartBuilder)
 
     children = [
