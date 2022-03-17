@@ -9,15 +9,15 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def init(attrs, ctx) do
     fields = %{
-      "chart" => attrs["chart"] || :bar,
-      "width" => attrs["width"],
-      "height" => attrs["height"],
-      "x_axis" => attrs["x_axis"],
-      "y_axis" => attrs["y_axis"],
-      "x_axis_type" => attrs["x_axis_type"],
-      "y_axis_type" => attrs["y_axis_type"],
-      "color" => attrs["color"],
-      "color_type" => attrs["color_type"]
+      "chart" => attrs["chart"] || "bar",
+      "width" => attrs["width"] || "",
+      "height" => attrs["height"] || "",
+      "x_axis" => attrs["x_axis"] || "",
+      "y_axis" => attrs["y_axis"] || "",
+      "x_axis_type" => attrs["x_axis_type"] || "",
+      "y_axis_type" => attrs["y_axis_type"] || "",
+      "color" => attrs["color"] || "",
+      "color_type" => attrs["color_type"] || ""
     }
 
     {:ok, assign(ctx, fields: fields, options: %{}, vl_alias: nil, missing_dep: missing_dep())}
@@ -52,7 +52,7 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
-    updated_fields = to_updates(ctx.assigns.fields, field, value)
+    updated_fields = %{field => value}
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
     if field == "data", do: update_options(ctx, value)
 
@@ -67,17 +67,17 @@ defmodule Kino.SmartCell.ChartBuilder do
     broadcast_event(ctx, "set_axis_options", %{"options" => options})
   end
 
-  defp to_updates(_fields, field, ""), do: %{field => nil}
+  defp convert_field(field, ""), do: {String.to_atom(field), nil}
 
-  defp to_updates(_fields, field, value) when field in @as_int do
-    %{field => String.to_integer(value)}
+  defp convert_field(field, value) when field in @as_int do
+    {String.to_atom(field), String.to_integer(value)}
   end
 
-  defp to_updates(_fields, field, value) when field in @as_atom do
-    %{field => String.to_atom(value)}
+  defp convert_field(field, value) when field in @as_atom do
+    {String.to_atom(field), String.to_atom(value)}
   end
 
-  defp to_updates(_fields, field, value), do: %{field => value}
+  defp convert_field(field, value), do: {String.to_atom(field), value}
 
   defp vl_alias(%Macro.Env{aliases: aliases}) do
     Enum.find_value(aliases, fn {current_alias, module} ->
@@ -103,11 +103,11 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp to_quoted(%{"data" => nil}), do: nil
 
   defp to_quoted(attrs) do
-    data = attrs["data"]
+    data = if attrs["data"], do: String.to_atom(attrs["data"]), else: nil
     module = if attrs["vl_alias"], do: attrs["vl_alias"], else: VegaLite
     module = Module.split(module) |> hd() |> String.to_atom()
 
-    attrs = Map.new(attrs, fn {k, v} -> {String.to_atom(k), v} end)
+    attrs = Map.new(attrs, fn {k, v} -> convert_field(k, v) end)
 
     [root | nodes] = [
       %{
