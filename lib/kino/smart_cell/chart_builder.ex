@@ -107,18 +107,35 @@ defmodule Kino.SmartCell.ChartBuilder do
     module = if attrs["vl_alias"], do: attrs["vl_alias"], else: VegaLite
     module = Module.split(module) |> hd() |> String.to_atom()
 
-    attrs =
-      attrs
-      |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
-      |> Enum.into(%{})
+    attrs = Map.new(attrs, fn {k, v} -> {String.to_atom(k), v} end)
 
-    [{_, root} | nodes] = [
-      new: %{name: :new, module: module, args: [[width: attrs.width, height: attrs.height]]},
-      data: %{name: :data_from_series, module: module, args: [Macro.var(data, nil)]},
-      mark: %{name: :mark, module: module, args: [attrs.chart]},
-      x: %{name: :encode_field, module: module, args: [attrs.x_axis, [type: attrs.x_axis_type]]},
-      y: %{name: :encode_field, module: module, args: [attrs.y_axis, [type: attrs.y_axis_type]]},
-      color: %{name: :encode_field, module: module, args: [attrs.color, [type: attrs.color_type]]}
+    [root | nodes] = [
+      %{
+        field: nil,
+        name: :new,
+        module: module,
+        args: [[width: attrs.width, height: attrs.height]]
+      },
+      %{field: :data, name: :data_from_series, module: module, args: [Macro.var(data, nil)]},
+      %{field: :mark, name: :mark, module: module, args: [attrs.chart]},
+      %{
+        field: :x,
+        name: :encode_field,
+        module: module,
+        args: [attrs.x_axis, [type: attrs.x_axis_type]]
+      },
+      %{
+        field: :y,
+        name: :encode_field,
+        module: module,
+        args: [attrs.y_axis, [type: attrs.y_axis_type]]
+      },
+      %{
+        field: :color,
+        name: :encode_field,
+        module: module,
+        args: [attrs.color, [type: attrs.color_type]]
+      }
     ]
 
     root = build_root(root)
@@ -128,9 +145,9 @@ defmodule Kino.SmartCell.ChartBuilder do
     |> Enum.reduce(root, &apply_node/2)
   end
 
-  defp build_root(node) do
+  defp build_root(root) do
     args =
-      node.args
+      root.args
       |> Enum.at(0)
       |> Enum.filter(&elem(&1, 1))
       |> case do
@@ -138,18 +155,17 @@ defmodule Kino.SmartCell.ChartBuilder do
         opts -> [opts]
       end
 
-    {{:., [], [{:__aliases__, [alias: false], [node.module]}, node.name]}, [], args}
+    {{:., [], [{:__aliases__, [alias: false], [root.module]}, root.name]}, [], args}
   end
 
-  def clean_node({field, node}) do
-    node = Map.replace!(node, :args, clean_args(node.args))
-    {field, node}
+  def clean_node(node) do
+    Map.replace!(node, :args, clean_args(node.args))
   end
 
-  defp apply_node({_, %{args: nil}}, acc), do: acc
-  defp apply_node({_, %{args: []}}, acc), do: acc
+  defp apply_node(%{args: nil}, acc), do: acc
+  defp apply_node(%{args: []}, acc), do: acc
 
-  defp apply_node({field, %{name: function, module: module, args: args}}, acc) do
+  defp apply_node(%{field: field, name: function, module: module, args: args}, acc) do
     ctx = [context: Elixir, import: Kernel]
     args = if function == :encode_field, do: List.insert_at(args, 0, field), else: args
 
@@ -163,14 +179,11 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp clean_args(args) do
     opts =
       args
-      |> Enum.filter(&is_list(&1))
+      |> Enum.filter(&is_list/1)
       |> List.flatten()
       |> Enum.filter(&elem(&1, 1))
 
-    args =
-      args
-      |> Enum.reject(&is_list(&1))
-      |> Enum.reject(&is_nil(&1))
+    args = Enum.reject(args, &(is_list(&1) or is_nil(&1)))
 
     if opts != [], do: List.insert_at(args, -1, opts), else: args
   end
