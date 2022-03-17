@@ -5,6 +5,8 @@ defmodule Kino.SmartCell.SQL do
   use Kino.JS.Live
   use Kino.SmartCell, name: "SQL query"
 
+  @default_query "select * from table_name limit 100"
+
   @impl true
   def init(attrs, ctx) do
     ctx =
@@ -17,7 +19,7 @@ defmodule Kino.SmartCell.SQL do
         result_variable: attrs["result_variable"] || "result"
       )
 
-    {:ok, ctx, editor: [attribute: "query", language: "sql"]}
+    {:ok, ctx, editor: [attribute: "query", language: "sql", default_source: @default_query]}
   end
 
   @impl true
