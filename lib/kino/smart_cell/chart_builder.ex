@@ -105,7 +105,6 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp to_quoted(attrs) do
     data = if attrs["data"], do: String.to_atom(attrs["data"]), else: nil
     module = if attrs["vl_alias"], do: attrs["vl_alias"], else: VegaLite
-    module = Module.split(module) |> hd() |> String.to_atom()
 
     attrs = Map.new(attrs, fn {k, v} -> convert_field(k, v) end)
 
@@ -155,7 +154,9 @@ defmodule Kino.SmartCell.ChartBuilder do
         opts -> [opts]
       end
 
-    {{:., [], [{:__aliases__, [alias: false], [root.module]}, root.name]}, [], args}
+    quote do
+      unquote(root.module).unquote(root.name)(unquote_splicing(args))
+    end
   end
 
   def clean_node(node) do
@@ -166,14 +167,11 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp apply_node(%{args: []}, acc), do: acc
 
   defp apply_node(%{field: field, name: function, module: module, args: args}, acc) do
-    ctx = [context: Elixir, import: Kernel]
     args = if function == :encode_field, do: List.insert_at(args, 0, field), else: args
 
-    {:|>, ctx,
-     [
-       acc,
-       {{:., [], [{:__aliases__, [alias: false], [module]}, function]}, [], args}
-     ]}
+    quote do
+      unquote(acc) |> unquote(module).unquote(function)(unquote_splicing(args))
+    end
   end
 
   defp clean_args(args) do
