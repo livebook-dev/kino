@@ -25,7 +25,10 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def scan_binding(pid, binding, env) do
-    send(pid, {:scan_binding_result, binding, env})
+    dfs = Keyword.filter(binding, fn {_key, val} -> is_map(val) end)
+    data_options = Map.new(dfs, fn {k, v} -> {k, Map.keys(v)} end)
+    vl_alias = vl_alias(env)
+    send(pid, {:scan_binding_result, data_options, vl_alias})
   end
 
   @impl true
@@ -40,11 +43,8 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   @impl true
-  def handle_info({:scan_binding_result, binding, env}, ctx) do
-    dfs = Keyword.filter(binding, fn {_key, val} -> is_map(val) end)
-    data_options = Enum.map(dfs, fn {k, v} -> {k, Map.keys(v)} end) |> Enum.into(%{})
-    ctx = assign(ctx, options: data_options, vl_alias: vl_alias(env))
-
+  def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
+    ctx = assign(ctx, options: data_options, vl_alias: vl_alias)
     broadcast_event(ctx, "set_data_options", %{"options" => data_options})
 
     {:noreply, ctx}
@@ -79,8 +79,11 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   defp to_updates(_fields, field, value), do: %{field => value}
 
-  defp vl_alias(%Macro.Env{aliases: [{vl_alias, VegaLite}]}), do: vl_alias
-  defp vl_alias(_), do: nil
+  defp vl_alias(%Macro.Env{aliases: aliases}) do
+    Enum.find_value(aliases, fn {current_alias, module} ->
+      if module == VegaLite, do: current_alias
+    end)
+  end
 
   @impl true
   def to_attrs(ctx) do
