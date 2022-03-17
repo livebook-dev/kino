@@ -95,9 +95,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   def to_source(attrs) do
     attrs
     |> to_quoted()
-    |> Macro.to_string()
-    |> Code.format_string!()
-    |> IO.iodata_to_binary()
+    |> Kino.Utils.Code.quoted_to_string()
   end
 
   defp to_quoted(%{"data" => ""}), do: nil
@@ -140,7 +138,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     root = build_root(root)
 
     nodes
-    |> Enum.map(&clean_node(&1))
+    |> Enum.map(&clean_node/1)
     |> Enum.reduce(root, &apply_node/2)
   end
 
