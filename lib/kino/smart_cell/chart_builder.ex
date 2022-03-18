@@ -17,10 +17,20 @@ defmodule Kino.SmartCell.ChartBuilder do
       "x_axis_type" => attrs["x_axis_type"] || "",
       "y_axis_type" => attrs["y_axis_type"] || "",
       "color" => attrs["color"] || "",
-      "color_type" => attrs["color_type"] || ""
+      "color_type" => attrs["color_type"] || "",
+      "data" => attrs["data"] || ""
     }
 
-    {:ok, assign(ctx, fields: fields, options: %{}, vl_alias: nil, missing_dep: missing_dep())}
+    fresh = attrs == %{}
+
+    {:ok,
+     assign(ctx,
+       fields: fields,
+       options: %{},
+       vl_alias: nil,
+       missing_dep: missing_dep(),
+       fresh: fresh
+     )}
   end
 
   @impl true
@@ -36,7 +46,8 @@ defmodule Kino.SmartCell.ChartBuilder do
     payload = %{
       fields: ctx.assigns.fields,
       missing_dep: ctx.assigns.missing_dep,
-      options: ctx.assigns.options
+      options: ctx.assigns.options,
+      fresh: ctx.assigns.fresh
     }
 
     {:ok, payload, ctx}
@@ -52,9 +63,12 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
+    current_data = ctx.assigns.fields["data"]
+
     updated_fields = %{field => value}
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
-    if field == "data", do: update_options(ctx, value)
+
+    if field == "data" && value != current_data, do: update_options(ctx, value)
 
     broadcast_event(ctx, "update", %{"fields" => updated_fields})
 
