@@ -17,7 +17,7 @@ defmodule KinoTest.SmartCell do
     quote do
       %{ref: ref} = unquote(widget)
 
-      assert_receive {:runtime_smart_cell_update, ^ref, unquote(attrs), unquote(source)},
+      assert_receive {:runtime_smart_cell_update, ^ref, unquote(attrs), unquote(source), _info},
                      unquote(timeout)
     end
   end
