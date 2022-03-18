@@ -42,9 +42,10 @@ defmodule Kino.SmartCell.Server do
     {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
     init_opts = validate_init_opts!(init_opts)
 
-    attrs = module.to_attrs(ctx)
-
     editor_source_attr = get_in(init_opts, [:editor, :attribute])
+    reevaluate_on_change = Keyword.get(init_opts, :reevaluate_on_change, false)
+
+    attrs = module.to_attrs(ctx)
 
     attrs =
       if editor_source_attr do
@@ -63,7 +64,8 @@ defmodule Kino.SmartCell.Server do
       ctx: ctx,
       target_pid: target_pid,
       attrs: attrs,
-      editor_source_attr: editor_source_attr
+      editor_source_attr: editor_source_attr,
+      reevaluate_on_change: reevaluate_on_change
     }
 
     :gen_server.enter_loop(__MODULE__, [], state)
@@ -71,7 +73,7 @@ defmodule Kino.SmartCell.Server do
 
   defp validate_init_opts!(opts) do
     opts
-    |> Keyword.validate!([:editor])
+    |> Keyword.validate!([:editor, :reevaluate_on_change])
     |> Keyword.update(:editor, nil, fn editor_opts ->
       editor_opts =
         Keyword.validate!(editor_opts, [
@@ -130,7 +132,8 @@ defmodule Kino.SmartCell.Server do
 
     send(
       state.target_pid,
-      {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source}
+      {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source,
+       %{reevaluate: state.reevaluate_on_change}}
     )
 
     %{state | attrs: attrs}
