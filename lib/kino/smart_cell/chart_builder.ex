@@ -56,7 +56,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
     ctx = assign(ctx, options: data_options, vl_alias: vl_alias)
-    broadcast_event(ctx, "set_data_options", %{"options" => data_options})
+    broadcast_event(ctx, "set_available_data", %{"options" => data_options})
 
     {:noreply, ctx}
   end
