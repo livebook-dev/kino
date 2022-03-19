@@ -64,13 +64,13 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     current_data = ctx.assigns.fields["data"]
+    current_field = ctx.assigns.fields[field]
 
     updated_fields = %{field => value}
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
     if field == "data" && value != current_data, do: update_options(ctx, value)
-
-    broadcast_event(ctx, "update", %{"fields" => updated_fields})
+    if value != current_field, do: broadcast_event(ctx, "update", %{"fields" => updated_fields})
 
     {:noreply, ctx}
   end

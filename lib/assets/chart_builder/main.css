@@ -128,6 +128,15 @@ select {
   background-size: 10px;
 }
 
-.unavailable {
+.unavailable-option {
   color: red;
+}
+
+.unavailable {
+  color: rgba(255, 0, 0, 0.75);
+  text-decoration: line-through;
+}
+
+select option {
+  color: black;
 }
