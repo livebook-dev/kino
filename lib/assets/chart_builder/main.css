@@ -129,12 +129,11 @@ select {
 }
 
 .unavailable-option {
-  color: red;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .unavailable {
-  color: rgba(255, 0, 0, 0.75);
-  text-decoration: line-through;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 select option {
