@@ -21,16 +21,16 @@ defmodule Kino.SmartCell.ChartBuilder do
       "data" => attrs["data"] || ""
     }
 
-    fresh = attrs == %{}
+    ctx =
+      assign(ctx,
+        fields: fields,
+        options: %{},
+        vl_alias: nil,
+        missing_dep: missing_dep(),
+        fresh: attrs == %{}
+      )
 
-    {:ok,
-     assign(ctx,
-       fields: fields,
-       options: %{},
-       vl_alias: nil,
-       missing_dep: missing_dep(),
-       fresh: fresh
-     )}
+    {:ok, ctx, reevaluate_on_change: true}
   end
 
   @impl true
