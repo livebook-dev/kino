@@ -156,6 +156,16 @@ defmodule Kino.SmartCell do
       `:top` or `:bottom`. Defaults to `:bottom`
 
     * `:default_source` - the initial editor source. Defaults to `""`
+
+  ## Other options
+
+  Other than the editor configuration, the following options are
+  supported:
+
+    * `:reevaluate_on_change` - if the cell should be reevaluated
+      whenever the generated source code changes. This option may be
+      helpful in cases where the cell output is a crucial element of
+      the UI interactions. Defaults to `false`
   '''
 
   require Logger
