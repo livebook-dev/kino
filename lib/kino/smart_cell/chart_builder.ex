@@ -120,8 +120,6 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp to_quoted(attrs) do
-    data = if attrs["data_variable"], do: String.to_atom(attrs["data_variable"]), else: nil
-
     attrs = Map.new(attrs, fn {k, v} -> convert_field(k, v) end)
 
     [root | nodes] = [
@@ -135,34 +133,31 @@ defmodule Kino.SmartCell.ChartBuilder do
         field: :data,
         name: :data_from_series,
         module: attrs.vl_alias,
-        args: [Macro.var(data, nil)]
+        args: [Macro.var(attrs.data_variable, nil)]
       },
       %{field: :mark, name: :mark, module: attrs.vl_alias, args: [attrs.chart_type]},
       %{
         field: :x,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: [attrs.x_field, [type: attrs.x_field_type]]
+        args: maybe_arg_type(attrs.x_field, attrs.x_field_type)
       },
       %{
         field: :y,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: [attrs.y_field, [type: attrs.y_field_type]]
+        args: maybe_arg_type(attrs.y_field, attrs.y_field_type)
       },
       %{
         field: :color,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: [attrs.color_field, [type: attrs.color_field_type]]
+        args: maybe_arg_type(attrs.color_field, attrs.color_field_type)
       }
     ]
 
     root = build_root(root)
-
-    nodes
-    |> Enum.map(&clean_node/1)
-    |> Enum.reduce(root, &apply_node/2)
+    Enum.reduce(nodes, root, &apply_node/2)
   end
 
   defp build_root(root) do
@@ -180,12 +175,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     end
   end
 
-  def clean_node(node) do
-    Map.replace!(node, :args, clean_args(node.args))
-  end
-
   defp apply_node(%{args: nil}, acc), do: acc
-  defp apply_node(%{args: []}, acc), do: acc
 
   defp apply_node(%{field: field, name: function, module: module, args: args}, acc) do
     args = if function == :encode_field, do: List.insert_at(args, 0, field), else: args
@@ -195,17 +185,9 @@ defmodule Kino.SmartCell.ChartBuilder do
     end
   end
 
-  defp clean_args(args) do
-    opts =
-      args
-      |> Enum.filter(&is_list/1)
-      |> List.flatten()
-      |> Enum.filter(&elem(&1, 1))
-
-    args = Enum.reject(args, &(is_list(&1) or is_nil(&1)))
-
-    if opts != [], do: List.insert_at(args, -1, opts), else: args
-  end
+  defp maybe_arg_type(nil, _type), do: nil
+  defp maybe_arg_type(field, nil), do: [field]
+  defp maybe_arg_type(field, type), do: [field, [type: type]]
 
   defp missing_dep() do
     unless Code.ensure_loaded?(VegaLite) do
