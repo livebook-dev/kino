@@ -307,4 +307,52 @@ defmodule Kino.SmartCell do
   defp put_modules(modules) do
     Application.put_env(:kino, @registry_key, modules)
   end
+
+  @doc """
+  Generates unique variable names with the given prefix.
+
+  When `var_name` is `nil`, allocates and returns the next available
+  name. Otherwise, marks the given suffix as taken, provided that
+  `var_name` has the given prefix.
+
+  This function can be used to generate default variable names during
+  smart cell initialization, so that don't overlap.
+  """
+  @spec prefixed_var_name(String.t(), String.t() | nil) :: String.t()
+  def prefixed_var_name(prefix, var_name)
+
+  def prefixed_var_name(prefix, nil) do
+    case Kino.Counter.next(var_counter_key(prefix)) do
+      1 -> prefix
+      n -> "#{prefix}#{n}"
+    end
+  end
+
+  def prefixed_var_name(prefix, var_name) do
+    with {:ok, suffix} <- parse_var_prefix(var_name, prefix),
+         {:ok, n} <- parse_var_suffix(suffix) do
+      Kino.Counter.put_max(var_counter_key(prefix), n)
+    end
+
+    var_name
+  end
+
+  defp parse_var_prefix(string, prefix) do
+    if String.starts_with?(string, prefix) do
+      {:ok, String.replace_prefix(string, prefix, "")}
+    else
+      :error
+    end
+  end
+
+  defp parse_var_suffix(""), do: {:ok, 1}
+
+  defp parse_var_suffix(other) do
+    case Integer.parse(other) do
+      {n, ""} when n > 1 -> {:ok, n}
+      _ -> :error
+    end
+  end
+
+  defp var_counter_key(prefix), do: {:smart_cell_variable, prefix}
 end

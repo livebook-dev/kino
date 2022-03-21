@@ -16,7 +16,7 @@ defmodule Kino.SmartCell.SQL do
           if conn_attrs = attrs["connection"] do
             %{variable: conn_attrs["variable"], type: conn_attrs["type"]}
           end,
-        result_variable: attrs["result_variable"] || "result"
+        result_variable: Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"])
       )
 
     {:ok, ctx, editor: [attribute: "query", language: "sql", default_source: @default_query]}

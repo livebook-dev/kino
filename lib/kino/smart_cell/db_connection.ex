@@ -10,7 +10,7 @@ defmodule Kino.SmartCell.DBConnection do
   @impl true
   def init(attrs, ctx) do
     fields = %{
-      "variable" => attrs["variable"] || "conn",
+      "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
       "type" => attrs["type"] || "postgres",
       "hostname" => attrs["hostname"] || "",
       "port" => attrs["port"] || 5432,
