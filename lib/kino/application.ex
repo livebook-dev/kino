@@ -4,6 +4,8 @@ defmodule Kino.Application do
   use Application
 
   def start(_type, _args) do
+    Kino.Counter.initialize()
+
     Kino.SmartCell.register(Kino.SmartCell.DBConnection)
     Kino.SmartCell.register(Kino.SmartCell.SQL)
 

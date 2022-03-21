@@ -7,8 +7,8 @@ defmodule Kino.SmartCell.DBConnectionTest do
   alias Kino.SmartCell.DBConnection
 
   describe "initialization" do
-    test "returns default source when started with empty attrs" do
-      {_widget, source} = start_smart_cell!(DBConnection, %{})
+    test "returns default source when started with missing attrs" do
+      {_widget, source} = start_smart_cell!(DBConnection, %{"variable" => "conn"})
 
       assert source ==
                """
@@ -46,7 +46,7 @@ defmodule Kino.SmartCell.DBConnectionTest do
   end
 
   test "when a field changes, broadcasts the change and sends source update" do
-    {widget, _source} = start_smart_cell!(DBConnection, %{})
+    {widget, _source} = start_smart_cell!(DBConnection, %{"variable" => "conn"})
 
     push_event(widget, "update_field", %{"field" => "hostname", "value" => "localhost"})
 
@@ -67,7 +67,12 @@ defmodule Kino.SmartCell.DBConnectionTest do
   end
 
   test "when the database type changes, restores the default port for that database" do
-    {widget, _source} = start_smart_cell!(DBConnection, %{"type" => "postgres", "port" => 5432})
+    {widget, _source} =
+      start_smart_cell!(DBConnection, %{
+        "variable" => "conn",
+        "type" => "postgres",
+        "port" => 5432
+      })
 
     push_event(widget, "update_field", %{"field" => "type", "value" => "mysql"})
 
