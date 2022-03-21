@@ -21,12 +21,12 @@ defmodule Kino.Counter do
   end
 
   @doc """
-  Bumps the counter to `value` unless it already has a higher value.
+  Sets the counter to `value` unless it already has a higher value.
 
-  Returns the current counter value.
+  Returns the new counter value.
   """
-  @spec bump(term(), integer()) :: integer()
-  def bump(key, value) do
+  @spec put_max(term(), integer()) :: integer()
+  def put_max(key, value) do
     [_, counter] =
       :ets.update_counter(@table_name, key, [{2, -1, value, value - 1}, {2, 1}], {key, 0})
 

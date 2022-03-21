@@ -331,7 +331,7 @@ defmodule Kino.SmartCell do
   def prefixed_var_name(prefix, var_name) do
     with {:ok, suffix} <- parse_var_prefix(var_name, prefix),
          {:ok, n} <- parse_var_suffix(suffix) do
-      Kino.Counter.bump(var_counter_key(prefix), n)
+      Kino.Counter.put_max(var_counter_key(prefix), n)
     end
 
     var_name

@@ -19,21 +19,21 @@ defmodule Kino.CounterTets do
 
   describe "bump/2" do
     test "sets the given value if the counter doesn't exist", %{test: test} do
-      assert Counter.bump(test, 10) == 10
+      assert Counter.put_max(test, 10) == 10
     end
 
     test "keeps existing value if the given one is lower or equal", %{test: test} do
-      Counter.bump(test, 10)
+      Counter.put_max(test, 10)
 
-      assert Counter.bump(test, 5) == 10
-      assert Counter.bump(test, 10) == 10
+      assert Counter.put_max(test, 5) == 10
+      assert Counter.put_max(test, 10) == 10
     end
 
     test "sets the given value if higher than the current one", %{test: test} do
-      Counter.bump(test, 10)
+      Counter.put_max(test, 10)
 
-      assert Counter.bump(test, 11) == 11
-      assert Counter.bump(test, 15) == 15
+      assert Counter.put_max(test, 11) == 11
+      assert Counter.put_max(test, 15) == 15
     end
   end
 end
