@@ -67,8 +67,6 @@ defmodule Kino.SmartCell.SQL do
 
   @impl true
   def handle_info({:connections, connections}, ctx) do
-    connections = Enum.sort_by(connections, & &1.variable)
-
     connection =
       case {connections, ctx.assigns.connection} do
         {[connection | _], nil} -> connection
