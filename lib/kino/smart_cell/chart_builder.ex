@@ -4,21 +4,21 @@ defmodule Kino.SmartCell.ChartBuilder do
   use Kino.SmartCell, name: "Chart builder"
 
   @as_int ["width", "height"]
-  @as_atom ["data", "chart", "x_axis_type", "y_axis_type", "color_type"]
+  @as_atom ["data_variable", "chart_type", "x_field_type", "y_field_type", "color_field_type"]
 
   @impl true
   def init(attrs, ctx) do
     fields = %{
-      "chart" => attrs["chart"] || "bar",
+      "chart_type" => attrs["chart_type"] || "bar",
       "width" => attrs["width"] || "",
       "height" => attrs["height"] || "",
-      "x_axis" => attrs["x_axis"] || "",
-      "y_axis" => attrs["y_axis"] || "",
-      "x_axis_type" => attrs["x_axis_type"] || "",
-      "y_axis_type" => attrs["y_axis_type"] || "",
-      "color" => attrs["color"] || "",
-      "color_type" => attrs["color_type"] || "",
-      "data" => attrs["data"] || ""
+      "x_field" => attrs["x_field"] || "",
+      "y_field" => attrs["y_field"] || "",
+      "x_field_type" => attrs["x_field_type"] || "",
+      "y_field_type" => attrs["y_field_type"] || "",
+      "color_field" => attrs["color_field"] || "",
+      "color_field_type" => attrs["color_field_type"] || "",
+      "data_variable" => attrs["data_variable"] || ""
     }
 
     ctx =
@@ -35,8 +35,9 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def scan_binding(pid, binding, env) do
-    dfs = Keyword.filter(binding, fn {_key, val} -> is_map(val) end)
-    data_options = Map.new(dfs, fn {k, v} -> {k, Map.keys(v)} end)
+    data_options =
+      for {key, val} <- binding, is_atom(key), is_map(val), into: %{}, do: {key, Map.keys(val)}
+
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
   end
@@ -63,13 +64,13 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
-    current_data = ctx.assigns.fields["data"]
+    current_data = ctx.assigns.fields["data_variable"]
     current_field = ctx.assigns.fields[field]
 
     updated_fields = %{field => value}
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
-    if field == "data" && value != current_data, do: update_options(ctx, value)
+    if field == "data_variable" && value != current_data, do: update_options(ctx, value)
     if value != current_field, do: broadcast_event(ctx, "update", %{"fields" => updated_fields})
 
     {:noreply, ctx}
@@ -94,9 +95,10 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp convert_field(field, value), do: {String.to_atom(field), value}
 
   defp vl_alias(%Macro.Env{aliases: aliases}) do
-    Enum.find_value(aliases, fn {current_alias, module} ->
-      if module == VegaLite, do: current_alias
-    end)
+    case List.keyfind(aliases, VegaLite, 1) do
+      {vl_alias, _} -> vl_alias
+      nil -> VegaLite
+    end
   end
 
   @impl true
@@ -112,11 +114,13 @@ defmodule Kino.SmartCell.ChartBuilder do
     |> Kino.Utils.Code.quoted_to_string()
   end
 
-  defp to_quoted(%{"data" => ""}), do: nil
+  defp to_quoted(%{"data_variable" => ""}) do
+    quote do
+    end
+  end
 
   defp to_quoted(attrs) do
-    data = if attrs["data"], do: String.to_atom(attrs["data"]), else: nil
-    module = if attrs["vl_alias"], do: attrs["vl_alias"], else: VegaLite
+    data = if attrs["data_variable"], do: String.to_atom(attrs["data_variable"]), else: nil
 
     attrs = Map.new(attrs, fn {k, v} -> convert_field(k, v) end)
 
@@ -124,28 +128,33 @@ defmodule Kino.SmartCell.ChartBuilder do
       %{
         field: nil,
         name: :new,
-        module: module,
+        module: attrs.vl_alias,
         args: [[width: attrs.width, height: attrs.height]]
       },
-      %{field: :data, name: :data_from_series, module: module, args: [Macro.var(data, nil)]},
-      %{field: :mark, name: :mark, module: module, args: [attrs.chart]},
+      %{
+        field: :data,
+        name: :data_from_series,
+        module: attrs.vl_alias,
+        args: [Macro.var(data, nil)]
+      },
+      %{field: :mark, name: :mark, module: attrs.vl_alias, args: [attrs.chart_type]},
       %{
         field: :x,
         name: :encode_field,
-        module: module,
-        args: [attrs.x_axis, [type: attrs.x_axis_type]]
+        module: attrs.vl_alias,
+        args: [attrs.x_field, [type: attrs.x_field_type]]
       },
       %{
         field: :y,
         name: :encode_field,
-        module: module,
-        args: [attrs.y_axis, [type: attrs.y_axis_type]]
+        module: attrs.vl_alias,
+        args: [attrs.y_field, [type: attrs.y_field_type]]
       },
       %{
         field: :color,
         name: :encode_field,
-        module: module,
-        args: [attrs.color, [type: attrs.color_type]]
+        module: attrs.vl_alias,
+        args: [attrs.color_field, [type: attrs.color_field_type]]
       }
     ]
 
