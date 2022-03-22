@@ -135,7 +135,7 @@ defmodule Kino.SmartCell.ChartBuilder do
         field: nil,
         name: :new,
         module: attrs.vl_alias,
-        args: [[width: attrs.width, height: attrs.height]]
+        args: build_arg_root(attrs.width, attrs.height)
       },
       %{
         field: :data,
@@ -169,17 +169,8 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp build_root(root) do
-    args =
-      root.args
-      |> Enum.at(0)
-      |> Enum.filter(&elem(&1, 1))
-      |> case do
-        [] -> []
-        opts -> [opts]
-      end
-
     quote do
-      unquote(root.module).unquote(root.name)(unquote_splicing(args))
+      unquote(root.module).unquote(root.name)(unquote_splicing(root.args))
     end
   end
 
@@ -192,6 +183,11 @@ defmodule Kino.SmartCell.ChartBuilder do
       unquote(acc) |> unquote(module).unquote(function)(unquote_splicing(args))
     end
   end
+
+  defp build_arg_root(nil, nil), do: []
+  defp build_arg_root(width, nil), do: [[width: width]]
+  defp build_arg_root(nil, height), do: [[height: height]]
+  defp build_arg_root(width, height), do: [[width: width, height: height]]
 
   defp maybe_arg_type(nil, _type), do: nil
   defp maybe_arg_type(field, nil), do: [field]
