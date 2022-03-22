@@ -16,14 +16,8 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "source for a basic bar plot with no optionals" do
       attrs = %{
         "chart_type" => "bar",
-        "width" => "",
-        "height" => "",
         "x_field" => "a",
         "y_field" => "b",
-        "x_field_type" => "",
-        "y_field_type" => "",
-        "color_field" => "",
-        "color_field_type" => "",
         "data_variable" => "data",
         "vl_alias" => VegaLite
       }
@@ -40,14 +34,8 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "source for a basic line plot with alias" do
       attrs = %{
         "chart_type" => "line",
-        "width" => "",
-        "height" => "",
         "x_field" => "a",
         "y_field" => "b",
-        "x_field_type" => "",
-        "y_field_type" => "",
-        "color_field" => "",
-        "color_field_type" => "",
         "data_variable" => "data",
         "vl_alias" => Vl
       }
@@ -64,12 +52,8 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "bar plot with color and color type" do
       attrs = %{
         "chart_type" => "bar",
-        "width" => "",
-        "height" => "",
         "x_field" => "a",
         "y_field" => "b",
-        "x_field_type" => "",
-        "y_field_type" => "",
         "color_field" => "c",
         "color_field_type" => "nominal",
         "data_variable" => "data",
@@ -89,14 +73,12 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "point plot with width x and y field types and color without type" do
       attrs = %{
         "chart_type" => "point",
-        "width" => "300",
-        "height" => "",
+        "width" => 300,
         "x_field" => "a",
         "y_field" => "b",
         "x_field_type" => "nominal",
         "y_field_type" => "quantitative",
         "color_field" => "c",
-        "color_field_type" => "",
         "data_variable" => "data",
         "vl_alias" => VegaLite
       }
@@ -114,8 +96,8 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "area plot with all optionals and alias" do
       attrs = %{
         "chart_type" => "point",
-        "width" => "600",
-        "height" => "300",
+        "width" => 600,
+        "height" => 300,
         "x_field" => "a",
         "y_field" => "b",
         "x_field_type" => "ordinal",

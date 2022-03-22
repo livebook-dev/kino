@@ -10,15 +10,15 @@ defmodule Kino.SmartCell.ChartBuilder do
   def init(attrs, ctx) do
     fields = %{
       "chart_type" => attrs["chart_type"] || "bar",
-      "width" => attrs["width"] || "",
-      "height" => attrs["height"] || "",
-      "x_field" => attrs["x_field"] || "",
-      "y_field" => attrs["y_field"] || "",
-      "x_field_type" => attrs["x_field_type"] || "",
-      "y_field_type" => attrs["y_field_type"] || "",
-      "color_field" => attrs["color_field"] || "",
-      "color_field_type" => attrs["color_field_type"] || "",
-      "data_variable" => attrs["data_variable"] || ""
+      "width" => attrs["width"],
+      "height" => attrs["height"],
+      "x_field" => attrs["x_field"],
+      "y_field" => attrs["y_field"],
+      "x_field_type" => attrs["x_field_type"],
+      "y_field_type" => attrs["y_field_type"],
+      "color_field" => attrs["color_field"],
+      "color_field_type" => attrs["color_field_type"],
+      "data_variable" => attrs["data_variable"]
     }
 
     ctx =
@@ -67,7 +67,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     current_data = ctx.assigns.fields["data_variable"]
     current_field = ctx.assigns.fields[field]
 
-    updated_fields = %{field => value}
+    updated_fields = to_update(field, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
     if field == "data_variable" && value != current_data, do: update_options(ctx, value)
@@ -82,11 +82,19 @@ defmodule Kino.SmartCell.ChartBuilder do
     broadcast_event(ctx, "set_axis_options", %{"options" => options})
   end
 
-  defp convert_field(field, ""), do: {String.to_atom(field), nil}
-
-  defp convert_field(field, value) when field in @as_int do
-    {String.to_atom(field), String.to_integer(value)}
+  defp to_update(field, "") do
+    %{field => nil}
   end
+
+  defp to_update(field, value) when field in @as_int do
+    %{field => String.to_integer(value)}
+  end
+
+  defp to_update(field, value) do
+    %{field => value}
+  end
+
+  defp convert_field(field, nil), do: {String.to_atom(field), nil}
 
   defp convert_field(field, value) when field in @as_atom do
     {String.to_atom(field), String.to_atom(value)}
@@ -114,7 +122,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     |> Kino.Utils.Code.quoted_to_string()
   end
 
-  defp to_quoted(%{"data_variable" => ""}) do
+  defp to_quoted(%{"data_variable" => nil}) do
     quote do
     end
   end
