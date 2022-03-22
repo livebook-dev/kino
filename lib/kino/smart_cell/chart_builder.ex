@@ -64,16 +64,10 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
-    current_data = ctx.assigns.fields["data_variable"]
-    current_field = ctx.assigns.fields[field]
-
     parsed_value = parse_value(field, value)
     ctx = update(ctx, :fields, &Map.put(&1, field, parsed_value))
-
-    if field == "data_variable" && value != current_data, do: update_options(ctx, value)
-
-    if value != current_field,
-      do: broadcast_event(ctx, "update", %{"fields" => %{field => parsed_value}})
+    if field == "data_variable", do: update_options(ctx, value)
+    broadcast_event(ctx, "update", %{"fields" => %{field => parsed_value}})
 
     {:noreply, ctx}
   end
