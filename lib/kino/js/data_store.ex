@@ -41,8 +41,9 @@ defmodule Kino.JS.DataStore do
 
   @impl true
   def handle_info({:connect, pid, %{origin: _origin, ref: ref}}, state) do
-    data = state.ref_with_data[ref]
-    Kino.Bridge.send(pid, {:connect_reply, data, %{ref: ref}})
+    with {:ok, data} <- Map.fetch(state.ref_with_data, ref) do
+      Kino.Bridge.send(pid, {:connect_reply, data, %{ref: ref}})
+    end
 
     {:noreply, state}
   end
