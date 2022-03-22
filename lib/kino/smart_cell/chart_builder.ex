@@ -67,11 +67,13 @@ defmodule Kino.SmartCell.ChartBuilder do
     current_data = ctx.assigns.fields["data_variable"]
     current_field = ctx.assigns.fields[field]
 
-    updated_fields = to_update(field, value)
-    ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+    parsed_value = parse_value(field, value)
+    ctx = update(ctx, :fields, &Map.put(&1, field, parsed_value))
 
     if field == "data_variable" && value != current_data, do: update_options(ctx, value)
-    if value != current_field, do: broadcast_event(ctx, "update", %{"fields" => updated_fields})
+
+    if value != current_field,
+      do: broadcast_event(ctx, "update", %{"fields" => %{field => parsed_value}})
 
     {:noreply, ctx}
   end
@@ -82,17 +84,9 @@ defmodule Kino.SmartCell.ChartBuilder do
     broadcast_event(ctx, "set_axis_options", %{"options" => options})
   end
 
-  defp to_update(field, "") do
-    %{field => nil}
-  end
-
-  defp to_update(field, value) when field in @as_int do
-    %{field => String.to_integer(value)}
-  end
-
-  defp to_update(field, value) do
-    %{field => value}
-  end
+  defp parse_value(_field, ""), do: nil
+  defp parse_value(field, value) when field in @as_int, do: String.to_integer(value)
+  defp parse_value(_field, value), do: value
 
   defp convert_field(field, nil), do: {String.to_atom(field), nil}
 
