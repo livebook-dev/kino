@@ -24,7 +24,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     ctx =
       assign(ctx,
         fields: fields,
-        options: %{},
+        data_options: %{},
         vl_alias: nil,
         missing_dep: missing_dep(),
         fresh: is_fresh?(attrs)
@@ -51,7 +51,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     payload = %{
       fields: ctx.assigns.fields,
       missing_dep: ctx.assigns.missing_dep,
-      options: ctx.assigns.options,
+      data_options: ctx.assigns.data_options,
       fresh: ctx.assigns.fresh
     }
 
@@ -60,8 +60,8 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
-    ctx = assign(ctx, options: data_options, vl_alias: vl_alias)
-    broadcast_event(ctx, "set_available_data", %{"options" => data_options})
+    ctx = assign(ctx, data_options: data_options, vl_alias: vl_alias)
+    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
 
     {:noreply, ctx}
   end
@@ -85,7 +85,7 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   defp updates_for_data_variable(ctx, value) do
     {x_field, y_field} =
-      case ctx.assigns.options[value] do
+      case ctx.assigns.data_options[value] do
         [key] -> {key, key}
         [key1, key2 | _] -> {key1, key2}
         _ -> {nil, nil}
