@@ -220,12 +220,9 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp is_valid_data(data) when is_map(data) and data != %{} do
-    try do
-      data |> Map.keys() |> Enum.map(&to_string/1)
-      true
-    rescue
-      _ -> false
-    end
+    Enum.all?(data, fn {key, val} ->
+      String.Chars.impl_for(key) != nil and Enumerable.impl_for(val) != nil
+    end)
   end
 
   defp is_valid_data(_), do: false
