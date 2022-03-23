@@ -60,26 +60,6 @@ defmodule Kino.SmartCell.ChartBuilderTest do
              """
     end
 
-    test "source for a empty map as data" do
-      attrs = %{
-        "chart_type" => "bar",
-        "width" => nil,
-        "height" => nil,
-        "x_field" => nil,
-        "y_field" => nil,
-        "x_field_type" => nil,
-        "y_field_type" => nil,
-        "color_field" => nil,
-        "color_field_type" => nil,
-        "data_variable" => "data",
-        "vl_alias" => Vl
-      }
-
-      assert ChartBuilder.to_source(attrs) == """
-             Vl.new() |> Vl.data_from_series(data) |> Vl.mark(:bar)\
-             """
-    end
-
     test "bar plot with color and color type" do
       attrs = %{
         "chart_type" => "bar",

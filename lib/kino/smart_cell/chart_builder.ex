@@ -38,7 +38,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     data_options =
       for {key, val} <- binding,
           is_atom(key),
-          is_map(val),
+          is_map(val) && val != %{},
           into: %{},
           do: {Atom.to_string(key), val |> Map.keys() |> Enum.map(&to_string/1)}
 
