@@ -1,7 +1,6 @@
 defmodule Kino.SmartCell.ChartBuilderTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
   import KinoTest.SmartCell
 
   alias Kino.SmartCell.ChartBuilder
@@ -16,8 +15,14 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "source for a basic bar plot with no optionals" do
       attrs = %{
         "chart_type" => "bar",
+        "width" => nil,
+        "height" => nil,
         "x_field" => "a",
         "y_field" => "b",
+        "x_field_type" => nil,
+        "y_field_type" => nil,
+        "color_field" => nil,
+        "color_field_type" => nil,
         "data_variable" => "data",
         "vl_alias" => VegaLite
       }
@@ -34,8 +39,14 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     test "source for a basic line plot with alias" do
       attrs = %{
         "chart_type" => "line",
+        "width" => nil,
+        "height" => nil,
         "x_field" => "a",
         "y_field" => "b",
+        "x_field_type" => nil,
+        "y_field_type" => nil,
+        "color_field" => nil,
+        "color_field_type" => nil,
         "data_variable" => "data",
         "vl_alias" => Vl
       }
@@ -49,11 +60,35 @@ defmodule Kino.SmartCell.ChartBuilderTest do
              """
     end
 
+    test "source for a empty map as data" do
+      attrs = %{
+        "chart_type" => "bar",
+        "width" => nil,
+        "height" => nil,
+        "x_field" => nil,
+        "y_field" => nil,
+        "x_field_type" => nil,
+        "y_field_type" => nil,
+        "color_field" => nil,
+        "color_field_type" => nil,
+        "data_variable" => "data",
+        "vl_alias" => Vl
+      }
+
+      assert ChartBuilder.to_source(attrs) == """
+             Vl.new() |> Vl.data_from_series(data) |> Vl.mark(:bar)\
+             """
+    end
+
     test "bar plot with color and color type" do
       attrs = %{
         "chart_type" => "bar",
+        "width" => nil,
+        "height" => nil,
         "x_field" => "a",
         "y_field" => "b",
+        "x_field_type" => nil,
+        "y_field_type" => nil,
         "color_field" => "c",
         "color_field_type" => "nominal",
         "data_variable" => "data",
@@ -74,11 +109,13 @@ defmodule Kino.SmartCell.ChartBuilderTest do
       attrs = %{
         "chart_type" => "point",
         "width" => 300,
+        "height" => nil,
         "x_field" => "a",
         "y_field" => "b",
         "x_field_type" => "nominal",
         "y_field_type" => "quantitative",
         "color_field" => "c",
+        "color_field_type" => nil,
         "data_variable" => "data",
         "vl_alias" => VegaLite
       }
