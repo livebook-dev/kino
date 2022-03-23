@@ -38,7 +38,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     data_options =
       for {key, val} <- binding,
           is_atom(key),
-          is_map(val) && val != %{},
+          is_valid_data(val),
           into: %{},
           do: {Atom.to_string(key), val |> Map.keys() |> Enum.map(&to_string/1)}
 
@@ -218,4 +218,15 @@ defmodule Kino.SmartCell.ChartBuilder do
     |> Enum.any?()
     |> then(&(!&1))
   end
+
+  defp is_valid_data(data) when is_map(data) and data != %{} do
+    try do
+      data |> Map.keys() |> Enum.map(&to_string/1)
+      true
+    rescue
+      _ -> false
+    end
+  end
+
+  defp is_valid_data(_), do: false
 end
