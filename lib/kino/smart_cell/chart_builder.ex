@@ -36,7 +36,11 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def scan_binding(pid, binding, env) do
     data_options =
-      for {key, val} <- binding, is_atom(key), is_map(val), into: %{}, do: {key, Map.keys(val)}
+      for {key, val} <- binding,
+          is_atom(key),
+          is_map(val),
+          into: %{},
+          do: {Atom.to_string(key), Map.keys(val)}
 
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
@@ -68,7 +72,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   def handle_event("update_field", %{"field" => "data_variable", "value" => value}, ctx) do
-    updated_fields = update_data_options(ctx, value)
+    updated_fields = updates_for_data_variable(ctx, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
     broadcast_event(ctx, "update", %{"fields" => updated_fields})
 
@@ -83,15 +87,18 @@ defmodule Kino.SmartCell.ChartBuilder do
     {:noreply, ctx}
   end
 
-  defp update_data_options(ctx, value) do
-    df = String.to_atom(value)
-    axis = ctx.assigns.options[df] |> List.first()
-    axis = if axis, do: Atom.to_string(axis)
+  defp updates_for_data_variable(ctx, value) do
+    {x_field, y_field} =
+      case ctx.assigns.options[value] do
+        [key] -> {Atom.to_string(key), Atom.to_string(key)}
+        [key1, key2 | _] -> {Atom.to_string(key1), Atom.to_string(key2)}
+        _ -> {nil, nil}
+      end
 
     %{
       "data_variable" => value,
-      "x_field" => axis,
-      "y_field" => axis,
+      "x_field" => x_field,
+      "y_field" => y_field,
       "color_field" => nil,
       "x_field_type" => nil,
       "y_field_type" => nil,
