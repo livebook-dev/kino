@@ -27,7 +27,7 @@ defmodule Kino.SmartCell.ChartBuilder do
         options: %{},
         vl_alias: nil,
         missing_dep: missing_dep(),
-        fresh: attrs == %{}
+        fresh: is_fresh?(attrs)
       )
 
     {:ok, ctx, reevaluate_on_change: true}
@@ -206,5 +206,13 @@ defmodule Kino.SmartCell.ChartBuilder do
     unless Code.ensure_loaded?(VegaLite) do
       ~s/{:vega_lite, "~> 0.1.2"}/
     end
+  end
+
+  defp is_fresh?(attrs) do
+    attrs
+    |> Map.drop(["chart_type", "vl_alias"])
+    |> Map.values()
+    |> Enum.any?()
+    |> then(&(!&1))
   end
 end
