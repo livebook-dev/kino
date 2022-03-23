@@ -1,0 +1,141 @@
+.app {
+  font-family: "Inter";
+
+  box-sizing: border-box;
+
+  --gray-50: #f8fafc;
+  --gray-100: #f0f5f9;
+  --gray-200: #e1e8f0;
+  --gray-400: #91a4b7;
+  --gray-500: #61758a;
+  --gray-600: #445668;
+  --gray-800: #1c2a3a;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row > *:not(:first-child) {
+  margin-left: 8px;
+}
+
+.row:not(:first-child) {
+  margin-top: 12px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 5px;
+}
+
+.group .field {
+  padding-top: 12px;
+}
+
+.box {
+  display: flex;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 5px;
+  min-width: 200px;
+}
+
+.box .field:not(:first-child) {
+  padding-left: 12px;
+}
+
+.input {
+  appearance: none;
+  padding: 8px 12px;
+  background-color: var(--gray-50);
+  font-size: 0.875rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  color: var(--gray-600);
+}
+
+.input::placeholder {
+  color: var(--gray-400);
+}
+
+.input:focus {
+  outline: none;
+}
+
+.input:disabled {
+  opacity: 50%;
+}
+
+.input--xs {
+  width: auto;
+  max-width: 65px;
+}
+
+.input--sm {
+  width: auto;
+  min-width: 200px;
+  max-width: 250px;
+}
+
+.input--md {
+  width: auto;
+  min-width: 450px;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.info-box {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 0.5rem;
+  white-space: pre-wrap;
+  font-weight: 500;
+  font-size: 0.875rem;
+  background-color: var(--gray-100);
+  color: var(--gray-500);
+}
+
+.hidden {
+  display: none;
+}
+
+select {
+  appearance: none;
+  background-color: transparent;
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwMCAxMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KICA8cGF0aCBmaWxsPSJncmF5IiBkPSJNMTAsMjMyLjdsNDkwLDUzNC41bDQ5MC01MzQuNUgxMHoiIC8+DQo8L3N2Zz4=);
+  background-repeat: no-repeat;
+  background-position: center right 10px;
+  background-size: 10px;
+}
+
+.unavailable-option {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.unavailable {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+select option {
+  color: black;
+}

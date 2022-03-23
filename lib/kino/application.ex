@@ -8,6 +8,7 @@ defmodule Kino.Application do
 
     Kino.SmartCell.register(Kino.SmartCell.DBConnection)
     Kino.SmartCell.register(Kino.SmartCell.SQL)
+    Kino.SmartCell.register(Kino.SmartCell.ChartBuilder)
 
     children = [
       {DynamicSupervisor, strategy: :one_for_one, name: Kino.DynamicSupervisor},
