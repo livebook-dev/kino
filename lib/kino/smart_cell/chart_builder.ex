@@ -63,12 +63,40 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   @impl true
+  def handle_event("update_field", %{"field" => "data_variable", "value" => ""}, ctx) do
+    {:noreply, ctx}
+  end
+
+  def handle_event("update_field", %{"field" => "data_variable", "value" => value}, ctx) do
+    updated_fields = update_data_options(ctx, value)
+    ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+    broadcast_event(ctx, "update", %{"fields" => updated_fields})
+
+    {:noreply, ctx}
+  end
+
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     parsed_value = parse_value(field, value)
     ctx = update(ctx, :fields, &Map.put(&1, field, parsed_value))
     broadcast_event(ctx, "update", %{"fields" => %{field => parsed_value}})
 
     {:noreply, ctx}
+  end
+
+  defp update_data_options(ctx, value) do
+    df = String.to_atom(value)
+    axis = ctx.assigns.options[df] |> List.first()
+    axis = if axis, do: Atom.to_string(axis)
+
+    %{
+      "data_variable" => value,
+      "x_field" => axis,
+      "y_field" => axis,
+      "color_field" => nil,
+      "x_field_type" => nil,
+      "y_field_type" => nil,
+      "color_field_type" => nil
+    }
   end
 
   defp parse_value(_field, ""), do: nil
