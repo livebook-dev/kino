@@ -67,10 +67,6 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   @impl true
-  def handle_event("update_field", %{"field" => "data_variable", "value" => ""}, ctx) do
-    {:noreply, ctx}
-  end
-
   def handle_event("update_field", %{"field" => "data_variable", "value" => value}, ctx) do
     updated_fields = updates_for_data_variable(ctx, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
