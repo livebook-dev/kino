@@ -40,7 +40,7 @@ defmodule Kino.SmartCell.ChartBuilder do
           is_atom(key),
           is_map(val),
           into: %{},
-          do: {Atom.to_string(key), Map.keys(val)}
+          do: {Atom.to_string(key), val |> Map.keys() |> Enum.map(&to_string/1)}
 
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
@@ -90,8 +90,8 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp updates_for_data_variable(ctx, value) do
     {x_field, y_field} =
       case ctx.assigns.options[value] do
-        [key] -> {Atom.to_string(key), Atom.to_string(key)}
-        [key1, key2 | _] -> {Atom.to_string(key1), Atom.to_string(key2)}
+        [key] -> {key, key}
+        [key1, key2 | _] -> {key1, key2}
         _ -> {nil, nil}
       end
 
