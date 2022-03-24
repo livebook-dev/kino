@@ -90,3 +90,12 @@ button {
 .hidden {
   display: none;
 }
+
+select {
+  appearance: none;
+  background-color: transparent;
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwMCAxMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KICA8cGF0aCBmaWxsPSJncmF5IiBkPSJNMTAsMjMyLjdsNDkwLDUzNC41bDQ5MC01MzQuNUgxMHoiIC8+DQo8L3N2Zz4=);
+  background-repeat: no-repeat;
+  background-position: center right 10px;
+  background-size: 10px;
+}
