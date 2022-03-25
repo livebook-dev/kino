@@ -4,21 +4,33 @@ defmodule Kino.SmartCell.ChartBuilder do
   use Kino.SmartCell, name: "Chart builder"
 
   @as_int ["width", "height"]
-  @as_atom ["data_variable", "chart_type", "x_field_type", "y_field_type", "color_field_type"]
+  @as_atom [
+    "data_variable",
+    "chart_type",
+    "x_field_type",
+    "y_field_type",
+    "color_field_type",
+    "x_field_aggregate",
+    "y_field_aggregate",
+    "color_field_aggregate"
+  ]
 
   @impl true
   def init(attrs, ctx) do
     fields = %{
       "chart_type" => attrs["chart_type"] || "bar",
+      "data_variable" => attrs["data_variable"],
       "width" => attrs["width"],
       "height" => attrs["height"],
       "x_field" => attrs["x_field"],
       "y_field" => attrs["y_field"],
+      "color_field" => attrs["color_field"],
       "x_field_type" => attrs["x_field_type"],
       "y_field_type" => attrs["y_field_type"],
-      "color_field" => attrs["color_field"],
       "color_field_type" => attrs["color_field_type"],
-      "data_variable" => attrs["data_variable"]
+      "x_field_aggregate" => attrs["x_field_aggregate"],
+      "y_field_aggregate" => attrs["y_field_aggregate"],
+      "color_field_aggregate" => attrs["color_field_aggregate"]
     }
 
     ctx =
@@ -98,7 +110,10 @@ defmodule Kino.SmartCell.ChartBuilder do
       "color_field" => nil,
       "x_field_type" => nil,
       "y_field_type" => nil,
-      "color_field_type" => nil
+      "color_field_type" => nil,
+      "x_field_aggregate" => nil,
+      "y_field_aggregate" => nil,
+      "color_field_aggregate" => nil
     }
   end
 
@@ -160,19 +175,20 @@ defmodule Kino.SmartCell.ChartBuilder do
         field: :x,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: maybe_arg_type(attrs.x_field, attrs.x_field_type)
+        args: build_arg_field(attrs.x_field, attrs.x_field_type, attrs.x_field_aggregate)
       },
       %{
         field: :y,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: maybe_arg_type(attrs.y_field, attrs.y_field_type)
+        args: build_arg_field(attrs.y_field, attrs.y_field_type, attrs.y_field_aggregate)
       },
       %{
         field: :color,
         name: :encode_field,
         module: attrs.vl_alias,
-        args: maybe_arg_type(attrs.color_field, attrs.color_field_type)
+        args:
+          build_arg_field(attrs.color_field, attrs.color_field_type, attrs.color_field_aggregate)
       }
     ]
 
@@ -201,9 +217,11 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp build_arg_root(nil, height), do: [[height: height]]
   defp build_arg_root(width, height), do: [[width: width, height: height]]
 
-  defp maybe_arg_type(nil, _type), do: nil
-  defp maybe_arg_type(field, nil), do: [field]
-  defp maybe_arg_type(field, type), do: [field, [type: type]]
+  defp build_arg_field(nil, _, _), do: nil
+  defp build_arg_field(field, nil, nil), do: [field]
+  defp build_arg_field(field, type, nil), do: [field, [type: type]]
+  defp build_arg_field(field, nil, aggregate), do: [field, [aggregate: aggregate]]
+  defp build_arg_field(field, type, aggregate), do: [field, [type: type, aggregate: aggregate]]
 
   defp missing_dep() do
     unless Code.ensure_loaded?(VegaLite) do
