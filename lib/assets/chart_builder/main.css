@@ -42,7 +42,7 @@
   padding: 12px;
   border: 1px solid var(--gray-200);
   border-radius: 5px;
-  min-width: 200px;
+  min-width: 190px;
 }
 
 .box .field:not(:first-child) {
@@ -78,13 +78,13 @@
 
 .input--sm {
   width: auto;
-  min-width: 200px;
-  max-width: 250px;
+  min-width: 190px;
+  max-width: 190px;
 }
 
 .input--md {
   width: auto;
-  min-width: 450px;
+  min-width: 350px;
 }
 
 .input-label {
