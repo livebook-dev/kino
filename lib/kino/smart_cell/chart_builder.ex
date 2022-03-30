@@ -214,8 +214,8 @@ defmodule Kino.SmartCell.ChartBuilder do
     end
   end
 
-  defp build_arg_root(args) do
-    args
+  defp build_arg_root(opts) do
+    opts
     |> Enum.filter(&elem(&1, 1))
     |> case do
       [] -> []
