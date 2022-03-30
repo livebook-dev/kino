@@ -31,6 +31,7 @@
   padding: 12px;
   border: 1px solid var(--gray-200);
   border-radius: 5px;
+  min-height: 220px;
 }
 
 .group .field {
@@ -73,18 +74,17 @@
 
 .input--xs {
   width: auto;
-  max-width: 65px;
+  max-width: 60px;
 }
 
 .input--sm {
   width: auto;
   min-width: 190px;
-  max-width: 190px;
 }
 
 .input--md {
   width: auto;
-  min-width: 350px;
+  min-width: 387px;
 }
 
 .input-label {
@@ -138,11 +138,4 @@ select {
 
 select option {
   color: black;
-}
-
-.slider {
-  //appearance: none;
-  padding: 8px 12px;
-  font-size: 0.875rem;
-  color: var(--gray-600);
 }
