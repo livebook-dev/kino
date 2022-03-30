@@ -139,3 +139,10 @@ select {
 select option {
   color: black;
 }
+
+.slider {
+  //appearance: none;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
