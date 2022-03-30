@@ -30,7 +30,8 @@ defmodule Kino.SmartCell.ChartBuilder do
       "color_field_type" => attrs["color_field_type"],
       "x_field_aggregate" => attrs["x_field_aggregate"],
       "y_field_aggregate" => attrs["y_field_aggregate"],
-      "color_field_aggregate" => attrs["color_field_aggregate"]
+      "color_field_aggregate" => attrs["color_field_aggregate"],
+      "chart_title" => attrs["chart_title"]
     }
 
     ctx =
@@ -113,7 +114,8 @@ defmodule Kino.SmartCell.ChartBuilder do
       "color_field_type" => nil,
       "x_field_aggregate" => nil,
       "y_field_aggregate" => nil,
-      "color_field_aggregate" => nil
+      "color_field_aggregate" => nil,
+      "chart_title" => nil
     }
   end
 
@@ -162,7 +164,7 @@ defmodule Kino.SmartCell.ChartBuilder do
         field: nil,
         name: :new,
         module: attrs.vl_alias,
-        args: build_arg_root(attrs.width, attrs.height)
+        args: build_arg_root(width: attrs.width, height: attrs.height, title: attrs.chart_title)
       },
       %{
         field: :data,
@@ -212,10 +214,14 @@ defmodule Kino.SmartCell.ChartBuilder do
     end
   end
 
-  defp build_arg_root(nil, nil), do: []
-  defp build_arg_root(width, nil), do: [[width: width]]
-  defp build_arg_root(nil, height), do: [[height: height]]
-  defp build_arg_root(width, height), do: [[width: width, height: height]]
+  defp build_arg_root(opts) do
+    opts
+    |> Enum.filter(&elem(&1, 1))
+    |> case do
+      [] -> []
+      opts -> [opts]
+    end
+  end
 
   defp build_arg_field(nil, _, _), do: nil
   defp build_arg_field(field, nil, nil), do: [field]
