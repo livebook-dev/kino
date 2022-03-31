@@ -136,6 +136,10 @@ select {
   color: rgba(0, 0, 0, 0.5);
 }
 
+.special-option {
+  font-weight: bold;
+}
+
 select option {
   color: black;
 }
