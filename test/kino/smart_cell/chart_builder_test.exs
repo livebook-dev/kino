@@ -146,7 +146,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     end
 
     test "simple plot with aggregate count" do
-      attrs = Map.merge(@defaults, %{"y_field" => "count"})
+      attrs = Map.merge(@defaults, %{"y_field" => "__count__"})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
