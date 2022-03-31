@@ -120,7 +120,6 @@ defmodule Kino.SmartCell.ChartBuilderTest do
           "y_field_aggregate" => "mean",
           "color_field" => "c",
           "color_field_type" => "nominal",
-          "color_field_aggregate" => "count",
           "vl_alias" => Vl
         })
 
@@ -130,7 +129,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
              |> Vl.mark(:point)
              |> Vl.encode_field(:x, "a", type: :ordinal)
              |> Vl.encode_field(:y, "b", aggregate: :mean)
-             |> Vl.encode_field(:color, "c", type: :nominal, aggregate: :count)\
+             |> Vl.encode_field(:color, "c", type: :nominal)\
              """
     end
 
@@ -143,6 +142,18 @@ defmodule Kino.SmartCell.ChartBuilderTest do
              |> VegaLite.mark(:point)
              |> VegaLite.encode_field(:x, "a")
              |> VegaLite.encode_field(:y, "b")\
+             """
+    end
+
+    test "simple plot with aggregate count" do
+      attrs = Map.merge(@defaults, %{"y_field" => "__count__"})
+
+      assert ChartBuilder.to_source(attrs) == """
+             VegaLite.new()
+             |> VegaLite.data_from_series(data)
+             |> VegaLite.mark(:bar)
+             |> VegaLite.encode_field(:x, "a")
+             |> VegaLite.encode(:y, aggregate: :count)\
              """
     end
   end

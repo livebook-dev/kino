@@ -175,19 +175,19 @@ defmodule Kino.SmartCell.ChartBuilder do
       %{field: :mark, name: :mark, module: attrs.vl_alias, args: [attrs.chart_type]},
       %{
         field: :x,
-        name: :encode_field,
+        name: encode(attrs.x_field),
         module: attrs.vl_alias,
         args: build_arg_field(attrs.x_field, attrs.x_field_type, attrs.x_field_aggregate)
       },
       %{
         field: :y,
-        name: :encode_field,
+        name: encode(attrs.y_field),
         module: attrs.vl_alias,
         args: build_arg_field(attrs.y_field, attrs.y_field_type, attrs.y_field_aggregate)
       },
       %{
         field: :color,
-        name: :encode_field,
+        name: encode(attrs.color_field),
         module: attrs.vl_alias,
         args:
           build_arg_field(attrs.color_field, attrs.color_field_type, attrs.color_field_aggregate)
@@ -207,7 +207,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp apply_node(%{args: nil}, acc), do: acc
 
   defp apply_node(%{field: field, name: function, module: module, args: args}, acc) do
-    args = if function == :encode_field, do: List.insert_at(args, 0, field), else: args
+    args = if function in [:encode_field, :encode], do: [field | args], else: args
 
     quote do
       unquote(acc) |> unquote(module).unquote(function)(unquote_splicing(args))
@@ -224,6 +224,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp build_arg_field(nil, _, _), do: nil
+  defp build_arg_field("__count__", _, _), do: [[aggregate: :count]]
   defp build_arg_field(field, nil, nil), do: [field]
   defp build_arg_field(field, type, nil), do: [field, [type: type]]
   defp build_arg_field(field, nil, aggregate), do: [field, [aggregate: aggregate]]
@@ -250,4 +251,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp is_valid_data(_), do: false
+
+  defp encode("__count__"), do: :encode
+  defp encode(_), do: :encode_field
 end
