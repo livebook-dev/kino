@@ -39,8 +39,7 @@ defmodule Kino.SmartCell.ChartBuilder do
         fields: fields,
         data_options: %{},
         vl_alias: nil,
-        missing_dep: missing_dep(),
-        fresh: is_fresh?(attrs)
+        missing_dep: missing_dep()
       )
 
     {:ok, ctx, reevaluate_on_change: true}
@@ -64,8 +63,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     payload = %{
       fields: ctx.assigns.fields,
       missing_dep: ctx.assigns.missing_dep,
-      data_options: ctx.assigns.data_options,
-      fresh: ctx.assigns.fresh
+      data_options: ctx.assigns.data_options
     }
 
     {:ok, payload, ctx}
@@ -74,9 +72,20 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
     ctx = assign(ctx, data_options: data_options, vl_alias: vl_alias)
-    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
 
-    {:noreply, ctx}
+    if !ctx.assigns.fields["data_variable"] do
+      data_variable = Map.keys(data_options) |> List.first()
+      updated_fields = updates_for_data_variable(ctx, data_variable)
+      ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+      broadcast_event(ctx, "update", %{"fields" => updated_fields})
+      broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+
+      {:noreply, ctx}
+    else
+      broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+
+      {:noreply, ctx}
+    end
   end
 
   @impl true
@@ -234,14 +243,6 @@ defmodule Kino.SmartCell.ChartBuilder do
     unless Code.ensure_loaded?(VegaLite) do
       ~s/{:vega_lite, "~> 0.1.2"}/
     end
-  end
-
-  defp is_fresh?(attrs) do
-    attrs
-    |> Map.drop(["chart_type", "vl_alias"])
-    |> Map.values()
-    |> Enum.any?()
-    |> then(&(!&1))
   end
 
   defp is_valid_data(data) when is_map(data) and data != %{} do
