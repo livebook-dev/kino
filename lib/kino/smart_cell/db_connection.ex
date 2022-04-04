@@ -7,13 +7,18 @@ defmodule Kino.SmartCell.DBConnection do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Database connection"
 
+  @default_port_by_type %{"postgres" => 5432, "mysql" => 3306}
+
   @impl true
   def init(attrs, ctx) do
+    default_type = default_db_type()
+    default_port = @default_port_by_type[default_type]
+
     fields = %{
       "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
-      "type" => attrs["type"] || "postgres",
+      "type" => attrs["type"] || default_type,
       "hostname" => attrs["hostname"] || "",
-      "port" => attrs["port"] || 5432,
+      "port" => attrs["port"] || default_port,
       "username" => attrs["username"] || "",
       "password" => attrs["password"] || "",
       "database" => attrs["database"] || ""
@@ -51,8 +56,6 @@ defmodule Kino.SmartCell.DBConnection do
 
     {:noreply, ctx}
   end
-
-  @default_port_by_type %{"postgres" => 5432, "mysql" => 3306}
 
   defp to_updates(_fields, "port", "") do
     %{"port" => nil}
@@ -115,6 +118,14 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
+
+  defp default_db_type() do
+    cond do
+      Code.ensure_loaded?(Postgrex) -> "postgres"
+      Code.ensure_loaded?(MyXQL) -> "mysql"
+      true -> "postgres"
+    end
+  end
 
   defp missing_dep(%{"type" => "postgres"}) do
     unless Code.ensure_loaded?(Postgrex) do
