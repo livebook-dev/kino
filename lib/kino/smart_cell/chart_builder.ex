@@ -82,7 +82,7 @@ defmodule Kino.SmartCell.ChartBuilder do
       end
 
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
-    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options, "fields" => updated_fields})
 
     {:noreply, ctx}
   end
