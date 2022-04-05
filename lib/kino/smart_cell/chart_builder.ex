@@ -82,7 +82,11 @@ defmodule Kino.SmartCell.ChartBuilder do
       end
 
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
-    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options, "fields" => updated_fields})
+
+    broadcast_event(ctx, "set_available_data", %{
+      "data_options" => data_options,
+      "fields" => updated_fields
+    })
 
     {:noreply, ctx}
   end
@@ -105,8 +109,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp updates_for_data_variable(ctx, value) do
-    columns =
-      Enum.find_value(ctx.assigns.data_options, [], &(&1.variable == value && &1.columns))
+    columns = Enum.find_value(ctx.assigns.data_options, [], &(&1.variable == value && &1.columns))
 
     {x_field, y_field} =
       case columns do
