@@ -37,7 +37,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     ctx =
       assign(ctx,
         fields: fields,
-        data_options: %{},
+        data_options: [],
         vl_alias: nil,
         missing_dep: missing_dep()
       )
@@ -51,8 +51,10 @@ defmodule Kino.SmartCell.ChartBuilder do
       for {key, val} <- binding,
           is_atom(key),
           is_valid_data(val),
-          into: %{},
-          do: {Atom.to_string(key), val |> Map.keys() |> Enum.map(&to_string/1)}
+          do: %{
+            variable: Atom.to_string(key),
+            columns: val |> Map.keys() |> Enum.map(&to_string/1)
+          }
 
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
@@ -73,19 +75,16 @@ defmodule Kino.SmartCell.ChartBuilder do
   def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
     ctx = assign(ctx, data_options: data_options, vl_alias: vl_alias)
 
-    if !ctx.assigns.fields["data_variable"] do
-      data_variable = Map.keys(data_options) |> List.first()
-      updated_fields = updates_for_data_variable(ctx, data_variable)
-      ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
-      broadcast_event(ctx, "update", %{"fields" => updated_fields})
-      broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+    updated_fields =
+      case {ctx.assigns.fields["data_variable"], data_options} do
+        {nil, [%{variable: data_variable} | _]} -> updates_for_data_variable(ctx, data_variable)
+        _ -> %{}
+      end
 
-      {:noreply, ctx}
-    else
-      broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+    ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
 
-      {:noreply, ctx}
-    end
+    {:noreply, ctx}
   end
 
   @impl true
@@ -106,8 +105,16 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp updates_for_data_variable(ctx, value) do
+    options =
+      ctx.assigns.data_options
+      |> Enum.find(&(&1.variable == value))
+      |> case do
+        nil -> []
+        options -> options.columns
+      end
+
     {x_field, y_field} =
-      case ctx.assigns.data_options[value] do
+      case options do
         [key] -> {key, key}
         [key1, key2 | _] -> {key1, key2}
         _ -> {nil, nil}
