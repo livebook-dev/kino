@@ -105,13 +105,8 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp updates_for_data_variable(ctx, value) do
-    options =
-      ctx.assigns.data_options
-      |> Enum.find(&(&1.variable == value))
-      |> case do
-        nil -> []
-        options -> options.columns
-      end
+    columns =
+      Enum.find_value(ctx.assigns.data_options, [], &(&1.variable == value && &1.columns))
 
     {x_field, y_field} =
       case options do
