@@ -74,7 +74,7 @@
 
 .input--xs {
   width: auto;
-  max-width: 60px;
+  max-width: 90px;
 }
 
 .input--sm {
@@ -113,6 +113,15 @@
   font-size: 0.875rem;
   background-color: var(--gray-100);
   color: var(--gray-500);
+}
+
+.info-box p {
+  margin-bottom: 0.3em;
+}
+
+.info-box span {
+  color: var(--gray-600);
+  padding-left: 0.5em;
 }
 
 .hidden {

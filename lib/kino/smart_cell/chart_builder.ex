@@ -37,10 +37,9 @@ defmodule Kino.SmartCell.ChartBuilder do
     ctx =
       assign(ctx,
         fields: fields,
-        data_options: %{},
+        data_options: [],
         vl_alias: nil,
-        missing_dep: missing_dep(),
-        fresh: is_fresh?(attrs)
+        missing_dep: missing_dep()
       )
 
     {:ok, ctx, reevaluate_on_change: true}
@@ -52,8 +51,10 @@ defmodule Kino.SmartCell.ChartBuilder do
       for {key, val} <- binding,
           is_atom(key),
           is_valid_data(val),
-          into: %{},
-          do: {Atom.to_string(key), val |> Map.keys() |> Enum.map(&to_string/1)}
+          do: %{
+            variable: Atom.to_string(key),
+            columns: val |> Map.keys() |> Enum.map(&to_string/1)
+          }
 
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
@@ -64,8 +65,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     payload = %{
       fields: ctx.assigns.fields,
       missing_dep: ctx.assigns.missing_dep,
-      data_options: ctx.assigns.data_options,
-      fresh: ctx.assigns.fresh
+      data_options: ctx.assigns.data_options
     }
 
     {:ok, payload, ctx}
@@ -74,7 +74,19 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def handle_info({:scan_binding_result, data_options, vl_alias}, ctx) do
     ctx = assign(ctx, data_options: data_options, vl_alias: vl_alias)
-    broadcast_event(ctx, "set_available_data", %{"data_options" => data_options})
+
+    updated_fields =
+      case {ctx.assigns.fields["data_variable"], data_options} do
+        {nil, [%{variable: data_variable} | _]} -> updates_for_data_variable(ctx, data_variable)
+        _ -> %{}
+      end
+
+    ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+
+    broadcast_event(ctx, "set_available_data", %{
+      "data_options" => data_options,
+      "fields" => updated_fields
+    })
 
     {:noreply, ctx}
   end
@@ -97,8 +109,10 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp updates_for_data_variable(ctx, value) do
+    columns = Enum.find_value(ctx.assigns.data_options, [], &(&1.variable == value && &1.columns))
+
     {x_field, y_field} =
-      case ctx.assigns.data_options[value] do
+      case columns do
         [key] -> {key, key}
         [key1, key2 | _] -> {key1, key2}
         _ -> {nil, nil}
@@ -234,14 +248,6 @@ defmodule Kino.SmartCell.ChartBuilder do
     unless Code.ensure_loaded?(VegaLite) do
       ~s/{:vega_lite, "~> 0.1.2"}/
     end
-  end
-
-  defp is_fresh?(attrs) do
-    attrs
-    |> Map.drop(["chart_type", "vl_alias"])
-    |> Map.values()
-    |> Enum.any?()
-    |> then(&(!&1))
   end
 
   defp is_valid_data(data) when is_map(data) and data != %{} do
