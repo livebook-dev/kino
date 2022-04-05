@@ -109,7 +109,7 @@ defmodule Kino.SmartCell.ChartBuilder do
       Enum.find_value(ctx.assigns.data_options, [], &(&1.variable == value && &1.columns))
 
     {x_field, y_field} =
-      case options do
+      case columns do
         [key] -> {key, key}
         [key1, key2 | _] -> {key1, key2}
         _ -> {nil, nil}
