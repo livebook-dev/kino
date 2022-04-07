@@ -14,7 +14,10 @@
 
 .row {
   display: flex;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  align-content: stretch;
+  flex-wrap: nowrap;
 }
 
 .row > *:not(:first-child) {
@@ -25,29 +28,39 @@
   margin-top: 12px;
 }
 
+.box {
+  align-self: auto;
+  flex: 0 1 25%;
+  border: 1px solid var(--gray-200);
+  border-radius: 5px;
+  padding: 12px;
+}
+
+.box:nth-child(2) {
+  display: flex;
+}
+
+.box:nth-child(3) {
+  flex: 0 1 54%;
+}
+
+.box:nth-child(2) .field:not(:first-child) {
+  padding-left: 12px;
+}
+
 .group {
   display: flex;
   flex-direction: column;
   padding: 12px;
+  padding-bottom: 0px;
   border: 1px solid var(--gray-200);
   border-radius: 5px;
   min-height: 220px;
+  flex: 0 1 25%;
 }
 
-.group .field {
+.group .field:not(:first-child) {
   padding-top: 12px;
-}
-
-.box {
-  display: flex;
-  padding: 12px;
-  border: 1px solid var(--gray-200);
-  border-radius: 5px;
-  min-width: 190px;
-}
-
-.box .field:not(:first-child) {
-  padding-left: 12px;
 }
 
 .input {
@@ -78,13 +91,8 @@
 }
 
 .input--sm {
-  width: auto;
-  min-width: 190px;
-}
-
-.input--md {
-  width: auto;
-  min-width: 387px;
+  width: 100%;
+  max-width: 190px;
 }
 
 .input-label {
