@@ -32,6 +32,7 @@ defmodule Kino.MixProject do
 
   defp deps do
     [
+      {:table, "~> 0.1.0-dev", github: "dashbitco/table"},
       {:vega_lite, "~> 0.1.0", optional: true},
       {:ecto, "~> 3.0", optional: true},
       {:postgrex, "~> 0.16", optional: true},
