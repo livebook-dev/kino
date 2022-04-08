@@ -3,55 +3,11 @@ defmodule Kino.DataTableTest do
 
   import KinoTest.JS.Live
 
-  describe "new/1" do
-    test "raises an error when records have invalid data type" do
-      assert_raise ArgumentError,
-                   "expected record to be either map, struct or key-value list, got: \"value\"",
-                   fn ->
-                     Kino.DataTable.new(["value"])
-                   end
-    end
-
-    test "raises an error when records have mixed data type" do
-      assert_raise ArgumentError,
-                   "expected records to have the same data type, found map and key_value_list",
-                   fn ->
-                     Kino.DataTable.new([%{id: 1, name: "Grumpy"}, [name: "Lil Bub"]])
-                   end
-    end
-
-    test "does not validate enumerables other than list" do
-      data = MapSet.new([%{id: 1, name: "Grumpy"}, {2, "Lil Bub"}])
-      Kino.DataTable.new(data)
-    end
-  end
-
   @people_entries [
     %{id: 3, name: "Amy Santiago"},
     %{id: 1, name: "Jake Peralta"},
     %{id: 2, name: "Terry Jeffords"}
   ]
-
-  test "sorting is enabled by default when a list is given" do
-    widget = Kino.DataTable.new([])
-    data = connect(widget)
-
-    assert %{features: [:pagination, :sorting]} = data
-  end
-
-  test "sorting is disabled by default when non-list is given" do
-    widget = Kino.DataTable.new(MapSet.new())
-    data = connect(widget)
-
-    assert %{features: [:pagination]} = data
-  end
-
-  test "sorting is enabled when set explicitly with :enable_sorting" do
-    widget = Kino.DataTable.new(MapSet.new(), sorting_enabled: true)
-    data = connect(widget)
-
-    assert %{features: [:pagination, :sorting]} = data
-  end
 
   test "initial data respects current query parameters" do
     widget = Kino.DataTable.new(@people_entries)
@@ -129,30 +85,11 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
-  test "columns include only attributes from the first record" do
-    entries = [
-      %{b: 1, a: 1},
-      %{b: 2, c: 2}
-    ]
-
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
-
-    assert %{
-             content: %{
-               columns: [
-                 %{key: "0", label: ":a"},
-                 %{key: "1", label: ":b"}
-               ]
-             }
-           } = data
-  end
-
   defmodule User do
     defstruct [:__meta__, :id, :name]
   end
 
-  test "columns don't include underscored attributes by default" do
+  test "supports a list of structs ignoring underscored attributes" do
     entries = [
       %User{id: 1, name: "Sherlock Holmes"},
       %User{id: 2, name: "John Watson"}
@@ -166,27 +103,6 @@ defmodule Kino.DataTableTest do
                columns: [
                  %{key: "0", label: ":id"},
                  %{key: "1", label: ":name"}
-               ]
-             }
-           } = data
-  end
-
-  test "columns include underscored attributes if the :show_underscored option is set" do
-    entries = [
-      %User{id: 1, name: "Sherlock Holmes"},
-      %User{id: 2, name: "John Watson"}
-    ]
-
-    widget = Kino.DataTable.new(entries, show_underscored: true)
-    data = connect(widget)
-
-    assert %{
-             content: %{
-               columns: [
-                 %{key: "0", label: ":__meta__"},
-                 %{key: "1", label: ":__struct__"},
-                 %{key: "2", label: ":id"},
-                 %{key: "3", label: ":name"}
                ]
              }
            } = data
@@ -272,14 +188,8 @@ defmodule Kino.DataTableTest do
     })
   end
 
-  test "default table name is Data" do
-    widget = Kino.DataTable.new([])
-    data = connect(widget)
-    assert %{name: "Data"} = data
-  end
-
   test "supports setting table name" do
-    widget = Kino.DataTable.new([], name: "Example")
+    widget = Kino.DataTable.new([x: 1..10, y: 1..10], name: "Example")
     data = connect(widget)
     assert %{name: "Example"} = data
   end
