@@ -63,9 +63,7 @@ defmodule Kino.DataTable do
   defp normalize_tabular([%struct{} | _] = tabular) do
     Enum.map(tabular, fn
       %^struct{} = item ->
-        item
-        |> Map.from_struct()
-        |> Map.reject(fn {key, _val} ->
+        Map.reject(item, fn {key, _val} ->
           key |> Atom.to_string() |> String.starts_with?("_")
         end)
 
