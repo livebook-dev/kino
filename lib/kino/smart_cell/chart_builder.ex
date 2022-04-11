@@ -17,21 +17,23 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   @impl true
   def init(attrs, ctx) do
+    layer = if attrs["layers"], do: List.first(attrs["layers"]), else: nil
+
     fields = %{
-      "chart_type" => attrs["chart_type"] || "bar",
-      "data_variable" => attrs["data_variable"],
+      "chart_title" => attrs["chart_title"],
       "width" => attrs["width"],
       "height" => attrs["height"],
-      "x_field" => attrs["x_field"],
-      "y_field" => attrs["y_field"],
-      "color_field" => attrs["color_field"],
-      "x_field_type" => attrs["x_field_type"],
-      "y_field_type" => attrs["y_field_type"],
-      "color_field_type" => attrs["color_field_type"],
-      "x_field_aggregate" => attrs["x_field_aggregate"],
-      "y_field_aggregate" => attrs["y_field_aggregate"],
-      "color_field_aggregate" => attrs["color_field_aggregate"],
-      "chart_title" => attrs["chart_title"]
+      "chart_type" => layer["chart_type"] || "bar",
+      "data_variable" => layer["data_variable"],
+      "x_field" => layer["x_field"],
+      "y_field" => layer["y_field"],
+      "color_field" => layer["color_field"],
+      "x_field_type" => layer["x_field_type"],
+      "y_field_type" => layer["y_field_type"],
+      "color_field_type" => layer["color_field_type"],
+      "x_field_aggregate" => layer["x_field_aggregate"],
+      "y_field_aggregate" => layer["y_field_aggregate"],
+      "color_field_aggregate" => layer["color_field_aggregate"]
     }
 
     ctx =
@@ -155,12 +157,14 @@ defmodule Kino.SmartCell.ChartBuilder do
   @impl true
   def to_attrs(ctx) do
     ctx.assigns.fields
+    |> add_layer()
     |> Map.put("vl_alias", ctx.assigns.vl_alias)
   end
 
   @impl true
   def to_source(attrs) do
     attrs
+    |> extract_layer()
     |> to_quoted()
     |> Kino.Utils.Code.quoted_to_string()
   end
@@ -260,4 +264,15 @@ defmodule Kino.SmartCell.ChartBuilder do
 
   defp encode("__count__"), do: :encode
   defp encode(_), do: :encode_field
+
+  defp add_layer(attrs) do
+    {root, layer} = Map.split(attrs, ["chart_title", "width", "height"])
+    Map.put(root, "layers", [layer])
+  end
+
+  defp extract_layer(%{"layers" => [layer]} = attrs) do
+    attrs
+    |> Map.delete("layers")
+    |> Map.merge(layer)
+  end
 end

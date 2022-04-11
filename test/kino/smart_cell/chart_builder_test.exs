@@ -5,11 +5,16 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
   alias Kino.SmartCell.ChartBuilder
 
-  @defaults %{
-    "chart_type" => "bar",
-    "data_variable" => "data",
+  @root %{
     "width" => nil,
     "height" => nil,
+    "chart_title" => nil,
+    "vl_alias" => VegaLite
+  }
+
+  @layer %{
+    "chart_type" => "bar",
+    "data_variable" => "data",
     "x_field" => "a",
     "y_field" => "b",
     "color_field" => nil,
@@ -18,9 +23,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     "color_field_type" => nil,
     "x_field_aggregate" => nil,
     "y_field_aggregate" => nil,
-    "color_field_aggregate" => nil,
-    "chart_title" => nil,
-    "vl_alias" => VegaLite
+    "color_field_aggregate" => nil
   }
 
   test "returns no source when starting fresh with no data" do
@@ -31,7 +34,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
   describe "code generation" do
     test "source for a basic bar plot with no optionals" do
-      attrs = @defaults
+      attrs = build_attrs(%{})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
@@ -43,7 +46,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     end
 
     test "source for a basic line plot with alias" do
-      attrs = Map.merge(@defaults, %{"chart_type" => "line", "vl_alias" => Vl})
+      attrs = build_attrs(%{"vl_alias" => Vl}, %{"chart_type" => "line"})
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new()
@@ -55,7 +58,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     end
 
     test "bar plot with color and color type" do
-      attrs = Map.merge(@defaults, %{"color_field" => "c", "color_field_type" => "nominal"})
+      attrs = build_attrs(%{"color_field" => "c", "color_field_type" => "nominal"})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
@@ -69,9 +72,8 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
     test "point plot with width x and y field types and color without type" do
       attrs =
-        Map.merge(@defaults, %{
+        build_attrs(%{"width" => 300}, %{
           "chart_type" => "point",
-          "width" => 300,
           "x_field_type" => "nominal",
           "y_field_type" => "quantitative",
           "color_field" => "c"
@@ -89,16 +91,16 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
     test "area plot with types and alias" do
       attrs =
-        Map.merge(@defaults, %{
-          "chart_type" => "point",
-          "width" => 600,
-          "height" => 300,
-          "x_field_type" => "ordinal",
-          "y_field_type" => "quantitative",
-          "color_field" => "c",
-          "color_field_type" => "nominal",
-          "vl_alias" => Vl
-        })
+        build_attrs(
+          %{"width" => 600, "height" => 300, "vl_alias" => Vl},
+          %{
+            "chart_type" => "point",
+            "x_field_type" => "ordinal",
+            "y_field_type" => "quantitative",
+            "color_field" => "c",
+            "color_field_type" => "nominal"
+          }
+        )
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new(width: 600, height: 300)
@@ -112,16 +114,16 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
     test "area plot with aggregate and alias" do
       attrs =
-        Map.merge(@defaults, %{
-          "chart_type" => "point",
-          "width" => 600,
-          "height" => 300,
-          "x_field_type" => "ordinal",
-          "y_field_aggregate" => "mean",
-          "color_field" => "c",
-          "color_field_type" => "nominal",
-          "vl_alias" => Vl
-        })
+        build_attrs(
+          %{"width" => 600, "height" => 300, "vl_alias" => Vl},
+          %{
+            "chart_type" => "point",
+            "x_field_type" => "ordinal",
+            "y_field_aggregate" => "mean",
+            "color_field" => "c",
+            "color_field_type" => "nominal"
+          }
+        )
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new(width: 600, height: 300)
@@ -134,7 +136,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     end
 
     test "simple plot with title" do
-      attrs = Map.merge(@defaults, %{"chart_type" => "point", "chart_title" => "Chart Title"})
+      attrs = build_attrs(%{"chart_title" => "Chart Title"}, %{"chart_type" => "point"})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new(title: "Chart Title")
@@ -146,7 +148,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     end
 
     test "simple plot with aggregate count" do
-      attrs = Map.merge(@defaults, %{"y_field" => "__count__"})
+      attrs = build_attrs(%{"y_field" => "__count__"})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
@@ -156,5 +158,11 @@ defmodule Kino.SmartCell.ChartBuilderTest do
              |> VegaLite.encode(:y, aggregate: :count)\
              """
     end
+  end
+
+  defp build_attrs(root_attrs \\ %{}, layer_attrs) do
+    root_attrs = Map.merge(@root, root_attrs)
+    layer_attrs = Map.merge(@layer, layer_attrs)
+    Map.put(root_attrs, "layers", [layer_attrs])
   end
 end
