@@ -265,7 +265,7 @@ defmodule Kino.SmartCell.ChartBuilder do
   defp encode("__count__"), do: :encode
   defp encode(_), do: :encode_field
 
-  def add_layer(attrs) do
+  defp add_layer(attrs) do
     {root, layer} = Map.split(attrs, ["chart_title", "width", "height"])
     Map.put(root, "layers", [layer])
   end
