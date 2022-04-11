@@ -140,6 +140,47 @@ defmodule Kino.ControlTest do
     end
   end
 
+  describe "stream/2" do
+    test "runs the given function on each event" do
+      button = Kino.Control.button("Click")
+
+      myself = self()
+
+      Kino.Control.stream(button, fn event ->
+        send(myself, event)
+      end)
+
+      Process.sleep(1)
+      info = %{origin: myself}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive ^info
+      assert_receive ^info
+    end
+  end
+
+  describe "stream/3" do
+    test "reduces state over subsequent events" do
+      button = Kino.Control.button("Click")
+
+      myself = self()
+
+      Kino.Control.stream(button, 0, fn _event, counter ->
+        send(myself, {:counter, counter + 1})
+        counter + 1
+      end)
+
+      Process.sleep(1)
+      info = %{origin: myself}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive {:counter, 1}
+      assert_receive {:counter, 2}
+    end
+  end
+
   describe "tagged_stream/1" do
     test "raises on invalid argument" do
       assert_raise ArgumentError, "expected a keyword list, got: [0]", fn ->
@@ -162,7 +203,7 @@ defmodule Kino.ControlTest do
           Process.sleep(1)
           info = %{origin: self()}
           send(button.attrs.destination, {:event, button.attrs.ref, info})
-          send(button.attrs.destination, {:event, input.attrs.ref, info})
+          send(input.attrs.destination, {:event, input.attrs.ref, info})
         end)
 
       events =
@@ -171,6 +212,58 @@ defmodule Kino.ControlTest do
         |> Enum.take(2)
 
       assert events == [{:click, %{origin: pid}}, {:name, %{origin: pid}}]
+    end
+  end
+
+  describe "tagged_stream/2" do
+    test "runs the given function on each event" do
+      button = Kino.Control.button("Click")
+      input = Kino.Input.text("Name")
+
+      myself = self()
+
+      Kino.Control.tagged_stream([click: button, name: input], fn pair ->
+        send(myself, pair)
+      end)
+
+      Process.sleep(1)
+      info = %{origin: myself}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(input.attrs.destination, {:event, input.attrs.ref, info})
+
+      assert_receive {:click, ^info}
+      assert_receive {:name, ^info}
+    end
+  end
+
+  describe "tagged_stream/3" do
+    test "reduces state over subsequent events" do
+      up = Kino.Control.button("Up")
+      down = Kino.Control.button("Down")
+
+      myself = self()
+
+      Kino.Control.tagged_stream([up: up, down: down], 0, fn
+        {:up, _event}, counter ->
+          send(myself, {:counter, counter + 1})
+          counter + 1
+
+        {:down, _event}, counter ->
+          send(myself, {:counter, counter - 1})
+          counter - 1
+      end)
+
+      Process.sleep(1)
+      info = %{origin: myself}
+      send(up.attrs.destination, {:event, up.attrs.ref, info})
+      send(up.attrs.destination, {:event, up.attrs.ref, info})
+      send(down.attrs.destination, {:event, down.attrs.ref, info})
+      send(down.attrs.destination, {:event, down.attrs.ref, info})
+
+      assert_receive {:counter, 1}
+      assert_receive {:counter, 2}
+      assert_receive {:counter, 1}
+      assert_receive {:counter, 0}
     end
   end
 end
