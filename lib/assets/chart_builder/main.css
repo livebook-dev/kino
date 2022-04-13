@@ -121,7 +121,12 @@ input[type=number] {
 }
 
 .info-box p {
-  margin-bottom: 0.3em;
+  margin: 0;
+  padding: 1em 0 0.3em;
+}
+
+.info-box p:first-child {
+  padding-top: 0;
 }
 
 .info-box span {
