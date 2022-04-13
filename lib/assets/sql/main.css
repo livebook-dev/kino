@@ -109,7 +109,6 @@ button {
 
 .icon-button:focus {
   outline: none;
-  background-color: var(--gray-100);
 }
 
 .icon-button:disabled {
