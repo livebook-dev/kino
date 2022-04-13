@@ -124,6 +124,10 @@ input[type=number] {
   margin-bottom: 0.3em;
 }
 
+.info-box p:first-child {
+  margin-top: 0;
+}
+
 .info-box span {
   color: var(--gray-600);
   padding-left: 0.5em;
