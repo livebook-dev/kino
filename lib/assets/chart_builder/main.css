@@ -28,7 +28,7 @@
 
 .root {
   display: flex;
-  background-color: var(--primary-100);
+  background-color: var(--blue-100);
   padding: 8px 16px;
   margin-bottom: 12px;
   border-radius: 0.5rem 0.5rem 0 0;
