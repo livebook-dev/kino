@@ -3,8 +3,6 @@
 
   box-sizing: border-box;
 
-  padding-bottom: 12px;
-
   --gray-50: #f8fafc;
   --gray-100: #f0f5f9;
   --gray-200: #e1e8f0;
@@ -53,7 +51,8 @@ button {
   background-color: var(--blue-100);
   padding: 8px 16px;
   border: solid 1px var(--gray-300);
-  border-radius: 0.5rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  border-bottom: solid 1px var(--gray-200);
   gap: 16px;
 }
 
