@@ -19,7 +19,7 @@
   border: solid 1px var(--gray-300);
   border-bottom: solid 1px var(--gray-200);
   border-radius: 0.5rem 0.5rem 0 0;
-  background-color: rgba(248, 250, 252, 0.3)
+  background-color: rgba(248, 250, 252, 0.3);
 }
 
 .row {
@@ -89,11 +89,11 @@ input[type=number] {
   flex-direction: column;
   margin-bottom: 16px;
   padding: 0 12px;
-  flex-basis: 25%;
+  flex-basis: 26%;
 }
 
 .field:first-child {
-  flex-basis: 40%;
+  flex-basis: 39%;
   margin-left: 4px;
 }
 
@@ -107,6 +107,7 @@ input[type=number] {
 .root-field:first-child {
   width: 80%;
   justify-content: start;
+  flex-shrink: 3;
 }
 
 .info-box {
