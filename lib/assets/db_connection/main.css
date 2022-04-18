@@ -79,6 +79,10 @@ input[type=number] {
   min-width: 150px;
 }
 
+.input--text {
+  max-width: 50%;
+}
+
 .input-label {
   display: block;
   margin-bottom: 2px;
@@ -143,4 +147,13 @@ select {
   background-repeat: no-repeat;
   background-position: center right 10px;
   background-size: 10px;
+}
+
+@media only screen and (max-width: 750px) {
+  .mixed-row  .field{
+    max-width: 32%;
+  }
+  .input--number {
+    max-width: 100%;
+  }
 }
