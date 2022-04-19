@@ -16,7 +16,17 @@ defmodule Kino.MixProject do
       deps: deps(),
       docs: docs(),
       package: package(),
-      xref: [exclude: [VegaLite, Ecto.Query, Ecto.Queryable, DBConnection]]
+      xref: [
+        exclude: [
+          VegaLite,
+          Ecto.Query,
+          Ecto.Queryable,
+          DBConnection,
+          Goth,
+          GoogleApi.BigQuery.V2.Api.Jobs,
+          GoogleApi.BigQuery.V2.Connection
+        ]
+      ]
     ]
   end
 
