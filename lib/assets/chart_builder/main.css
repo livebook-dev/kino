@@ -83,6 +83,7 @@ input[type=number] {
   padding-right: 6px;
   font-size: 0.875rem;
   text-transform: uppercase;
+  padding-top: 2px;
 }
 
 .field {
@@ -101,7 +102,7 @@ input[type=number] {
 .root-field {
   display: flex;
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   justify-content: end;
 }
 
@@ -159,4 +160,10 @@ select.input {
 
 select option {
   color: black;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
