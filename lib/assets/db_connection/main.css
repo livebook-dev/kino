@@ -84,6 +84,7 @@ input[type=number] {
   margin-bottom: 2px;
   font-size: 0.875rem;
   color: var(--gray-800);
+  font-weight: 500;
 }
 
 .header .input-label {

@@ -59,6 +59,7 @@ button {
 .input-label {
   margin-bottom: 2px;
   color: var(--gray-600);
+  font-weight: 500;
   padding-right: 6px;
   font-size: 0.875rem;
   text-transform: uppercase;
