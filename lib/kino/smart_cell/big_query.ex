@@ -7,7 +7,7 @@ defmodule Kino.SmartCell.BigQuery do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Google BigQuery database connection"
 
-  alias Kino.SmartCell.BigQuery.Connection
+  alias Kino.SmartCell.BigQuery.GothToken
 
   @impl true
   def init(attrs, ctx) do
@@ -77,35 +77,48 @@ defmodule Kino.SmartCell.BigQuery do
 
   defp to_quoted(attrs) do
     quote do
-      alias unquote(Connection), as: BigQuery
+      scopes = ["https://www.googleapis.com/auth/cloud-platform"]
 
-      opts = [
-        project_id: unquote(attrs["project_id"]),
-        dataset: unquote(attrs["dataset"]),
-        service_account: unquote(attrs["service_account"]),
-        private_key_id: unquote(attrs["private_key_id"]),
-        private_key: unquote(attrs["private_key"]),
-        client_email: unquote(attrs["client_email"]),
-        client_id: unquote(attrs["client_id"]),
-        client_x509_cert_url: unquote(attrs["client_x509_cert_url"])
-      ]
+      credentials = %{
+        "type" => "service_account",
+        "project_id" => unquote(attrs["project_id"]),
+        "private_key_id" => unquote(attrs["private_key_id"]),
+        "private_key" => unquote(private_key(attrs["private_key"])),
+        "client_email" => unquote(attrs["client_email"]),
+        "client_id" => unquote(attrs["client_id"]),
+        "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
+        "token_uri" => "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url" => "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url" => unquote(attrs["client_x509_cert_url"])
+      }
 
-      {:ok, _pid} = Kino.start_child({BigQuery, opts})
+      dataset = unquote(attrs["dataset"])
+
+      unquote(quoted_var(attrs["variable"])) = BigQuery
+
+      {:ok, goth} =
+        Goth.start_link(name: Goth, source: {:service_account, credentials, scopes: scopes})
+
+      {:ok, _finch_pid} = Kino.start_child({Finch, name: BigQuery})
     end
   end
+
+  defp quoted_var(string), do: {String.to_atom(string), [], nil}
+
+  defp private_key(private_key), do: String.replace(private_key, "\\n", "\n")
 
   defp missing_dep do
     unless ensure_loaded?() do
       """
-      {:google_api_big_query, "~> 0.76.0"},
-        {:hackney, "~> 1.17"},
-        {:goth, "~> 1.3.0-rc.3"}
+      {:finch, "~> 0.11.0"},
+      {:goth, "~> 1.3.0-rc.3"},
+      {:hackney, "~> 1.17"}
       """
     end
   end
 
   defp ensure_loaded? do
-    Code.ensure_loaded?(GoogleApi.BigQuery.V2.Connection) and
+    Code.ensure_loaded?(Finch) and
       Code.ensure_loaded?(Goth.Token) and
       Code.ensure_loaded?(:hackney)
   end
