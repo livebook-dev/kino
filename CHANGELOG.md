@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/livebook-dev/kino)
+
+### Added
+
+* Support for binary payloads in `Kino.JS` and `Kino.JS.Live` ([#88](https://github.com/livebook-dev/kino/pull/88))
+* Column type information to `Kino.Ecto` table ([#94](https://github.com/livebook-dev/kino/pull/94))
+* Support for defining smart cells ([#98](https://github.com/livebook-dev/kino/pull/98))
+* Smart cells: Database Connection ([#98](https://github.com/livebook-dev/kino/pull/98)), SQL query ([#105](https://github.com/livebook-dev/kino/pull/105)), Chart builder ([#106](https://github.com/livebook-dev/kino/pull/106))
+* Support for custom `:name` in `Kino.DataTable` ([#102](https://github.com/livebook-dev/kino/pull/102))
+* Callback API for `Kino.Control` events ([#126](https://github.com/livebook-dev/kino/pull/126))
+
+### Changed
+
+* Changed `Kino.ETS` to render a single column of tuples ([#90](https://github.com/livebook-dev/kino/pull/90))
+* Converted DataTable to accept any data compatible with `Table.Reader` ([#122](https://github.com/livebook-dev/kino/pull/122))
+* The default VegaLite theme to better match Livebook colors ([#131](https://github.com/livebook-dev/kino/pull/131))
+
 ## [v0.5.2](https://github.com/livebook-dev/kino/tree/v0.5.2) (2022-02-03)
 
 ### Removed
