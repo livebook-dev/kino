@@ -1,4 +1,6 @@
 defmodule Kino.SmartCell.ChartBuilder do
+  @moduledoc false
+
   use Kino.JS, assets_path: "lib/assets/chart_builder"
   use Kino.JS.Live
   use Kino.SmartCell, name: "Chart builder"
@@ -166,7 +168,7 @@ defmodule Kino.SmartCell.ChartBuilder do
     attrs
     |> extract_layer()
     |> to_quoted()
-    |> Kino.Utils.Code.quoted_to_string()
+    |> Kino.SmartCell.quoted_to_string()
   end
 
   defp to_quoted(%{"data_variable" => nil}) do
