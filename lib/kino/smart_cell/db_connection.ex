@@ -70,7 +70,7 @@ defmodule Kino.SmartCell.DBConnection do
   end
 
   defp to_updates(fields, "variable", value) do
-    if Kino.Utils.Code.valid_variable_name?(value) do
+    if Kino.SmartCell.valid_variable_name?(value) do
       %{"variable" => value}
     else
       %{"variable" => fields["variable"]}
@@ -86,7 +86,7 @@ defmodule Kino.SmartCell.DBConnection do
 
   @impl true
   def to_source(attrs) do
-    attrs |> to_quoted() |> Kino.Utils.Code.quoted_to_string()
+    attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
   end
 
   defp to_quoted(%{"type" => "postgres"} = attrs) do

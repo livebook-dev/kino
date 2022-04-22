@@ -43,7 +43,7 @@ defmodule Kino.SmartCell.SQL do
 
   def handle_event("update_result_variable", variable, ctx) do
     ctx =
-      if Kino.Utils.Code.valid_variable_name?(variable) do
+      if Kino.SmartCell.valid_variable_name?(variable) do
         broadcast_event(ctx, "update_result_variable", variable)
         assign(ctx, result_variable: variable)
       else
@@ -111,7 +111,7 @@ defmodule Kino.SmartCell.SQL do
 
   @impl true
   def to_source(attrs) do
-    attrs |> to_quoted() |> Kino.Utils.Code.quoted_to_string()
+    attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
   end
 
   defp to_quoted(%{"connection" => %{"type" => "postgres"}} = attrs) do
