@@ -22,7 +22,7 @@ button {
   font-family: inherit;
 }
 
-.row {
+.header {
   display: flex;
   align-items: stretch;
   justify-content: flex-start;
@@ -61,6 +61,15 @@ button {
 }
 
 .input-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.inline-input-label {
+  display: block;
   margin-bottom: 2px;
   color: var(--gray-600);
   font-weight: 500;
@@ -71,6 +80,12 @@ button {
 
 .field {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.inline-field {
+  display: flex;
   flex-direction: row;
   align-items: baseline;
 }
@@ -79,16 +94,23 @@ button {
   opacity: 0.6;
 }
 
+.section {
+  border: solid 1px var(--gray-300);
+  border-top: 0;
+  border-bottom: 0;
+}
+
 .info-box {
   padding: 16px;
   white-space: pre-wrap;
   font-weight: 500;
   font-size: 0.875rem;
   background-color: var(--gray-100);
-  border: solid 1px var(--gray-300);
-  border-top: 0;
-  border-bottom: 0;
   color: var(--gray-500);
+}
+
+.settings-box {
+  padding: 16px;
 }
 
 .hidden {
