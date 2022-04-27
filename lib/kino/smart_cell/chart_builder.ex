@@ -17,6 +17,8 @@ defmodule Kino.SmartCell.ChartBuilder do
     "color_field_aggregate"
   ]
 
+  @count_field "__count__"
+
   @impl true
   def init(attrs, ctx) do
     layer = if attrs["layers"], do: List.first(attrs["layers"]), else: nil
@@ -54,11 +56,8 @@ defmodule Kino.SmartCell.ChartBuilder do
     data_options =
       for {key, val} <- binding,
           is_atom(key),
-          is_valid_data(val),
-          do: %{
-            variable: Atom.to_string(key),
-            columns: val |> Map.keys() |> Enum.map(&to_string/1)
-          }
+          columns = columns_for(val),
+          do: %{variable: Atom.to_string(key), columns: columns}
 
     vl_alias = vl_alias(env)
     send(pid, {:scan_binding_result, data_options, vl_alias})
@@ -188,9 +187,9 @@ defmodule Kino.SmartCell.ChartBuilder do
       },
       %{
         field: :data,
-        name: :data_from_series,
+        name: :data_from_values,
         module: attrs.vl_alias,
-        args: [Macro.var(attrs.data_variable, nil)]
+        args: [Macro.var(attrs.data_variable, nil), [only: used_fields(attrs)]]
       },
       %{field: :mark, name: :mark, module: attrs.vl_alias, args: [attrs.chart_type]},
       %{
@@ -244,27 +243,38 @@ defmodule Kino.SmartCell.ChartBuilder do
   end
 
   defp build_arg_field(nil, _, _), do: nil
-  defp build_arg_field("__count__", _, _), do: [[aggregate: :count]]
+  defp build_arg_field(@count_field, _, _), do: [[aggregate: :count]]
   defp build_arg_field(field, nil, nil), do: [field]
   defp build_arg_field(field, type, nil), do: [field, [type: type]]
   defp build_arg_field(field, nil, aggregate), do: [field, [aggregate: aggregate]]
   defp build_arg_field(field, type, aggregate), do: [field, [type: type, aggregate: aggregate]]
 
+  defp used_fields(attrs) do
+    for attr <- [:x_field, :y_field, :color_field],
+        value = attrs[attr],
+        value not in [nil, @count_field],
+        do: value
+  end
+
   defp missing_dep() do
     unless Code.ensure_loaded?(VegaLite) do
-      ~s/{:vega_lite, "~> 0.1.2"}/
+      ~s/{:vega_lite, "~> 0.1.4"}/
     end
   end
 
-  defp is_valid_data(data) when is_map(data) and data != %{} do
-    Enum.all?(data, fn {key, val} ->
-      String.Chars.impl_for(key) != nil and Enumerable.impl_for(val) != nil
-    end)
+  defp columns_for(data) do
+    with true <- implements?(Table.Reader, data),
+         {_, %{columns: columns}, _} <- Table.Reader.init(data),
+         true <- Enum.all?(columns, &implements?(String.Chars, &1)) do
+      Enum.map(columns, &to_string/1)
+    else
+      _ -> nil
+    end
   end
 
-  defp is_valid_data(_), do: false
+  defp implements?(protocol, value), do: protocol.impl_for(value) != nil
 
-  defp encode("__count__"), do: :encode
+  defp encode(@count_field), do: :encode
   defp encode(_), do: :encode_field
 
   defp add_layer(attrs) do
