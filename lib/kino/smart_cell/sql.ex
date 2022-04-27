@@ -16,7 +16,8 @@ defmodule Kino.SmartCell.SQL do
           if conn_attrs = attrs["connection"] do
             %{variable: conn_attrs["variable"], type: conn_attrs["type"]}
           end,
-        result_variable: Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"])
+        result_variable: Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
+        timeout: attrs["timeout"]
       )
 
     {:ok, ctx, editor: [attribute: "query", language: "sql", default_source: @default_query]}
@@ -27,7 +28,8 @@ defmodule Kino.SmartCell.SQL do
     payload = %{
       connections: ctx.assigns.connections,
       connection: ctx.assigns.connection,
-      result_variable: ctx.assigns.result_variable
+      result_variable: ctx.assigns.result_variable,
+      timeout: ctx.assigns.timeout
     }
 
     {:ok, payload, ctx}
@@ -51,6 +53,18 @@ defmodule Kino.SmartCell.SQL do
         ctx
       end
 
+    {:noreply, ctx}
+  end
+
+  def handle_event("update_timeout", timeout, ctx) do
+    timeout =
+      case Integer.parse(timeout) do
+        {n, ""} -> n
+        _ -> nil
+      end
+
+    ctx = assign(ctx, timeout: timeout)
+    broadcast_event(ctx, "update_timeout", timeout)
     {:noreply, ctx}
   end
 
@@ -105,7 +119,8 @@ defmodule Kino.SmartCell.SQL do
         if connection = ctx.assigns.connection do
           %{"variable" => connection.variable, "type" => connection.type}
         end,
-      "result_variable" => ctx.assigns.result_variable
+      "result_variable" => ctx.assigns.result_variable,
+      "timeout" => ctx.assigns.timeout
     }
   end
 
@@ -129,13 +144,15 @@ defmodule Kino.SmartCell.SQL do
 
   defp to_quoted(attrs, quoted_module, next) do
     {query, params} = parameterize(attrs["query"], next)
+    opts_args = query_opts_args(attrs)
 
     quote do
       unquote(quoted_var(attrs["result_variable"])) =
         unquote(quoted_module).query!(
           unquote(quoted_var(attrs["connection"]["variable"])),
           unquote(quoted_query(query)),
-          unquote(params)
+          unquote(params),
+          unquote_splicing(opts_args)
         )
     end
   end
@@ -150,6 +167,11 @@ defmodule Kino.SmartCell.SQL do
       query
     end
   end
+
+  defp query_opts_args(%{"timeout" => timeout}) when timeout != nil,
+    do: [[timeout: timeout * 1000]]
+
+  defp query_opts_args(_attrs), do: []
 
   defp parameterize(query, next) do
     parameterize(query, "", [], 1, next)

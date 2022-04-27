@@ -57,12 +57,14 @@ defmodule Kino.SmartCell.DBConnection do
     {:noreply, ctx}
   end
 
-  defp to_updates(_fields, "port", "") do
-    %{"port" => nil}
-  end
-
   defp to_updates(_fields, "port", value) do
-    %{"port" => String.to_integer(value)}
+    port =
+      case Integer.parse(value) do
+        {n, ""} -> n
+        _ -> nil
+      end
+
+    %{"port" => port}
   end
 
   defp to_updates(_fields, "type", value) do

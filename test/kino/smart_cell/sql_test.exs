@@ -11,6 +11,7 @@ defmodule Kino.SmartCell.SQLTest do
       attrs = %{
         "connection" => %{"variable" => "db", "type" => "postgres"},
         "result_variable" => "ids_result",
+        "timeout" => nil,
         "query" => "SELECT id FROM users"
       }
 
@@ -65,6 +66,7 @@ defmodule Kino.SmartCell.SQLTest do
       attrs = %{
         "connection" => %{"variable" => "conn", "type" => "postgres"},
         "result_variable" => "result",
+        "timeout" => nil,
         "query" => "SELECT id FROM users"
       }
 
@@ -81,6 +83,7 @@ defmodule Kino.SmartCell.SQLTest do
       attrs = %{
         "connection" => %{"variable" => "conn", "type" => "postgres"},
         "result_variable" => "result",
+        "timeout" => nil,
         "query" => "SELECT id FROM users\nWHERE last_name = 'Sherlock'"
       }
 
@@ -113,6 +116,7 @@ defmodule Kino.SmartCell.SQLTest do
       attrs = %{
         "connection" => %{"variable" => "conn", "type" => "postgres"},
         "result_variable" => "result",
+        "timeout" => nil,
         "query" => ~s/SELECT id FROM users WHERE id {{user_id}} AND name LIKE {{search <> "%"}}/
       }
 
@@ -137,6 +141,7 @@ defmodule Kino.SmartCell.SQLTest do
       attrs = %{
         "connection" => %{"variable" => "conn", "type" => "postgres"},
         "result_variable" => "result",
+        "timeout" => nil,
         "query" => """
         SELECT id from users
         -- WHERE id = {{user_id1}}
@@ -169,6 +174,23 @@ defmodule Kino.SmartCell.SQLTest do
                  [user_id3]
                )\
              '''
+    end
+
+    test "passes timeout option when a timeout is specified" do
+      attrs = %{
+        "connection" => %{"variable" => "conn", "type" => "postgres"},
+        "result_variable" => "result",
+        "timeout" => 30,
+        "query" => "SELECT id FROM users"
+      }
+
+      assert SQL.to_source(attrs) == """
+             result = Postgrex.query!(conn, "SELECT id FROM users", [], timeout: 30000)\
+             """
+
+      assert SQL.to_source(put_in(attrs["connection"]["type"], "mysql")) == """
+             result = MyXQL.query!(conn, "SELECT id FROM users", [], timeout: 30000)\
+             """
     end
   end
 end
