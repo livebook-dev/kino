@@ -31,7 +31,7 @@ defmodule Kino.SmartCell.SQLTest do
     assert_broadcast_event(widget, "update_result_variable", "result")
   end
 
-  test "finds database connections in binding and them to the client" do
+  test "finds database connections in binding and sends them to the client" do
     {widget, _source} = start_smart_cell!(SQL, %{})
 
     parent = self()

@@ -1,6 +1,7 @@
 defmodule Kino.SmartCell.ChartBuilderTest do
   use Kino.LivebookCase, async: true
 
+  import KinoTest.JS.Live
   import KinoTest.SmartCell
 
   alias Kino.SmartCell.ChartBuilder
@@ -32,13 +33,40 @@ defmodule Kino.SmartCell.ChartBuilderTest do
     assert source == ""
   end
 
+  test "finds tabular data in binding and sends new options to the client" do
+    {widget, _source} = start_smart_cell!(ChartBuilder, %{})
+
+    row_data = [%{x: 1, y: 1}, %{x: 2, y: 2}]
+    column_data = %{x: 1..2, y: 1..2}
+    invalid_data = %{self() => [1, 2], :y => [1, 2]}
+
+    binding = [row_data: row_data, column_data: column_data, invalid_data: invalid_data]
+    # TODO: Use Code.env_for_eval on Elixir v1.14+
+    env = :elixir.env_for_eval([])
+    ChartBuilder.scan_binding(widget.pid, binding, env)
+
+    data_options = [
+      %{variable: "row_data", columns: ["x", "y"]},
+      %{variable: "column_data", columns: ["x", "y"]}
+    ]
+
+    assert_broadcast_event(widget, "set_available_data", %{
+      "data_options" => ^data_options,
+      "fields" => %{
+        "data_variable" => "row_data",
+        "x_field" => "x",
+        "y_field" => "y"
+      }
+    })
+  end
+
   describe "code generation" do
     test "source for a basic bar plot with no optionals" do
       attrs = build_attrs(%{})
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
-             |> VegaLite.data_from_series(data)
+             |> VegaLite.data_from_values(data, only: ["a", "b"])
              |> VegaLite.mark(:bar)
              |> VegaLite.encode_field(:x, "a")
              |> VegaLite.encode_field(:y, "b")\
@@ -50,7 +78,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new()
-             |> Vl.data_from_series(data)
+             |> Vl.data_from_values(data, only: ["a", "b"])
              |> Vl.mark(:line)
              |> Vl.encode_field(:x, "a")
              |> Vl.encode_field(:y, "b")\
@@ -62,7 +90,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
-             |> VegaLite.data_from_series(data)
+             |> VegaLite.data_from_values(data, only: ["a", "b", "c"])
              |> VegaLite.mark(:bar)
              |> VegaLite.encode_field(:x, "a")
              |> VegaLite.encode_field(:y, "b")
@@ -81,7 +109,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new(width: 300)
-             |> VegaLite.data_from_series(data)
+             |> VegaLite.data_from_values(data, only: ["a", "b", "c"])
              |> VegaLite.mark(:point)
              |> VegaLite.encode_field(:x, "a", type: :nominal)
              |> VegaLite.encode_field(:y, "b", type: :quantitative)
@@ -104,7 +132,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new(width: 600, height: 300)
-             |> Vl.data_from_series(data)
+             |> Vl.data_from_values(data, only: ["a", "b", "c"])
              |> Vl.mark(:point)
              |> Vl.encode_field(:x, "a", type: :ordinal)
              |> Vl.encode_field(:y, "b", type: :quantitative)
@@ -127,7 +155,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              Vl.new(width: 600, height: 300)
-             |> Vl.data_from_series(data)
+             |> Vl.data_from_values(data, only: ["a", "b", "c"])
              |> Vl.mark(:point)
              |> Vl.encode_field(:x, "a", type: :ordinal)
              |> Vl.encode_field(:y, "b", aggregate: :mean)
@@ -140,7 +168,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new(title: "Chart Title")
-             |> VegaLite.data_from_series(data)
+             |> VegaLite.data_from_values(data, only: ["a", "b"])
              |> VegaLite.mark(:point)
              |> VegaLite.encode_field(:x, "a")
              |> VegaLite.encode_field(:y, "b")\
@@ -152,7 +180,7 @@ defmodule Kino.SmartCell.ChartBuilderTest do
 
       assert ChartBuilder.to_source(attrs) == """
              VegaLite.new()
-             |> VegaLite.data_from_series(data)
+             |> VegaLite.data_from_values(data, only: ["a"])
              |> VegaLite.mark(:bar)
              |> VegaLite.encode_field(:x, "a")
              |> VegaLite.encode(:y, aggregate: :count)\
