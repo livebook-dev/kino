@@ -1,4 +1,4 @@
-defmodule KinoTest do
+defmodule Kino.Test do
   @moduledoc """
   Conveniences for testing custom Kino components.
 
@@ -7,7 +7,7 @@ defmodule KinoTest do
   so we need to mimic this side of the communication. To do so, add
   the following setup to your test module:
 
-      import KinoTest
+      import Kino.Test
 
       setup :configure_livebook_bridge
 
@@ -17,7 +17,7 @@ defmodule KinoTest do
   import ExUnit.Assertions
 
   def configure_livebook_bridge(_context) do
-    gl = start_supervised!({KinoTest.GroupLeader, self()})
+    gl = start_supervised!({Kino.Test.GroupLeader, self()})
     Process.group_leader(self(), gl)
     :ok
   end

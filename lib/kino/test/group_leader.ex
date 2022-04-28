@@ -1,4 +1,4 @@
-defmodule KinoTest.GroupLeader do
+defmodule Kino.Test.GroupLeader do
   @moduledoc false
 
   # A process mocking the Livebook group leader,

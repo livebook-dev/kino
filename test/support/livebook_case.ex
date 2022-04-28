@@ -1,11 +1,11 @@
 defmodule Kino.LivebookCase do
   use ExUnit.CaseTemplate
 
-  import KinoTest
+  import Kino.Test
 
   using do
     quote do
-      import KinoTest
+      import Kino.Test
     end
   end
 

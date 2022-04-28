@@ -65,7 +65,7 @@ defmodule Kino.MixProject do
           Kino.Output
         ],
         Testing: [
-          KinoTest
+          Kino.Test
         ]
       ]
     ]

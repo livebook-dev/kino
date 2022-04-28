@@ -1,12 +1,10 @@
 <h1><img src="https://github.com/elixir-nx/kino/raw/main/images/kino.png" alt="Kino" width="400"></h1>
 
-[![Actions Status](https://github.com/elixir-nx/kino/workflows/Test/badge.svg)](https://github.com/elixir-nx/kino/actions)
-[![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/kino)
+[![Docs](https://img.shields.io/badge/hex.pm-docs-8e7ce6.svg)](https://hexdocs.pm/kino)
+[![Actions Status](https://github.com/livebook-dev/kino/workflows/Test/badge.svg)](https://github.com/livebook-dev/kino/actions)
 
 `Kino` is the library used by [Livebook](https://github.com/elixir-nx/livebook)
 to render rich and interactive output directly from your Elixir code.
-
-[See the documentation](https://hexdocs.pm/kino).
 
 ## Installation
 
