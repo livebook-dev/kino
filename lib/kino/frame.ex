@@ -6,23 +6,23 @@ defmodule Kino.Frame do
   any time.
 
   Also see `Kino.animate/3` which offers a convenience on
-  top of this widget.
+  top of this kino.
 
   ## Examples
 
-      widget = Kino.Frame.new() |> Kino.render()
+      frame = Kino.Frame.new() |> Kino.render()
 
       for i <- 1..100 do
-        Kino.Frame.render(widget, i)
+        Kino.Frame.render(frame, i)
         Process.sleep(50)
       end
 
   Or with a scheduled task in the background.
 
-      widget = Kino.Frame.new() |> Kino.render()
+      frame = Kino.Frame.new() |> Kino.render()
 
-      Kino.Frame.periodically(widget, 50, 0, fn i ->
-        Kino.Frame.render(widget, i)
+      Kino.Frame.periodically(frame, 50, 0, fn i ->
+        Kino.Frame.render(frame, i)
         {:cont, i + 1}
       end)
   """
@@ -38,7 +38,7 @@ defmodule Kino.Frame do
   @type state :: %{outputs: list(Kino.Output.t())}
 
   @doc """
-  Starts a widget process.
+  Creates a new frame.
   """
   @spec new() :: t()
   def new() do
@@ -59,28 +59,28 @@ defmodule Kino.Frame do
   output replaces existing frame contents.
   """
   @spec render(t(), term()) :: :ok
-  def render(widget, term) do
-    GenServer.cast(widget.pid, {:render, term})
+  def render(frame, term) do
+    GenServer.cast(frame.pid, {:render, term})
   end
 
   @doc """
   Renders and appends the given term to the frame.
   """
   @spec append(t(), term()) :: :ok
-  def append(widget, term) do
-    GenServer.cast(widget.pid, {:append, term})
+  def append(frame, term) do
+    GenServer.cast(frame.pid, {:append, term})
   end
 
   @doc """
   Removes all outputs within the given frame.
   """
   @spec clear(t()) :: :ok
-  def clear(widget) do
-    GenServer.cast(widget.pid, :clear)
+  def clear(frame) do
+    GenServer.cast(frame.pid, :clear)
   end
 
   @doc """
-  Registers a callback to run periodically in the widget process.
+  Registers a callback to run periodically in the frame process.
 
   The callback is run every `interval_ms` milliseconds and receives
   the accumulated value. The callback should return either of:
@@ -92,14 +92,14 @@ defmodule Kino.Frame do
   The callback is run for the first time immediately upon registration.
   """
   @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
-  def periodically(widget, interval_ms, acc, fun) do
-    GenServer.cast(widget.pid, {:periodically, interval_ms, acc, fun})
+  def periodically(frame, interval_ms, acc, fun) do
+    GenServer.cast(frame.pid, {:periodically, interval_ms, acc, fun})
   end
 
   @doc false
   @spec get_outputs(t()) :: list(Kino.Output.t())
-  def get_outputs(widget) do
-    GenServer.call(widget.pid, :get_outputs)
+  def get_outputs(frame) do
+    GenServer.call(frame.pid, :get_outputs)
   end
 
   @impl true

@@ -43,7 +43,7 @@ defmodule Kino.MixProject do
       source_ref: "v#{@version}",
       logo: "images/kino_without_text.png",
       groups_for_modules: [
-        Widgets: [
+        Kinos: [
           Kino.DataTable,
           Kino.ETS,
           Kino.Frame,

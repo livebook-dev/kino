@@ -18,20 +18,18 @@ defimpl Kino.Render, for: Any do
   end
 end
 
-# Kino widgets
-
 defimpl Kino.Render, for: Kino.JS do
-  def to_livebook(widget) do
-    info = Kino.JS.js_info(widget)
-    Kino.Bridge.reference_object(widget.ref, self())
+  def to_livebook(kino) do
+    info = Kino.JS.js_info(kino)
+    Kino.Bridge.reference_object(kino.ref, self())
     Kino.Output.js(info)
   end
 end
 
 defimpl Kino.Render, for: Kino.JS.Live do
-  def to_livebook(widget) do
-    Kino.Bridge.reference_object(widget.pid, self())
-    info = Kino.JS.Live.js_info(widget)
+  def to_livebook(kino) do
+    Kino.Bridge.reference_object(kino.pid, self())
+    info = Kino.JS.Live.js_info(kino)
     Kino.Output.js(info)
   end
 end
@@ -49,10 +47,10 @@ defimpl Kino.Render, for: Kino.Markdown do
 end
 
 defimpl Kino.Render, for: Kino.Frame do
-  def to_livebook(widget) do
-    Kino.Bridge.reference_object(widget.pid, self())
-    outputs = Kino.Frame.get_outputs(widget)
-    Kino.Output.frame(outputs, %{ref: widget.ref, type: :default})
+  def to_livebook(kino) do
+    Kino.Bridge.reference_object(kino.pid, self())
+    outputs = Kino.Frame.get_outputs(kino)
+    Kino.Output.frame(outputs, %{ref: kino.ref, type: :default})
   end
 end
 

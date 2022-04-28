@@ -39,20 +39,20 @@ defmodule Kino.JSTest do
     end
 
     test "builds export info when :export_info_string is specified" do
-      widget =
+      kino =
         Kino.JS.new(Kino.TestModules.JSExternalAssets, %{spec: %{"width" => 10, "height" => 10}},
           export_info_string: "vega-lite",
           export_key: :spec
         )
 
-      assert %{export: %{info_string: "vega-lite", key: :spec}} = widget
+      assert %{export: %{info_string: "vega-lite", key: :spec}} = kino
     end
 
     test "sets export info to nil when :export_info_string is not specified" do
-      widget =
+      kino =
         Kino.JS.new(Kino.TestModules.JSExternalAssets, %{spec: %{"width" => 10, "height" => 10}})
 
-      assert %{export: nil} = widget
+      assert %{export: nil} = kino
     end
   end
 end

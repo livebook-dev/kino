@@ -1,13 +1,13 @@
 defmodule Kino.JS do
   @moduledoc ~S'''
-  Allows for defining custom JavaScript powered widgets.
+  Allows for defining custom JavaScript powered kinos.
 
   ## Example
 
-  Here's how we could define a minimal widget that embeds
-  the given HTML directly into the page.
+  Here's how we could define a minimal kino that embeds the given
+  HTML directly into the page.
 
-      defmodule Kino.HTML do
+      defmodule KinoDocs.HTML do
         use Kino.JS
 
         def new(html) do
@@ -25,29 +25,27 @@ defmodule Kino.JS do
 
   Let's break down the API.
 
-  To define a custom widget we need to create a new module,
-  conventionally under the `Kino.` prefix, so that the end
-  user can easily autocomplete all available widgets. In
-  this case we go with `Kino.HTML`.
+  To define a custom kino we need to create a new module. In this
+  case we go with `KinoDocs.HTML`.
 
   We start by adding `use Kino.JS`, which makes our module
   asset-aware. In particular, it allows us to use the `asset/2`
   macro to define arbitrary files directly in the module source.
 
-  All widgets require a `main.js` file that  defines a JavaScript
+  All kinos require a `main.js` file that  defines a JavaScript
   module and  becomes the entrypoint on the client side. The
   JavaScript module is expected to export the `init(ctx, data)`
   function, where `ctx` is a special object (discussed in
-  detail later) and `data` is the widget data passed from the
+  detail later) and `data` is the kino data passed from the
   Elixir side. In our example the `init` function accesses the
   root element with `ctx.root` and overrides its content with
   the given HTML string.
 
-  Finally, we define the `new(html)` function that builds widgets
+  Finally, we define the `new(html)` function that creates kinos
   with the given HTML. Underneath we call `Kino.JS.new/2`
-  specifying our module as the widget type and passing the data
+  specifying our module as the kino type and passing the data
   (available in the JavaScript `init` function later). Again,
-  it's a convention for each widget module to define a `new`
+  it's a convention for each kino module to define a `new`
   function to provide uniform experience for the end user.
 
   ## Assets
@@ -67,7 +65,7 @@ defmodule Kino.JS do
   a font from Google Fonts or a custom asset (as outlined above). Here's
   an example of both:
 
-      defmodule Kino.HTML do
+      defmodule KinoDocs.HTML do
         use Kino.JS
 
         def new(html) do
@@ -124,7 +122,7 @@ defmodule Kino.JS do
 
   ### Properties
 
-    * `ctx.root` - the root element controlled by the widget
+    * `ctx.root` - the root element controlled by the kino
 
   ### Functions
 
@@ -133,11 +131,11 @@ defmodule Kino.JS do
 
     * `ctx.handleEvent(event, callback)` - registers an event
       handler. Once `event` is broadcasted, `callback` is executed
-      with the event payload. This applies to `Kino.JS.Live` widgets
+      with the event payload. This applies to `Kino.JS.Live` kinos
 
-    * `ctx.pushEvent(event, payload)` - sends an event to the widget
+    * `ctx.pushEvent(event, payload)` - sends an event to the kino
       server, where it is handled with `c:Kino.JS.Live.handle_event/3`.
-      This applies to `Kino.JS.Live` widgets
+      This applies to `Kino.JS.Live` kinos
 
   ## CDN
 
@@ -181,9 +179,9 @@ defmodule Kino.JS do
         C-->D;
       """)
 
-  ## Live widgets
+  ## Live kinos
 
-  So far we covered the API for defining static widgets, where the
+  So far we covered the API for defining static kinos, where the
   JavaScript side only receives the initial data and there is no
   further interaction with the Elixir side. To introduce such
   interaction, see `Kino.JS.Live` as a next step in our discussion.
@@ -208,9 +206,9 @@ defmodule Kino.JS do
   @doc ~S'''
   Defines an asset file.
 
-  This serves as a convenience when prototyping or building
-  simple widgets, otherwise you most likely want to put assets
-  in separate files. See the [Assets](#module-assets) for more details.
+  This serves as a convenience when prototyping or building simple
+  kinos, otherwise you most likely want to put assets in separate
+  files. See the [Assets](#module-assets) for more details.
 
   ## Examples
 
@@ -285,7 +283,7 @@ defmodule Kino.JS do
 
           Make sure to either explicitly specify assets directory:
 
-              use Kino.JS, assets_path: "lib/assets/my_widget"
+              use Kino.JS, assets_path: "lib/assets/my_kino"
 
           Or define assets inline:
 
@@ -388,7 +386,7 @@ defmodule Kino.JS do
   end
 
   @doc """
-  Instantiates a static JavaScript widget defined by `module`.
+  Instantiates a static JavaScript kino defined by `module`.
 
   The given `data` is passed directly to the JavaScript side during
   initialization.
@@ -452,14 +450,14 @@ defmodule Kino.JS do
 
   @doc false
   @spec js_info(t()) :: Kino.Output.js_info()
-  def js_info(%__MODULE__{} = widget) do
+  def js_info(%__MODULE__{} = kino) do
     %{
       js_view: %{
-        ref: widget.ref,
+        ref: kino.ref,
         pid: Kino.JS.DataStore.cross_node_name(),
-        assets: widget.module.__assets_info__()
+        assets: kino.module.__assets_info__()
       },
-      export: widget.export
+      export: kino.export
     }
   end
 end

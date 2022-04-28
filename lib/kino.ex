@@ -5,7 +5,7 @@ defmodule Kino do
   Kino is the library used by Livebook to render rich and interactive
   outputs directly from your Elixir code.
 
-  ## Built-in widgets
+  ## Built-in kinos
 
   Kino renders any data structure that implements the `Kino.Render`
   protocol, falling back to the `Kernel.inspect/2` representation
@@ -68,10 +68,10 @@ defmodule Kino do
   `Kino.Frame` is a placeholder for static outputs that can
   be dynamically updated.
 
-      widget = Kino.Frame.new() |> Kino.render()
+      frame = Kino.Frame.new() |> Kino.render()
 
       for i <- 1..100 do
-        Kino.Frame.render(widget, i)
+        Kino.Frame.render(frame, i)
         Process.sleep(50)
       end
 
@@ -88,10 +88,10 @@ defmodule Kino do
   All other data structures are rendered as text using Elixir's
   `Kernel.inspect/2`.
 
-  ## Custom widgets
+  ## Custom kinos
 
   Kino makes it possible to define custom JavaScript powered
-  widgets, see `Kino.JS` and `Kino.JS.Live` for more details.
+  kinos, see `Kino.JS` and `Kino.JS.Live` for more details.
   '''
 
   import Kernel, except: [inspect: 1]
@@ -119,7 +119,7 @@ defmodule Kino do
   set with `configure/1`.
 
   Opposite to `render/1`, it does not attempt to render the given
-  term as a widget.
+  term as a kino.
   """
   @spec inspect(term(), keyword()) :: term()
   def inspect(term, opts \\ []) do
@@ -164,7 +164,7 @@ defmodule Kino do
   end
 
   @doc ~S"""
-  Returns a widget that periodically calls the given function
+  Returns a kino that periodically calls the given function
   to render a new result.
 
   The callback is run every `interval_ms` milliseconds and receives
@@ -174,7 +174,7 @@ defmodule Kino do
 
     * `:halt` - to no longer schedule callback evaluation
 
-  This function uses `Kino.Frame` as the underlying widget.
+  This function uses `Kino.Frame` as the underlying kino.
 
   ## Examples
 
@@ -190,12 +190,12 @@ defmodule Kino do
           (term() -> {:cont, term(), acc :: term()} | :halt)
         ) :: nothing()
   def animate(interval_ms, acc, fun) do
-    widget = Kino.Frame.new()
+    frame = Kino.Frame.new()
 
-    Kino.Frame.periodically(widget, interval_ms, acc, fn acc ->
+    Kino.Frame.periodically(frame, interval_ms, acc, fn acc ->
       case fun.(acc) do
         {:cont, term, acc} ->
-          Kino.Frame.render(widget, term)
+          Kino.Frame.render(frame, term)
           {:cont, acc}
 
         :halt ->
@@ -203,7 +203,7 @@ defmodule Kino do
       end
     end)
 
-    Kino.render(widget)
+    Kino.render(frame)
 
     nothing()
   end
