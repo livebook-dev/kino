@@ -1,25 +1,24 @@
 defmodule Kino.JS.Live do
   @moduledoc ~S'''
   Introduces state and event-driven capabilities to JavaScript
-  powered widgets.
+  powered kinos.
 
-  Make sure to read the introduction to JavaScript widgets in
+  Make sure to read the introduction to JavaScript kinos in
   `Kino.JS` for more context.
 
-  Similarly to static widgets, live widgets involve a custom
-  JavaScript code running in the browser. In fact, this part
-  of the API is the same. In addition, each live widget has
-  a server process running on the Elixir side, responsible for
-  maintaining state and able to communicate with the JavaScript
-  side at any time. Again, to illustrate the ideas we start
-  with a minimal example.
+  Similarly to static kinos, live kinos involve a custom JavaScript
+  code running in the browser. In fact, this part of the API is the
+  same. In addition, each live kino has a server process running on
+  the Elixir side, responsible for maintaining state and able to
+  communicate with the JavaScript side at any time. Again, to illustrate
+  the ideas we start with a minimal example.
 
   ## Example
 
-  We will follow up on our `Kino.HTML` example by adding support
+  We will follow up on our `KinoDocs.HTML` example by adding support
   for replacing the content on demand.
 
-      defmodule Kino.LiveHTML do
+      defmodule KinoDocs.LiveHTML do
         use Kino.JS
         use Kino.JS.Live
 
@@ -27,8 +26,8 @@ defmodule Kino.JS.Live do
           Kino.JS.Live.new(__MODULE__, html)
         end
 
-        def replace(widget, html) do
-          Kino.JS.Live.cast(widget, {:replace, html})
+        def replace(kino, html) do
+          Kino.JS.Live.cast(kino, {:replace, html})
         end
 
         @impl true
@@ -61,23 +60,23 @@ defmodule Kino.JS.Live do
       end
 
   Just as before we define a module, this time calling it
-  `Kino.LiveHTML` for clarity. Note many similarities to the
-  previous version, we still call `use Kino.JS`, define the
-  `main.js` file and define the `new(html)` function for
-  building the widget. As a matter of fact, the initial result
-  of `Kino.LiveHTML.new(html)` will render exactly the same
-  as our previous `Kino.HTMl.new(html)`.
+  `KinoDocs.LiveHTML` for clarity. Note many similarities to
+  the previous version, we still call `use Kino.JS`, define
+  the `main.js` file and define the `new(html)` function for
+  creating a kino instance. As a matter of fact, the initial
+  result of `KinoDocs.LiveHTML.new(html)` will render exactly
+  the same as our previous `KinoDocs.HTML.new(html)`.
 
   As for the new bits, we added `use Kino.JS.Live` to define
-  a live widget server. We use `Kino.JS.Live.new/2` for creating
-  the widget instance and we implement a few `GenServer`-like
+  a live kino server. We use `Kino.JS.Live.new/2` for creating
+  the kino instance and we implement a few `GenServer`-like
   callbacks.
 
-  Once the widget server is started with `Kino.JS.Live.new/2`,
+  Once the kino server is started with `Kino.JS.Live.new/2`,
   the `c:init/2` callback is called with the initial argument.
   In this case we store the given `html` in server state.
 
-  Whenever the widget is rendered on a new client, the `c:handle_connect/1`
+  Whenever the kino is rendered on a new client, the `c:handle_connect/1`
   callback is called and it builds the initial data for the
   client. In this case, we always return the stored `html`.
   This initial data is then passed to the JavaScript `init`
@@ -87,7 +86,7 @@ defmodule Kino.JS.Live do
 
   Finally, the whole point of our example is the ability to
   replace the HTML content directly from the Elixir side and
-  for this purpose we added the public `replace(widget, html)`
+  for this purpose we added the public `replace(kino, html)`
   function. Underneath the function uses `cast/2` to message
   our server and the message is handled with `c:handle_cast/2`.
   In this case we store the new `html` in the server state and
@@ -277,10 +276,10 @@ defmodule Kino.JS.Live do
   end
 
   @doc """
-  Instantiates a live JavaScript widget defined by `module`.
+  Instantiates a live JavaScript kino defined by `module`.
 
   The given `init_arg` is passed to the `init/2` callback when
-  the underlying widget process is started.
+  the underlying kino process is started.
   """
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
@@ -291,35 +290,35 @@ defmodule Kino.JS.Live do
 
   @doc false
   @spec js_info(t()) :: Kino.Output.js_info()
-  def js_info(%__MODULE__{} = widget) do
+  def js_info(%__MODULE__{} = kino) do
     %{
       js_view: %{
-        ref: widget.ref,
-        pid: widget.pid,
-        assets: widget.module.__assets_info__()
+        ref: kino.ref,
+        pid: kino.pid,
+        assets: kino.module.__assets_info__()
       },
       export: nil
     }
   end
 
   @doc """
-  Sends an asynchronous request to the widget server.
+  Sends an asynchronous request to the kino server.
 
   See `GenServer.cast/2` for more details.
   """
   @spec cast(t(), term()) :: :ok
-  def cast(widget, term) do
-    Kino.JS.Live.Server.cast(widget.pid, term)
+  def cast(kino, term) do
+    Kino.JS.Live.Server.cast(kino.pid, term)
   end
 
   @doc """
-  Makes a synchronous call to the widget server and waits
+  Makes a synchronous call to the kino server and waits
   for its reply.
 
   See `GenServer.call/3` for more details.
   """
   @spec call(t(), term(), timeout()) :: term()
-  def call(widget, term, timeout \\ 5_000) do
-    Kino.JS.Live.Server.call(widget.pid, term, timeout)
+  def call(kino, term, timeout \\ 5_000) do
+    Kino.JS.Live.Server.call(kino.pid, term, timeout)
   end
 end

@@ -1,6 +1,6 @@
 defmodule Kino.DataTable do
   @moduledoc """
-  A widget for interactively viewing tabular data.
+  A kino for interactively viewing tabular data.
 
   The data must be a tabular data supported by `Table`.
 
@@ -29,7 +29,7 @@ defmodule Kino.DataTable do
   @type t :: Kino.JS.Live.t()
 
   @doc """
-  Starts a widget process with tabular data.
+  Creates a new kino displaying given tabular data.
 
   ## Options
 
@@ -38,9 +38,9 @@ defmodule Kino.DataTable do
 
     * `:name` - The displayed name of the table. Defaults to `"Data"`
 
-    * `:sorting_enabled` - whether the widget should support sorting the data.
-      Sorting requires traversal of the whole enumerable, so it may not be
-      desirable for large lazy enumerables. Defaults to `true`
+    * `:sorting_enabled` - whether the table should support sorting the
+      data. Sorting requires traversal of the whole enumerable, so it
+      may not be desirable for large lazy enumerables. Defaults to `true`
 
   """
   @spec new(Table.Reader.t(), keyword()) :: t()

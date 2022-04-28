@@ -6,10 +6,6 @@ defmodule Kino.Application do
   def start(_type, _args) do
     Kino.Counter.initialize()
 
-    Kino.SmartCell.register(Kino.SmartCell.DBConnection)
-    Kino.SmartCell.register(Kino.SmartCell.SQL)
-    Kino.SmartCell.register(Kino.SmartCell.ChartBuilder)
-
     children = [
       {DynamicSupervisor, strategy: :one_for_one, name: Kino.DynamicSupervisor},
       Kino.SubscriptionManager,

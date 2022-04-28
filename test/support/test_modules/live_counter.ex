@@ -6,12 +6,12 @@ defmodule Kino.TestModules.LiveCounter do
     Kino.JS.Live.new(__MODULE__, count)
   end
 
-  def bump(widget, by \\ 1) do
-    Kino.JS.Live.cast(widget, {:bump, by})
+  def bump(kino, by \\ 1) do
+    Kino.JS.Live.cast(kino, {:bump, by})
   end
 
-  def read(widget) do
-    Kino.JS.Live.call(widget, :read)
+  def read(kino) do
+    Kino.JS.Live.call(kino, :read)
   end
 
   @impl true

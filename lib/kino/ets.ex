@@ -1,6 +1,6 @@
 defmodule Kino.ETS do
   @moduledoc """
-  A widget for interactively viewing an ETS table.
+  A kino for interactively viewing an ETS table.
 
   ## Examples
 
@@ -15,7 +15,7 @@ defmodule Kino.ETS do
   @type t :: Kino.JS.Live.t()
 
   @doc """
-  Starts a widget process representing the given ETS table.
+  Creates a new kino displaying the given ETS table.
 
   Note that private tables cannot be read by an arbitrary process,
   so the given table must have either public or protected access.

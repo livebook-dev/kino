@@ -1,8 +1,6 @@
 defmodule Kino.DataTableTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
-
   @people_entries [
     %{id: 3, name: "Amy Santiago"},
     %{id: 1, name: "Jake Peralta"},
@@ -10,8 +8,8 @@ defmodule Kino.DataTableTest do
   ]
 
   test "initial data respects current query parameters" do
-    widget = Kino.DataTable.new(@people_entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(@people_entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -30,11 +28,11 @@ defmodule Kino.DataTableTest do
            } = data
 
     send(
-      widget.pid,
+      kino.pid,
       {:event, "order_by", %{"key" => "0", "order" => "desc"}, %{origin: self()}}
     )
 
-    data = connect(widget)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -59,8 +57,8 @@ defmodule Kino.DataTableTest do
       [b: 2, a: 2]
     ]
 
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -75,8 +73,8 @@ defmodule Kino.DataTableTest do
       [{"b", 2}, {"a", 2}]
     ]
 
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -95,8 +93,8 @@ defmodule Kino.DataTableTest do
       %User{id: 2, name: "John Watson"}
     ]
 
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -109,8 +107,8 @@ defmodule Kino.DataTableTest do
   end
 
   test "sends only relevant fields if user-specified keys are given" do
-    widget = Kino.DataTable.new(@people_entries, keys: [:id])
-    data = connect(widget)
+    kino = Kino.DataTable.new(@people_entries, keys: [:id])
+    data = connect(kino)
 
     assert data.content.rows == [
              %{fields: %{"0" => "3"}},
@@ -120,8 +118,8 @@ defmodule Kino.DataTableTest do
   end
 
   test "preserves data order by default" do
-    widget = Kino.DataTable.new(@people_entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(@people_entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -143,14 +141,14 @@ defmodule Kino.DataTableTest do
   end
 
   test "supports sorting by other columns" do
-    widget = Kino.DataTable.new(@people_entries)
+    kino = Kino.DataTable.new(@people_entries)
 
     # Get initial data to populate the key-string mapping
-    connect(widget)
+    connect(kino)
 
-    push_event(widget, "order_by", %{"key" => "1", "order" => "desc"})
+    push_event(kino, "order_by", %{"key" => "1", "order" => "desc"})
 
-    assert_broadcast_event(widget, "update_content", %{
+    assert_broadcast_event(kino, "update_content", %{
       columns: [
         %{key: "0", label: ":id"},
         %{key: "1", label: ":name"}
@@ -168,8 +166,8 @@ defmodule Kino.DataTableTest do
   test "supports pagination" do
     entries = for n <- 1..25, do: %{n: n}
 
-    widget = Kino.DataTable.new(entries)
-    data = connect(widget)
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -179,9 +177,9 @@ defmodule Kino.DataTableTest do
              }
            } = data
 
-    push_event(widget, "show_page", %{"page" => 2})
+    push_event(kino, "show_page", %{"page" => 2})
 
-    assert_broadcast_event(widget, "update_content", %{
+    assert_broadcast_event(kino, "update_content", %{
       page: 2,
       max_page: 3,
       rows: [%{fields: %{"0" => "11"}} | _]
@@ -189,8 +187,8 @@ defmodule Kino.DataTableTest do
   end
 
   test "supports setting table name" do
-    widget = Kino.DataTable.new([x: 1..10, y: 1..10], name: "Example")
-    data = connect(widget)
+    kino = Kino.DataTable.new([x: 1..10, y: 1..10], name: "Example")
+    data = connect(kino)
     assert %{name: "Example"} = data
   end
 end

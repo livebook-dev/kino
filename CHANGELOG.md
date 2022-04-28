@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/livebook-dev/kino)
 
+This release primarily introduces `Kino.SmartCell`, which allows for
+creating custom cells in Livebook. Check out the module docs for more
+information and see [this PR](https://github.com/livebook-dev/livebook/pull/1029)
+for more context.
+
+Along with this release we introduce two new packages, focusing on
+specific integrations, namely [`kino_vega_lite`](https://github.com/livebook-dev/kino_vega_lite)
+and [`kino_db`](https://github.com/livebook-dev/kino_db).
+
 ### Added
 
 * Support for binary payloads in `Kino.JS` and `Kino.JS.Live` ([#88](https://github.com/livebook-dev/kino/pull/88))
-* Column type information to `Kino.Ecto` table ([#94](https://github.com/livebook-dev/kino/pull/94))
 * Support for defining smart cells ([#98](https://github.com/livebook-dev/kino/pull/98))
-* Smart cells: Database Connection ([#98](https://github.com/livebook-dev/kino/pull/98)), SQL query ([#105](https://github.com/livebook-dev/kino/pull/105)), Chart builder ([#106](https://github.com/livebook-dev/kino/pull/106))
 * Support for custom `:name` in `Kino.DataTable` ([#102](https://github.com/livebook-dev/kino/pull/102))
 * Callback API for `Kino.Control` events ([#126](https://github.com/livebook-dev/kino/pull/126))
 
@@ -20,7 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Changed `Kino.ETS` to render a single column of tuples ([#90](https://github.com/livebook-dev/kino/pull/90))
 * Converted DataTable to accept any data compatible with `Table.Reader` ([#122](https://github.com/livebook-dev/kino/pull/122))
-* The default VegaLite theme to better match Livebook colors ([#131](https://github.com/livebook-dev/kino/pull/131))
+
+### Removed
+
+* Removed `Kino.Ecto`
+* Removed `VegaLite` integration in favour of the `kino_vega_lite` package
 
 ## [v0.5.2](https://github.com/livebook-dev/kino/tree/v0.5.2) (2022-02-03)
 

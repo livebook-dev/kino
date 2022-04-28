@@ -1,10 +1,10 @@
 defmodule Kino.JS.DataStore do
   @moduledoc false
 
-  # Process responsible for keeping the data for static
-  # JS outputs. Unlike JS.Live widgets, plain JS widgets
-  # have no server, so we use a single process for storing
-  # their data and replying to data queries.
+  # Process responsible for keeping the data for static JS outputs.
+  # Unlike JS.Live kinos, plain JS kinos have no server, so we use
+  # a single process for storing their data and replying to data
+  # queries.
 
   use GenServer
 

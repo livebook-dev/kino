@@ -1,8 +1,6 @@
 defmodule Kino.ETSTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
-
   describe "new/1" do
     test "raises an error when private table is given" do
       tid = :ets.new(:users, [:set, :private])
@@ -29,8 +27,8 @@ defmodule Kino.ETSTest do
   test "includes table name in the information" do
     tid = :ets.new(:users, [:set, :public])
 
-    widget = Kino.ETS.new(tid)
-    data = connect(widget)
+    kino = Kino.ETS.new(tid)
+    data = connect(kino)
 
     assert %{name: "ETS :users", features: [:refetch, :pagination]} = data
   end
@@ -38,8 +36,8 @@ defmodule Kino.ETSTest do
   test "content contains empty columns definition if there are no records" do
     tid = :ets.new(:users, [:set, :public])
 
-    widget = Kino.ETS.new(tid)
-    data = connect(widget)
+    kino = Kino.ETS.new(tid)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -56,8 +54,8 @@ defmodule Kino.ETSTest do
     :ets.insert(tid, {2, "Terry Jeffords"})
     :ets.insert(tid, {3, "Amy Santiago"})
 
-    widget = Kino.ETS.new(tid)
-    data = connect(widget)
+    kino = Kino.ETS.new(tid)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -85,8 +83,8 @@ defmodule Kino.ETSTest do
     :ets.insert(tid, {3, "John Watson", 150, :doctor})
     :ets.insert(tid, {4})
 
-    widget = Kino.ETS.new(tid)
-    data = connect(widget)
+    kino = Kino.ETS.new(tid)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -102,8 +100,8 @@ defmodule Kino.ETSTest do
 
     for n <- 1..25, do: :ets.insert(tid, {n})
 
-    widget = Kino.ETS.new(tid)
-    data = connect(widget)
+    kino = Kino.ETS.new(tid)
+    data = connect(kino)
 
     assert %{
              content: %{
@@ -113,9 +111,9 @@ defmodule Kino.ETSTest do
              }
            } = data
 
-    push_event(widget, "show_page", %{"page" => 2})
+    push_event(kino, "show_page", %{"page" => 2})
 
-    assert_broadcast_event(widget, "update_content", %{
+    assert_broadcast_event(kino, "update_content", %{
       page: 2,
       max_page: 3,
       rows: [%{fields: %{"0" => "{11}"}} | _]
