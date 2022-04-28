@@ -1,8 +1,6 @@
 defmodule Kino.ETSTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
-
   describe "new/1" do
     test "raises an error when private table is given" do
       tid = :ets.new(:users, [:set, :private])

@@ -1,8 +1,6 @@
 defmodule Kino.DataTableTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
-
   @people_entries [
     %{id: 3, name: "Amy Santiago"},
     %{id: 1, name: "Jake Peralta"},

@@ -1,8 +1,6 @@
 defmodule Kino.JS.LiveTest do
   use Kino.LivebookCase, async: true
 
-  import KinoTest.JS.Live
-
   alias Kino.TestModules.LiveCounter
 
   # Integration tests covering callback paths

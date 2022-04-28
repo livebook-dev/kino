@@ -12,36 +12,6 @@ defmodule Kino do
   whenever an implementation is not available. The data structures
   supported by Kino out of the box are:
 
-  ### VegaLite
-
-  `VegaLite` specifications are rendered as visualizations:
-
-      Vl.new(...)
-      |> Vl.data_from_series(...)
-      |> ...
-
-  ### Kino.VegaLite
-
-  `Kino.VegaLite` is an extension of `VegaLite` that allows data to
-  be streamed:
-
-      widget =
-        Vl.new(...)
-        |> Vl.data_from_series(...)
-        |> ...
-        |> Kino.VegaLite.new()
-        |> Kino.render()
-
-      Kino.VegaLite.push(widget, %{x: 1, y: 2})
-
-  ### Kino.ETS
-
-  `Kino.ETS` implements a data table output for ETS tables in the
-  system:
-
-      tid = :ets.new(:users, [:set, :public])
-      Kino.ETS.new(tid)
-
   ### Kino.DataTable
 
   `Kino.DataTable` implements a data table output for user-provided
@@ -53,6 +23,14 @@ defmodule Kino do
       ]
 
       Kino.DataTable.new(data)
+
+  ### Kino.ETS
+
+  `Kino.ETS` implements a data table output for ETS tables in the
+  system:
+
+      tid = :ets.new(:users, [:set, :public])
+      Kino.ETS.new(tid)
 
   ### Kino.Image
 
@@ -84,13 +62,6 @@ defmodule Kino do
       | 1  | Elixir | https://elixir-lang.org |
       | 2  | Erlang | https://www.erlang.org  |
       """)
-
-  ### Kino.Ecto
-
-  `Kino.Ecto` implements a data table output for arbitrary
-  `Ecto` queries:
-
-      Kino.Ecto.new(Weather, Repo)
 
   ### Kino.Frame
 

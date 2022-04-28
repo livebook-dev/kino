@@ -58,7 +58,7 @@ defmodule Kino.Bridge do
   all of its associated pids terminate or the associated
   cells reevaluate.
 
-  See `monitor_oject/3` to add a monitoring.
+  See `monitor_object/3` to add a monitoring.
   """
   @spec reference_object(term(), pid()) :: :ok | {:error, request_error()}
   def reference_object(object, pid) do

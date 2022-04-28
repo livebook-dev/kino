@@ -96,29 +96,3 @@ defimpl Kino.Render, for: Reference do
     end
   end
 end
-
-# External packages
-
-defimpl Kino.Render, for: VegaLite do
-  def to_livebook(vl) do
-    vl |> Kino.VegaLite.static() |> Kino.Render.to_livebook()
-  end
-end
-
-defimpl Kino.Render, for: Postgrex.Result do
-  def to_livebook(result) do
-    (result.rows || [])
-    |> Enum.map(&Enum.zip(result.columns, &1))
-    |> Kino.DataTable.new(name: "Results")
-    |> Kino.Render.to_livebook()
-  end
-end
-
-defimpl Kino.Render, for: MyXQL.Result do
-  def to_livebook(result) do
-    (result.rows || [])
-    |> Enum.map(&Enum.zip(result.columns, &1))
-    |> Kino.DataTable.new(name: "Results")
-    |> Kino.Render.to_livebook()
-  end
-end

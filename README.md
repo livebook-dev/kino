@@ -18,8 +18,11 @@ Mix.install([
 ])
 ```
 
-You may need other dependencies for specific widgets, like
-[`:vega_lite`](https://github.com/elixir-nx/vega_lite) for dynamic plots.
+Additionally, there are packages with components designed for a specific
+use cases. The officially supported ones are:
+
+  * [`kino_vega_lite`](https://github.com/livebook-dev/kino_vega_lite) - for data charting
+  * [`kino_db`](https://github.com/livebook-dev/kino_db) - for database integrations
 
 ## License
 
