@@ -1,4 +1,4 @@
-defmodule KinoUnitTest do
+defmodule KinoTest do
   use ExUnit.Case, async: true
 
   describe "inspect/2" do
