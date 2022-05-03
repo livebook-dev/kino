@@ -102,7 +102,7 @@ defmodule Kino.SmartCell do
             const textarea = ctx.root.querySelector("#source");
             textarea.value = payload.source;
 
-            textarea.addEventListener("blur", (event) => {
+            textarea.addEventListener("change", (event) => {
               ctx.pushEvent("update", { source: event.target.value });
             });
 
@@ -111,9 +111,9 @@ defmodule Kino.SmartCell do
             });
 
             ctx.handleSync(() => {
-              // Synchronously invokes blur listeners
+              // Synchronously invokes change listeners
               document.activeElement &&
-                document.activeElement.dispatchEvent(new Event("blur"));
+                document.activeElement.dispatchEvent(new Event("change"));
             });
           }
           """
@@ -136,8 +136,9 @@ defmodule Kino.SmartCell do
 
   Note that we register a synchronization handler on the client with
   `ctx.handleSync(() => ...)`. This optional handler is invoked before
-  evaluation and it should flush any deferred UI changes to the server,
-  in our case we want to submit the change if it currently awaits blur.
+  evaluation and it should flush any deferred UI changes to the server.
+  In our example we listen to textarea's "change" event, which is only
+  triggered on blur, so on synchronization we trigger it programmatically.
 
   ## Collaborative editor
 
