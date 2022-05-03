@@ -90,6 +90,12 @@ defmodule Kino.JS.Live.Server do
     {:ok, ctx}
   end
 
+  def call_handle_info({:ping, pid, term, _info}, _module, ctx) do
+    Kino.Bridge.send(pid, {:pong, term, %{ref: ctx.__private__.ref}})
+
+    {:ok, ctx}
+  end
+
   def call_handle_info(msg, module, ctx) do
     if has_function?(module, :handle_info, 2) do
       {:noreply, ctx} = module.handle_info(msg, ctx)

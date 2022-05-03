@@ -115,6 +115,14 @@ defmodule Kino.Output do
   The client process may keep sending one of the following events:
 
       {:event, event :: String.t(), payload, info :: %{ref: ref(), origin: term()}}
+
+  The client can also send a ping message:
+
+      {:ping, pid(), metadata :: term(), info :: %{ref: ref()}}
+
+  And the server should respond with:
+
+      {:pong, metadata :: term(), info :: %{ref: ref()}}
   """
   @type js_view :: %{
           ref: ref(),
