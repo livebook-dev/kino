@@ -39,4 +39,10 @@ defmodule Kino.JS.LiveTest do
       assert count == 2
     end
   end
+
+  test "server ping" do
+    %{ref: ref} = kino = LiveCounter.new(0)
+    send(kino.pid, {:ping, self(), :metadata, %{ref: ref}})
+    assert_receive {:pong, :metadata, %{ref: ^ref}}
+  end
 end

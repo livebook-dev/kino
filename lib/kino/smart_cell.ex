@@ -109,6 +109,12 @@ defmodule Kino.SmartCell do
             ctx.handleEvent("update", ({ source }) => {
               textarea.value = source;
             });
+
+            ctx.handleSync(() => {
+              // Synchronously invokes blur listeners
+              document.activeElement &&
+                document.activeElement.dispatchEvent(new Event("blur"));
+            });
           }
           """
         end
@@ -127,6 +133,11 @@ defmodule Kino.SmartCell do
   And then we would register it as
 
       Kino.SmartCell.register(Kino.SmartCell.Plain)
+
+  Note that we register a synchronization handler on the client with
+  `ctx.handleSync(() => ...)`. This optional handler is invoked before
+  evaluation and it should flush any deferred UI changes to the server,
+  in our case we want to submit the change if it currently awaits blur.
 
   ## Collaborative editor
 

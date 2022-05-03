@@ -137,6 +137,10 @@ defmodule Kino.JS do
       server, where it is handled with `c:Kino.JS.Live.handle_event/3`.
       This applies to `Kino.JS.Live` kinos
 
+    * `ctx.handleSync(callback)` - registers a synchronization handler,
+      it should flush any deferred UI changes to the server. This
+      applies to `Kino.SmartCell` cells
+
   ## CDN
 
   It is possible to use a regular JavaScript bundler for generating
