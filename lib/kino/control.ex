@@ -348,7 +348,7 @@ defmodule Kino.Control do
   end
 
   @doc ~S"""
-  A stateful version of `stream/1`.
+  A stateful version of `stream/2`.
 
   ## Examples
 
