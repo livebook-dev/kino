@@ -117,6 +117,20 @@ defmodule Kino.DataTableTest do
            ]
   end
 
+  test "respects :keys order" do
+    kino = Kino.DataTable.new(@people_entries, keys: [:name, :id])
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":name"},
+                 %{key: "1", label: ":id"}
+               ]
+             }
+           } = data
+  end
+
   test "preserves data order by default" do
     kino = Kino.DataTable.new(@people_entries)
     data = connect(kino)
