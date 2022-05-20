@@ -50,11 +50,14 @@ defmodule Kino.DataTable do
     name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
 
-    {data_rows, %{columns: data_columns}} =
+    {data_rows, data_columns} =
       if keys = opts[:keys] do
-        Table.to_rows_with_info(tabular, only: keys)
+        {rows, %{columns: columns}} = Table.to_rows_with_info(tabular, only: keys)
+        nonexistent = keys -- columns
+        {rows, keys -- nonexistent}
       else
-        Table.to_rows_with_info(tabular)
+        {rows, %{columns: columns}} = Table.to_rows_with_info(tabular)
+        {rows, columns}
       end
 
     Kino.Table.new(__MODULE__, {data_rows, data_columns, name, sorting_enabled})
