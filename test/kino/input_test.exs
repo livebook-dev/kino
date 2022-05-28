@@ -50,4 +50,12 @@ defmodule Kino.InputTest do
       end
     end
   end
+
+  describe "file/2" do
+    test "raises an error when accept is empty" do
+      assert_raise ArgumentError, "expected :accept to be not empty", fn ->
+        Kino.Input.file("File", accept: [])
+      end
+    end
+  end
 end
