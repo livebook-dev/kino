@@ -164,7 +164,7 @@ defmodule Kino do
   end
 
   @doc ~S"""
-  Returns a kino that periodically calls the given function
+  Renders a kino that periodically calls the given function
   to render a new result.
 
   The callback is run every `interval_ms` milliseconds and receives
@@ -175,6 +175,7 @@ defmodule Kino do
     * `:halt` - to no longer schedule callback evaluation
 
   This function uses `Kino.Frame` as the underlying kino.
+  It returns nothing (a non-printable result).
 
   ## Examples
 
