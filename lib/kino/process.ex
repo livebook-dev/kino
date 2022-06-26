@@ -1,8 +1,42 @@
 defmodule Kino.Process do
   @moduledoc """
+  A kino for generating Mermaid.js visualizations to help introspect your
+  running processes.
 
   ## Examples
+
+  With a supervisor definition like so:
+
+      {:ok, supervisor_pid} =
+        Supervisor.start_link(
+          [
+            ProcessOne,
+            ProcessTwo,
+            ProcessThree,
+          ],
+          strategy: :one_for_one,
+          name: ImportantSupervisor
+        )
+
+  You can then call `Kino.Process.generate_supervision_tree/1` to render
+  the supervision tree using Mermaid.js using the PID of the supervisor.
+
+      Kino.Process.generate_supervision_tree(supervisor_pid)
+
+  You can also render the supervisor by passing the name of the supervisor
+  if the supervisor was started with a name.
+
+      Kino.Process.generate_supervision_tree(ImportantSupervisor)
+
+  You can also change the direction of the rendering by calling
+  `Kino.Process.generate_supervision_tree/2` with the `:direction` option.
+
+      Kino.Process.generate_supervision_tree(ImportantSupervisor, direction: :lr)
   """
+
+  alias Kino.Markdown
+
+  @type supervisor :: pid() | atom()
 
   defmodule SupervisorGraphNode do
     @moduledoc false
@@ -68,10 +102,31 @@ defmodule Kino.Process do
   end
 
   @doc """
-  Generates a Mermaid.js graph of a supervision tree.
+  Generates a Mermaid.js graph of a supervision tree. The provided supervisor can be either a named
+  process or a PID. The supervision tree is displayed with solid lines denoting supervisor-worker
+  relationships and dotted lines denoting links between processes. The graph rendering supports
+  the following options:
+
+  ## Options
+
+    * `:direction` - defines the direction of the Mermaid.js graph. The
+      value can either be `:td` (top-down) or `:lr` (left to right) with
+      the default being `:td`. Optional
+
   """
-  @spec generate_supervision_tree(pid(), keyword()) :: Kino.Markdown.t()
+  @spec generate_supervision_tree(supervisor(), keyword()) :: Markdown.t()
   def generate_supervision_tree(supervisor, opts \\ [])
+
+  def generate_supervision_tree(named_supervisor, opts) when is_atom(named_supervisor) do
+    case Process.whereis(named_supervisor) do
+      supervisor_pid when is_pid(supervisor_pid) ->
+        generate_supervision_tree(supervisor_pid, opts)
+
+      _ ->
+        raise ArgumentError,
+              "the provided atom #{inspect(named_supervisor)} does not reference a running supervisor"
+    end
+  end
 
   def generate_supervision_tree(supervisor, opts) when is_pid(supervisor) do
     direction =
