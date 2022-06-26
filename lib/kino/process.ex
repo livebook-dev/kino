@@ -68,14 +68,21 @@ defmodule Kino.Process do
   end
 
   @doc """
-  Generates a Mermaid.js graph of the supervision tree
+  Generates a Mermaid.js graph of a supervision tree.
   """
-  @spec generate_supervision_tree(pid()) :: Kino.Markdown.t()
-  def generate_supervision_tree(supervisor) when is_pid(supervisor) do
+  @spec generate_supervision_tree(pid(), keyword()) :: Kino.Markdown.t()
+  def generate_supervision_tree(supervisor, opts \\ [])
+
+  def generate_supervision_tree(supervisor, opts) when is_pid(supervisor) do
+    direction =
+      opts
+      |> Keyword.get(:direction, :td)
+      |> convert_direction()
+
     try do
       initial_pid_lookup = Map.put(%{}, supervisor, {0, :supervisor})
 
-      {edges, _, _} =
+      edges =
         supervisor
         |> Supervisor.which_children()
         |> traverse_processes(supervisor, {%{}, 1, initial_pid_lookup})
@@ -89,7 +96,7 @@ defmodule Kino.Process do
 
       Kino.Markdown.new("""
       ```mermaid
-      graph TD;
+      graph #{direction};
       #{edges}
       classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
       classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
@@ -102,9 +109,15 @@ defmodule Kino.Process do
     end
   end
 
-  def generate_supervision_tree(invalid_pid) do
+  def generate_supervision_tree(invalid_pid, _opts) do
     raise ArgumentError, "expected a PID, got: #{inspect(invalid_pid)}"
   end
+
+  defp convert_direction(:td), do: "TD"
+  defp convert_direction(:lr), do: "LR"
+
+  defp convert_direction(invalid_direction),
+    do: raise(ArgumentError, "expected a valid direction, got: #{inspect(invalid_direction)}")
 
   defp traverse_processes([{_, pid, :supervisor, _} | rest], supervisor, {rels, idx, pid_keys}) do
     pid_keys = Map.put(pid_keys, pid, {idx, :supervisor})
@@ -152,7 +165,7 @@ defmodule Kino.Process do
     Map.put_new(rels, lookup, edge)
   end
 
-  defp traverse_links({rels, idx, pid_keys}) do
+  defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
       pid_keys
       |> Enum.reduce(rels, fn {pid, _idx}, rels_with_links ->
@@ -164,7 +177,7 @@ defmodule Kino.Process do
         end)
       end)
 
-    {rels_with_links, idx, pid_keys}
+    rels_with_links
   end
 
   defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
