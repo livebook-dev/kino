@@ -72,30 +72,34 @@ defmodule Kino.Process do
   """
   @spec generate_supervision_tree(pid()) :: Kino.Markdown.t()
   def generate_supervision_tree(supervisor) when is_pid(supervisor) do
-    initial_pid_lookup = Map.put(%{}, supervisor, {0, :supervisor})
+    try do
+      initial_pid_lookup = Map.put(%{}, supervisor, {0, :supervisor})
 
-    # TODO: Check that the provided PID is actually a supervisor
-    {edges, _, _} =
-      supervisor
-      |> Supervisor.which_children()
-      |> traverse_processes(supervisor, {%{}, 1, initial_pid_lookup})
-      |> traverse_links()
+      {edges, _, _} =
+        supervisor
+        |> Supervisor.which_children()
+        |> traverse_processes(supervisor, {%{}, 1, initial_pid_lookup})
+        |> traverse_links()
 
-    edges =
-      edges
-      |> Enum.map_join("\n", fn {_pid_pair, edge} ->
-        SupervisorGraphEdge.generate_mermaid_entry(edge)
-      end)
+      edges =
+        edges
+        |> Enum.map_join("\n", fn {_pid_pair, edge} ->
+          SupervisorGraphEdge.generate_mermaid_entry(edge)
+        end)
 
-    Kino.Markdown.new("""
-    ```mermaid
-    graph TD;
-    #{edges}
-    classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-    classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-    classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-    ```
-    """)
+      Kino.Markdown.new("""
+      ```mermaid
+      graph TD;
+      #{edges}
+      classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+      classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+      classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+      ```
+      """)
+    catch
+      _, _ ->
+        raise ArgumentError, "the provided PID #{inspect(supervisor)} is not a supervisor"
+    end
   end
 
   def generate_supervision_tree(invalid_pid) do
