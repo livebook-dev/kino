@@ -39,7 +39,7 @@ defmodule Kino.Table do
                %{
                  columns: list(column()),
                  rows: list(row()),
-                 total_rows: non_neg_integer()
+                 total_rows: non_neg_integer() | nil
                }, state()}
 
   use Kino.JS, assets_path: "lib/assets/data_table"
@@ -142,7 +142,7 @@ defmodule Kino.Table do
       rows: rows,
       columns: columns,
       page: ctx.assigns.page,
-      max_page: ceil(total_rows / ctx.assigns.limit),
+      max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by]
