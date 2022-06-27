@@ -63,7 +63,7 @@ defmodule Kino.Process do
 
         _ ->
           raise ArgumentError,
-                "the provided identifier #{inspect(supervisor)} does not reference a running supervisor"
+                "the provided identifier #{inspect(supervisor)} does not reference a running process"
       end
 
     direction =
@@ -71,34 +71,31 @@ defmodule Kino.Process do
       |> Keyword.get(:direction, :top_down)
       |> convert_direction()
 
-    try do
-      initial_pid_lookup = Map.put(%{}, supervisor, {0, :supervisor})
+    supervisor_children =
+      try do
+        Supervisor.which_children(supervisor)
+      catch
+        _, _ ->
+          raise ArgumentError, "the provided process #{inspect(supervisor)} is not a supervisor"
+      end
 
-      edges =
-        supervisor
-        |> Supervisor.which_children()
-        |> traverse_processes(supervisor, {%{}, 1, initial_pid_lookup})
-        |> traverse_links()
+    edges =
+      supervisor_children
+      |> traverse_processes(supervisor, {%{}, 1, %{supervisor => {0, :supervisor}}})
+      |> traverse_links()
+      |> Enum.map_join("\n", fn {_pid_pair, edge} ->
+        generate_mermaid_entry(edge)
+      end)
 
-      edges =
-        edges
-        |> Enum.map_join("\n", fn {_pid_pair, edge} ->
-          generate_mermaid_entry(edge)
-        end)
-
-      Kino.Markdown.new("""
-      ```mermaid
-      graph #{direction};
-      #{edges}
-      classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-      classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-      classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-      ```
-      """)
-    catch
-      _, _ ->
-        raise ArgumentError, "the provided PID #{inspect(supervisor)} is not a supervisor"
-    end
+    Kino.Markdown.new("""
+    ```mermaid
+    graph #{direction};
+    #{edges}
+    classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+    classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+    classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+    ```
+    """)
   end
 
   defp convert_direction(:top_down), do: "TD"
