@@ -155,12 +155,10 @@ defmodule Kino.Process do
 
   defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
-      pid_keys
-      |> Enum.reduce(rels, fn {pid, _idx}, rels_with_links ->
+      Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
         {:links, links} = Process.info(pid, :links)
 
-        links
-        |> Enum.reduce(rels_with_links, fn link, acc ->
+        Enum.reduce(links, rels_with_links, fn link, acc ->
           add_new_links_to_acc(pid_keys, pid, link, acc)
         end)
       end)
