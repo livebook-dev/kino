@@ -1,7 +1,25 @@
 defmodule Kino.Process do
   @moduledoc """
-  A kino for generating Mermaid.js visualizations to help introspect your
-  running processes.
+  This module contains kinos for generating visualizations to help
+  introspect your running processes.
+  """
+
+  alias Kino.Markdown
+
+  @type supervisor :: pid() | atom()
+
+  @doc """
+  Generates a visualization of a supervision tree.
+
+  The provided supervisor can be either a named process or a PID. The supervision tree
+  is displayed with solid lines denoting supervisor-worker relationships and dotted
+  lines denoting links between processes. The graph rendering supports the following
+  options:
+
+  ## Options
+
+    * `:direction` - defines the direction of the graph visual. The
+      value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
 
   ## Examples
 
@@ -10,128 +28,47 @@ defmodule Kino.Process do
       {:ok, supervisor_pid} =
         Supervisor.start_link(
           [
-            ProcessOne,
-            ProcessTwo,
-            ProcessThree,
+            {DynamicSupervisor, strategy: :one_for_one, name: MyApp.DynamicSupervisor},
+            {Agent, fn -> [] end}
           ],
           strategy: :one_for_one,
-          name: ImportantSupervisor
+          name: MyApp.Supervisor
         )
 
-  You can then call `Kino.Process.generate_supervision_tree/1` to render
-  the supervision tree using Mermaid.js using the PID of the supervisor.
+      Enum.each(1..3, fn _ ->
+        DynamicSupervisor.start_child(MyApp.DynamicSupervisor, {Agent, fn -> %{} end})
+      end)
 
-      Kino.Process.generate_supervision_tree(supervisor_pid)
+  You can then call `Kino.Process.sup_tree/1` to render
+  the supervision tree using using the PID of the supervisor.
+
+      Kino.Process.sup_tree(supervisor_pid)
 
   You can also render the supervisor by passing the name of the supervisor
   if the supervisor was started with a name.
 
-      Kino.Process.generate_supervision_tree(ImportantSupervisor)
+      Kino.Process.sup_tree(MyApp.Supervisor)
 
   You can also change the direction of the rendering by calling
-  `Kino.Process.generate_supervision_tree/2` with the `:direction` option.
+  `Kino.Process.sup_tree/2` with the `:direction` option.
 
-      Kino.Process.generate_supervision_tree(ImportantSupervisor, direction: :lr)
+      Kino.Process.sup_tree(MyApp.Supervisor, direction: :left_right)
   """
+  @spec sup_tree(supervisor(), keyword()) :: Markdown.t()
+  def sup_tree(supervisor, opts \\ []) do
+    supervisor =
+      case GenServer.whereis(supervisor) do
+        supervisor_pid when is_pid(supervisor_pid) ->
+          supervisor_pid
 
-  alias Kino.Markdown
+        _ ->
+          raise ArgumentError,
+                "the provided identifier #{inspect(supervisor)} does not reference a running supervisor"
+      end
 
-  @type supervisor :: pid() | atom()
-
-  defmodule SupervisorGraphNode do
-    @moduledoc false
-
-    defstruct [:id, :pid, :type]
-
-    @doc false
-    def new(id, pid, type) do
-      %__MODULE__{
-        id: id,
-        pid: pid,
-        type: type
-      }
-    end
-
-    @doc false
-    def generate_node(%__MODULE__{id: id, pid: pid, type: type}) do
-      type =
-        if id == 0 do
-          :root
-        else
-          type
-        end
-
-      display =
-        pid
-        |> Process.info(:registered_name)
-        |> case do
-          {:registered_name, []} -> inspect(pid)
-          {:registered_name, name} -> inspect(name)
-        end
-
-      "#{id}(#{display}):::#{type}"
-    end
-  end
-
-  defmodule SupervisorGraphEdge do
-    @moduledoc false
-
-    defstruct [:node_1, :node_2, :relationship]
-
-    @doc false
-    def new(node_1, node_2, relationship) do
-      %__MODULE__{
-        node_1: node_1,
-        node_2: node_2,
-        relationship: relationship
-      }
-    end
-
-    @doc false
-    def generate_mermaid_entry(%__MODULE__{node_1: node_1, node_2: node_2, relationship: :link}) do
-      "#{SupervisorGraphNode.generate_node(node_1)} -..- #{SupervisorGraphNode.generate_node(node_2)}"
-    end
-
-    def generate_mermaid_entry(%__MODULE__{
-          node_1: node_1,
-          node_2: node_2,
-          relationship: :supervisor
-        }) do
-      "#{SupervisorGraphNode.generate_node(node_1)} ---> #{SupervisorGraphNode.generate_node(node_2)}"
-    end
-  end
-
-  @doc """
-  Generates a Mermaid.js graph of a supervision tree. The provided supervisor can be either a named
-  process or a PID. The supervision tree is displayed with solid lines denoting supervisor-worker
-  relationships and dotted lines denoting links between processes. The graph rendering supports
-  the following options:
-
-  ## Options
-
-    * `:direction` - defines the direction of the Mermaid.js graph. The
-      value can either be `:td` (top-down) or `:lr` (left to right) with
-      the default being `:td`. Optional
-
-  """
-  @spec generate_supervision_tree(supervisor(), keyword()) :: Markdown.t()
-  def generate_supervision_tree(supervisor, opts \\ [])
-
-  def generate_supervision_tree(named_supervisor, opts) when is_atom(named_supervisor) do
-    case Process.whereis(named_supervisor) do
-      supervisor_pid when is_pid(supervisor_pid) ->
-        generate_supervision_tree(supervisor_pid, opts)
-
-      _ ->
-        raise ArgumentError,
-              "the provided atom #{inspect(named_supervisor)} does not reference a running supervisor"
-    end
-  end
-
-  def generate_supervision_tree(supervisor, opts) when is_pid(supervisor) do
     direction =
       opts
-      |> Keyword.get(:direction, :td)
+      |> Keyword.get(:direction, :top_down)
       |> convert_direction()
 
     try do
@@ -146,7 +83,7 @@ defmodule Kino.Process do
       edges =
         edges
         |> Enum.map_join("\n", fn {_pid_pair, edge} ->
-          SupervisorGraphEdge.generate_mermaid_entry(edge)
+          generate_mermaid_entry(edge)
         end)
 
       Kino.Markdown.new("""
@@ -164,12 +101,8 @@ defmodule Kino.Process do
     end
   end
 
-  def generate_supervision_tree(invalid_pid, _opts) do
-    raise ArgumentError, "expected a PID, got: #{inspect(invalid_pid)}"
-  end
-
-  defp convert_direction(:td), do: "TD"
-  defp convert_direction(:lr), do: "LR"
+  defp convert_direction(:top_down), do: "TD"
+  defp convert_direction(:left_right), do: "LR"
 
   defp convert_direction(invalid_direction),
     do: raise(ArgumentError, "expected a valid direction, got: #{inspect(invalid_direction)}")
@@ -179,10 +112,10 @@ defmodule Kino.Process do
     children = Supervisor.which_children(pid)
 
     {supervisor_idx, _type} = Map.get(pid_keys, supervisor)
-    supervisor_node = SupervisorGraphNode.new(supervisor_idx, supervisor, :supervisor)
+    supervisor_node = graph_node(supervisor_idx, supervisor, :supervisor)
 
-    worker_node = SupervisorGraphNode.new(idx, pid, :supervisor)
-    new_connection = SupervisorGraphEdge.new(supervisor_node, worker_node, :supervisor)
+    worker_node = graph_node(idx, pid, :supervisor)
+    new_connection = graph_edge(supervisor_node, worker_node, :supervisor)
 
     {subtree_rels, idx, pid_keys} = traverse_processes(children, pid, {%{}, idx + 1, pid_keys})
 
@@ -198,10 +131,10 @@ defmodule Kino.Process do
     pid_keys = Map.put(pid_keys, pid, {idx, :worker})
 
     {supervisor_idx, _type} = Map.get(pid_keys, supervisor)
-    supervisor_node = SupervisorGraphNode.new(supervisor_idx, supervisor, :supervisor)
+    supervisor_node = graph_node(supervisor_idx, supervisor, :supervisor)
 
-    worker_node = SupervisorGraphNode.new(idx, pid, :worker)
-    new_connection = SupervisorGraphEdge.new(supervisor_node, worker_node, :supervisor)
+    worker_node = graph_node(idx, pid, :worker)
+    new_connection = graph_edge(supervisor_node, worker_node, :supervisor)
 
     traverse_processes(rest, supervisor, {add_rel(rels, new_connection), idx + 1, pid_keys})
   end
@@ -214,7 +147,7 @@ defmodule Kino.Process do
     Map.merge(rels, additional_rels, fn _key, edge_1, _edge_2 -> edge_1 end)
   end
 
-  defp add_rel(rels, %SupervisorGraphEdge{} = edge) do
+  defp add_rel(rels, edge) do
     lookup = Enum.sort([edge.node_1.pid, edge.node_2.pid])
 
     Map.put_new(rels, lookup, edge)
@@ -236,16 +169,61 @@ defmodule Kino.Process do
   end
 
   defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
-    with {:ok, {idx_1, type_1}} <- Map.fetch(pid_keys, pid),
-         {:ok, {idx_2, type_2}} <- Map.fetch(pid_keys, link_pid) do
-      process_1 = SupervisorGraphNode.new(idx_1, pid, type_1)
-      process_2 = SupervisorGraphNode.new(idx_2, link_pid, type_2)
-      link_edge = SupervisorGraphEdge.new(process_1, process_2, :link)
+    case pid_keys do
+      %{^pid => {idx_1, type_1}, ^link_pid => {idx_2, type_2}} ->
+        process_1 = graph_node(idx_1, pid, type_1)
+        process_2 = graph_node(idx_2, link_pid, type_2)
+        link_edge = graph_edge(process_1, process_2, :link)
 
-      add_rel(acc, link_edge)
-    else
+        add_rel(acc, link_edge)
+
       _ ->
         acc
     end
+  end
+
+  # Mermaid rendering helper functions
+
+  defp graph_edge(node_1, node_2, relationship) do
+    %{
+      node_1: node_1,
+      node_2: node_2,
+      relationship: relationship
+    }
+  end
+
+  defp graph_node(id, pid, type) do
+    %{
+      id: id,
+      pid: pid,
+      type: type
+    }
+  end
+
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :link}) do
+    "#{graph_node(node_1)} -..- #{graph_node(node_2)}"
+  end
+
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :supervisor}) do
+    "#{graph_node(node_1)} ---> #{graph_node(node_2)}"
+  end
+
+  defp graph_node(%{id: id, pid: pid, type: type}) do
+    type =
+      if id == 0 do
+        :root
+      else
+        type
+      end
+
+    display =
+      pid
+      |> Process.info(:registered_name)
+      |> case do
+        {:registered_name, []} -> inspect(pid)
+        {:registered_name, name} -> inspect(name)
+      end
+
+    "#{id}(#{display}):::#{type}"
   end
 end
