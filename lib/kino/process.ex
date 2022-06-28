@@ -38,9 +38,7 @@ defmodule Kino.Process do
       Kino.Process.app_tree(:logger, direction: :left_right)
   """
   @spec app_tree(atom(), keyword()) :: Markdown.t()
-  def app_tree(application, opts \\ [])
-
-  def app_tree(application, opts) when is_atom(application) do
+  def app_tree(application, opts \\ []) when is_atom(application) do
     {master, root_supervisor} =
       case :application_controller.get_master(application) do
         :undefined ->
@@ -78,10 +76,6 @@ defmodule Kino.Process do
     classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
     ```
     """)
-  end
-
-  def app_tree(application, _) do
-    raise ArgumentError, "expected an atom, got: #{inspect(application)}"
   end
 
   @doc """
