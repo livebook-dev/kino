@@ -11,8 +11,8 @@ defmodule Kino.Process do
   @doc """
   Generates a visualization of an application tree.
 
-  Given an atom denoting the name of an application, this function will render
-  the application tree. It is displayed with solid lines denoting supervisor-worker
+  Given the name of an application as an atom, this function will render the
+  application tree. It is displayed with solid lines denoting supervisor-worker
   relationships and dotted lines denoting links between processes. The graph
   rendering supports the following options:
 
