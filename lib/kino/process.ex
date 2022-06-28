@@ -59,11 +59,8 @@ defmodule Kino.Process do
     direction = direction_from_opts(opts)
     edges = traverse_supervisor(root_supervisor)
 
-    [ancestor] =
-      root_supervisor
-      |> Process.info()
-      |> Keyword.get(:dictionary)
-      |> Keyword.get(:"$ancestors")
+    {:dictionary, dictionary} = Process.info(root_supervisor, :dictionary)
+    [ancestor] = dictionary[:"$ancestors"]
 
     Kino.Markdown.new("""
     ```mermaid
