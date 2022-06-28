@@ -51,14 +51,18 @@ defmodule Kino.DataTable do
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
     keys = opts[:keys]
 
-    {data_rows, data_columns, count} =
+    {_, meta, _} = reader = init_reader!(tabular)
+
+    count = meta[:count] || infer_count(reader, tabular)
+
+    {data_rows, data_columns} =
       if keys do
-        {rows, info} = Table.to_rows_with_info(tabular, only: keys)
-        nonexistent = keys -- info.columns
-        {rows, keys -- nonexistent, info.count}
+        rows = Table.to_rows(reader, only: keys)
+        nonexistent = keys -- meta.columns
+        {rows, keys -- nonexistent}
       else
-        {rows, info} = Table.to_rows_with_info(tabular)
-        {rows, info.columns, info.count}
+        rows = Table.to_rows(reader)
+        {rows, meta.columns}
       end
 
     Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled})
@@ -78,6 +82,44 @@ defmodule Kino.DataTable do
   end
 
   defp normalize_tabular(tabular), do: tabular
+
+  defp init_reader!(tabular) do
+    with :none <- Table.Reader.init(tabular) do
+      raise ArgumentError, "expected valid tabular data, but got: #{inspect(tabular)}"
+    end
+  end
+
+  # TODO: remove special cases using length/1 on Elixir v1.14,
+  # since it adds Enumerable.count/1 implementation for List
+
+  defp infer_count({_, %{count: count}, _}, _), do: count
+
+  defp infer_count({:rows, _, _}, tabular) when is_list(tabular), do: length(tabular)
+
+  defp infer_count({:columns, _, _}, [{_, series} | _]) when is_list(series), do: length(series)
+
+  defp infer_count({:columns, _, _}, %{} = tabular) do
+    {_, series} = Enum.at(tabular, 0)
+    length(series)
+  end
+
+  defp infer_count({:rows, _, enum}, _) do
+    case Enumerable.count(enum) do
+      {:ok, count} -> count
+      _ -> nil
+    end
+  end
+
+  defp infer_count({:columns, _, enum}, _) do
+    series = Enum.at(enum, 0)
+
+    case Enumerable.count(series) do
+      {:ok, count} -> count
+      _ -> nil
+    end
+  end
+
+  defp infer_count(_, _), do: nil
 
   @impl true
   def init({data_rows, data_columns, count, name, sorting_enabled}) do
