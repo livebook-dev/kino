@@ -9,6 +9,82 @@ defmodule Kino.Process do
   @type supervisor :: pid() | atom()
 
   @doc """
+  Generates a visualization of an application tree.
+
+  Given an atom denoting the name of an application, this function will render
+  the application tree. It is displayed with solid lines denoting supervisor-worker
+  relationships and dotted lines denoting links between processes. The graph
+  rendering supports the following options:
+
+  ## Options
+
+    * `:direction` - defines the direction of the graph visual. The
+      value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
+
+  ## Examples
+
+  To view the applications running in your instance run:
+
+      :application_controller.which_applications()
+
+  You can then call `Kino.Process.app_tree/1` to render
+  the application tree using using the atom of the application.
+
+      Kino.Process.app_tree(:logger)
+
+  You can also change the direction of the rendering by calling
+  `Kino.Process.app_tree/2` with the `:direction` option.
+
+      Kino.Process.app_tree(:logger, direction: :left_right)
+  """
+  @spec app_tree(atom(), keyword()) :: Markdown.t()
+  def app_tree(application, opts \\ [])
+
+  def app_tree(application, opts) when is_atom(application) do
+    {master, root_supervisor} =
+      case :application_controller.get_master(application) do
+        :undefined ->
+          raise ArgumentError,
+                "the provided application #{inspect(application)} does not reference an application"
+
+        master ->
+          case :application_master.get_child(master) do
+            {root, _application} when is_pid(root) ->
+              {master, root}
+
+            _ ->
+              raise ArgumentError,
+                    "the provided application #{inspect(application)} does not have a root supervisor"
+          end
+      end
+
+    direction = direction_from_opts(opts)
+    edges = traverse_supervisor(root_supervisor)
+
+    [ancestor] =
+      root_supervisor
+      |> Process.info()
+      |> Keyword.get(:dictionary)
+      |> Keyword.get(:"$ancestors")
+
+    Kino.Markdown.new("""
+    ```mermaid
+    graph #{direction};
+    application_master(#{inspect(master)}):::supervisor ---> supervisor_ancestor;
+    supervisor_ancestor(#{inspect(ancestor)}):::supervisor ---> 0;
+    #{edges}
+    classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+    classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+    classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+    ```
+    """)
+  end
+
+  def app_tree(application, _) do
+    raise ArgumentError, "expected an atom, got: #{inspect(application)}"
+  end
+
+  @doc """
   Generates a visualization of a supervision tree.
 
   The provided supervisor can be either a named process or a PID. The supervision tree
@@ -56,36 +132,8 @@ defmodule Kino.Process do
   """
   @spec sup_tree(supervisor(), keyword()) :: Markdown.t()
   def sup_tree(supervisor, opts \\ []) do
-    supervisor =
-      case GenServer.whereis(supervisor) do
-        supervisor_pid when is_pid(supervisor_pid) ->
-          supervisor_pid
-
-        _ ->
-          raise ArgumentError,
-                "the provided identifier #{inspect(supervisor)} does not reference a running process"
-      end
-
-    direction =
-      opts
-      |> Keyword.get(:direction, :top_down)
-      |> convert_direction()
-
-    supervisor_children =
-      try do
-        Supervisor.which_children(supervisor)
-      catch
-        _, _ ->
-          raise ArgumentError, "the provided process #{inspect(supervisor)} is not a supervisor"
-      end
-
-    edges =
-      supervisor_children
-      |> traverse_processes(supervisor, {%{}, 1, %{supervisor => {0, :supervisor}}})
-      |> traverse_links()
-      |> Enum.map_join("\n", fn {_pid_pair, edge} ->
-        generate_mermaid_entry(edge)
-      end)
+    direction = direction_from_opts(opts)
+    edges = traverse_supervisor(supervisor)
 
     Kino.Markdown.new("""
     ```mermaid
@@ -96,6 +144,39 @@ defmodule Kino.Process do
     classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
     ```
     """)
+  end
+
+  defp direction_from_opts(opts) do
+    opts
+    |> Keyword.get(:direction, :top_down)
+    |> convert_direction()
+  end
+
+  defp traverse_supervisor(supervisor) do
+    supervisor =
+      case GenServer.whereis(supervisor) do
+        supervisor_pid when is_pid(supervisor_pid) ->
+          supervisor_pid
+
+        _ ->
+          raise ArgumentError,
+                "the provided identifier #{inspect(supervisor)} does not reference a running process"
+      end
+
+    supervisor_children =
+      try do
+        Supervisor.which_children(supervisor)
+      catch
+        _, _ ->
+          raise ArgumentError, "the provided process #{inspect(supervisor)} is not a supervisor"
+      end
+
+    supervisor_children
+    |> traverse_processes(supervisor, {%{}, 1, %{supervisor => {0, :supervisor}}})
+    |> traverse_links()
+    |> Enum.map_join("\n", fn {_pid_pair, edge} ->
+      generate_mermaid_entry(edge)
+    end)
   end
 
   defp convert_direction(:top_down), do: "TD"
