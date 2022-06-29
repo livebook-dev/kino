@@ -101,8 +101,10 @@ defmodule Kino.DataTable do
   defp infer_count({:columns, _, _}, [{_, series} | _]) when is_list(series), do: length(series)
 
   defp infer_count({:columns, _, _}, %{} = tabular) do
-    {_, series} = Enum.at(tabular, 0)
-    length(series)
+    case Enum.at(tabular, 0) do
+      {_, series} when is_list(series) -> length(series)
+      _ -> nil
+    end
   end
 
   defp infer_count({:rows, _, enum}, _) do
@@ -113,12 +115,10 @@ defmodule Kino.DataTable do
   end
 
   defp infer_count({:columns, _, enum}, _) do
-    series = Enum.at(enum, 0)
-
-    case Enumerable.count(series) do
-      {:ok, count} -> count
-      _ -> nil
-    end
+    with {:ok, series} <- Enum.fetch(enum, 0),
+         {:ok, count} <- Enumerable.count(series),
+         do: count,
+         else: (_ -> nil)
   end
 
   defp infer_count(_, _), do: nil
@@ -150,6 +150,8 @@ defmodule Kino.DataTable do
 
     if slicing_fun do
       slicing_fun = fn start, length, cache ->
+        max_length = max(count - start, 0)
+        length = min(length, max_length)
         {slicing_fun.(start, length), count, cache}
       end
 
