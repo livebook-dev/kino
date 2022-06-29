@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.2](https://github.com/livebook-dev/kino/tree/v0.6.2) (2022-06-29)
+
+### Added
+
+* Added `Kino.Process` with application/supervision tree visualization ([#158](https://github.com/livebook-dev/kino/pull/158))
+
+### Changed
+
+* Improved `Kino.DataTable` to lazily traverse the data ([#160](https://github.com/livebook-dev/kino/pull/160))
+
+### Fixed
+
+* Fixed `Kino.DataTable` to respect the `:keys` order ([#151](https://github.com/livebook-dev/kino/pull/151))
+
 ## [v0.6.1](https://github.com/livebook-dev/kino/tree/v0.6.1) (2022-05-03)
 
 This release primarily introduces `Kino.SmartCell`, which allows for
