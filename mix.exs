@@ -31,7 +31,7 @@ defmodule Kino.MixProject do
 
   defp deps do
     [
-      {:table, "~> 0.1.0"},
+      {:table, "~> 0.1.0", github: "dashbitco/table"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
   end
