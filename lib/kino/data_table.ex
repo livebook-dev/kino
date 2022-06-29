@@ -96,6 +96,8 @@ defmodule Kino.DataTable do
 
   defp infer_count({:rows, _, _}, tabular) when is_list(tabular), do: length(tabular)
 
+  defp infer_count({:rows, _, enum}, _) when is_list(enum), do: length(enum)
+
   defp infer_count({:columns, _, _}, [{_, series} | _]) when is_list(series), do: length(series)
 
   defp infer_count({:columns, _, _}, %{} = tabular) do
