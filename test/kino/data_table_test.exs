@@ -23,7 +23,8 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
                ],
                order: :asc,
-               order_by: nil
+               order_by: nil,
+               total_rows: 3
              }
            } = data
 
@@ -46,7 +47,8 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}}
                ],
                order: :desc,
-               order_by: "0"
+               order_by: "0",
+               total_rows: 3
              }
            } = data
   end
@@ -62,7 +64,8 @@ defmodule Kino.DataTableTest do
 
     assert %{
              content: %{
-               columns: [%{key: "0", label: ":b"}, %{key: "1", label: ":a"}]
+               columns: [%{key: "0", label: ":b"}, %{key: "1", label: ":a"}],
+               total_rows: 2
              }
            } = data
   end
@@ -78,7 +81,8 @@ defmodule Kino.DataTableTest do
 
     assert %{
              content: %{
-               columns: [%{key: "0", label: ~s/"b"/}, %{key: "1", label: ~s/"a"/}]
+               columns: [%{key: "0", label: ~s/"b"/}, %{key: "1", label: ~s/"a"/}],
+               total_rows: 2
              }
            } = data
   end
@@ -101,7 +105,8 @@ defmodule Kino.DataTableTest do
                columns: [
                  %{key: "0", label: ":id"},
                  %{key: "1", label: ":name"}
-               ]
+               ],
+               total_rows: 2
              }
            } = data
   end
@@ -204,5 +209,53 @@ defmodule Kino.DataTableTest do
     kino = Kino.DataTable.new([x: 1..10, y: 1..10], name: "Example")
     data = connect(kino)
     assert %{name: "Example"} = data
+  end
+
+  test "supports sliceable data" do
+    entries = %{x: 1..3, y: 1..3}
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: ":x"}, %{key: "1", label: ":y"}],
+               rows: [
+                 %{fields: %{"0" => "1", "1" => "1"}},
+                 %{fields: %{"0" => "2", "1" => "2"}},
+                 %{fields: %{"0" => "3", "1" => "3"}}
+               ],
+               total_rows: 3
+             }
+           } = data
+  end
+
+  test "correctly paginates sliceable data" do
+    entries = %{x: 1..30, y: 1..30}
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: ":x"}, %{key: "1", label: ":y"}],
+               rows: [%{fields: %{"0" => "1", "1" => "1"}} | _] = rows,
+               total_rows: 30
+             }
+           } = data
+
+    assert length(rows) == 10
+
+    push_event(kino, "show_page", %{"page" => 2})
+
+    assert_broadcast_event(kino, "update_content", %{
+      rows: [%{fields: %{"0" => "11", "1" => "11"}} | _]
+    })
+
+    push_event(kino, "show_page", %{"page" => 1})
+
+    assert_broadcast_event(kino, "update_content", %{
+      rows: [%{fields: %{"0" => "1", "1" => "1"}} | _]
+    })
   end
 end
