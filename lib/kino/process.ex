@@ -199,17 +199,27 @@ defmodule Kino.Process do
     :seq_trace.set_token(:monotonic_timestamp, true)
     previous_tracer = :seq_trace.set_system_tracer(tracer_pid)
 
-    # Run the user supplied function
-    trace_function.()
+    # Run the user supplied function and capture the events if
+    # no errors were encountered
+    trace_events =
+      try do
+        # Run the user provided function
+        trace_function.()
 
-    # Reset all of the tracing options
-    :seq_trace.set_system_tracer(previous_tracer)
-    :seq_trace.reset_trace()
+        # Extract all of the events from the system tracer
+        Tracer.get_trace_events(tracer_pid)
+      after
+        # The Tracer GenServer is no longer needed, shut it down
+        GenServer.stop(tracer_pid)
+
+        # Reset all of the tracing options
+        :seq_trace.set_system_tracer(previous_tracer)
+        :seq_trace.reset_trace()
+      end
 
     # Get all of the events from the Tracer GenServer
     trace_events =
-      tracer_pid
-      |> Tracer.get_trace_events()
+      trace_events
       |> Enum.filter(fn
         # Skip :spawn_reply messages
         {_, _, _, _, {:spawn_reply, _, _, _}} ->
@@ -230,9 +240,6 @@ defmodule Kino.Process do
       |> Enum.sort_by(fn {_type, timestamp, _from, _to, _message} ->
         timestamp
       end)
-
-    # The Tracer GenServer is no longer needed, shut it down
-    GenServer.stop(tracer_pid)
 
     # Get all the participating actors in the trace along with their sequence diagram IDs
     {participants_lookup, _idx} =
