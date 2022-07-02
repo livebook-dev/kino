@@ -317,7 +317,7 @@ defmodule Kino.Process do
     case message do
       {:EXIT, _, reason} -> "EXIT: #{label_from_reason(reason)}"
       {:spawn_request, _, _, _, _, _, _, _} -> "SPAWN"
-      {:down, _, reason} -> "DOWN: #{label_from_reason(reason)}"
+      {:DOWN, _, :process, _, reason} -> "DOWN: #{label_from_reason(reason)}"
       {:"$gen_call", _ref, value} -> "CALL: #{label_from_value(value)}"
       {:"$gen_cast", value} -> "CAST: #{label_from_value(value)}"
       value -> "INFO: #{label_from_value(value)}"
