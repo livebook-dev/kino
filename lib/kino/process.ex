@@ -334,6 +334,7 @@ defmodule Kino.Process do
        do: elem(tuple, 0)
 
   defp label_from_value(atom) when is_atom(atom), do: atom
+  defp label_from_value(ref) when is_reference(ref), do: inspect(ref)
   defp label_from_value(tuple) when is_tuple(tuple), do: "tuple"
   defp label_from_value(_), do: "term"
 
