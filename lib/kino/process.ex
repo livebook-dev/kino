@@ -203,7 +203,6 @@ defmodule Kino.Process do
     trace_function.()
 
     # Reset all of the tracing options
-    :erlang.trace(:all, false, [:send, :receive])
     :seq_trace.set_system_tracer(previous_tracer)
     :seq_trace.reset_trace()
 
