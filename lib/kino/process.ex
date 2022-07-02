@@ -255,14 +255,11 @@ defmodule Kino.Process do
       participants_lookup
       |> Enum.map_join("\n", fn {pid, idx} ->
         case Process.info(pid, :registered_name) do
-          nil ->
-            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
-
-          {:registered_name, []} ->
-            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
-
-          {:registered_name, name} ->
+          {:registered_name, name} when is_atom(name) ->
             "participant #{idx} AS #{inspect(name)};"
+
+          _ ->
+            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
         end
       end)
 
