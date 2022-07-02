@@ -191,7 +191,7 @@ defmodule Kino.Process do
     seq_trace([pid], trace_function)
   end
 
-  def seq_trace(trace_pids, trace_function) do
+  def seq_trace(trace_pids, trace_function) when is_list(trace_pids) or trace_pids == :all do
     # Set up the process message tracer and the Erlang seq_trace_module
     {:ok, tracer_pid} = Tracer.start_link(nil)
     :seq_trace.set_token(:send, true)
