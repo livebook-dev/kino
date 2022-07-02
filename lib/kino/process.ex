@@ -152,7 +152,7 @@ defmodule Kino.Process do
   To generate a trace of all the messages occurring during the execution of the
   provided function, you can do the following:
 
-      Kino.Process.seq_trace(:all, fn ->
+      Kino.Process.seq_trace(fn ->
         {:ok, agent_pid} = Agent.start_link(fn -> [] end)
         Process.monitor(agent_pid)
 
@@ -264,10 +264,31 @@ defmodule Kino.Process do
       end)
 
     # Generate the mermaid formatted list of message events
-    messages =
-      Enum.map_join(trace_events, "\n", fn {type, _timestamp, from, to, message} ->
-        normalize_message(type, from, to, message, participants_lookup)
+    {formatted_messages, _} =
+      trace_events
+      |> Enum.reduce({[], MapSet.new()}, fn {_type, _timestamp, from, to, message},
+                                            {events, started_processes} ->
+        events = [normalize_message(from, to, message, participants_lookup) | events]
+
+        from_idx = Map.get(participants_lookup, from, :not_found)
+        to_idx = Map.get(participants_lookup, to, :not_found)
+
+        cond do
+          activate?(to_idx, message) ->
+            {["activate #{to_idx}" | events], MapSet.put(started_processes, to_idx)}
+
+          deactivate?(from_idx, message) and MapSet.member?(started_processes, from_idx) ->
+            {["deactivate #{from_idx}" | events], MapSet.delete(started_processes, from_idx)}
+
+          true ->
+            {events, started_processes}
+        end
       end)
+
+    messages =
+      formatted_messages
+      |> Enum.reverse()
+      |> Enum.join("\n")
 
     Markdown.new("""
     ```mermaid
@@ -290,31 +311,22 @@ defmodule Kino.Process do
     acc
   end
 
-  defp maybe_activate(idx, {:spawn_request, _, _, _, _, _, _, _}), do: "\nactivate #{idx}"
-  defp maybe_activate(_, _), do: ""
+  defp activate?(idx, {:spawn_request, _, _, _, _, _, _, _}) when idx != :not_found, do: true
+  defp activate?(_idx, _), do: false
 
-  defp maybe_deactivate(idx, {:EXIT, _, _}), do: "\ndeactivate #{idx}"
-  defp maybe_deactivate(_, _), do: ""
+  defp deactivate?(idx, {:EXIT, _, _}) when idx != :not_found, do: true
+  defp deactivate?(_idx, _), do: false
 
-  defp normalize_message(type, from, to, message, participants_lookup)
+  defp normalize_message(from, to, message, participants_lookup)
        when is_map_key(participants_lookup, from) and is_map_key(participants_lookup, to) do
+    formatted_message = label_from_message(message)
     from_idx = participants_lookup[from]
     to_idx = participants_lookup[to]
 
-    formatted_message = label_from_message(message)
-
-    case type do
-      :send ->
-        "#{from_idx}->>#{to_idx}: #{formatted_message}" <>
-          maybe_activate(to_idx, message) <>
-          maybe_deactivate(from_idx, message)
-
-      :receive ->
-        "#{to_idx}-->>#{from_idx}: #{formatted_message}"
-    end
+    "#{from_idx}->>#{to_idx}: #{formatted_message}"
   end
 
-  defp normalize_message(_, _, _, _, _), do: ""
+  defp normalize_message(_, _, _, _), do: ""
 
   defp label_from_message(message) do
     case message do
