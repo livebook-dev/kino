@@ -140,7 +140,7 @@ defmodule Kino.Process do
   end
 
   @doc """
-  Generate a sequence diagram of process messages.
+  Generate a sequence diagram of process messages starting from `self()`.
 
   The provided function is executed and traced, with all the events sent to and
   received by the trace target processes rendered in a sequence diagram. The trace
