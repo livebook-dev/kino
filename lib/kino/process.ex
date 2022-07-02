@@ -259,8 +259,7 @@ defmodule Kino.Process do
 
     # Generate the Mermaid formatted list of participants
     participants =
-      participants_lookup
-      |> Enum.map_join("\n", fn {pid, idx} ->
+      Enum.map_join(participants_lookup, "\n", fn {pid, idx} ->
         case Process.info(pid, :registered_name) do
           {:registered_name, name} when is_atom(name) ->
             "participant #{idx} AS #{inspect(name)};"
