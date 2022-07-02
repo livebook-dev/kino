@@ -191,7 +191,7 @@ defmodule Kino.Process do
     seq_trace([pid], trace_function)
   end
 
-  def seq_trace(trace_pids, trace_function) do
+  def seq_trace(trace_pids, trace_function) when is_list(trace_pids) or trace_pids == :all do
     # Set up the process message tracer and the Erlang seq_trace_module
     {:ok, tracer_pid} = Tracer.start_link(nil)
     :seq_trace.set_token(:send, true)
@@ -255,14 +255,11 @@ defmodule Kino.Process do
       participants_lookup
       |> Enum.map_join("\n", fn {pid, idx} ->
         case Process.info(pid, :registered_name) do
-          nil ->
-            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
-
-          {:registered_name, []} ->
-            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
-
-          {:registered_name, name} ->
+          {:registered_name, name} when is_atom(name) ->
             "participant #{idx} AS #{inspect(name)};"
+
+          _ ->
+            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
         end
       end)
 
