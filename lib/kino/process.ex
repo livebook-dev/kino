@@ -250,8 +250,7 @@ defmodule Kino.Process do
 
     # Get all the participating actors in the trace along with their sequence diagram IDs
     {participants_lookup, _idx} =
-      trace_events
-      |> Enum.reduce({%{}, 0}, fn {_type, _timestamp, from, to, _message}, acc ->
+      Enum.reduce(trace_events, {%{}, 0}, fn {_type, _timestamp, from, to, _message}, acc ->
         acc
         |> maybe_add_participant(from)
         |> maybe_add_participant(to)
