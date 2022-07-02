@@ -268,8 +268,7 @@ defmodule Kino.Process do
 
     # Generate the mermaid formatted list of message events
     messages =
-      trace_events
-      |> Enum.map_join("\n", fn {type, _timestamp, from, to, message} ->
+      Enum.map_join(trace_events, "\n", fn {type, _timestamp, from, to, message} ->
         normalize_message(type, from, to, message, participants_lookup)
       end)
 
