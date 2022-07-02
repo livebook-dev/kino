@@ -188,6 +188,7 @@ defmodule Kino.Process do
   """
   @spec seq_trace(trace_target(), (() -> any())) :: Markdown.t()
   def seq_trace(trace_target \\ :all, trace_function)
+
   def seq_trace(pid, trace_function) when is_pid(pid) do
     seq_trace([pid], trace_function)
   end
