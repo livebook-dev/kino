@@ -195,6 +195,7 @@ defmodule Kino.Process do
 
   def seq_trace(trace_pids, trace_function) when is_list(trace_pids) or trace_pids == :all do
     # Set up the process message tracer and the Erlang seq_trace_module
+    calling_pid = self()
     {:ok, tracer_pid} = Tracer.start_link(nil)
     :seq_trace.set_token(:send, true)
     :seq_trace.set_token(:receive, true)
@@ -254,12 +255,10 @@ defmodule Kino.Process do
     # Generate the Mermaid formatted list of participants
     participants =
       Enum.map_join(participants_lookup, "\n", fn {pid, idx} ->
-        case Process.info(pid, :registered_name) do
-          {:registered_name, name} when is_atom(name) ->
-            "participant #{idx} AS #{inspect(name)};"
-
-          _ ->
-            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
+        if pid == calling_pid do
+          "participant #{idx} AS self();"
+        else
+          generate_participant_entry(pid, idx)
         end
       end)
 
@@ -297,6 +296,16 @@ defmodule Kino.Process do
     #{messages}
     ```
     """)
+  end
+
+  defp generate_participant_entry(pid, idx) do
+    case Process.info(pid, :registered_name) do
+      {:registered_name, name} when is_atom(name) ->
+        "participant #{idx} AS #{inspect(name)};"
+
+      _ ->
+        "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
+    end
   end
 
   defp maybe_add_participant({participants, idx}, pid) when is_pid(pid) do
