@@ -157,11 +157,13 @@ defmodule Kino.Process do
         Process.monitor(agent_pid)
 
         1..2
-        |> Task.async_stream(fn value ->
-          Agent.get(agent_pid, fn value -> value end)
-          100 * value
-        end,
-        max_concurrency: 3)
+        |> Task.async_stream(
+          fn value ->
+            Agent.get(agent_pid, fn value -> value end)
+            100 * value
+          end,
+          max_concurrency: 3
+        )
         |> Stream.run()
 
         Agent.stop(agent_pid)
