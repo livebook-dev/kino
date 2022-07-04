@@ -23,7 +23,14 @@ defmodule Kino.Process.Tracer do
 
   @impl true
   def handle_info({:seq_trace, _, {:send, _, from, to, message}, timestamp}, trace_events) do
-    new_event = {:send, timestamp, from, to, message}
+    new_event = %{
+      type: :send,
+      timestamp: timestamp,
+      from: from,
+      to: to,
+      message: message
+    }
+
     {:noreply, [new_event | trace_events]}
   end
 

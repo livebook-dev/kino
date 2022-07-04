@@ -200,7 +200,7 @@ defmodule Kino.Process do
   def seq_trace(trace_pids, trace_function) when is_list(trace_pids) or trace_pids == :all do
     # Set up the process message tracer and the Erlang seq_trace_module
     calling_pid = self()
-    {:ok, tracer_pid} = Tracer.start_link(nil)
+    {:ok, tracer_pid} = Tracer.start_link()
     :seq_trace.set_token(:send, true)
     :seq_trace.set_token(:receive, true)
     :seq_trace.set_token(:monotonic_timestamp, true)
@@ -229,28 +229,28 @@ defmodule Kino.Process do
       raw_trace_events
       |> Enum.filter(fn
         # Skip :spawn_reply messages
-        {_, _, _, _, {:spawn_reply, _, _, _}} ->
+        %{message: {:spawn_reply, _, _, _}} ->
           false
 
         # Skip loopback messages
-        {_, _, pid, pid, _message} ->
+        %{from: pid, to: pid} ->
           false
 
         # Filter out messages based on the trace target
-        {_, _, from_pid, to_pid, _message} ->
+        %{from: from_pid, to: to_pid} ->
           trace_pids == :all or from_pid in trace_pids or to_pid in trace_pids
 
         # Reject the rest
         _ ->
           false
       end)
-      |> Enum.sort_by(fn {_type, timestamp, _from, _to, _message} ->
+      |> Enum.sort_by(fn %{timestamp: timestamp} ->
         timestamp
       end)
 
     # Get all the participating actors in the trace along with their sequence diagram IDs
     {participants_lookup, _idx} =
-      Enum.reduce(trace_events, {%{}, 0}, fn {_type, _timestamp, from, to, _message}, acc ->
+      Enum.reduce(trace_events, {%{}, 0}, fn %{from: from, to: to}, acc ->
         acc
         |> maybe_add_participant(from)
         |> maybe_add_participant(to)
@@ -269,7 +269,7 @@ defmodule Kino.Process do
     # Generate the mermaid formatted list of message events
     {formatted_messages, _} =
       trace_events
-      |> Enum.reduce({[], MapSet.new()}, fn {_type, _timestamp, from, to, message},
+      |> Enum.reduce({[], MapSet.new()}, fn %{from: from, to: to, message: message},
                                             {events, started_processes} ->
         events = [normalize_message(from, to, message, participants_lookup) | events]
 
