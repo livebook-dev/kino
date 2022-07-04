@@ -7,14 +7,9 @@ defmodule Kino.Process.Tracer do
     GenServer.start_link(__MODULE__, nil)
   end
 
-  # ---- Client API ----
-
-  @doc false
   def get_trace_events(tracer) do
     GenServer.call(tracer, :get_trace_events)
   end
-
-  # ---- Callbacks ----
 
   @impl true
   def init(_) do
