@@ -140,6 +140,58 @@ defmodule Kino.Process do
   end
 
   @doc """
+  Renders a visual of the provided application tree.
+
+  This function renders an application tree much like `app_tree/2` with the difference
+  being that this function can be called anywhere within the Livebook code block
+  whereas `app_tree/2` must have its result be the last thing returned from the code
+  block in order to render the visual. It supports the same options as `app_tree/2` as
+  it delegates to that function to generate the visual.
+  """
+  @spec render_app_tree(atom(), keyword()) :: Kino.nothing()
+  def render_app_tree(application, opts \\ []) do
+    application
+    |> app_tree(opts)
+    |> Kino.render()
+
+    Kino.nothing()
+  end
+
+  @doc """
+  Renders a sequence diagram of process messages and returns the function result.
+
+  This function renders a sequence diagram much like `seq_trace/2` with the difference
+  being that this function can be called anywhere within the Livebook code block
+  whereas `seq_trace/2` must have its result be the last thing returned from the code
+  block in order to render the visual. In addition, this function returns the result
+  from the provided trace function.
+  """
+  @spec render_seq_trace(trace_target(), (() -> any())) :: any()
+  def render_seq_trace(trace_target \\ :all, trace_function) do
+    {func_result, sequence_diagram} = seq_trace(trace_target, trace_function)
+    Kino.render(sequence_diagram)
+    func_result
+  end
+
+  @doc """
+  Renders a visual of the provided supervision tree.
+
+  This function renders a supervision tree much like `sup_tree/2` with the difference
+  being that this function can be called anywhere within the Livebook code block
+  whereas `sup_tree/2` must have its result be the last thing returned from the code
+  block in order to render the visual. It supports the same options as `sup_tree/2` as
+  it delegates to that function to generate the visual.
+  """
+  @spec render_sup_tree(supervisor(), keyword()) :: Kino.nothing()
+  def render_sup_tree(supervisor, opts \\ []) do
+    supervisor
+    |> sup_tree(opts)
+    |> Kino.render()
+
+    Kino.nothing()
+  end
+
+  @doc """
   Generate a sequence diagram of process messages starting from `self()`.
 
   The provided function is executed and traced, with all the events sent to and
@@ -190,7 +242,7 @@ defmodule Kino.Process do
         Agent.stop(agent_pid)
       end)
   """
-  @spec seq_trace(trace_target(), (() -> any())) :: Markdown.t()
+  @spec seq_trace(trace_target(), (() -> any())) :: {any(), Markdown.t()}
   def seq_trace(trace_target \\ :all, trace_function)
 
   def seq_trace(pid, trace_function) when is_pid(pid) do
@@ -207,18 +259,19 @@ defmodule Kino.Process do
     previous_tracer = :seq_trace.set_system_tracer(tracer_pid)
 
     # Run the user supplied function and capture the events if no errors were encountered
-    raw_trace_events =
+    {raw_trace_events, func_result} =
       try do
-        try do
-          # Run the user provided function
-          trace_function.()
-        after
-          # Reset all of the seq_trace options
-          :seq_trace.set_system_tracer(previous_tracer)
-          :seq_trace.reset_trace()
-        end
+        func_result =
+          try do
+            # Run the user provided function
+            trace_function.()
+          after
+            # Reset all of the seq_trace options
+            :seq_trace.set_system_tracer(previous_tracer)
+            :seq_trace.reset_trace()
+          end
 
-        Tracer.get_trace_events(tracer_pid)
+        {Tracer.get_trace_events(tracer_pid), func_result}
       after
         # The Tracer GenServer is no longer needed, shut it down
         GenServer.stop(tracer_pid)
@@ -293,13 +346,16 @@ defmodule Kino.Process do
       |> Enum.reverse()
       |> Enum.join("\n")
 
-    Markdown.new("""
-    ```mermaid
-    sequenceDiagram
-    #{participants}
-    #{messages}
-    ```
-    """)
+    sequence_diagram =
+      Markdown.new("""
+      ```mermaid
+      sequenceDiagram
+      #{participants}
+      #{messages}
+      ```
+      """)
+
+    {func_result, sequence_diagram}
   end
 
   defp generate_participant_entry(pid, idx) do
