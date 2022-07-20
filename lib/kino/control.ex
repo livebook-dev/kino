@@ -237,6 +237,9 @@ defmodule Kino.Control do
   @doc """
   Subscribes the calling process to control or input events.
 
+  This is an alternative API to `stream/1`, such that event
+  messages are consumed via process messages instead of streams.
+
   The events are sent as `{tag, info}`, where info is a map with
   event details. In particular, it always includes `:origin`, which
   is an opaque identifier of the client that triggered the event.
@@ -271,10 +274,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Returns a `Stream` of control events.
-
-  This is an alternative API to `subscribe/2`, such that event
-  messages are consume via stream instead of process messages.
+  Returns a `stream` of control events.
 
   It accepts a single source or a list of sources, where each
   source is either of:
@@ -282,6 +282,8 @@ defmodule Kino.Control do
     * `Kino.Control` - emitting value on relevant interaction
 
     * `Kino.Input` - emitting value on value change
+
+  You can then consume the stream to access its events.
 
   ## Example
 
@@ -323,8 +325,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Subscribes the given function to events from one or more event
-  sources.
+  Consumes the given `source` (or sources) as a stream with `fun`.
 
   The given function runs asynchronously.
 
