@@ -252,6 +252,14 @@ defmodule Kino.Output do
               default: String.t(),
               destination: Process.dest()
             }
+          | %{
+              type: :file,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: String.t(),
+              destination: Process.dest()
+            }
 
   @typedoc """
   A control widget.
