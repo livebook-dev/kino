@@ -1,5 +1,5 @@
 defmodule Kino.Download do
-  @moduledoc ~S'''
+  @moduledoc """
   Built on top of `Kino.JS`, uses Javascript to initiate a download
   on the client's machine.
   '''
