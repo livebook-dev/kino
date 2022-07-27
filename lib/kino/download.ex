@@ -5,28 +5,23 @@ defmodule Kino.Download do
   use Kino.JS.Live
 
   @doc """
-  Initiates a download.  The content is generated lazily by invoking
-  the `content_fun` argument on the server when the "Download" button
-  is clicked.
+  Renders a download button.  The content of downloaded file is
+  prepared on the server by invoking the `content_fun` argument only
+  when the button is clicked.
 
   ## Examples
 
-  Passing the content from an existing variable:
-
-      json = ~s/{"foo": "bar"}/
-      Kino.Download.new("file.json", fn -> json end)
-
-  Lazily generating a large file:
-
-      Kino.Download.new("large-file.txt", fn ->
-        String.duplicate("data ", 10_000_000)
+      Kino.Download.new("file.json", fn ->
+        ~s/{"foo": "bar"}/
       end)
+
   """
   def new(filename, content_fun) do
     Kino.JS.Live.new(__MODULE__, {filename, content_fun})
   end
 
   @impl true
+  @spec init({any, any}, Kino.JS.Live.Context.t()) :: {:ok, Kino.JS.Live.Context.t()}
   def init({filename, content_fun}, ctx) do
     {:ok, assign(ctx, filename: filename, content_fun: content_fun)}
   end
