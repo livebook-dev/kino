@@ -115,12 +115,33 @@ defmodule Kino.Test do
   Matches against the source and attribute that are reported as part
   of the update.
 
+  The `source` argument can be a string, or a function.  If it is a
+  string, an exact match is performed.  Pass a function instead
+  if you want to do a custom (non-exact-match) assertion the Kino's
+  source.  The function has one argument, the Kino's source, and is
+  considered successful is the return value is truthy.
+
   ## Examples
 
       assert_smart_cell_update(kino, %{"variable" => "x", "number" => 10}, "x = 10")
 
+      assert_smart_cell_update(kino, %{"status" => "ok"}, fn source -> source =~ "ok" end)
+
   '''
-  defmacro assert_smart_cell_update(kino, attrs, source, timeout \\ 100) do
+  defmacro assert_smart_cell_update(kino, attrs, source, timeout \\ 100)
+
+  defmacro assert_smart_cell_update(kino, attrs, {:fn, _, _} = source_fun, timeout) do
+    quote do
+      %{ref: ref} = unquote(kino)
+
+      assert_receive {:runtime_smart_cell_update, ^ref, unquote(attrs), kino_source, _info},
+                     unquote(timeout)
+
+      assert unquote(source_fun).(kino_source)
+    end
+  end
+
+  defmacro assert_smart_cell_update(kino, attrs, source, timeout) do
     quote do
       %{ref: ref} = unquote(kino)
 
