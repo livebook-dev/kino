@@ -36,7 +36,7 @@ defmodule Kino.Download do
     """
     export function init(ctx, data) {
       var hiddenElement = document.createElement('a');
-      hiddenElement.href = 'data:attachment/text,' + encodeURI(data.content);
+      hiddenElement.href = 'data:attachment,' + encodeURI(data.content);
       hiddenElement.target = '_blank';
       hiddenElement.download = data.filename;
       hiddenElement.click();
