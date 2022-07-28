@@ -38,7 +38,7 @@ defmodule Kino.Download do
 
     reply_payload = {:binary, %{}, file_content}
 
-    broadcast_event(ctx, "do_download", reply_payload)
+    broadcast_event(ctx, "download_content", reply_payload)
 
     {:noreply, ctx}
   end
