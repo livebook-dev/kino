@@ -39,7 +39,7 @@ defmodule Kino.Download do
       ctx.assigns.content_fun.()
       |> Base.encode64()
 
-    reply_payload = {:binary, %{filename: ctx.assigns.filename}, file_content}
+    reply_payload = {:binary, %{}, file_content}
 
     broadcast_event(ctx, "do_download", reply_payload)
 
