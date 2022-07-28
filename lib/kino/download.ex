@@ -31,8 +31,7 @@ defmodule Kino.Download do
   end
 
   @impl true
-  def handle_event("prepare_download", %{"filename" => filename}, ctx) do
-    ctx = assign(ctx, filename: filename)
+  def handle_event("download", %{}, ctx) do
 
     file_content = ctx.assigns.content_fun.()
 
