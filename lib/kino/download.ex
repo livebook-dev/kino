@@ -34,10 +34,7 @@ defmodule Kino.Download do
   def handle_event("prepare_download", %{"filename" => filename}, ctx) do
     ctx = assign(ctx, filename: filename)
 
-    # To keep things generic the content is a base64-encoded binary
-    file_content =
-      ctx.assigns.content_fun.()
-      |> Base.encode64()
+    file_content = ctx.assigns.content_fun.()
 
     reply_payload = {:binary, %{}, file_content}
 
