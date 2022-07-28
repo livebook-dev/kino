@@ -32,7 +32,6 @@ defmodule Kino.Download do
 
   @impl true
   def handle_event("download", %{}, ctx) do
-
     file_content = ctx.assigns.content_fun.()
 
     reply_payload = {:binary, %{}, file_content}
@@ -47,13 +46,12 @@ defmodule Kino.Download do
     export function init(ctx, data) {
 
       // Handle the event which initiates the actual downloading of the file
-      ctx.handleEvent("do_download", ([info, arrayBuffer]) => {
-        const decoder = new TextDecoder("utf-8");
-        const content = decoder.decode(arrayBuffer);
+      ctx.handleEvent("download_content", ([info, arrayBuffer]) => {
+        const content = bufferToBase64(arrayBuffer);
 
         const a = document.createElement('a');
         a.href = `data:application/octet-stream;base64,${content}`;
-        a.download = info.filename;
+        a.download = data.filename;
         a.click();
       });
 
@@ -64,8 +62,20 @@ defmodule Kino.Download do
       ctx.root.appendChild(button);
 
       function buttonClicked() {
-        ctx.pushEvent("prepare_download", {filename: data.filename})
+        ctx.pushEvent("download", {})
       }
+    }
+
+    function bufferToBase64(buffer) {
+      let binaryString = "";
+      const bytes = new Uint8Array(buffer);
+      const length = bytes.byteLength;
+
+      for (let i = 0; i < length; i++) {
+        binaryString += String.fromCharCode(bytes[i]);
+      }
+
+      return btoa(binaryString);
     }
     """
   end
