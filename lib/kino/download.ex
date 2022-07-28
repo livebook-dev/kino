@@ -27,7 +27,7 @@ defmodule Kino.Download do
 
   @impl true
   def handle_connect(ctx) do
-    {:ok, Map.take(ctx.assigns, [:filename]), ctx}
+    {:ok, %{filename: ctx.assigns.filename}, ctx}
   end
 
   @impl true
