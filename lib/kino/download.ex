@@ -51,12 +51,10 @@ defmodule Kino.Download do
         const decoder = new TextDecoder("utf-8");
         const content = decoder.decode(arrayBuffer);
 
-        // Create a hidden element that we can attach the download to
-        const hiddenElement = document.createElement('a');
-        hiddenElement.href = `data:attachment/application/octet-stream;base64,${content}`;
-        hiddenElement.target = '_blank';
-        hiddenElement.download = info.filename;
-        hiddenElement.click();
+        const a = document.createElement('a');
+        a.href = `data:application/octet-stream;base64,${content}`;
+        a.download = info.filename;
+        a.click();
       });
 
       // Create the Download button
