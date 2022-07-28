@@ -21,7 +21,6 @@ defmodule Kino.Download do
   end
 
   @impl true
-  @spec init({any, any}, Kino.JS.Live.Context.t()) :: {:ok, Kino.JS.Live.Context.t()}
   def init({filename, content_fun}, ctx) do
     {:ok, assign(ctx, filename: filename, content_fun: content_fun)}
   end
