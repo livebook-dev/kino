@@ -573,7 +573,7 @@ defmodule Kino.Process do
       |> Process.info(:registered_name)
       |> case do
         {:registered_name, []} -> inspect(pid)
-        {:registered_name, name} -> inspect(name)
+        {:registered_name, name} -> name |> inspect() |> String.trim_leading(":")
       end
 
     "#{id}(#{display}):::#{type}"
