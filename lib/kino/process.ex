@@ -576,7 +576,7 @@ defmodule Kino.Process do
 
     "#{id}(#{display}):::#{type}"
   end
-  
+
   defp module_or_atom_to_string(atom) do
     case Atom.to_string(atom) do
       "Elixir." <> rest -> rest
