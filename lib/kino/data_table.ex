@@ -89,24 +89,23 @@ defmodule Kino.DataTable do
     end
   end
 
-  # TODO: remove special cases using length/1 on Elixir v1.14,
-  # since it adds Enumerable.count/1 implementation for List
-
   defp infer_count({_, %{count: count}, _}, _), do: count
 
+  # Handle lists as common cases for rows
   defp infer_count({:rows, _, _}, tabular) when is_list(tabular), do: length(tabular)
-
   defp infer_count({:rows, _, enum}, _) when is_list(enum), do: length(enum)
 
+  # Handle kw/maps as common cases for columns
   defp infer_count({:columns, _, _}, [{_, series} | _]) when is_list(series), do: length(series)
 
-  defp infer_count({:columns, _, _}, %{} = tabular) do
+  defp infer_count({:columns, _, _}, %{} = tabular) when not is_map_key(tabular, :__struct__) do
     case Enum.at(tabular, 0) do
       {_, series} when is_list(series) -> length(series)
       _ -> nil
     end
   end
 
+  # Otherwise fallback to enumerable operations
   defp infer_count({:rows, _, enum}, _) do
     case Enumerable.count(enum) do
       {:ok, count} -> count
