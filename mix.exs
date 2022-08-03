@@ -48,6 +48,7 @@ defmodule Kino.MixProject do
           Kino.ETS,
           Kino.Frame,
           Kino.Image,
+          Kino.Layout,
           Kino.Markdown,
           Kino.Process
         ],

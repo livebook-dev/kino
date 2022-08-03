@@ -16,6 +16,8 @@ defmodule Kino.Output do
           | image()
           | js()
           | frame()
+          | tabs()
+          | grid()
           | input()
           | control()
 
@@ -151,6 +153,24 @@ defmodule Kino.Output do
         }
 
   @type frame_ref :: String.t()
+
+  @typedoc """
+  Multiple outputs arranged into tabs.
+  """
+  @type tabs :: {:tabs, outputs :: list(t()), tabs_info()}
+
+  @type tabs_info :: %{
+          labels: list(String.t())
+        }
+
+  @typedoc """
+  Multiple outputs arranged in a grid.
+  """
+  @type grid :: {:grid, outputs :: list(t()), tabs_info()}
+
+  @type grid_info :: %{
+          columns: pos_integer()
+        }
 
   @typedoc """
   An input field.
@@ -340,6 +360,22 @@ defmodule Kino.Output do
   @spec frame(list(t()), frame_info()) :: t()
   def frame(outputs, info) when is_list(outputs) and is_map(info) do
     {:frame, outputs, info}
+  end
+
+  @doc """
+  See `t:tabs/0`.
+  """
+  @spec tabs(list(t()), tabs_info()) :: t()
+  def tabs(outputs, info) when is_list(outputs) and is_map(info) do
+    {:tabs, outputs, info}
+  end
+
+  @doc """
+  See `t:grid/0`.
+  """
+  @spec grid(list(t()), grid_info()) :: t()
+  def grid(outputs, info) when is_list(outputs) and is_map(info) do
+    {:grid, outputs, info}
   end
 
   @doc """
