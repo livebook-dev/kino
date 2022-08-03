@@ -54,6 +54,16 @@ defimpl Kino.Render, for: Kino.Frame do
   end
 end
 
+defimpl Kino.Render, for: Kino.Layout do
+  def to_livebook(%{type: :tabs} = kino) do
+    Kino.Output.tabs(kino.outputs, kino.info)
+  end
+
+  def to_livebook(%{type: :grid} = kino) do
+    Kino.Output.grid(kino.outputs, kino.info)
+  end
+end
+
 defimpl Kino.Render, for: Kino.Input do
   def to_livebook(input) do
     Kino.Bridge.reference_object(input.attrs.ref, self())
