@@ -22,8 +22,8 @@ defmodule Kino.Layout do
       ]
 
       Kino.Layout.tabs([
-        {"Table", Kino.DataTable.new(data)},
-        {"Raw", data}
+        Table: Kino.DataTable.new(data),
+        Raw: data
       ])
 
   """
