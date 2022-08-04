@@ -26,13 +26,10 @@ defmodule Kino.JS.Live.Server do
   def send_event(ctx, origin, event, payload) do
     ref = ctx.__private__.ref
 
-    pid =
-      case ctx.__private__.clients[origin] do
-        {pid, _} -> pid
-        _ -> raise "could not find a connected client with origin #{inspect(origin)}"
-      end
+    with {pid, _} <- ctx.__private__.clients[origin] do
+      Kino.Bridge.send(pid, {:event, event, payload, %{ref: ref}})
+    end
 
-    Kino.Bridge.send(pid, {:event, event, payload, %{ref: ref}})
     :ok
   end
 
