@@ -23,6 +23,19 @@ defmodule Kino.JS.Live.Server do
     :ok
   end
 
+  def send_event(ctx, origin, event, payload) do
+    ref = ctx.__private__.ref
+
+    pid =
+      case ctx.__private__.clients[origin] do
+        {pid, _} -> pid
+        _ -> raise "could not find a connected client with origin #{inspect(origin)}"
+      end
+
+    Kino.Bridge.send(pid, {:event, event, payload, %{ref: ref}})
+    :ok
+  end
+
   @impl true
   def init({module, init_arg, ref}) do
     {:ok, ctx, _opts} = call_init(module, init_arg, ref)
@@ -59,6 +72,7 @@ defmodule Kino.JS.Live.Server do
   def call_init(module, init_arg, ref) do
     ctx = Context.new()
     ctx = put_in(ctx.__private__[:ref], ref)
+    ctx = put_in(ctx.__private__[:clients], %{})
 
     if has_function?(module, :init, 2) do
       case module.init(init_arg, ctx) do
@@ -73,6 +87,8 @@ defmodule Kino.JS.Live.Server do
   def call_handle_info(msg, module, ctx)
 
   def call_handle_info({:connect, pid, %{origin: origin}}, module, ctx) do
+    ctx = add_client(ctx, pid, origin)
+
     ctx = %{ctx | origin: origin}
     {:ok, data, ctx} = module.handle_connect(ctx)
     ctx = %{ctx | origin: nil}
@@ -96,7 +112,17 @@ defmodule Kino.JS.Live.Server do
     {:ok, ctx}
   end
 
+  def call_handle_info({:DOWN, ref, :process, _pid, _reason} = msg, module, ctx) do
+    with :error <- remove_client(ctx, ref) do
+      call_handle_info_fallback(msg, module, ctx)
+    end
+  end
+
   def call_handle_info(msg, module, ctx) do
+    call_handle_info_fallback(msg, module, ctx)
+  end
+
+  def call_handle_info_fallback(msg, module, ctx) do
     if has_function?(module, :handle_info, 2) do
       {:noreply, ctx} = module.handle_info(msg, ctx)
       {:ok, ctx}
@@ -115,5 +141,29 @@ defmodule Kino.JS.Live.Server do
     end
 
     :ok
+  end
+
+  defp add_client(ctx, pid, origin) do
+    if Map.has_key?(ctx.__private__.clients, origin) do
+      ctx
+    else
+      monitor_ref = Kino.Bridge.monitor(pid)
+      put_in(ctx.__private__.clients[origin], {pid, monitor_ref})
+    end
+  end
+
+  defp remove_client(ctx, ref) do
+    origin =
+      Enum.find_value(ctx.__private__.clients, fn
+        {origin, {_pid, ^ref}} -> origin
+        _ -> nil
+      end)
+
+    if origin do
+      {_, ctx} = pop_in(ctx.__private__.clients[origin])
+      {:ok, ctx}
+    else
+      :error
+    end
   end
 end

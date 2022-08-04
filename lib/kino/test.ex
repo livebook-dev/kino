@@ -56,6 +56,23 @@ defmodule Kino.Test do
   end
 
   @doc """
+  Asserts a `Kino.JS.Live` kino will send an event within `timeout`
+  to the caller.
+
+  ## Examples
+
+      assert_send_event(kino, "pong", %{})
+
+  """
+  defmacro assert_send_event(kino, event, payload, timeout \\ 100) do
+    quote do
+      %{ref: ref} = unquote(kino)
+
+      assert_receive {:event, unquote(event), unquote(payload), %{ref: ^ref}}, unquote(timeout)
+    end
+  end
+
+  @doc """
   Sends a client event to a `Kino.JS.Live` kino.
 
   ## Examples
