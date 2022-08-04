@@ -110,6 +110,16 @@ defmodule Kino.Bridge do
     :ok
   end
 
+  @doc """
+  Starts monitoring the given Livebook process.
+
+  Provides the same semantics as `Process.monitor/1`.
+  """
+  @spec monitor(pid()) :: reference()
+  def monitor(pid) do
+    Process.monitor(pid)
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)

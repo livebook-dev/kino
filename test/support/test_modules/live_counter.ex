@@ -29,6 +29,11 @@ defmodule Kino.TestModules.LiveCounter do
     {:noreply, bump_count(ctx, by)}
   end
 
+  def handle_event("ping", %{}, ctx) do
+    send_event(ctx, ctx.origin, "pong", %{})
+    {:noreply, ctx}
+  end
+
   @impl true
   def handle_cast({:bump, by}, ctx) do
     {:noreply, bump_count(ctx, by)}

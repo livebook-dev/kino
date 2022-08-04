@@ -253,7 +253,7 @@ defmodule Kino.JS.Live do
     quote location: :keep do
       @behaviour Kino.JS.Live
 
-      import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3]
+      import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3, send_event: 4]
 
       @before_compile Kino.JS.Live
     end

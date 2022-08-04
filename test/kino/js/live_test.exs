@@ -38,6 +38,14 @@ defmodule Kino.JS.LiveTest do
       count = LiveCounter.read(kino)
       assert count == 2
     end
+
+    test "handle_event/3 with send event" do
+      kino = LiveCounter.new(0)
+      # Simulate a client event
+      _ = connect(kino)
+      push_event(kino, "ping", %{})
+      assert_send_event(kino, "pong", %{})
+    end
   end
 
   test "server ping" do
