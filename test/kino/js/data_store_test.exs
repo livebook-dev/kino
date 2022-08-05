@@ -8,7 +8,7 @@ defmodule Kino.JS.DataStoreTest do
     data = [1, 2, 3]
     DataStore.store(ref, data)
 
-    send(DataStore, {:connect, self(), %{origin: self(), ref: ref}})
+    send(DataStore, {:connect, self(), %{origin: "client1", ref: ref}})
     assert_receive {:connect_reply, ^data, %{ref: ^ref}}
   end
 
@@ -19,7 +19,7 @@ defmodule Kino.JS.DataStoreTest do
 
     send(DataStore, {:remove, ref})
 
-    send(DataStore, {:connect, self(), %{origin: self(), ref: ref}})
+    send(DataStore, {:connect, self(), %{origin: "client1", ref: ref}})
     refute_receive {:connect_reply, _, %{ref: ^ref}}
   end
 end
