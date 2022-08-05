@@ -11,6 +11,7 @@
 
 .button:hover, .button:focus {
   background-color: #F0F5F9;
+  outline: none;
 }
 
 .button .icon {
