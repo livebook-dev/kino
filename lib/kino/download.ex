@@ -15,7 +15,8 @@ defmodule Kino.Download do
 
       Kino.Download.new(
         fn -> <<0, 1>> end,
-        filename: "data.bin"
+        filename: "data.bin",
+        label: "Binary data"
       )
 
   """
@@ -33,24 +34,29 @@ defmodule Kino.Download do
 
   ## Options
 
-    * `:filename` - the default filename suggested for download
+    * `:filename` - the default filename suggested for download.
+      Defaults to `"download"`
+
+    * `:label` - the button text. Defaults to the value of `:filename`
+      if present and `"Download"` otherwise
 
   """
   @spec new((() -> binary()), keyword()) :: t()
   def new(content_fun, opts \\ []) do
-    opts = Keyword.validate!(opts, [:filename])
-    filename = opts[:filename]
-    Kino.JS.Live.new(__MODULE__, {content_fun, filename})
+    opts = Keyword.validate!(opts, [:filename, :label])
+    filename = opts[:filename] || "download"
+    label = opts[:label] || opts[:filename] || "Download"
+    Kino.JS.Live.new(__MODULE__, {content_fun, filename, label})
   end
 
   @impl true
-  def init({content_fun, filename}, ctx) do
-    {:ok, assign(ctx, content_fun: content_fun, filename: filename)}
+  def init({content_fun, filename, label}, ctx) do
+    {:ok, assign(ctx, content_fun: content_fun, filename: filename, label: label)}
   end
 
   @impl true
   def handle_connect(ctx) do
-    {:ok, %{filename: ctx.assigns.filename}, ctx}
+    {:ok, %{filename: ctx.assigns.filename, label: ctx.assigns.label}, ctx}
   end
 
   @impl true
