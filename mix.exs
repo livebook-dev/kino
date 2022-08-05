@@ -66,7 +66,7 @@ defmodule Kino.MixProject do
         Internal: [
           Kino.Render,
           Kino.Output,
-          Kino.Raw
+          Kino.Inspect
         ],
         Testing: [
           Kino.Test

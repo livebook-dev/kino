@@ -1,4 +1,4 @@
-defmodule Kino.Raw do
+defmodule Kino.Inspect do
   @moduledoc """
   A struct wrapping any term for default rendering.
 

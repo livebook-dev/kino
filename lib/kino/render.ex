@@ -18,7 +18,7 @@ defimpl Kino.Render, for: Any do
   end
 end
 
-defimpl Kino.Render, for: Kino.Raw do
+defimpl Kino.Render, for: Kino.Inspect do
   def to_livebook(raw) do
     Kino.Output.inspect(raw.term)
   end
@@ -115,13 +115,13 @@ defimpl Kino.Render, for: Atom do
   def to_livebook(atom) do
     cond do
       application_with_supervisor?(atom) ->
-        raw = Kino.Raw.new(atom)
+        raw = Kino.Inspect.new(atom)
         tree = Kino.Process.app_tree(atom, direction: :left_right)
         tabs = Kino.Layout.tabs(Raw: raw, "Application tree": tree)
         Kino.Render.to_livebook(tabs)
 
       Kino.Utils.supervisor?(atom) ->
-        raw = Kino.Raw.new(atom)
+        raw = Kino.Inspect.new(atom)
         tree = Kino.Process.sup_tree(atom, direction: :left_right)
         tabs = Kino.Layout.tabs(Raw: raw, "Supervision tree": tree)
         Kino.Render.to_livebook(tabs)
@@ -143,7 +143,7 @@ defimpl Kino.Render, for: PID do
   def to_livebook(pid) do
     cond do
       Kino.Utils.supervisor?(pid) ->
-        raw = Kino.Raw.new(pid)
+        raw = Kino.Inspect.new(pid)
         tree = Kino.Process.sup_tree(pid, direction: :left_right)
         tabs = Kino.Layout.tabs(Raw: raw, "Supervision tree": tree)
         Kino.Render.to_livebook(tabs)
