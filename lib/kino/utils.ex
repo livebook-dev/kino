@@ -28,4 +28,16 @@ defmodule Kino.Utils do
   def has_function?(module, function, arity) do
     Code.ensure_loaded?(module) and function_exported?(module, function, arity)
   end
+
+  @doc """
+  Checks if the given process is a supervisor.
+  """
+  @spec supervisor?(atom() | pid()) :: boolean
+  def supervisor?(supervisor) do
+    with pid when is_pid(pid) <- GenServer.whereis(supervisor),
+         {:dictionary, dictionary} <- Process.info(pid, :dictionary),
+         {:supervisor, _, _} <- dictionary[:"$initial_call"],
+         do: true,
+         else: (_ -> false)
+  end
 end
