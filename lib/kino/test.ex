@@ -81,7 +81,7 @@ defmodule Kino.Test do
 
   """
   def push_event(kino, event, payload) do
-    send(kino.pid, {:event, event, payload, %{origin: self()}})
+    send(kino.pid, {:event, event, payload, %{origin: inspect(self())}})
   end
 
   @doc """
@@ -98,7 +98,7 @@ defmodule Kino.Test do
   """
   def connect(kino, resolve_fun \\ nil, timeout \\ 100) do
     ref = kino.ref
-    send(kino.pid, {:connect, self(), %{ref: ref, origin: self()}})
+    send(kino.pid, {:connect, self(), %{ref: ref, origin: inspect(self())}})
     if resolve_fun, do: resolve_fun.()
     assert_receive {:connect_reply, data, %{ref: ^ref}}, timeout
     data

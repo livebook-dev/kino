@@ -78,7 +78,7 @@ defmodule Kino.JS.Live.Context do
       send_event(ctx, origin, "new_point", %{x: 10, y: 10})
   """
   @spec send_event(t(), term(), String.t(), term()) :: :ok
-  def send_event(%__MODULE__{} = ctx, origin, event, payload \\ nil) when is_binary(event) do
-    Kino.JS.Live.Server.send_event(ctx, origin, event, payload)
+  def send_event(%__MODULE__{} = ctx, client_id, event, payload \\ nil) when is_binary(event) do
+    Kino.JS.Live.Server.send_event(ctx, client_id, event, payload)
   end
 end

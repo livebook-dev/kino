@@ -60,7 +60,7 @@ defmodule Kino.ControlTest do
 
       Kino.Control.subscribe(button, :name)
 
-      info = %{origin: self()}
+      info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
 
       assert_receive {:name, ^info}
@@ -79,17 +79,16 @@ defmodule Kino.ControlTest do
     test "returns control event feed" do
       button = Kino.Control.button("Name")
 
-      pid =
-        spawn(fn ->
-          Process.sleep(1)
-          info = %{origin: self()}
-          send(button.attrs.destination, {:event, button.attrs.ref, info})
-          send(button.attrs.destination, {:event, button.attrs.ref, info})
-        end)
+      spawn(fn ->
+        Process.sleep(1)
+        info = %{origin: "client1"}
+        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(button.attrs.destination, {:event, button.attrs.ref, info})
+      end)
 
       events = button |> Kino.Control.stream() |> Enum.take(2)
 
-      assert events == [%{origin: pid}, %{origin: pid}]
+      assert events == [%{origin: "client1"}, %{origin: "client1"}]
     end
 
     test "supports interval" do
@@ -100,16 +99,15 @@ defmodule Kino.ControlTest do
     test "halts when the topic is cleared" do
       button = Kino.Control.button("Name")
 
-      pid =
-        spawn(fn ->
-          Process.sleep(1)
-          info = %{origin: self()}
-          send(button.attrs.destination, {:event, button.attrs.ref, info})
-          send(button.attrs.destination, {:clear_topic, button.attrs.ref})
-        end)
+      spawn(fn ->
+        Process.sleep(1)
+        info = %{origin: "client1"}
+        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(button.attrs.destination, {:clear_topic, button.attrs.ref})
+      end)
 
       events = button |> Kino.Control.stream() |> Enum.to_list()
-      assert events == [%{origin: pid}]
+      assert events == [%{origin: "client1"}]
     end
   end
 
@@ -126,17 +124,16 @@ defmodule Kino.ControlTest do
       button = Kino.Control.button("Click")
       input = Kino.Input.text("Name")
 
-      pid =
-        spawn(fn ->
-          Process.sleep(1)
-          info = %{origin: self()}
-          send(button.attrs.destination, {:event, button.attrs.ref, info})
-          send(button.attrs.destination, {:event, input.attrs.ref, info})
-        end)
+      spawn(fn ->
+        Process.sleep(1)
+        info = %{origin: "client1"}
+        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(button.attrs.destination, {:event, input.attrs.ref, info})
+      end)
 
       events = [button, input] |> Kino.Control.stream() |> Enum.take(2)
 
-      assert events == [%{origin: pid}, %{origin: pid}]
+      assert events == [%{origin: "client1"}, %{origin: "client1"}]
     end
   end
 
@@ -151,7 +148,7 @@ defmodule Kino.ControlTest do
       end)
 
       Process.sleep(1)
-      info = %{origin: myself}
+      info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
       send(button.attrs.destination, {:event, button.attrs.ref, info})
 
@@ -172,7 +169,7 @@ defmodule Kino.ControlTest do
       end)
 
       Process.sleep(1)
-      info = %{origin: myself}
+      info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
       send(button.attrs.destination, {:event, button.attrs.ref, info})
 
@@ -198,20 +195,19 @@ defmodule Kino.ControlTest do
       button = Kino.Control.button("Click")
       input = Kino.Input.text("Name")
 
-      pid =
-        spawn(fn ->
-          Process.sleep(1)
-          info = %{origin: self()}
-          send(button.attrs.destination, {:event, button.attrs.ref, info})
-          send(input.attrs.destination, {:event, input.attrs.ref, info})
-        end)
+      spawn(fn ->
+        Process.sleep(1)
+        info = %{origin: "client1"}
+        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(input.attrs.destination, {:event, input.attrs.ref, info})
+      end)
 
       events =
         [click: button, name: input]
         |> Kino.Control.tagged_stream()
         |> Enum.take(2)
 
-      assert events == [{:click, %{origin: pid}}, {:name, %{origin: pid}}]
+      assert events == [{:click, %{origin: "client1"}}, {:name, %{origin: "client1"}}]
     end
   end
 
@@ -227,7 +223,7 @@ defmodule Kino.ControlTest do
       end)
 
       Process.sleep(1)
-      info = %{origin: myself}
+      info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
       send(input.attrs.destination, {:event, input.attrs.ref, info})
 
@@ -254,7 +250,7 @@ defmodule Kino.ControlTest do
       end)
 
       Process.sleep(1)
-      info = %{origin: myself}
+      info = %{origin: "client1"}
       send(up.attrs.destination, {:event, up.attrs.ref, info})
       send(up.attrs.destination, {:event, up.attrs.ref, info})
       send(down.attrs.destination, {:event, down.attrs.ref, info})

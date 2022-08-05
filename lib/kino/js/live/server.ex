@@ -23,10 +23,10 @@ defmodule Kino.JS.Live.Server do
     :ok
   end
 
-  def send_event(ctx, origin, event, payload) do
+  def send_event(ctx, client_id, event, payload) do
     ref = ctx.__private__.ref
 
-    if pid = ctx.__private__.origins_with_pid[origin] do
+    if pid = ctx.__private__.client_ids_with_pid[client_id] do
       Kino.Bridge.send(pid, {:event, event, payload, %{ref: ref}})
     end
 
@@ -69,8 +69,8 @@ defmodule Kino.JS.Live.Server do
   def call_init(module, init_arg, ref) do
     ctx = Context.new()
     ctx = put_in(ctx.__private__[:ref], ref)
-    ctx = put_in(ctx.__private__[:origins_with_pid], %{})
-    ctx = put_in(ctx.__private__[:monitors_with_origin], %{})
+    ctx = put_in(ctx.__private__[:client_ids_with_pid], %{})
+    ctx = put_in(ctx.__private__[:monitors_with_client_id], %{})
 
     if has_function?(module, :init, 2) do
       case module.init(init_arg, ctx) do
@@ -141,21 +141,21 @@ defmodule Kino.JS.Live.Server do
     :ok
   end
 
-  defp add_client(ctx, pid, origin) do
-    if Map.has_key?(ctx.__private__.origins_with_pid, origin) do
+  defp add_client(ctx, pid, client_id) do
+    if Map.has_key?(ctx.__private__.client_ids_with_pid, client_id) do
       ctx
     else
       monitor_ref = Kino.Bridge.monitor(pid)
-      ctx = put_in(ctx.__private__.origins_with_pid[origin], pid)
-      put_in(ctx.__private__.monitors_with_origin[monitor_ref], origin)
+      ctx = put_in(ctx.__private__.client_ids_with_pid[client_id], pid)
+      put_in(ctx.__private__.monitors_with_client_id[monitor_ref], client_id)
     end
   end
 
   defp remove_client(ctx, monitor_ref) do
-    {origin, ctx} = pop_in(ctx.__private__.monitors_with_origin[monitor_ref])
+    {client_id, ctx} = pop_in(ctx.__private__.monitors_with_client_id[monitor_ref])
 
-    if origin do
-      {_, ctx} = pop_in(ctx.__private__.origins_with_pid[origin])
+    if client_id do
+      {_, ctx} = pop_in(ctx.__private__.client_ids_with_pid[client_id])
       {:ok, ctx}
     else
       :error

@@ -26,8 +26,8 @@ defmodule Kino.Control do
   receives corresponding events.
 
       IEx.Helpers.flush()
-      #=> {:hello, %{origin: #PID<10895.9854.0>}}
-      #=> {:hello, %{origin: #PID<10895.9854.0>}}
+      #=> {:hello, %{origin: "client1"}}
+      #=> {:hello, %{origin: "client1"}}
   """
 
   defstruct [:attrs]
@@ -94,11 +94,11 @@ defmodule Kino.Control do
   As the user types events are streamed:
 
       IEx.Helpers.flush()
-      #=> {:keyboard, %{enabled: true, origin: #PID<10895.9854.0>, type: :status}
-      #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keydown}}
-      #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keydown}}
-      #=> {:keyboard, %{key: "o", origin: #PID<10895.9854.0>, type: :keyup}}
-      #=> {:keyboard, %{key: "k", origin: #PID<10895.9854.0>, type: :keyup}}
+      #=> {:keyboard, %{enabled: true, origin: "client1", type: :status}
+      #=> {:keyboard, %{key: "o", origin: "client1", type: :keydown}}
+      #=> {:keyboard, %{key: "k", origin: "client1", type: :keydown}}
+      #=> {:keyboard, %{key: "o", origin: "client1", type: :keyup}}
+      #=> {:keyboard, %{key: "k", origin: "client1", type: :keyup}}
   """
   @spec keyboard(list(:keyup | :keydown | :status)) :: t()
   def keyboard(events) when is_list(events) do
@@ -170,13 +170,13 @@ defmodule Kino.Control do
       #=> {:chat_form,
       #=>   %{
       #=>     data: %{message: "Hola", name: "Amy"},
-      #=>     origin: #PID<10905.5195.0>,
+      #=>     origin: "client1",
       #=>     type: :submit
       #=>   }}
       #=> {:chat_form,
       #=>   %{
       #=>     data: %{message: "Hey!", name: "Jake"},
-      #=>     origin: #PID<10905.5186.0>,
+      #=>     origin: "client2",
       #=>     type: :submit
       #=>   }}
   """
@@ -292,8 +292,8 @@ defmodule Kino.Control do
       for event <- Kino.Control.stream(button) do
         IO.inspect(event)
       end
-      #=> %{origin: #PID<10895.9854.0>, type: :click}
-      #=> %{origin: #PID<10895.9854.0>, type: :click}
+      #=> %{origin: "client1", type: :click}
+      #=> %{origin: "client1", type: :click}
 
   Or with multiple sources:
 
@@ -305,8 +305,8 @@ defmodule Kino.Control do
         IO.inspect(event)
       end
       #=> %{type: :interval, iteration: 0}
-      #=> %{origin: #PID<10895.9854.0>, type: :click}
-      #=> %{origin: #PID<10895.9854.0>, type: :change, value: true}
+      #=> %{origin: "client1", type: :click}
+      #=> %{origin: "client1", type: :change, value: true}
   """
   @spec stream(event_source() | list(event_source())) :: Enumerable.t()
   def stream(source)
@@ -387,8 +387,8 @@ defmodule Kino.Control do
       for event <- Kino.Control.tagged_stream([hello: button, check: input]) do
         IO.inspect(event)
       end
-      #=> {:hello, %{origin: #PID<10895.9854.0>, type: :click}}
-      #=> {:check, %{origin: #PID<10895.9854.0>, type: :change, value: true}}
+      #=> {:hello, %{origin: "client1", type: :click}}
+      #=> {:check, %{origin: "client1", type: :change, value: true}}
   """
   @spec tagged_stream(list({atom(), event_source()})) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do

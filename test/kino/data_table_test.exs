@@ -28,10 +28,7 @@ defmodule Kino.DataTableTest do
              }
            } = data
 
-    send(
-      kino.pid,
-      {:event, "order_by", %{"key" => "0", "order" => "desc"}, %{origin: self()}}
-    )
+    push_event(kino, "order_by", %{"key" => "0", "order" => "desc"})
 
     data = connect(kino)
 
