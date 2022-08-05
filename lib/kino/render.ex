@@ -18,6 +18,12 @@ defimpl Kino.Render, for: Any do
   end
 end
 
+defimpl Kino.Render, for: Kino.Raw do
+  def to_livebook(raw) do
+    Kino.Output.inspect(raw.term)
+  end
+end
+
 defimpl Kino.Render, for: Kino.JS do
   def to_livebook(kino) do
     info = Kino.JS.js_info(kino)
@@ -79,20 +85,6 @@ defimpl Kino.Render, for: Kino.Control do
 end
 
 # Elixir built-ins
-
-defmodule Kino.Raw do
-  @moduledoc false
-
-  defstruct [:term]
-
-  def new(term), do: %__MODULE__{term: term}
-
-  defimpl Kino.Render do
-    def to_livebook(raw) do
-      Kino.Output.inspect(raw.term)
-    end
-  end
-end
 
 defimpl Kino.Render, for: Reference do
   def to_livebook(reference) do
