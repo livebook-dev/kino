@@ -1,0 +1,27 @@
+.button {
+  padding: 8px 20px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px #CAD5E0 solid;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button:hover, .button:focus {
+  background-color: #F0F5F9;
+  outline: none;
+}
+
+.button .icon {
+  margin-right: 8px;
+}
+
+.button .text {
+  color: #445668;
+  font-family: "Inter";
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}

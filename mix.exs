@@ -45,6 +45,7 @@ defmodule Kino.MixProject do
       groups_for_modules: [
         Kinos: [
           Kino.DataTable,
+          Kino.Download,
           Kino.ETS,
           Kino.Frame,
           Kino.Image,
