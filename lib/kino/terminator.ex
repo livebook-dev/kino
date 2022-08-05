@@ -25,7 +25,7 @@ defmodule Kino.Terminator do
 
   @impl true
   def handle_info({:terminate, pid}, state) do
-    :ok = DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
+    DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
     {:noreply, state}
   end
 end

@@ -53,7 +53,7 @@ defmodule Kino.JS.Live.Context do
   end
 
   @doc """
-  Sends an event to the client.
+  Sends an event to all clients.
 
   The event is dispatched to the registered JavaScript callback
   on all connected clients.
@@ -65,5 +65,20 @@ defmodule Kino.JS.Live.Context do
   @spec broadcast_event(t(), String.t(), term()) :: :ok
   def broadcast_event(%__MODULE__{} = ctx, event, payload \\ nil) when is_binary(event) do
     Kino.JS.Live.Server.broadcast_event(ctx, event, payload)
+  end
+
+  @doc """
+  Sends an event to a specific client.
+
+  The event is dispatched to the registered JavaScript callback
+  on the specific connected client.
+
+  ## Examples
+
+      send_event(ctx, origin, "new_point", %{x: 10, y: 10})
+  """
+  @spec send_event(t(), term(), String.t(), term()) :: :ok
+  def send_event(%__MODULE__{} = ctx, origin, event, payload \\ nil) when is_binary(event) do
+    Kino.JS.Live.Server.send_event(ctx, origin, event, payload)
   end
 end
