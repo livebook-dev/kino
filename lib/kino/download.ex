@@ -1,28 +1,51 @@
 defmodule Kino.Download do
-  @moduledoc false
-
-  use Kino.JS
-  use Kino.JS.Live
-
-  @doc """
-  Renders a download button.  The content of downloaded file is
-  prepared on the server by invoking the `content_fun` argument only
-  when the button is clicked.
+  @moduledoc """
+  A kino for downloading file content.
 
   ## Examples
 
-      Kino.Download.new("file.json", fn ->
-        ~s/{"foo": "bar"}/
+      Kino.Download.new(fn ->
+        "Example text"
       end)
 
+      Kino.Download.new(
+        fn -> Jason.encode!(%{"foo" => "bar"}) end,
+        filename: "data.json"
+      )
+
+      Kino.Download.new(
+        fn -> <<0, 1>> end,
+        filename: "data.bin"
+      )
+
   """
-  def new(filename, content_fun) do
-    Kino.JS.Live.new(__MODULE__, {filename, content_fun})
+
+  use Kino.JS, assets_path: "lib/assets/download"
+  use Kino.JS.Live
+
+  @type t :: Kino.JS.Live.t()
+
+  @doc """
+  Creates a button for file download.
+
+  The given function is invoked to generate the file content whenever
+  a download is requested.
+
+  ## Options
+
+    * `:filename` - the default filename suggested for download
+
+  """
+  @spec new((() -> binary()), keyword()) :: t()
+  def new(content_fun, opts \\ []) do
+    opts = Keyword.validate!(opts, [:filename])
+    filename = opts[:filename]
+    Kino.JS.Live.new(__MODULE__, {content_fun, filename})
   end
 
   @impl true
-  def init({filename, content_fun}, ctx) do
-    {:ok, assign(ctx, filename: filename, content_fun: content_fun)}
+  def init({content_fun, filename}, ctx) do
+    {:ok, assign(ctx, content_fun: content_fun, filename: filename)}
   end
 
   @impl true
@@ -33,50 +56,8 @@ defmodule Kino.Download do
   @impl true
   def handle_event("download", %{}, ctx) do
     file_content = ctx.assigns.content_fun.()
-
     reply_payload = {:binary, %{}, file_content}
-
-    broadcast_event(ctx, "download_content", reply_payload)
-
+    send_event(ctx, ctx.origin, "download_content", reply_payload)
     {:noreply, ctx}
-  end
-
-  asset "main.js" do
-    """
-    export function init(ctx, data) {
-
-      // Handle the event which initiates the actual downloading of the file
-      ctx.handleEvent("download_content", ([info, arrayBuffer]) => {
-        const content = bufferToBase64(arrayBuffer);
-
-        const a = document.createElement('a');
-        a.href = `data:application/octet-stream;base64,${content}`;
-        a.download = data.filename;
-        a.click();
-      });
-
-      // Create the Download button
-      const button = document.createElement('button');
-      button.innerHTML = `Download ${data.filename}`;
-      button.addEventListener('click', buttonClicked);
-      ctx.root.appendChild(button);
-
-      function buttonClicked() {
-        ctx.pushEvent("download", {})
-      }
-    }
-
-    function bufferToBase64(buffer) {
-      let binaryString = "";
-      const bytes = new Uint8Array(buffer);
-      const length = bytes.byteLength;
-
-      for (let i = 0; i < length; i++) {
-        binaryString += String.fromCharCode(bytes[i]);
-      }
-
-      return btoa(binaryString);
-    }
-    """
   end
 end
