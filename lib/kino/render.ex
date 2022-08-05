@@ -18,6 +18,12 @@ defimpl Kino.Render, for: Any do
   end
 end
 
+defimpl Kino.Render, for: Kino.Inspect do
+  def to_livebook(raw) do
+    Kino.Output.inspect(raw.term)
+  end
+end
+
 defimpl Kino.Render, for: Kino.JS do
   def to_livebook(kino) do
     info = Kino.JS.js_info(kino)
@@ -101,6 +107,49 @@ defimpl Kino.Render, for: Reference do
     rescue
       # When the tid is not a valid table identifier
       ArgumentError -> false
+    end
+  end
+end
+
+defimpl Kino.Render, for: Atom do
+  def to_livebook(atom) do
+    cond do
+      application_with_supervisor?(atom) ->
+        raw = Kino.Inspect.new(atom)
+        tree = Kino.Process.app_tree(atom, direction: :left_right)
+        tabs = Kino.Layout.tabs(Raw: raw, "Application tree": tree)
+        Kino.Render.to_livebook(tabs)
+
+      Kino.Utils.supervisor?(atom) ->
+        raw = Kino.Inspect.new(atom)
+        tree = Kino.Process.sup_tree(atom, direction: :left_right)
+        tabs = Kino.Layout.tabs(Raw: raw, "Supervision tree": tree)
+        Kino.Render.to_livebook(tabs)
+
+      true ->
+        Kino.Output.inspect(atom)
+    end
+  end
+
+  defp application_with_supervisor?(name) do
+    with master when master != :undefined <- :application_controller.get_master(name),
+         {root, _application} when is_pid(root) <- :application_master.get_child(master),
+         do: true,
+         else: (_ -> false)
+  end
+end
+
+defimpl Kino.Render, for: PID do
+  def to_livebook(pid) do
+    cond do
+      Kino.Utils.supervisor?(pid) ->
+        raw = Kino.Inspect.new(pid)
+        tree = Kino.Process.sup_tree(pid, direction: :left_right)
+        tabs = Kino.Layout.tabs(Raw: raw, "Supervision tree": tree)
+        Kino.Render.to_livebook(tabs)
+
+      true ->
+        Kino.Output.inspect(pid)
     end
   end
 end
