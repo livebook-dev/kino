@@ -324,56 +324,22 @@ defmodule Kino.Control do
     stream([source])
   end
 
-  @doc """
-  Consumes the given `source` (or sources) as a stream with `fun`.
-
-  The given function runs asynchronously.
-
-  See `stream/1` for more details on event sources.
-
-  ## Examples
-
-      button = Kino.Control.button("Greet")
-
-      Kino.Control.stream(button, fn _event ->
-        IO.puts("Hello!")
-      end)
-  """
-  @spec stream(event_source() | list(event_source()), (term() -> any())) :: :ok
+  # TODO: remove on Kino v0.8
+  @deprecated "Use Kino.Control.stream/1 and Kino.listen/2 instead"
   def stream(source, fun) when is_function(fun, 1) do
-    async(fn ->
-      source
-      |> stream()
-      |> Enum.each(fun)
-    end)
+    source
+    |> stream()
+    |> Kino.listen(fun)
   end
 
-  @doc ~S"""
-  A stateful version of `stream/2`.
-
-  ## Examples
-
-      button = Kino.Control.button("Greet")
-
-      Kino.Control.stream(button, 0, fn _event, counter ->
-        new_counter = counter + 1
-        IO.puts("clicks: #{new_counter}")
-        new_counter
-      end)
-  """
-  @spec stream(event_source() | list(event_source()), state, (term(), state -> state)) :: :ok
-        when state: term()
+  # TODO: remove on Kino v0.8
+  @deprecated "Use Kino.Control.stream/1 and Kino.listen/3 instead"
   def stream(source, state, fun) when is_function(fun, 2) do
-    async(fn ->
-      source
-      |> stream()
-      |> Enum.reduce(state, fun)
+    source
+    |> stream()
+    |> Kino.listen(state, fn event, state ->
+      {:cont, fun.(event, state)}
     end)
-  end
-
-  defp async(fun) do
-    Kino.start_child({Task, fun})
-    :ok
   end
 
   @doc """
@@ -408,56 +374,21 @@ defmodule Kino.Control do
     build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
   end
 
-  @doc """
-  Same as `stream/2`, but attaches custom tag to every event.
-
-  ## Example
-
-      button = Kino.Control.button("Hello")
-      input = Kino.Input.checkbox("Check")
-
-      Kino.Control.tagged_stream([hello: button, check: input], fn
-        {:hello, event} -> ...
-        {:check, event} -> ...
-      end)
-  """
-  @spec tagged_stream(list({tag, event_source()}), ({tag, term()} -> any())) :: :ok
-        when tag: atom()
+  # TODO: remove on Kino v0.8
+  @deprecated "Use Kino.Control.tagged_stream/1 and Kino.listen/2 instead"
   def tagged_stream(entries, fun) when is_list(entries) and is_function(fun, 1) do
-    async(fn ->
-      entries
-      |> tagged_stream()
-      |> Enum.each(fun)
-    end)
+    entries
+    |> tagged_stream()
+    |> Kino.listen(fun)
   end
 
-  @doc ~S"""
-  A stateful version of `tagged_stream/2`.
-
-  ## Example
-
-      up = Kino.Control.button("Up") |> Kino.render()
-      down = Kino.Control.button("Down") |> Kino.render()
-
-      Kino.Control.tagged_stream([up: up, down: down], 0, fn
-        {:up, _event}, counter ->
-          new_counter = counter + 1
-          IO.puts("counter: #{new_counter}")
-          new_counter
-
-        {:down, _event}, counter ->
-          new_counter = counter - 1
-          IO.puts("counter: #{new_counter}")
-          new_counter
-      end)
-  """
-  @spec tagged_stream(list({tag, event_source()}), state, ({tag, term()}, state -> state)) :: :ok
-        when tag: atom(), state: term()
+  # TODO: remove on Kino v0.8
+  @deprecated "Use Kino.Control.tagged_stream/1 and Kino.listen/3 instead"
   def tagged_stream(entries, state, fun) when is_list(entries) and is_function(fun, 2) do
-    async(fn ->
-      entries
-      |> tagged_stream()
-      |> Enum.reduce(state, fun)
+    entries
+    |> tagged_stream()
+    |> Kino.listen(state, fn event, state ->
+      {:cont, fun.(event, state)}
     end)
   end
 
