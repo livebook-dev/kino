@@ -167,37 +167,93 @@ defmodule Kino do
   Renders a kino that periodically calls the given function
   to render a new result.
 
-  The callback is run every `interval_ms` milliseconds and receives
-  the accumulated value. The callback should return either of:
-
-    * `{:cont, term_to_render, acc}` - the continue
-
-    * `:halt` - to no longer schedule callback evaluation
+  The callback receives a stream element and should return a term
+  to be rendered.
 
   This function uses `Kino.Frame` as the underlying kino.
   It returns nothing (a non-printable result).
 
   ## Examples
 
+  An animation is created by turning a stream of values into
+  subsequent animation frames:
+
+      Stream.interval(100)
+      |> Stream.take(100)
+      |> Kino.animate(fn i ->
+        Kino.Markdown.new("**Iteration: `#{i}`**")
+      end)
+
+  Alternatively an integer may be passed as a shorthand for
+  `Stream.interval/1`:
+
       # Render new Markdown every 100ms
-      Kino.animate(100, 0, fn i ->
-        md = Kino.Markdown.new("**Iteration: `#{i}`**")
-        {:cont, md, i + 1}
+      Kino.animate(100, fn i ->
+        Kino.Markdown.new("**Iteration: `#{i}`**")
+      end)
+  """
+  @spec animate(Enumerable.t() | pos_integer(), (term() -> any())) :: nothing()
+  def animate(stream_or_interval_ms, fun) when is_function(fun, 1) do
+    animate(stream_or_interval_ms, nil, fn item, nil ->
+      {:cont, fun.(item), nil}
+    end)
+  end
+
+  @doc ~S"""
+  A stateful version of `animate/2`.
+
+  The callback receives a stream element and the accumulated state
+  and it should return either of:
+
+    * `{:cont, term_to_render, state}` - the continue
+
+    * `:halt` - to no longer schedule callback evaluation
+
+  ## Examples
+
+  This function is primarily useful to consume `Kino.Control` events:
+
+      button = Kino.Control.button("Click")
+
+      button
+      |> Kino.Control.stream()
+      |> Kino.animate(0, fn _event, counter ->
+        new_counter = counter + 1
+        md = Kino.Markdown.new("**Clicks: `#{new_counter}`**")
+        {:cont, md, new_counter}
       end)
   """
   @spec animate(
-          pos_integer(),
-          term(),
-          (term() -> {:cont, term(), acc :: term()} | :halt)
+          Enumerable.t() | pos_integer(),
+          state,
+          (term(), state -> {:cont, term(), state} | :halt)
         ) :: nothing()
-  def animate(interval_ms, acc, fun) do
+        when state: term()
+  def animate(stream_or_interval_ms, state, fun)
+
+  def animate(interval_ms, state, fun) when is_integer(interval_ms) do
     frame = Kino.Frame.new()
 
-    Kino.Frame.periodically(frame, interval_ms, acc, fn acc ->
-      case fun.(acc) do
-        {:cont, term, acc} ->
+    fun =
+      cond do
+        is_function(fun, 1) ->
+          # TODO: remove on Kino v0.8
+          IO.warn(
+            "Passing arity-1 function to Kino.animate/3 is deprecated, " <>
+              "please use Kino.animate/2 or pass an arity-2 function"
+          )
+
+          fn _i, state -> fun.(state) end
+
+        is_function(fun, 2) ->
+          fun
+      end
+
+    Kino.Frame.periodically(frame, interval_ms, {0, state}, fn {i, state} ->
+      case fun.(i, state) do
+        {:cont, term, state} ->
           Kino.Frame.render(frame, term)
-          {:cont, acc}
+          {:cont, {i + 1, state}}
 
         :halt ->
           :halt
@@ -207,6 +263,120 @@ defmodule Kino do
     Kino.render(frame)
 
     nothing()
+  end
+
+  def animate(stream, state, fun) when is_function(fun, 2) do
+    frame = Kino.Frame.new() |> Kino.render()
+
+    listen(stream, state, fn item, state ->
+      case fun.(item, state) do
+        {:cont, term, state} ->
+          Kino.Frame.render(frame, term)
+          {:cont, state}
+
+        :halt ->
+          :halt
+      end
+    end)
+
+    nothing()
+  end
+
+  @doc ~S"""
+  Asynchronously consumes a stream with `fun`.
+
+  ## Examples
+
+  This function is primarily useful to consume `Kino.Control` events:
+
+      button = Kino.Control.button("Greet")
+
+      button
+      |> Kino.Control.stream()
+      |> Kino.listen(fn event -> IO.inspect(event) end)
+
+  Or in the tagged version:
+
+      button = Kino.Control.button("Hello")
+      input = Kino.Input.checkbox("Check")
+
+      stream = Kino.Control.tagged_stream([hello: button, check: input])
+
+      Kino.listen(stream, fn
+        {:hello, event} -> ...
+        {:check, event} -> ...
+      end)
+
+  Any other stream works as well:
+
+      Stream.interval(100)
+      |> Stream.take(10)
+      |> Kino.listen(fn i -> IO.puts("Ping #{i}") end)
+
+  Finally, an integer may be passed as a shorthand for `Stream.interval/1`:
+
+      Kino.listen(100, fn i -> IO.puts("Ping #{i}") end)
+
+  """
+  @spec listen(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
+  def listen(stream_or_interval_ms, fun)
+
+  def listen(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
+    listen(Stream.interval(interval_ms), fun)
+  end
+
+  def listen(stream, fun) when is_function(fun, 1) do
+    async(fn -> Enum.each(stream, fun) end)
+  end
+
+  @doc ~S"""
+  A stateful version of `listen/2`.
+
+  The callback should return either of:
+
+    * `{:cont, state}` - the continue
+
+    * `:halt` - to stop listening
+
+  ## Examples
+
+      button = Kino.Control.button("Click")
+
+      button
+      |> Kino.Control.stream()
+      |> Kino.listen(0, fn _event, counter ->
+        new_counter = counter + 1
+        IO.puts("Clicks: #{new_counter}")
+        {:cont, new_counter}
+      end)
+
+  """
+  @spec listen(
+          Enumerable.t() | pos_integer(),
+          state,
+          (term(), state -> {:cont, state} | :halt)
+        ) :: :ok
+        when state: term()
+  def listen(stream_or_interval_ms, state, fun)
+
+  def listen(interval_ms, state, fun) when is_integer(interval_ms) and is_function(fun, 2) do
+    listen(Stream.interval(interval_ms), state, fun)
+  end
+
+  def listen(stream, state, fun) when is_function(fun, 2) do
+    async(fn ->
+      Enum.reduce_while(stream, state, fn item, state ->
+        case fun.(item, state) do
+          {:cont, state} -> {:cont, state}
+          :halt -> {:halt, state}
+        end
+      end)
+    end)
+  end
+
+  defp async(fun) do
+    Kino.start_child({Task, fun})
+    :ok
   end
 
   @doc """
