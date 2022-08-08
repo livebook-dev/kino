@@ -21,6 +21,7 @@ use cases. The officially supported ones are:
 
   * [`kino_vega_lite`](https://github.com/livebook-dev/kino_vega_lite) - for data charting
   * [`kino_db`](https://github.com/livebook-dev/kino_db) - for database integrations
+  * [`kino_benchee`](https://github.com/livebook-dev/kino_benchee) - for rendering [Benchee](https://github.com/bencheeorg/benchee) results
 
 ## License
 
