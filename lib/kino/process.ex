@@ -449,8 +449,10 @@ defmodule Kino.Process do
           raise ArgumentError, "the provided process #{inspect(supervisor)} is not a supervisor"
       end
 
+    root_node = graph_node(0, :root, supervisor, :supervisor)
+
     supervisor_children
-    |> traverse_processes(supervisor, {%{}, 1, %{supervisor => {0, :supervisor}}})
+    |> traverse_processes(root_node, {%{}, 1, %{root_node.pid => root_node}})
     |> traverse_links()
     |> Enum.map_join("\n", fn {_pid_pair, edge} ->
       generate_mermaid_entry(edge)
@@ -463,36 +465,49 @@ defmodule Kino.Process do
   defp convert_direction(invalid_direction),
     do: raise(ArgumentError, "expected a valid direction, got: #{inspect(invalid_direction)}")
 
-  defp traverse_processes([{_, pid, :supervisor, _} | rest], supervisor, {rels, idx, pid_keys}) do
-    pid_keys = Map.put(pid_keys, pid, {idx, :supervisor})
+  defp traverse_processes(
+         [{id, :undefined, type, _} | rest],
+         parent_node,
+         {rels, idx, pid_keys}
+       ) do
+    child_node = graph_node(idx, id, :undefined, type)
+    connection = graph_edge(parent_node, child_node, :supervisor)
+
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
+  end
+
+  defp traverse_processes(
+         [{id, pid, :supervisor, _} | rest],
+         parent_node,
+         {rels, idx, pid_keys}
+       ) do
+    child_node = graph_node(idx, id, pid, :supervisor)
+    connection = graph_edge(parent_node, child_node, :supervisor)
+    pid_keys = Map.put(pid_keys, pid, child_node)
+
     children = Supervisor.which_children(pid)
 
-    {supervisor_idx, _type} = Map.get(pid_keys, supervisor)
-    supervisor_node = graph_node(supervisor_idx, supervisor, :supervisor)
-
-    worker_node = graph_node(idx, pid, :supervisor)
-    new_connection = graph_edge(supervisor_node, worker_node, :supervisor)
-
-    {subtree_rels, idx, pid_keys} = traverse_processes(children, pid, {%{}, idx + 1, pid_keys})
+    {subtree_rels, idx, pid_keys} =
+      traverse_processes(children, child_node, {%{}, idx + 1, pid_keys})
 
     updated_rels =
       rels
       |> add_rels(subtree_rels)
-      |> add_rel(new_connection)
+      |> add_rel(connection)
 
-    traverse_processes(rest, supervisor, {updated_rels, idx, pid_keys})
+    traverse_processes(rest, parent_node, {updated_rels, idx, pid_keys})
   end
 
-  defp traverse_processes([{_, pid, :worker, _} | rest], supervisor, {rels, idx, pid_keys}) do
-    pid_keys = Map.put(pid_keys, pid, {idx, :worker})
+  defp traverse_processes(
+         [{id, pid, :worker, _} | rest],
+         parent_node,
+         {rels, idx, pid_keys}
+       ) do
+    child_node = graph_node(idx, id, pid, :worker)
+    connection = graph_edge(parent_node, child_node, :supervisor)
+    pid_keys = Map.put(pid_keys, pid, child_node)
 
-    {supervisor_idx, _type} = Map.get(pid_keys, supervisor)
-    supervisor_node = graph_node(supervisor_idx, supervisor, :supervisor)
-
-    worker_node = graph_node(idx, pid, :worker)
-    new_connection = graph_edge(supervisor_node, worker_node, :supervisor)
-
-    traverse_processes(rest, supervisor, {add_rel(rels, new_connection), idx + 1, pid_keys})
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
   end
 
   defp traverse_processes([], _, acc) do
@@ -504,7 +519,7 @@ defmodule Kino.Process do
   end
 
   defp add_rel(rels, edge) do
-    lookup = Enum.sort([edge.node_1.pid, edge.node_2.pid])
+    lookup = Enum.sort([edge.node_1.idx, edge.node_2.idx])
 
     Map.put_new(rels, lookup, edge)
   end
@@ -512,14 +527,10 @@ defmodule Kino.Process do
   defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
       Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
-        {:links, links} =
-          case pid do
-            :undefined -> {:links, []}
-            pid -> Process.info(pid, :links)
-          end
+        {:links, links} = Process.info(pid, :links)
 
-        Enum.reduce(links, rels_with_links, fn link, acc ->
-          add_new_links_to_acc(pid_keys, pid, link, acc)
+        Enum.reduce(links, rels_with_links, fn link_pid, acc ->
+          add_new_links_to_acc(pid_keys, pid, link_pid, acc)
         end)
       end)
 
@@ -528,12 +539,8 @@ defmodule Kino.Process do
 
   defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
     case pid_keys do
-      %{^pid => {idx_1, type_1}, ^link_pid => {idx_2, type_2}} ->
-        process_1 = graph_node(idx_1, pid, type_1)
-        process_2 = graph_node(idx_2, link_pid, type_2)
-        link_edge = graph_edge(process_1, process_2, :link)
-
-        add_rel(acc, link_edge)
+      %{^pid => node_1, ^link_pid => node_2} ->
+        add_rel(acc, graph_edge(node_1, node_2, :link))
 
       _ ->
         acc
@@ -550,8 +557,9 @@ defmodule Kino.Process do
     }
   end
 
-  defp graph_node(id, pid, type) do
+  defp graph_node(idx, id, pid, type) do
     %{
+      idx: idx,
       id: id,
       pid: pid,
       type: type
@@ -566,13 +574,13 @@ defmodule Kino.Process do
     "#{graph_node(node_1)} ---> #{graph_node(node_2)}"
   end
 
-  defp graph_node(%{id: id, pid: :undefined}) do
-    "#{id}(:ignore):::notstarted"
+  defp graph_node(%{pid: :undefined, id: id, idx: idx}) do
+    "#{idx}(id:#{inspect(id)}):::notstarted"
   end
 
-  defp graph_node(%{id: id, pid: pid, type: type}) do
+  defp graph_node(%{idx: idx, pid: pid, type: type}) do
     type =
-      if id == 0 do
+      if idx == 0 do
         :root
       else
         type
@@ -584,7 +592,7 @@ defmodule Kino.Process do
         {:registered_name, name} -> module_or_atom_to_string(name)
       end
 
-    "#{id}(#{display}):::#{type}"
+    "#{idx}(#{display}):::#{type}"
   end
 
   defp module_or_atom_to_string(atom) do
