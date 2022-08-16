@@ -73,6 +73,7 @@ defmodule Kino.Process do
     classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
     classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
     classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+    classDef notstarted fill:#b9b9b9, stroke:#374151, stroke-width:1px;
     ```
     """)
   end
@@ -135,6 +136,7 @@ defmodule Kino.Process do
     classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
     classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
     classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+    classDef notstarted fill:#b9b9b9, stroke:#374151, stroke-width:1px;
     ```
     """)
   end
@@ -510,7 +512,11 @@ defmodule Kino.Process do
   defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
       Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
-        {:links, links} = Process.info(pid, :links)
+        {:links, links} =
+          case pid do
+            :undefined -> {:links, []}
+            pid -> Process.info(pid, :links)
+          end
 
         Enum.reduce(links, rels_with_links, fn link, acc ->
           add_new_links_to_acc(pid_keys, pid, link, acc)
@@ -558,6 +564,10 @@ defmodule Kino.Process do
 
   defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :supervisor}) do
     "#{graph_node(node_1)} ---> #{graph_node(node_2)}"
+  end
+
+  defp graph_node(%{id: id, pid: :undefined}) do
+    "#{id}(:ignore):::notstarted"
   end
 
   defp graph_node(%{id: id, pid: pid, type: type}) do
