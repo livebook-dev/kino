@@ -29,7 +29,7 @@ defmodule Kino.ProcessTest do
         Supervisor.start_link(
           [
             {Agent, fn -> :ok end},
-            %{id: :not_started, start: {__MODULE__, :start_ignore, []}}
+            %{id: :not_started, start: {Function, :identity, [:ignore]}}
           ],
           name: :supervisor_parent,
           strategy: :one_for_one
@@ -50,6 +50,4 @@ defmodule Kino.ProcessTest do
   end
 
   defp markdown(%Kino.Markdown{content: content}), do: content
-
-  def start_ignore, do: :ignore
 end
