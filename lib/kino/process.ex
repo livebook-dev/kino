@@ -7,6 +7,13 @@ defmodule Kino.Process do
   alias Kino.Markdown
   alias Kino.Process.Tracer
 
+  @mermaid_classdefs """
+  classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+  classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+  classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+  classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+  """
+
   @type supervisor :: pid() | atom()
   @type trace_target :: :all | pid() | [pid()]
 
@@ -70,10 +77,7 @@ defmodule Kino.Process do
     application_master(#{inspect(master)}):::supervisor ---> supervisor_ancestor;
     supervisor_ancestor(#{inspect(ancestor)}):::supervisor ---> 0;
     #{edges}
-    classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-    classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-    classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-    classDef notstarted fill:#b9b9b9, stroke:#374151, stroke-width:1px;
+    #{@mermaid_classdefs}
     ```
     """)
   end
@@ -133,10 +137,7 @@ defmodule Kino.Process do
     ```mermaid
     graph #{direction};
     #{edges}
-    classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-    classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-    classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-    classDef notstarted fill:#b9b9b9, stroke:#374151, stroke-width:1px;
+    #{@mermaid_classdefs}
     ```
     """)
   end
