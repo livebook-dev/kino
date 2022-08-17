@@ -24,6 +24,24 @@ defmodule Kino.ProcessTest do
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
 
+    test "shows supervision tree with children alongside non-started children" do
+      {:ok, pid} =
+        Supervisor.start_link(
+          [
+            {Agent, fn -> :ok end},
+            %{id: :not_started, start: {Function, :identity, [:ignore]}}
+          ],
+          name: :supervisor_parent,
+          strategy: :one_for_one
+        )
+
+      [{:not_started, :undefined, _, _}, {_, agent, _, _}] = Supervisor.which_children(pid)
+
+      content = Kino.Process.sup_tree(pid) |> markdown()
+      assert content =~ "0(supervisor_parent):::root ---> 1(id: :not_started):::notstarted"
+      assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
+    end
+
     test "raises if supervisor does not exist" do
       assert_raise ArgumentError,
                    ~r/the provided identifier :not_a_valid_supervisor does not reference a running process/,
