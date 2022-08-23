@@ -433,7 +433,7 @@ defmodule Kino.SmartCell do
     end
   end
 
-  defp macro_valid_alias?('Elixir' ++ rest), do: macro_valid_alias_piece?(rest)
+  defp macro_valid_alias?(~c"Elixir" ++ rest), do: macro_valid_alias_piece?(rest)
   defp macro_valid_alias?(_other), do: false
 
   defp macro_valid_alias_piece?([?., char | rest]) when char >= ?A and char <= ?Z,

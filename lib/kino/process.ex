@@ -51,8 +51,12 @@ defmodule Kino.Process do
     {master, root_supervisor} =
       case :application_controller.get_master(application) do
         :undefined ->
-          raise ArgumentError,
-                "the provided application #{inspect(application)} does not reference an application"
+          if Application.spec(application, :vsn) do
+            raise ArgumentError,
+                  "the provided application #{inspect(application)} does not have a supervision tree"
+          else
+            raise ArgumentError, "there is no application named #{inspect(application)}"
+          end
 
         master ->
           case :application_master.get_child(master) do

@@ -1,6 +1,14 @@
 defmodule Kino.ProcessTest do
   use ExUnit.Case, async: true
 
+  describe "app_tree/2" do
+    test "raises if there is no sup tree" do
+      assert_raise ArgumentError,
+                   "the provided application :stdlib does not have a supervision tree",
+                   fn -> Kino.Process.app_tree(:stdlib) end
+    end
+  end
+
   describe "sup_tree/2" do
     test "shows supervision tree with children" do
       {:ok, pid} =
