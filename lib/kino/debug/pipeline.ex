@@ -13,7 +13,7 @@ defmodule Kino.Debug.Pipeline do
         {sources, results, wrapped_funs, dbg_id, dbg_location_info, result_frame}
       )
 
-    Kino.Layout.grid([ui, result_frame], boxed: true)
+    Kino.Layout.grid([ui, result_frame], boxed: true, gap: 8)
   end
 
   @impl true
