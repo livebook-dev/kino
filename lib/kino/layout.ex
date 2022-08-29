@@ -46,6 +46,9 @@ defmodule Kino.Layout do
 
     * `:columns` - the number of columns in the grid. Defaults to `1`
 
+    * `:boxed` - whether the grid should be wrapped in a bordered box.
+      Defaults to `false`
+
   ## Examples
 
       images =
@@ -58,11 +61,12 @@ defmodule Kino.Layout do
   """
   @spec grid(list(term()), keyword()) :: t()
   def grid(terms, opts \\ []) do
-    opts = Keyword.validate!(opts, columns: 1)
+    opts = Keyword.validate!(opts, columns: 1, boxed: false)
     outputs = Enum.map(terms, &Kino.Render.to_livebook/1)
 
     info = %{
-      columns: opts[:columns]
+      columns: opts[:columns],
+      boxed: opts[:boxed]
     }
 
     %Kino.Layout{type: :grid, outputs: outputs, info: info}

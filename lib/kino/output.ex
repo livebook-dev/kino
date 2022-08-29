@@ -166,10 +166,11 @@ defmodule Kino.Output do
   @typedoc """
   Multiple outputs arranged in a grid.
   """
-  @type grid :: {:grid, outputs :: list(t()), tabs_info()}
+  @type grid :: {:grid, outputs :: list(t()), grid_info()}
 
   @type grid_info :: %{
-          columns: pos_integer()
+          columns: pos_integer(),
+          boxed: boolean()
         }
 
   @typedoc """
