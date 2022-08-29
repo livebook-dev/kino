@@ -127,7 +127,7 @@ defmodule Kino.Bridge do
   def get_evaluation_file() do
     case io_request(:livebook_get_evaluation_file) do
       {:ok, file} -> file
-      {:error, _} -> "unknown"
+      {:error, _} -> "nofile"
     end
   end
 

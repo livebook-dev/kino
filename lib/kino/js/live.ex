@@ -199,7 +199,7 @@ defmodule Kino.JS.Live do
   >
   > It is generally not possible to start kinos inside the `c:init/2`
   > callback, as such operation would block forever. In case you need
-  > to start other kinos during initialization, you mast start them
+  > to start other kinos during initialization, you must start them
   > beforehand and pass as an argument to `c:init/2`. So instead of
   >
   >     defmodule KinoDocs.Custom do
