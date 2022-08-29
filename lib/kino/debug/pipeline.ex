@@ -80,24 +80,16 @@ defmodule Kino.Debug.Pipeline do
 
   def handle_event("update_enabled", %{"id" => id, "enabled" => enabled}, ctx) do
     index = Enum.find_index(ctx.assigns.items, &(&1.id == id))
-
-    ctx =
-      if id == ctx.assigns.selected_id and not enabled do
-        prev_id = previous_enabled_id(ctx.assigns.items, id)
-        assign(ctx, selected_id: prev_id)
-      else
-        ctx
-      end
-
     items = put_in(ctx.assigns.items, [Access.at(index), :enabled], enabled)
 
+    selected_id = last_selectable_id(items, ctx.assigns.errored_id)
     changed? = changed?(items)
-    ctx = assign(ctx, changed?: changed?)
+    ctx = assign(ctx, changed?: changed?, selected_id: selected_id)
 
     broadcast_event(ctx, "enabled_updated", %{
       "id" => id,
       "enabled" => enabled,
-      "selected_id" => ctx.assigns.selected_id,
+      "selected_id" => selected_id,
       "changed" => changed?
     })
 
@@ -157,8 +149,7 @@ defmodule Kino.Debug.Pipeline do
           {:error, items, errored_id, error} -> {items, errored_id, error}
         end
 
-      selected_id =
-        if(errored_id, do: previous_enabled_id(items, errored_id), else: ctx.assigns.selected_id)
+      selected_id = last_selectable_id(items, errored_id)
 
       ctx = assign(ctx, items: items, error: error)
 
@@ -178,9 +169,15 @@ defmodule Kino.Debug.Pipeline do
     end
   end
 
-  defp previous_enabled_id(items, id) do
+  defp last_selectable_id(items, errored_id) do
+    items =
+      if errored_id do
+        Enum.take_while(items, &(&1.id != errored_id))
+      else
+        items
+      end
+
     items
-    |> Enum.take_while(&(&1.id != id))
     |> Enum.reverse()
     |> Enum.find_value(fn item -> item.enabled && item.id end)
   end
