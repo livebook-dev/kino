@@ -12,26 +12,15 @@ defmodule Kino.Debug do
   """
   @spec dbg(Macro.t(), Macro.t(), Macro.Env.t()) :: Macro.t()
   def dbg(ast, options, %Macro.Env{} = env) do
-    default_dbg_ast = Macro.dbg(ast, options, env)
     dbg_id = System.unique_integer()
 
     case ast do
-      {:|>, _meta, _args} ->
-        quote do
-          if pid = unquote(__MODULE__).lookup_dbg_handler(unquote(dbg_id)) do
-            send(pid, :dbg_call)
-            unquote(ast)
-          else
-            unquote(initialize_pipeline(ast, dbg_id, env))
-          end
-        end
-
-      _ ->
-        default_dbg_ast
+      {:|>, _meta, _args} -> dbg_pipeline_ast(ast, dbg_id, env)
+      _ -> Macro.dbg(ast, options, env)
     end
   end
 
-  defp initialize_pipeline(ast, dbg_id, env) do
+  defp dbg_pipeline_ast(ast, dbg_id, env) do
     [head_ast | rest_asts] = asts = for {ast, 0} <- Macro.unpipe(ast), do: ast
 
     head_source = Macro.to_string(head_ast)
@@ -68,26 +57,32 @@ defmodule Kino.Debug do
     quote do
       unquote(assignments)
 
-      # We want to send a list of functions to the kino process,
-      # however that would copy relevant binding entries for each
-      # function individually. To avoid that, we wrap the list in
-      # another function, so the binding is copied only once and
-      # we unpack the list in the kino process
-      wrapped_funs = fn -> unquote(funs) end
+      if pid = unquote(__MODULE__).lookup_dbg_handler(unquote(dbg_id)) do
+        send(pid, :dbg_call)
+      else
+        # We want to send a list of functions to the kino process,
+        # however that would copy relevant binding entries for each
+        # function individually. To avoid that, we wrap the list in
+        # another function, so the binding is copied only once and
+        # we unpack the list in the kino process
+        wrapped_funs = fn -> unquote(funs) end
 
-      unquote(__MODULE__).__dbg__(
-        unquote(sources),
-        unquote(vars),
-        wrapped_funs,
-        unquote(dbg_id),
-        unquote(env.file),
-        unquote(env.line)
-      )
+        unquote(__MODULE__).render_dbg_pipeline(
+          unquote(sources),
+          unquote(vars),
+          wrapped_funs,
+          unquote(dbg_id),
+          unquote(env.file),
+          unquote(env.line)
+        )
+      end
+
+      unquote(List.last(vars))
     end
   end
 
   @doc false
-  def __dbg__(sources, results, wrapped_funs, dbg_id, dbg_file, dbg_line) do
+  def render_dbg_pipeline(sources, results, wrapped_funs, dbg_id, dbg_file, dbg_line) do
     evaluation_file = Kino.Bridge.get_evaluation_file()
 
     dbg_location_info =
@@ -99,8 +94,6 @@ defmodule Kino.Debug do
 
     Kino.Debug.Pipeline.new(sources, results, wrapped_funs, dbg_id, dbg_location_info)
     |> Kino.render()
-
-    List.last(results)
   end
 
   @doc """
