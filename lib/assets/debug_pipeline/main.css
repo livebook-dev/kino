@@ -39,6 +39,7 @@
 .actions .copy-source {
   display: flex;
   align-items: center;
+  cursor: pointer;
 }
 
 .actions .copy-source .change-indicator {
@@ -58,6 +59,11 @@
   height: 12px;
   width: 12px;
   background-color: var(--yellow-bright-200);
+}
+
+.actions .copy-source:hover .change-indicator,
+.actions .copy-source:hover .icon-button {
+  color: var(--gray-900);
 }
 
 .box {
