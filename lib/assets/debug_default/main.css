@@ -1,0 +1,30 @@
+.app {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--gray-700);
+
+  --gray-300: #cad5e0;
+  --gray-700: #304254;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.headline {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.headline .dbg {
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-right: 8px;
+  background-color: var(--gray-300);
+}
+
+.source {
+  font-size: 12px;
+  white-space: pre-wrap;
+}

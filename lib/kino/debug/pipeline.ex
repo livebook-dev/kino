@@ -4,20 +4,20 @@ defmodule Kino.Debug.Pipeline do
   use Kino.JS, assets_path: "lib/assets/debug_pipeline"
   use Kino.JS.Live
 
-  def new(sources, results, wrapped_funs, dbg_id, dbg_location_info) do
+  def new(sources, results, wrapped_funs, dbg_id, dbg_same_file, dbg_line) do
     result_frame = Kino.Frame.new()
 
     ui =
       Kino.JS.Live.new(
         __MODULE__,
-        {sources, results, wrapped_funs, dbg_id, dbg_location_info, result_frame}
+        {sources, results, wrapped_funs, dbg_id, dbg_same_file, dbg_line, result_frame}
       )
 
     Kino.Layout.grid([ui, result_frame], boxed: true, gap: 8)
   end
 
   @impl true
-  def init({sources, results, wrapped_funs, dbg_id, dbg_location_info, result_frame}, ctx) do
+  def init({sources, results, wrapped_funs, dbg_id, dbg_same_file, dbg_line, result_frame}, ctx) do
     Kino.Debug.register_dbg_handler!(dbg_id)
 
     funs = [nil | wrapped_funs.()]
@@ -34,9 +34,10 @@ defmodule Kino.Debug.Pipeline do
     {:ok,
      ctx
      |> assign(
+       dbg_same_file: dbg_same_file,
+       dbg_line: dbg_line,
        items: items,
        funs: funs,
-       dbg_location_info: dbg_location_info,
        result_frame: result_frame,
        selected_id: last_id,
        errored_id: nil,
@@ -53,12 +54,13 @@ defmodule Kino.Debug.Pipeline do
 
     {:ok,
      %{
-       dbg_location_info: ctx.assigns.dbg_location_info,
+       dbg_same_file: ctx.assigns.dbg_same_file,
+       dbg_line: ctx.assigns.dbg_line,
+       call_count: ctx.assigns.call_count,
        items: items,
        selected_id: ctx.assigns.selected_id,
        errored_id: ctx.assigns.errored_id,
        error: ctx.assigns.error,
-       call_count: ctx.assigns.call_count,
        changed: ctx.assigns.changed?
      }, ctx}
   end

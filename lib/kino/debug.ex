@@ -11,12 +11,37 @@ defmodule Kino.Debug do
   falls back to the default backend otherwise.
   """
   @spec dbg(Macro.t(), Macro.t(), Macro.Env.t()) :: Macro.t()
-  def dbg(ast, options, %Macro.Env{} = env) do
+  def dbg(ast, _options, %Macro.Env{} = env) do
     dbg_id = System.unique_integer()
 
     case ast do
-      {:|>, _meta, _args} -> dbg_pipeline_ast(ast, dbg_id, env)
-      _ -> Macro.dbg(ast, options, env)
+      {:|>, _meta, _args} ->
+        dbg_pipeline_ast(ast, dbg_id, env)
+
+      _ ->
+        dbg_default_ast(ast, dbg_id, env)
+    end
+  end
+
+  defp dbg_default_ast(ast, dbg_id, env) do
+    source = Macro.to_string(ast)
+
+    quote do
+      result = unquote(ast)
+
+      if pid = unquote(__MODULE__).lookup_dbg_handler(unquote(dbg_id)) do
+        send(pid, :dbg_call)
+      else
+        unquote(__MODULE__).render_dbg_default(
+          unquote(source),
+          result,
+          unquote(dbg_id),
+          unquote(env.file),
+          unquote(env.line)
+        )
+      end
+
+      result
     end
   end
 
@@ -82,17 +107,20 @@ defmodule Kino.Debug do
   end
 
   @doc false
+  def render_dbg_default(source, result, dbg_id, dbg_file, dbg_line) do
+    evaluation_file = Kino.Bridge.get_evaluation_file()
+    same_file? = evaluation_file == dbg_file
+
+    Kino.Debug.Default.new(source, result, dbg_id, same_file?, dbg_line)
+    |> Kino.render()
+  end
+
+  @doc false
   def render_dbg_pipeline(sources, results, wrapped_funs, dbg_id, dbg_file, dbg_line) do
     evaluation_file = Kino.Bridge.get_evaluation_file()
+    same_file? = evaluation_file == dbg_file
 
-    dbg_location_info =
-      if evaluation_file == dbg_file do
-        "dbg called at line #{dbg_line}"
-      else
-        "dbg called from another cell at line #{dbg_line}"
-      end
-
-    Kino.Debug.Pipeline.new(sources, results, wrapped_funs, dbg_id, dbg_location_info)
+    Kino.Debug.Pipeline.new(sources, results, wrapped_funs, dbg_id, same_file?, dbg_line)
     |> Kino.render()
   end
 

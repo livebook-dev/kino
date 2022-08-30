@@ -32,7 +32,16 @@
 }
 
 .headline {
+  display: flex;
+  align-items: center;
   font-size: 12px;
+}
+
+.headline .dbg {
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-right: 8px;
+  background-color: var(--gray-300);
 }
 
 .output-label {
@@ -86,6 +95,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.box .primary .source {
+  white-space: pre-wrap;
 }
 
 .box .error {
