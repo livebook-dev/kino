@@ -91,7 +91,7 @@
 }
 
 .box .primary {
-  height: 28px;
+  min-height: 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;

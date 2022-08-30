@@ -120,12 +120,6 @@ defmodule Kino.Debug.Pipeline do
     {:noreply, update_result_frame(ctx)}
   end
 
-  def handle_event("source_request", %{}, ctx) do
-    source = to_source(ctx.assigns.items)
-    send_event(ctx, ctx.origin, "source_reply", %{"source" => source})
-    {:noreply, ctx}
-  end
-
   @impl true
   def handle_info(:dbg_call, ctx) do
     ctx = update(ctx, :call_count, &(&1 + 1))
@@ -258,10 +252,5 @@ defmodule Kino.Debug.Pipeline do
       _item, _acc -> {:halt, nil}
     end)
     |> is_nil()
-  end
-
-  defp to_source(items) do
-    lines = for item <- items, item.enabled, do: item.source
-    Enum.join(lines, "\n")
   end
 end
