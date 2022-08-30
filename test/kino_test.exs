@@ -19,22 +19,6 @@ defmodule KinoTest do
     end
   end
 
-  describe "start_child/1" do
-    test "raises in a process already started as a child" do
-      {:ok, pid} =
-        Kino.start_child(
-          {Task,
-           fn ->
-             assert_raise ArgumentError, ~r/could not start .* using Kino.start_child/, fn ->
-               Kino.start_child({Task, fn -> :ok end})
-             end
-           end}
-        )
-
-      await_process(pid)
-    end
-  end
-
   describe "animate/2" do
     test "renders a new output for every consumed item" do
       Stream.iterate(0, &(&1 + 1))
