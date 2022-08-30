@@ -120,6 +120,17 @@ defmodule Kino.Bridge do
     Process.monitor(pid)
   end
 
+  @doc """
+  Returns the file that is currently being evaluated.
+  """
+  @spec get_evaluation_file() :: String.t()
+  def get_evaluation_file() do
+    case io_request(:livebook_get_evaluation_file) do
+      {:ok, file} -> file
+      {:error, _} -> "nofile"
+    end
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)

@@ -120,8 +120,6 @@ defmodule Kino.DataTable do
          else: (_ -> nil)
   end
 
-  defp infer_count(_, _), do: nil
-
   @impl true
   def init({data_rows, data_columns, count, name, sorting_enabled}) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)

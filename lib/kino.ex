@@ -392,6 +392,18 @@ defmodule Kino do
 
   The process is automatically terminated when the current process
   terminates or the current cell reevaluates.
+
+  > #### Nested start {: .warning}
+  >
+  > It is not possible to use `start_child/1` while initializing
+  > another process started this way. In other words, you generally
+  > cannot call `start_child/1` inside callbacks such as `c:GenServer.init/1`
+  > or `c:Kino.JS.Live.init/2`. If you do that, starting the process
+  > will block forever.
+  >
+  > Note that creating many kinos uses `start_child/1` underneath,
+  > hence the same restriction applies to starting those. See
+  > `c:Kino.JS.Live.init/2` for more details.
   """
   @spec start_child(
           Supervisor.child_spec()
@@ -399,15 +411,6 @@ defmodule Kino do
           | module()
         ) :: DynamicSupervisor.on_start_child()
   def start_child(child_spec) do
-    # Starting a process that calls Kino.start_child/1 in its init
-    # would block forever, so we don't allow nesting
-    if Kino.DynamicSupervisor in Process.get(:"$ancestors", []) do
-      raise ArgumentError,
-            "could not start #{Kernel.inspect(child_spec)} using Kino.start_child/1," <>
-              " because the current process has been started with Kino.start_child/1." <>
-              " Please move the nested start outside and pass the result as an argument to this process"
-    end
-
     %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
     parent = self()
     gl = Process.group_leader()

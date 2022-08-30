@@ -4,7 +4,7 @@ html {
 
 .app {
   font-family: "JetBrains Mono", monospace;
-  padding: 0px 12px 12px 12px;
+  padding: 12px;
 
   --gray-50: #f8fafc;
   --gray-100: #f0f5f9;
