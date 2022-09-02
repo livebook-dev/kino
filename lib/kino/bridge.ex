@@ -72,11 +72,31 @@ defmodule Kino.Bridge do
 
   It must be called after at least one reference is added
   via `reference_object/2`.
+
+  ## Options
+
+    * `:ack?` - whether the monitoring process wants to
+      acknowledge the monitor message. When set to `true`
+      the process receives `{payload, reply_to, reply_as}`
+      and should do `send(reply_to, reply_as)` once it is
+      done. This is useful when cleaning state after the
+      object is removed, because Livebook waits for the
+      acknowledgement before staring new evaluation.
+      Defaults to `false`
+
   """
-  @spec monitor_object(term(), Process.dest(), payload :: term()) ::
+  @spec monitor_object(term(), Process.dest(), payload :: term(), keyword()) ::
           :ok | {:error, request_error()}
-  def monitor_object(object, destination, payload) do
-    with {:ok, reply} <- io_request({:livebook_monitor_object, object, destination, payload}) do
+  def monitor_object(object, destination, payload, opts \\ []) do
+    ack? = Keyword.get(opts, :ack?, false)
+
+    io_request_result =
+      with {:error, :unsupported} <-
+             io_request({:livebook_monitor_object, object, destination, payload, ack?}),
+           # Used until Livebook v0.7
+           do: io_request({:livebook_monitor_object, object, destination, payload})
+
+    with {:ok, reply} <- io_request_result do
       case reply do
         :ok ->
           :ok

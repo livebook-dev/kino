@@ -436,7 +436,10 @@ defmodule Kino do
 
       if pid do
         Kino.Bridge.reference_object(pid, parent)
-        Kino.Bridge.monitor_object(pid, Kino.Terminator.cross_node_name(), {:terminate, pid})
+
+        Kino.Bridge.monitor_object(pid, Kino.Terminator.cross_node_name(), {:terminate, pid},
+          ack?: true
+        )
       end
 
       resp
