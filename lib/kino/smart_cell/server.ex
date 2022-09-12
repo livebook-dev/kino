@@ -33,7 +33,8 @@ defmodule Kino.SmartCell.Server do
            editor: editor,
            scan_binding: if(has_function?(module, :scan_binding, 3), do: &module.scan_binding/3),
            scan_eval_result:
-             if(has_function?(module, :scan_eval_result, 2), do: &module.scan_eval_result/2)
+             if(has_function?(module, :scan_eval_result, 2), do: &module.scan_eval_result/2),
+           scan_secrets: if(has_function?(module, :scan_secrets, 1), do: &module.scan_secrets/1)
          }}
     end
   end

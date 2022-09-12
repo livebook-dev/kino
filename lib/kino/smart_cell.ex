@@ -242,11 +242,16 @@ defmodule Kino.SmartCell do
   """
   @callback scan_eval_result(server :: pid(), eval_result()) :: any()
 
+  @doc """
+  Invoked when a new secret is added to the session.
+  """
+  @callback scan_secrets(server :: pid()) :: any()
+
   @type eval_result ::
           {:ok, result :: any()}
           | {:error, Exception.kind(), error :: any(), Exception.stacktrace()}
 
-  @optional_callbacks scan_binding: 3, scan_eval_result: 2
+  @optional_callbacks scan_binding: 3, scan_eval_result: 2, scan_secrets: 1
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
