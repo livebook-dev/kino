@@ -1,6 +1,6 @@
 defmodule Kino.Image do
   @moduledoc """
-  A struct wrapping a binary image.
+  A kino for rendering a binary image.
 
   This is just a meta-struct that implements the `Kino.Render`
   protocol, so that it gets rendered as the underlying image.
@@ -24,7 +24,7 @@ defmodule Kino.Image do
   @type common_image_type :: :jpeg | :png | :gif | :svg
 
   @doc """
-  Wraps the given binary content into the image struct.
+  Creates a new kino displaying the given binary image.
 
   The given type be either `:jpeg`, `:png`, `:gif`, `:svg`
   or a string with image MIME type.
