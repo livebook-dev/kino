@@ -51,6 +51,7 @@ defmodule Kino.MixProject do
           Kino.Image,
           Kino.Layout,
           Kino.Markdown,
+          Kino.Mermaid,
           Kino.Process
         ],
         Inputs: [

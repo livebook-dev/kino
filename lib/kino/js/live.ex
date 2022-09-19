@@ -141,7 +141,7 @@ defmodule Kino.JS.Live do
   The following example showcases how to send and receive events
   with binary payloads.
 
-      defmodule Kino.Binary do
+      defmodule KinoDocs.Binary do
         use Kino.JS
         use Kino.JS.Live
 

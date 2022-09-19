@@ -1,13 +1,13 @@
 defmodule Kino.Markdown do
-  @moduledoc """
-  A struct wrapping a Markdown content.
+  @moduledoc ~S'''
+  A kino for rendering Markdown content.
 
   This is just a meta-struct that implements the `Kino.Render`
   protocol, so that it gets rendered as markdown.
 
   ## Examples
 
-      Kino.Markdown.new(\"\"\"
+      Kino.Markdown.new("""
       # Example
 
       A regular Markdown file.
@@ -24,14 +24,14 @@ defmodule Kino.Markdown do
       | -- | ------ | ----------------------- |
       | 1  | Elixir | https://elixir-lang.org |
       | 2  | Erlang | https://www.erlang.org  |
-      \"\"\")
+      """)
 
   This format may come in handy when exploring Markdown
   from external sources:
 
       content = File.read!("/path/to/README.md")
       Kino.Markdown.new(content)
-  """
+  '''
 
   @enforce_keys [:content]
 
@@ -42,7 +42,7 @@ defmodule Kino.Markdown do
           }
 
   @doc """
-  Wraps the given binary content into the markdown struct.
+  Creates a new kino displaying the given Markdown content.
   """
   @spec new(binary()) :: t()
   def new(content) do

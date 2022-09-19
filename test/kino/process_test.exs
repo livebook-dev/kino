@@ -23,11 +23,11 @@ defmodule Kino.ProcessTest do
 
       [_, {_, agent, _, _}] = Supervisor.which_children(pid)
 
-      content = Kino.Process.sup_tree(pid) |> markdown()
+      content = Kino.Process.sup_tree(pid) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
 
-      content = Kino.Process.sup_tree(:supervisor_parent) |> markdown()
+      content = Kino.Process.sup_tree(:supervisor_parent) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
@@ -45,7 +45,7 @@ defmodule Kino.ProcessTest do
 
       [{:not_started, :undefined, _, _}, {_, agent, _, _}] = Supervisor.which_children(pid)
 
-      content = Kino.Process.sup_tree(pid) |> markdown()
+      content = Kino.Process.sup_tree(pid) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(id: :not_started):::notstarted"
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
@@ -57,5 +57,9 @@ defmodule Kino.ProcessTest do
     end
   end
 
-  defp markdown(%Kino.Markdown{content: content}), do: content
+  defp mermaid(%Kino.JS{ref: ref}) do
+    send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
+    assert_receive {:connect_reply, data, %{ref: ^ref}}
+    data
+  end
 end

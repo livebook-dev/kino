@@ -42,7 +42,7 @@ defmodule Kino do
 
   ### Kino.Markdown
 
-  `Kino.Markdown` wraps Markdown content for richer text rendering.
+  `Kino.Markdown` renders Markdown content, in case you need richer text:
 
       Kino.Markdown.new("""
       # Example
@@ -61,6 +61,18 @@ defmodule Kino do
       | -- | ------ | ----------------------- |
       | 1  | Elixir | https://elixir-lang.org |
       | 2  | Erlang | https://www.erlang.org  |
+      """)
+
+  ### Kino.Mermaid
+
+  `Kino.Mermaid` renders Mermaid graphs:
+
+      Kino.Mermaid.new("""
+      graph TD;
+        A-->B;
+        A-->C;
+        B-->D;
+        C-->D;
       """)
 
   ### Kino.Frame

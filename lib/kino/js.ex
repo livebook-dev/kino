@@ -150,7 +150,7 @@ defmodule Kino.JS do
   To give a concrete example, here's how we could use the `mermaid`
   JavaScript package for rendering diagrams:
 
-      defmodule Kino.Mermaid do
+      defmodule KinoDocs.Mermaid do
         use Kino.JS
 
         def new(graph) do
@@ -159,7 +159,7 @@ defmodule Kino.JS do
 
         asset "main.js" do
           """
-          import "https://cdn.jsdelivr.net/npm/mermaid@8.13.3/dist/mermaid.min.js";
+          import "https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js";
 
           mermaid.initialize({ startOnLoad: false });
 
@@ -175,7 +175,7 @@ defmodule Kino.JS do
 
   And we would use it like so:
 
-      Kino.Mermaid.new("""
+      KinoDocs.Mermaid.new("""
       graph TD;
         A-->B;
         A-->C;

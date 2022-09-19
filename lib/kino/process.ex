@@ -4,7 +4,7 @@ defmodule Kino.Process do
   introspect your running processes.
   """
 
-  alias Kino.Markdown
+  alias Kino.Mermaid
   alias Kino.Process.Tracer
 
   @mermaid_classdefs """
@@ -46,7 +46,7 @@ defmodule Kino.Process do
 
       Kino.Process.app_tree(:logger, direction: :left_right)
   """
-  @spec app_tree(atom(), keyword()) :: Markdown.t()
+  @spec app_tree(atom(), keyword()) :: Mermaid.t()
   def app_tree(application, opts \\ []) when is_atom(application) do
     {master, root_supervisor} =
       case :application_controller.get_master(application) do
@@ -75,14 +75,12 @@ defmodule Kino.Process do
     {:dictionary, dictionary} = Process.info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
 
-    Markdown.new("""
-    ```mermaid
+    Mermaid.new("""
     graph #{direction};
     application_master(#{inspect(master)}):::supervisor ---> supervisor_ancestor;
     supervisor_ancestor(#{inspect(ancestor)}):::supervisor ---> 0;
     #{edges}
     #{@mermaid_classdefs}
-    ```
     """)
   end
 
@@ -132,17 +130,15 @@ defmodule Kino.Process do
 
       Kino.Process.sup_tree(MyApp.Supervisor, direction: :left_right)
   """
-  @spec sup_tree(supervisor(), keyword()) :: Markdown.t()
+  @spec sup_tree(supervisor(), keyword()) :: Mermaid.t()
   def sup_tree(supervisor, opts \\ []) do
     direction = direction_from_opts(opts)
     edges = traverse_supervisor(supervisor)
 
-    Markdown.new("""
-    ```mermaid
+    Mermaid.new("""
     graph #{direction};
     #{edges}
     #{@mermaid_classdefs}
-    ```
     """)
   end
 
@@ -249,7 +245,7 @@ defmodule Kino.Process do
         Agent.stop(agent_pid)
       end)
   """
-  @spec seq_trace(trace_target(), (() -> any())) :: {any(), Markdown.t()}
+  @spec seq_trace(trace_target(), (() -> any())) :: {any(), Mermaid.t()}
   def seq_trace(trace_target \\ :all, trace_function)
 
   def seq_trace(pid, trace_function) when is_pid(pid) do
@@ -354,12 +350,10 @@ defmodule Kino.Process do
       |> Enum.join("\n")
 
     sequence_diagram =
-      Markdown.new("""
-      ```mermaid
+      Mermaid.new("""
       sequenceDiagram
       #{participants}
       #{messages}
-      ```
       """)
 
     {func_result, sequence_diagram}
