@@ -129,6 +129,10 @@ defmodule Kino.JS do
     * `ctx.importCSS(url)` - loads CSS from the given URL into the
       page. Returns a `Promise` that resolves once the CSS is loaded
 
+    * `ctx.importJS(url)` - loads JS from the given URL into the page
+      using a regular `<script>` tag. Returns a `Promise` that resolves
+      once the JS is loaded
+
     * `ctx.handleEvent(event, callback)` - registers an event
       handler. Once `event` is broadcasted, `callback` is executed
       with the event payload. This applies to `Kino.JS.Live` kinos
@@ -140,6 +144,11 @@ defmodule Kino.JS do
     * `ctx.handleSync(callback)` - registers a synchronization handler,
       it should flush any deferred UI changes to the server. This
       applies to `Kino.SmartCell` cells
+
+    * `ctx.selectSecret(callback, preselectName)` - asks the user to
+      select a Livebook secret. Suggests `preselectName` as the default
+      choice. When the user selects a secret, `callback` is called
+      with the secret name
 
   ## CDN
 
