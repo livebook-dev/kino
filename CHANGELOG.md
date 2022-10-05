@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/livebook-dev/kino)
+
+Along with this release we introduce [`kino_benchee`](https://github.com/livebook-dev/kino_benchee)
+for visualizing Benchee results.
+
+### Added
+
+* Added `Kino.Process.render_seq_trace/2` for visualizing inter-process communication ([#165](https://github.com/livebook-dev/kino/pull/165))
+* Added `Kino.Layout` for building composite outputs, such as tabs and grid ([#179](https://github.com/livebook-dev/kino/pull/179))
+* Added `send_event/4` to `Kino.JS.Live` components for messaging a specific client ([#183](https://github.com/livebook-dev/kino/pull/183))
+* Added `Kino.Download` for downloading generated content on demand ([#174](https://github.com/livebook-dev/kino/pull/174))
+* Tabbed output for pids and atoms ([#185](https://github.com/livebook-dev/kino/pull/185))
+* Unified events consumption via `Kino.listen/{2,3}` and `Kino.animate/{2,3}` ([#186](https://github.com/livebook-dev/kino/pull/186))
+* Custom backend for `Kernel.dbg/2` ([#191](https://github.com/livebook-dev/kino/pull/191))
+* Added `Kino.Mermaid` ([#199](https://github.com/livebook-dev/kino/pull/199))
+
+### Fixed
+
+* Crashes when reevaluating a cell with finished tasks ([#181](https://github.com/livebook-dev/kino/pull/181))
+* Ensured processes started with `Kino.start_child/2` get terminated before reevaluation ([#195](https://github.com/livebook-dev/kino/pull/195))
+
 ## [v0.6.2](https://github.com/livebook-dev/kino/tree/v0.6.2) (2022-06-29)
 
 ### Added
