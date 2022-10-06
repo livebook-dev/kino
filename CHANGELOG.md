@@ -7,9 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.7.0](https://github.com/livebook-dev/kino/tree/v0.7.0) (2022-10-07)
 
-Along with this release we introduce [`kino_benchee`](https://github.com/livebook-dev/kino_benchee)
-for visualizing Benchee results.
-
 ### Added
 
 * Added `Kino.Process.render_seq_trace/2` for visualizing inter-process communication ([#165](https://github.com/livebook-dev/kino/pull/165))
