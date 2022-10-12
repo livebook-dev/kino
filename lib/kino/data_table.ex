@@ -17,9 +17,9 @@ defmodule Kino.DataTable do
   and analyze it thanks to sorting capabilities.
 
       data =
-        Process.list()
-        |> Enum.map(&Process.info/1)
-        |> Enum.map(&(Keyword.merge([registered_name: nil], &1)))
+        for pid <- Process.list() do
+          pid |> Process.info() |> Keyword.merge(registered_name: nil)
+        end
 
       Kino.DataTable.new(
         data,
