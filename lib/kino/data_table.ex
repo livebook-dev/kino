@@ -16,7 +16,10 @@ defmodule Kino.DataTable do
   The tabular view allows you to quickly preview the data
   and analyze it thanks to sorting capabilities.
 
-      data = Process.list() |> Enum.map(&Process.info/1)
+      data =
+        for pid <- Process.list() do
+          pid |> Process.info() |> Keyword.merge(registered_name: nil)
+        end
 
       Kino.DataTable.new(
         data,
