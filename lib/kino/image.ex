@@ -21,12 +21,12 @@ defmodule Kino.Image do
           }
 
   @type mime_type :: binary()
-  @type common_image_type :: :jpeg | :png | :gif | :svg
+  @type common_image_type :: :jpeg | :jpg | :png | :gif | :svg
 
   @doc """
   Creates a new kino displaying the given binary image.
 
-  The given type be either `:jpeg`, `:png`, `:gif`, `:svg`
+  The given type be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`
   or a string with image MIME type.
   """
   @spec new(binary(), common_image_type() | mime_type()) :: t()
@@ -35,6 +35,7 @@ defmodule Kino.Image do
   end
 
   defp mime_type!(:jpeg), do: "image/jpeg"
+  defp mime_type!(:jpg), do: "image/jpeg"
   defp mime_type!(:png), do: "image/png"
   defp mime_type!(:gif), do: "image/gif"
   defp mime_type!(:svg), do: "image/svg+xml"
