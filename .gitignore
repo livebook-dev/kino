@@ -24,3 +24,6 @@ kino-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Node modules.
+lib/assets/*/node_modules/
