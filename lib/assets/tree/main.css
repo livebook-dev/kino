@@ -1,0 +1,38 @@
+.app {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+}
+
+div.item {
+  display: flex;
+}
+
+div.clickable {
+  cursor: pointer;
+}
+
+.ri {
+  font-size: 1.25rem;
+  vertical-align: middle;
+}
+
+.ri-empty {
+  display: inline-block;
+  width: 1.25rem;
+}
+
+ol {
+  display: none;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  padding-left: 2rem;
+}
+
+ol.show {
+  display: block;
+}
+
+div.suffix {
+  margin-left: 1.25rem;
+}
