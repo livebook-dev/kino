@@ -138,6 +138,9 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
+    types = infer_types(List.first(rows))
+    columns = Enum.zip_with(columns, types, fn column, type -> Map.put(column, :type, type) end)
+
     content = %{
       rows: rows,
       columns: columns,
@@ -150,6 +153,23 @@ defmodule Kino.Table do
 
     {content, ctx}
   end
+
+  defp infer_types(row) do
+    fields = Map.values(row.fields) |> Enum.map(& String.trim(&1, "\""))
+    Enum.map(fields, &type_of/1)
+  end
+
+  defp type_of("http" <> _rest), do: "uri"
+
+  defp type_of(data) do
+    case Float.parse(data) do
+      {_, ""} -> "number"
+      _ -> if date?(data) or date_time?(data), do: "date", else: "text"
+    end
+  end
+
+  defp date?(value), do: match?({:ok, _}, Date.from_iso8601(value))
+  defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
 
   # Map keys to string representation for the client side
   defp stringify_keys(columns, rows, key_to_string) do
