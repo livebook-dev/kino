@@ -208,8 +208,12 @@ defmodule Kino.SmartCell do
 
   @doc """
   Invoked to generate source code based on the given attributes.
+
+  A list of sources can be returned, in which case the sources are
+  joined into a single source, however converting to a Code cell
+  results in multiple cells.
   """
-  @callback to_source(attrs()) :: String.t()
+  @callback to_source(attrs()) :: String.t() | list(String.t())
 
   @doc """
   Invoked whenever the base evaluation context changes.
