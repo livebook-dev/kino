@@ -22,6 +22,12 @@ div.clickable {
   cursor: pointer;
 }
 
+div.icon-container {
+  display: inline-block;
+  width: 2ch;
+  margin-right: 2px;
+}
+
 .ri {
   font-size: 1.25rem;
   vertical-align: middle;
@@ -29,7 +35,7 @@ div.clickable {
 
 .ri-empty {
   display: inline-block;
-  width: 1.25rem;
+  width: 2ch;
 }
 
 ol {
@@ -37,7 +43,7 @@ ol {
   list-style-type: none;
   margin: 0;
   padding: 0;
-  padding-left: 2rem;
+  margin-left: 2ch;
 }
 
 ol.show {
@@ -45,5 +51,5 @@ ol.show {
 }
 
 div.suffix {
-  margin-left: 1.25rem;
+  margin-left: 2ch;
 }
