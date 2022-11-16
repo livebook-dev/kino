@@ -98,6 +98,10 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
+  def handle_event("limit", %{"limit" => limit}, ctx) do
+    {:noreply, ctx |> assign(limit: limit) |> broadcast_update()}
+  end
+
   def handle_event("order_by", %{"key" => key_string, "order" => order}, ctx) do
     order = String.to_existing_atom(order)
 
@@ -148,7 +152,8 @@ defmodule Kino.Table do
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: ctx.assigns.order,
-      order_by: key_to_string[ctx.assigns.order_by]
+      order_by: key_to_string[ctx.assigns.order_by],
+      limit: ctx.assigns.limit,
     }
 
     {content, ctx}
