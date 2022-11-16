@@ -29,28 +29,28 @@ defmodule Kino.Tree do
     Kino.JS.new(__MODULE__, to_node(data))
   end
 
-  def to_node(string) when is_binary(string) do
+  defp to_node(string) when is_binary(string) do
     %{type: "string", value: string}
   end
 
-  def to_node(atom) when is_atom(atom) do
+  defp to_node(atom) when is_atom(atom) do
     %{type: "atom", value: Atom.to_string(atom)}
   end
 
-  def to_node(integer) when is_integer(integer) do
+  defp to_node(integer) when is_integer(integer) do
     %{type: "integer", value: integer}
   end
 
-  def to_node(float) when is_float(float) do
+  defp to_node(float) when is_float(float) do
     %{type: "float", value: float}
   end
 
-  def to_node(tuple) when is_tuple(tuple) do
+  defp to_node(tuple) when is_tuple(tuple) do
     children = tuple |> Tuple.to_list() |> Enum.map(&to_node/1)
     %{type: "tuple", value: nil, children: children}
   end
 
-  def to_node(list) when is_list(list) do
+  defp to_node(list) when is_list(list) do
     if Keyword.keyword?(list) do
       children = Enum.map(list, fn {key, value} -> to_key_value_node(key, value) end)
       %{type: "list", value: nil, children: children}
@@ -60,7 +60,7 @@ defmodule Kino.Tree do
     end
   end
 
-  def to_node(%module{} = struct) when is_struct(struct) do
+  defp to_node(%module{} = struct) when is_struct(struct) do
     children =
       struct
       |> Map.from_struct()
@@ -69,7 +69,7 @@ defmodule Kino.Tree do
     %{type: "struct", value: Atom.to_string(module), children: children}
   end
 
-  def to_node(map) when is_map(map) do
+  defp to_node(map) when is_map(map) do
     children =
       map
       |> Enum.sort_by(fn {key, _value} -> inspect(key) end)
@@ -78,7 +78,7 @@ defmodule Kino.Tree do
     %{type: "map", value: nil, children: children}
   end
 
-  def to_node(other) do
+  defp to_node(other) do
     %{type: "string", value: inspect(other)}
   end
 
