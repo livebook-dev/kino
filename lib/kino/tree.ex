@@ -30,66 +30,110 @@ defmodule Kino.Tree do
   end
 
   defp to_node(string) when is_binary(string) do
-    %{type: "string", value: string}
+    %{text: inspect(string), children: nil}
   end
 
   defp to_node(atom) when is_atom(atom) do
-    %{type: "atom", value: Atom.to_string(atom)}
+    %{text: inspect(atom), children: nil}
   end
 
-  defp to_node(integer) when is_integer(integer) do
-    %{type: "integer", value: integer}
-  end
-
-  defp to_node(float) when is_float(float) do
-    %{type: "float", value: float}
+  defp to_node(number) when is_number(number) do
+    %{text: inspect(number), children: nil}
   end
 
   defp to_node(tuple) when is_tuple(tuple) do
-    children = tuple |> Tuple.to_list() |> Enum.map(&to_node/1)
-    %{type: "tuple", value: nil, children: children}
+    size = tuple_size(tuple)
+    children = tuple |> Tuple.to_list() |> to_children(size)
+
+    %{
+      text: "{...}",
+      children: children,
+      expanded: %{prefix: "{", suffix: "}"}
+    }
   end
 
   defp to_node(list) when is_list(list) do
-    if Keyword.keyword?(list) do
-      children = Enum.map(list, fn {key, value} -> to_key_value_node(key, value) end)
-      %{type: "list", value: nil, children: children}
-    else
-      children = Enum.map(list, &to_node/1)
-      %{type: "list", value: nil, children: children}
-    end
+    size = length(list)
+
+    children =
+      if Keyword.keyword?(list) do
+        to_key_value_children(list, size)
+      else
+        to_children(list, size)
+      end
+
+    %{
+      text: "[...]",
+      children: children,
+      expanded: %{prefix: "[", suffix: "]"}
+    }
   end
 
   defp to_node(%module{} = struct) when is_struct(struct) do
-    children =
-      struct
-      |> Map.from_struct()
-      |> Enum.map(fn {key, value} -> to_key_value_node(key, value) end)
+    map = Map.from_struct(struct)
+    size = map_size(map)
+    children = to_key_value_children(map, size)
 
-    %{type: "struct", value: Atom.to_string(module), children: children}
+    %{
+      text: "%#{inspect(module)}{...}",
+      children: children,
+      expanded: %{prefix: "%#{inspect(module)}{", suffix: "}"}
+    }
   end
 
   defp to_node(map) when is_map(map) do
-    children =
-      map
-      |> Enum.sort_by(fn {key, _value} -> inspect(key) end)
-      |> Enum.map(fn {key, value} -> to_key_value_node(key, value) end)
+    size = map_size(map)
+    children = to_key_value_children(map, size)
 
-    %{type: "map", value: nil, children: children}
+    %{
+      text: "%{...}",
+      children: children,
+      expanded: %{prefix: "%{", suffix: "}"}
+    }
   end
 
   defp to_node(other) do
-    %{type: "string", value: inspect(other)}
+    %{text: inspect(other), children: nil}
   end
 
-  defp to_key_value_node(key, value) do
-    simple_key =
-      if is_binary(key) or is_atom(key) or is_number(key) do
-        to_node(key)
+  defp to_key_value_node({key, value}) do
+    key_text =
+      if is_atom(key) do
+        String.trim_leading(inspect(key), ":") <> ": "
       else
-        %{type: "compoundkey", value: inspect(key, width: :infinity)}
+        inspect(key) <> " => "
       end
 
-    value |> to_node() |> Map.put(:key, simple_key)
+    case to_node(value) do
+      %{text: text, expanded: %{prefix: prefix} = expanded} = node ->
+        %{node | text: key_text <> text, expanded: %{expanded | prefix: key_text <> prefix}}
+
+      %{text: text} = node ->
+        %{node | text: key_text <> text}
+    end
+  end
+
+  defp to_children(items, container_size) do
+    items |> Enum.map(&to_node/1) |> with_commas(container_size)
+  end
+
+  defp to_key_value_children(items, container_size) do
+    items |> Enum.map(&to_key_value_node/1) |> with_commas(container_size)
+  end
+
+  defp with_commas(children, container_size) do
+    children
+    |> Enum.with_index()
+    |> Enum.map(fn {node, index} ->
+      comma = if index != container_size - 1, do: ",", else: ""
+
+      case node do
+        %{text: text, expanded: %{suffix: suffix} = expanded} = node ->
+          %{node | text: text <> comma, expanded: %{expanded | suffix: suffix <> comma}}
+
+        %{text: text} = node ->
+          %{node | text: text <> comma}
+      end
+    end)
   end
 end

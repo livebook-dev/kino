@@ -13,135 +13,137 @@ defmodule Kino.TreeTest do
   end
 
   test "renders strings as string nodes" do
-    assert %{type: "string", value: "some string"} = tree("some string")
+    assert %{text: ~s("some string"), children: nil} = tree("some string")
   end
 
-  test "renders atoms as atom nodes with string value" do
-    assert %{type: "atom", value: "Elixir.SomeModule"} = tree(SomeModule)
+  test "renders atoms as nodes with inspected value" do
+    assert %{text: ":foo", children: nil} = tree(:foo)
+    assert %{text: ~s(:"I need quotes"), children: nil} = tree(:"I need quotes")
+    assert %{text: "SomeModule", children: nil} = tree(SomeModule)
   end
 
-  test "renders integers as integer nodes" do
-    assert %{type: "integer", value: 100} = tree(100)
+  test "renders numbers as nodes with inspected value" do
+    assert %{text: "100", children: nil} = tree(100)
+    assert %{text: "100.0", children: nil} = tree(100.0)
   end
 
-  test "renders floats as float nodes" do
-    assert %{type: "float", value: 100.0} = tree(100.0)
-  end
-
-  test "renders tuples as tuple nodes with children" do
+  test "renders tuples as nodes with children" do
     assert %{
-              type: "tuple",
-              value: nil,
-              children: [
-                %{type: "integer", value: 1},
-                %{type: "string", value: "two"}
-              ]
-            } = tree({1, "two"})
+             text: "{...}",
+             expanded: %{prefix: "{", suffix: "}"},
+             children: [
+               %{text: "1", children: nil}
+             ]
+           } = tree({1})
   end
 
-  test "renders lists as list nodes with children" do
+  test "handles deep nesting" do
     assert %{
-              type: "list",
-              value: nil,
-              children: [
-                %{type: "integer", value: 1},
-                %{type: "string", value: "two"}
-              ]
-            } = tree([1, "two"])
+             text: "{...}",
+             expanded: %{prefix: "{", suffix: "}"},
+             children: [
+               %{
+                 text: "{...}",
+                 expanded: %{prefix: "{", suffix: "}"},
+                 children: [
+                   %{text: "1", children: nil}
+                 ]
+               }
+             ]
+           } = tree({{1}})
   end
 
-  test "renders keywords as a list nodes with key-value children" do
+  test "adds trailing commas to all but last child" do
     assert %{
-              type: "list",
-              value: nil,
-              children: [
-                %{
-                  type: "atom",
-                  key: %{type: "atom", value: "foo"},
-                  value: "oof"
-                },
-                %{
-                  type: "atom",
-                  key: %{type: "atom", value: "bar"},
-                  value: "baz"
-                }
-              ]
-            } = tree(foo: :oof, bar: :baz)
+             text: "{...}",
+             expanded: %{prefix: "{", suffix: "}"},
+             children: [
+               %{text: "1,", children: nil},
+               %{
+                 text: "{...},",
+                 expanded: %{prefix: "{", suffix: "},"},
+                 children: [
+                   %{text: ":x,", children: nil},
+                   %{text: ":y", children: nil}
+                 ]
+               },
+               %{text: ":three", children: nil}
+             ]
+           } = tree({1, {:x, :y}, :three})
   end
 
-  test "renders maps as map nodes with sorted key-value children" do
+  test "renders lists as nodes with children" do
     assert %{
-              type: "map",
-              value: nil,
-              children: [
-                %{
-                  type: "atom",
-                  key: %{type: "atom", value: "bar"},
-                  value: "baz"
-                },
-                %{
-                  type: "atom",
-                  key: %{type: "atom", value: "foo"},
-                  value: "oof"
-                }
-              ]
-            } = tree(%{foo: :oof, bar: :baz})
+             text: "[...]",
+             expanded: %{prefix: "[", suffix: "]"},
+             children: [
+               %{text: "1", children: nil}
+             ]
+           } = tree([1])
+  end
+
+  test "renders keywords as nodes with key-value children" do
+    assert %{
+             text: "[...]",
+             expanded: %{prefix: "[", suffix: "]"},
+             children: [
+               %{text: "foo: :bar", children: nil}
+             ]
+           } = tree(foo: :bar)
+  end
+
+  test "renders maps as nodes with key-value children" do
+    assert %{
+             text: "%{...}",
+             expanded: %{prefix: "%{", suffix: "}"},
+             children: [
+               %{text: "foo: :bar", children: nil}
+             ]
+           } = tree(%{foo: :bar})
+  end
+
+  test "uses the arrow for non-atom keys" do
+    assert %{
+             text: "%{...}",
+             expanded: %{prefix: "%{", suffix: "}"},
+             children: [
+               %{text: ~s("foo" => "bar"), children: nil}
+             ]
+           } = tree(%{"foo" => "bar"})
+  end
+
+  test "sorts maps by key" do
+    assert %{
+             text: "%{...}",
+             expanded: %{prefix: "%{", suffix: "}"},
+             children: [
+               %{text: "bar: :baz,", children: nil},
+               %{text: "foo: :oof", children: nil}
+             ]
+           } = tree(%{foo: :oof, bar: :baz})
   end
 
   test "uses Inspect protocol for compound keys" do
     assert %{
-              type: "map",
-              value: nil,
-              children: [
-                %{
-                  type: "atom",
-                  key: %{type: "compoundkey", value: "{1, 2}"},
-                  value: "true"
-                }
-              ]
-            } = tree(%{{1, 2} => true})
+             text: "%{...}",
+             expanded: %{prefix: "%{", suffix: "}"},
+             children: [
+                %{text: "{1, 2} => true", children: nil}
+             ]
+           } = tree(%{{1, 2} => true})
   end
 
-  test "renders structs as struct nodes" do
+  test "renders structs as nodes with children" do
     assert %{
-              type: "struct",
-              value: "Elixir.Kino.TreeTest.User",
-              children: [
-                %{
-                  type: "string",
-                  key: %{type: "atom", value: "email"},
-                  value: "user@example.com"
-                }
-              ]
-            } = tree(%User{email: "user@example.com"})
+             text: "%Kino.TreeTest.User{...}",
+             expanded: %{prefix: "%Kino.TreeTest.User{", suffix: "}"},
+             children: [
+               %{text: ~s(email: "user@example.com"), children: nil}
+             ]
+           } = tree(%User{email: "user@example.com"})
   end
 
   test "renders other terms as string nodes using Inspect protocol" do
-    assert %{type: "string", value: "#PID<" <> _rest} = tree(self())
-  end
-
-  test "handles nested data" do
-    assert %{
-              type: "map",
-              value: nil,
-              children: [
-                %{
-                  type: "list",
-                  key: %{type: "atom", value: "items"},
-                  value: nil,
-                  children: [
-                    %{type: "integer", value: 1},
-                    %{type: "atom", value: "nil"},
-                    %{
-                      type: "tuple",
-                      children: [
-                        %{type: "integer", value: 1},
-                        %{type: "integer", value: 2}
-                      ]
-                    }
-                  ]
-                }
-              ]
-            } = tree(%{items: [1, nil, {1, 2}]})
+    assert %{text: "#PID<" <> _rest, children: nil} = tree(self())
   end
 end
