@@ -1,6 +1,17 @@
 .app {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.875rem;
+
+  --gray-50: #f8fafc;
+  --gray-100: #f0f5f9;
+  --gray-200: #e1e8f0;
+  --gray-300: #cad5e0;
+  --gray-400: #91a4b7;
+  --gray-500: #61758a;
+  --gray-700: #304254;
+  --gray-800: #1c2a3a;
+
+  color: var(--gray-500);
 }
 
 div.item {
