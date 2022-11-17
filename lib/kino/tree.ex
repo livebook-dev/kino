@@ -26,7 +26,7 @@ defmodule Kino.Tree do
   use Kino.JS, assets_path: "lib/assets/tree"
 
   def new(data) do
-    Kino.JS.new(__MODULE__, to_node(data))
+    Kino.Layout.grid([Kino.JS.new(__MODULE__, to_node(data))], boxed: true)
   end
 
   defp to_node(string) when is_binary(string) do
