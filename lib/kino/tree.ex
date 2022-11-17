@@ -30,15 +30,15 @@ defmodule Kino.Tree do
   end
 
   defp to_node(string) when is_binary(string) do
-    %{text: inspect(string), children: nil}
+    %{content: inspect(string), children: nil}
   end
 
   defp to_node(atom) when is_atom(atom) do
-    %{text: inspect(atom), children: nil}
+    %{content: inspect(atom), children: nil}
   end
 
   defp to_node(number) when is_number(number) do
-    %{text: inspect(number), children: nil}
+    %{content: inspect(number), children: nil}
   end
 
   defp to_node(tuple) when is_tuple(tuple) do
@@ -46,7 +46,7 @@ defmodule Kino.Tree do
     children = tuple |> Tuple.to_list() |> to_children(size)
 
     %{
-      text: "{...}",
+      content: "{...}",
       children: children,
       expanded: %{prefix: "{", suffix: "}"}
     }
@@ -63,14 +63,14 @@ defmodule Kino.Tree do
       end
 
     %{
-      text: "[...]",
+      content: "[...]",
       children: children,
       expanded: %{prefix: "[", suffix: "]"}
     }
   end
 
   defp to_node(%Regex{} = regex) do
-    %{text: inspect(regex), children: nil}
+    %{content: inspect(regex), children: nil}
   end
 
   defp to_node(%module{} = struct) when is_struct(struct) do
@@ -79,7 +79,7 @@ defmodule Kino.Tree do
     children = to_key_value_children(map, size)
 
     %{
-      text: "%#{inspect(module)}{...}",
+      content: "%#{inspect(module)}{...}",
       children: children,
       expanded: %{prefix: "%#{inspect(module)}{", suffix: "}"}
     }
@@ -90,14 +90,14 @@ defmodule Kino.Tree do
     children = to_key_value_children(map, size)
 
     %{
-      text: "%{...}",
+      content: "%{...}",
       children: children,
       expanded: %{prefix: "%{", suffix: "}"}
     }
   end
 
   defp to_node(other) do
-    %{text: inspect(other), children: nil}
+    %{content: inspect(other), children: nil}
   end
 
   defp to_key_value_node({key, value}) do
@@ -108,11 +108,11 @@ defmodule Kino.Tree do
       end
 
     case to_node(value) do
-      %{text: text, expanded: %{prefix: prefix} = expanded} = node ->
-        %{node | text: key_text <> text, expanded: %{expanded | prefix: key_text <> prefix}}
+      %{content: content, expanded: %{prefix: prefix} = expanded} = node ->
+        %{node | content: key_text <> content, expanded: %{expanded | prefix: key_text <> prefix}}
 
-      %{text: text} = node ->
-        %{node | text: key_text <> text}
+      %{content: content} = node ->
+        %{node | content: key_text <> content}
     end
   end
 
@@ -131,11 +131,11 @@ defmodule Kino.Tree do
       comma = if index != container_size - 1, do: ",", else: ""
 
       case node do
-        %{text: text, expanded: %{suffix: suffix} = expanded} = node ->
-          %{node | text: text <> comma, expanded: %{expanded | suffix: suffix <> comma}}
+        %{content: content, expanded: %{suffix: suffix} = expanded} = node ->
+          %{node | content: content <> comma, expanded: %{expanded | suffix: suffix <> comma}}
 
-        %{text: text} = node ->
-          %{node | text: text <> comma}
+        %{content: content} = node ->
+          %{node | content: content <> comma}
       end
     end)
   end

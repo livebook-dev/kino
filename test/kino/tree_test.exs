@@ -13,40 +13,40 @@ defmodule Kino.TreeTest do
   end
 
   test "renders strings as string nodes" do
-    assert %{text: ~s("some string"), children: nil} = tree("some string")
+    assert %{content: ~s("some string"), children: nil} = tree("some string")
   end
 
   test "renders atoms as nodes with inspected value" do
-    assert %{text: ":foo", children: nil} = tree(:foo)
-    assert %{text: ~s(:"I need quotes"), children: nil} = tree(:"I need quotes")
-    assert %{text: "SomeModule", children: nil} = tree(SomeModule)
+    assert %{content: ":foo", children: nil} = tree(:foo)
+    assert %{content: ~s(:"I need quotes"), children: nil} = tree(:"I need quotes")
+    assert %{content: "SomeModule", children: nil} = tree(SomeModule)
   end
 
   test "renders numbers as nodes with inspected value" do
-    assert %{text: "100", children: nil} = tree(100)
-    assert %{text: "100.0", children: nil} = tree(100.0)
+    assert %{content: "100", children: nil} = tree(100)
+    assert %{content: "100.0", children: nil} = tree(100.0)
   end
 
   test "renders tuples as nodes with children" do
     assert %{
-             text: "{...}",
+             content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
-               %{text: "1", children: nil}
+               %{content: "1", children: nil}
              ]
            } = tree({1})
   end
 
   test "handles deep nesting" do
     assert %{
-             text: "{...}",
+             content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
                %{
-                 text: "{...}",
+                 content: "{...}",
                  expanded: %{prefix: "{", suffix: "}"},
                  children: [
-                   %{text: "1", children: nil}
+                   %{content: "1", children: nil}
                  ]
                }
              ]
@@ -55,100 +55,100 @@ defmodule Kino.TreeTest do
 
   test "adds trailing commas to all but last child" do
     assert %{
-             text: "{...}",
+             content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
-               %{text: "1,", children: nil},
+               %{content: "1,", children: nil},
                %{
-                 text: "{...},",
+                 content: "{...},",
                  expanded: %{prefix: "{", suffix: "},"},
                  children: [
-                   %{text: ":x,", children: nil},
-                   %{text: ":y", children: nil}
+                   %{content: ":x,", children: nil},
+                   %{content: ":y", children: nil}
                  ]
                },
-               %{text: ":three", children: nil}
+               %{content: ":three", children: nil}
              ]
            } = tree({1, {:x, :y}, :three})
   end
 
   test "renders lists as nodes with children" do
     assert %{
-             text: "[...]",
+             content: "[...]",
              expanded: %{prefix: "[", suffix: "]"},
              children: [
-               %{text: "1", children: nil}
+               %{content: "1", children: nil}
              ]
            } = tree([1])
   end
 
   test "renders keywords as nodes with key-value children" do
     assert %{
-             text: "[...]",
+             content: "[...]",
              expanded: %{prefix: "[", suffix: "]"},
              children: [
-               %{text: "foo: :bar", children: nil}
+               %{content: "foo: :bar", children: nil}
              ]
            } = tree(foo: :bar)
   end
 
   test "renders maps as nodes with key-value children" do
     assert %{
-             text: "%{...}",
+             content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{text: "foo: :bar", children: nil}
+               %{content: "foo: :bar", children: nil}
              ]
            } = tree(%{foo: :bar})
   end
 
   test "uses the arrow for non-atom keys" do
     assert %{
-             text: "%{...}",
+             content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{text: ~s("foo" => "bar"), children: nil}
+               %{content: ~s("foo" => "bar"), children: nil}
              ]
            } = tree(%{"foo" => "bar"})
   end
 
   test "sorts maps by key" do
     assert %{
-             text: "%{...}",
+             content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{text: "bar: :baz,", children: nil},
-               %{text: "foo: :oof", children: nil}
+               %{content: "bar: :baz,", children: nil},
+               %{content: "foo: :oof", children: nil}
              ]
            } = tree(%{foo: :oof, bar: :baz})
   end
 
   test "uses Inspect protocol for compound keys" do
     assert %{
-             text: "%{...}",
+             content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-                %{text: "{1, 2} => true", children: nil}
+               %{content: "{1, 2} => true", children: nil}
              ]
            } = tree(%{{1, 2} => true})
   end
 
   test "renders structs as nodes with children" do
     assert %{
-             text: "%Kino.TreeTest.User{...}",
+             content: "%Kino.TreeTest.User{...}",
              expanded: %{prefix: "%Kino.TreeTest.User{", suffix: "}"},
              children: [
-               %{text: ~s(email: "user@example.com"), children: nil}
+               %{content: ~s(email: "user@example.com"), children: nil}
              ]
            } = tree(%User{email: "user@example.com"})
   end
 
   test "uses special handling for regexes" do
-    assert %{text: "~r/foobar/", children: nil} = tree(~r/foobar/)
-    assert %{text: "~r//", children: nil} = tree(%Regex{})
+    assert %{content: "~r/foobar/", children: nil} = tree(~r/foobar/)
+    assert %{content: "~r//", children: nil} = tree(%Regex{})
   end
 
   test "renders other terms as string nodes using Inspect protocol" do
-    assert %{text: "#PID<" <> _rest, children: nil} = tree(self())
+    assert %{content: "#PID<" <> _rest, children: nil} = tree(self())
   end
 end
