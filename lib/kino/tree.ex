@@ -102,10 +102,9 @@ defmodule Kino.Tree do
 
   defp to_key_value_node({key, value}) do
     key_text =
-      if is_atom(key) do
-        String.trim_leading(inspect(key), ":") <> ": "
-      else
-        inspect(key) <> " => "
+      case inspect(key) do
+        ":" <> name when is_atom(key) -> name <> ": "
+        key -> key <> " => "
       end
 
     case to_node(value) do
