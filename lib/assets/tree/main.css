@@ -11,6 +11,23 @@
   --gray-700: #304254;
   --gray-800: #1c2a3a;
 
+  --ansi-color-black: black;
+  --ansi-color-red: #ca1243;
+  --ansi-color-green: #50a14f;
+  --ansi-color-yellow: #c18401;
+  --ansi-color-blue: #4078f2;
+  --ansi-color-magenta: #a726a4;
+  --ansi-color-cyan: #0184bc;
+  --ansi-color-white: white;
+  --ansi-color-light-black: #5c6370;
+  --ansi-color-light-red: #e45649;
+  --ansi-color-light-green: #34d399;
+  --ansi-color-light-yellow: #fde68a;
+  --ansi-color-light-blue: #61afef;
+  --ansi-color-light-magenta: #c678dd;
+  --ansi-color-light-cyan: #56b6c2;
+  --ansi-color-light-white: white;
+
   color: var(--gray-500);
 }
 
