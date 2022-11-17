@@ -5,12 +5,15 @@ defmodule Kino.SmartCell.Server do
 
   import Kino.Utils, only: [has_function?: 3]
 
+  @chunk_joiner "\n\n"
+  @chunk_joiner_size byte_size(@chunk_joiner)
+
   def start_link(module, ref, attrs, target_pid) do
     case :proc_lib.start_link(__MODULE__, :init, [module, ref, attrs, target_pid]) do
       {:error, error} ->
         {:error, error}
 
-      {:ok, pid, source, init_opts} ->
+      {:ok, pid, source, chunks, init_opts} ->
         editor =
           if editor_opts = init_opts[:editor] do
             source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
@@ -25,6 +28,7 @@ defmodule Kino.SmartCell.Server do
         {:ok, pid,
          %{
            source: source,
+           chunks: chunks,
            js_view: %{
              ref: ref,
              pid: pid,
@@ -55,9 +59,9 @@ defmodule Kino.SmartCell.Server do
         attrs
       end
 
-    source = module.to_source(attrs)
+    {source, chunks} = to_source(module, attrs)
 
-    :proc_lib.init_ack({:ok, self(), source, init_opts})
+    :proc_lib.init_ack({:ok, self(), source, chunks, init_opts})
 
     state = %{
       module: module,
@@ -128,14 +132,31 @@ defmodule Kino.SmartCell.Server do
   defp set_attrs(%{attrs: attrs} = state, attrs), do: state
 
   defp set_attrs(state, attrs) do
-    source = state.module.to_source(attrs)
+    {source, chunks} = to_source(state.module, attrs)
 
     send(
       state.target_pid,
       {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source,
-       %{reevaluate: state.reevaluate_on_change}}
+       %{chunks: chunks, reevaluate: state.reevaluate_on_change}}
     )
 
     %{state | attrs: attrs}
+  end
+
+  defp to_source(module, attrs) do
+    case module.to_source(attrs) do
+      sources when is_list(sources) ->
+        {chunks, _} =
+          Enum.map_reduce(sources, 0, fn source, offset ->
+            size = byte_size(source)
+            {{offset, size}, offset + size + @chunk_joiner_size}
+          end)
+
+        source = Enum.join(sources, @chunk_joiner)
+        {source, chunks}
+
+      source when is_binary(source) ->
+        {source, nil}
+    end
   end
 end
