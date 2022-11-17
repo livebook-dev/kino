@@ -42,7 +42,7 @@ defmodule Kino.Table do
                  total_rows: non_neg_integer() | nil
                }, state()}
 
-  use Kino.JS, assets_path: "lib/assets/data_table"
+  use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
 
   @limit 10

@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "esbuild.config.js"
+    "build": "./esbuild.config.js"
   },
   "dependencies": {
     "@glideapps/glide-data-grid": "^5.1.4",
