@@ -188,6 +188,12 @@ defmodule Kino.TreeTest do
     assert %{content: "#PID<" <> _rest, children: nil} = plaintext_tree(self())
   end
 
+  test "renders empty containers as leaf nodes" do
+    assert %{content: "[]", children: nil} = plaintext_tree([])
+    assert %{content: "{}", children: nil} = plaintext_tree({})
+    assert %{content: "%{}", children: nil} = plaintext_tree(%{})
+  end
+
   test "adds colors" do
     assert %{content: [%{text: "nil", color: "var(--ansi-color-magenta)"}]} = tree(nil)
     assert %{content: [%{text: "true", color: "var(--ansi-color-magenta)"}]} = tree(true)

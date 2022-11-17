@@ -48,6 +48,10 @@ defmodule Kino.Tree do
     %{content: [blue(inspect(number)) | suffix], children: nil}
   end
 
+  defp to_node({}, suffix) do
+    %{content: [black("{}") | suffix], children: nil}
+  end
+
   defp to_node(tuple, suffix) when is_tuple(tuple) do
     size = tuple_size(tuple)
     children = tuple |> Tuple.to_list() |> to_children(size)
@@ -57,6 +61,10 @@ defmodule Kino.Tree do
       children: children,
       expanded: %{prefix: [black("{")], suffix: [black("}") | suffix]}
     }
+  end
+
+  defp to_node([], suffix) do
+    %{content: [black("[]") | suffix], children: nil}
   end
 
   defp to_node(list, suffix) when is_list(list) do
@@ -93,6 +101,10 @@ defmodule Kino.Tree do
         suffix: [black("}") | suffix]
       }
     }
+  end
+
+  defp to_node(%{} = map, suffix) when map_size(map) == 0 do
+    %{content: [black("%{}") | suffix], children: nil}
   end
 
   defp to_node(map, suffix) when is_map(map) do
