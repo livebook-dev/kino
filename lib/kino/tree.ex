@@ -69,6 +69,10 @@ defmodule Kino.Tree do
     }
   end
 
+  defp to_node(%Regex{} = regex) do
+    %{text: inspect(regex), children: nil}
+  end
+
   defp to_node(%module{} = struct) when is_struct(struct) do
     map = Map.from_struct(struct)
     size = map_size(map)

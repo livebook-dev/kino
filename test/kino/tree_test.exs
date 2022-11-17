@@ -143,6 +143,11 @@ defmodule Kino.TreeTest do
            } = tree(%User{email: "user@example.com"})
   end
 
+  test "uses special handling for regexes" do
+    assert %{text: "~r/foobar/", children: nil} = tree(~r/foobar/)
+    assert %{text: "~r//", children: nil} = tree(%Regex{})
+  end
+
   test "renders other terms as string nodes using Inspect protocol" do
     assert %{text: "#PID<" <> _rest, children: nil} = tree(self())
   end
