@@ -265,3 +265,27 @@ select.input {
 select option {
   color: black;
 }
+
+.search {
+  position: relative;
+  display: inline-block;
+}
+
+.search .tooltip {
+  visibility: hidden;
+  width: 125px;
+  background-color: var(--gray-200);
+  color: var(--gray-500);
+  text-align: center;
+  font-size: .875rem;
+  border-radius: 6px;
+  padding: 4px 0;
+  position: absolute;
+  bottom: 2px;
+  z-index: 1;
+  margin-left: 4px;
+}
+
+.search:hover .tooltip {
+  visibility: visible;
+}
