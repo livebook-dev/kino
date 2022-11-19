@@ -40,6 +40,7 @@ div.clickable {
 }
 
 div.icon-container {
+  flex-shrink: 0;
   display: inline-block;
   width: 2ch;
   margin-right: 2px;
