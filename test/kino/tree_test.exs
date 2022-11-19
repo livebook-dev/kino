@@ -141,6 +141,10 @@ defmodule Kino.TreeTest do
     assert %{content: "~r//", children: nil} = plaintext_tree(%Regex{})
   end
 
+  test "uses the Inspect protocol for structs that implement it" do
+    assert %{content: "~D[2022-01-01]", children: nil} = plaintext_tree(Date.new!(2022, 1, 1))
+  end
+
   test "renders other terms as string nodes using Inspect protocol" do
     assert %{content: "#PID<" <> _rest, children: nil} = plaintext_tree(self())
   end

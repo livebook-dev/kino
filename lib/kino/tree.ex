@@ -91,18 +91,22 @@ defmodule Kino.Tree do
   end
 
   defp to_node(%module{} = struct, suffix) when is_struct(struct) do
-    map = Map.from_struct(struct)
-    size = map_size(map)
-    children = to_key_value_children(map, size)
+    if Inspect.impl_for(struct) != Inspect.Any do
+      %{content: [black(inspect(struct)) | suffix], children: nil}
+    else
+      map = Map.from_struct(struct)
+      size = map_size(map)
+      children = to_key_value_children(map, size)
 
-    %{
-      content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
-      children: children,
-      expanded: %{
-        prefix: [black("%"), blue(inspect(module)), black("{")],
-        suffix: [black("}") | suffix]
+      %{
+        content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
+        children: children,
+        expanded: %{
+          prefix: [black("%"), blue(inspect(module)), black("{")],
+          suffix: [black("}") | suffix]
+        }
       }
-    }
+    end
   end
 
   defp to_node(%{} = map, suffix) when map_size(map) == 0 do
