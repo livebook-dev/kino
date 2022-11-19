@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "./esbuild.config.js"
+    "build": "esbuild main.js --bundle --minify --outfile=build/main.js --format=esm --loader:.js=jsx"
   },
   "dependencies": {
     "@glideapps/glide-data-grid": "^5.1.4",
