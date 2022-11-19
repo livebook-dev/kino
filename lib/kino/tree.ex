@@ -21,10 +21,21 @@ defmodule Kino.Tree do
       }
 
       Kino.Tree.new(data)
+
+  The tree view is particularly useful when inspecting larger data
+  structures:
+
+      data = Process.info(self())
+      Kino.Tree.new(data)
+
   """
 
   use Kino.JS, assets_path: "lib/assets/tree"
 
+  @doc """
+  Creates a new kino displaying the given data structure.
+  """
+  @spec new(term()) :: Kino.Layout.t()
   def new(data) do
     tree = to_node(data, [])
     kino = Kino.JS.new(__MODULE__, tree)
