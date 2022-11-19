@@ -67,6 +67,15 @@ ol.show {
   display: block;
 }
 
+ol li {
+  display: flex;
+  flex-direction: column;
+}
+
 div.suffix {
   margin-left: 2ch;
+}
+
+span.code {
+  white-space: pre;
 }
