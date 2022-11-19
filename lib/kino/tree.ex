@@ -26,7 +26,9 @@ defmodule Kino.Tree do
   use Kino.JS, assets_path: "lib/assets/tree"
 
   def new(data) do
-    Kino.Layout.grid([Kino.JS.new(__MODULE__, to_node(data, []))], boxed: true)
+    tree = to_node(data, [])
+    kino = Kino.JS.new(__MODULE__, tree)
+    Kino.Layout.grid([kino], boxed: true)
   end
 
   defp to_node(string, suffix) when is_binary(string) do
@@ -146,15 +148,15 @@ defmodule Kino.Tree do
   end
 
   defp to_children(items, container_size) do
-    items
-    |> Enum.with_index()
-    |> Enum.map(fn {item, index} -> to_node(item, suffix(index, container_size)) end)
+    Enum.with_index(items, fn item, index ->
+      to_node(item, suffix(index, container_size))
+    end)
   end
 
   defp to_key_value_children(items, container_size) do
-    items
-    |> Enum.with_index()
-    |> Enum.map(fn {item, index} -> to_key_value_node(item, suffix(index, container_size)) end)
+    Enum.with_index(items, fn item, index ->
+      to_key_value_node(item, suffix(index, container_size))
+    end)
   end
 
   defp suffix(index, container_size) do

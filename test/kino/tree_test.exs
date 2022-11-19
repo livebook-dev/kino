@@ -1,53 +1,6 @@
 defmodule Kino.TreeTest do
   use Kino.LivebookCase, async: true
 
-  defp tree(input) do
-    %Kino.Layout{type: :grid, outputs: [js: %{js_view: %{ref: ref}}]} = Kino.Tree.new(input)
-    send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
-    assert_receive {:connect_reply, data, %{ref: ^ref}}
-    data
-  end
-
-  # Convert all content to strings for simpler assertions.
-  defp plaintext_tree(input) do
-    input |> tree() |> plaintext()
-  end
-
-  defp plaintext(nil) do
-    nil
-  end
-
-  defp plaintext(list) when is_list(list) do
-    Enum.map(list, &plaintext/1)
-  end
-
-  defp plaintext(
-         %{
-           content: content,
-           children: children,
-           expanded: %{prefix: prefix, suffix: suffix} = expanded
-         } = node
-       ) do
-    %{
-      node
-      | content: text_of(content),
-        children: Enum.map(children, &plaintext/1),
-        expanded: %{expanded | prefix: text_of(prefix), suffix: text_of(suffix)}
-    }
-  end
-
-  defp plaintext(%{content: content, children: nil} = node) do
-    %{node | content: text_of(content)}
-  end
-
-  defp text_of(list) when is_list(list) do
-    list |> Enum.map(& &1.text) |> Enum.join()
-  end
-
-  defmodule User do
-    defstruct [:email]
-  end
-
   test "renders strings as string nodes" do
     assert %{content: ~s("some string"), children: nil} = plaintext_tree("some string")
   end
@@ -169,6 +122,10 @@ defmodule Kino.TreeTest do
            } = plaintext_tree(%{{1, 2} => true})
   end
 
+  defmodule User do
+    defstruct [:email]
+  end
+
   test "renders structs as nodes with children" do
     assert %{
              content: "%Kino.TreeTest.User{...}",
@@ -220,5 +177,48 @@ defmodule Kino.TreeTest do
                }
              ]
            } = tree(foo: true)
+  end
+
+  defp tree(input) do
+    %Kino.Layout{type: :grid, outputs: [js: %{js_view: %{ref: ref}}]} = Kino.Tree.new(input)
+    send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
+    assert_receive {:connect_reply, data, %{ref: ^ref}}
+    data
+  end
+
+  # Convert all content to strings for simpler assertions.
+  defp plaintext_tree(input) do
+    input |> tree() |> plaintext()
+  end
+
+  defp plaintext(nil) do
+    nil
+  end
+
+  defp plaintext(list) when is_list(list) do
+    Enum.map(list, &plaintext/1)
+  end
+
+  defp plaintext(
+         %{
+           content: content,
+           children: children,
+           expanded: %{prefix: prefix, suffix: suffix} = expanded
+         } = node
+       ) do
+    %{
+      node
+      | content: text_of(content),
+        children: Enum.map(children, &plaintext/1),
+        expanded: %{expanded | prefix: text_of(prefix), suffix: text_of(suffix)}
+    }
+  end
+
+  defp plaintext(%{content: content, children: nil} = node) do
+    %{node | content: text_of(content)}
+  end
+
+  defp text_of(list) when is_list(list) do
+    list |> Enum.map(& &1.text) |> Enum.join()
   end
 end
