@@ -273,6 +273,17 @@ defmodule Kino.Output do
               default: String.t(),
               destination: Process.dest()
             }
+          | %{
+              type: :image,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: nil,
+              destination: Process.dest(),
+              format: :rgb | :png | :jpeg,
+              size: {pos_integer(), pos_integer()} | nil,
+              fit: :match | :contain | :pad | :crop
+            }
 
   @typedoc """
   A control widget.

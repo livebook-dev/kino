@@ -259,6 +259,85 @@ defmodule Kino.Input do
   end
 
   @doc """
+  Creates a new image input.
+
+  The input value is a map, with the image binary and metadata:
+
+  ```elixir
+  %{
+    data: binary(),
+    height: pos_integer(),
+    width: pos_integer(),
+    format: :rgb | :png | :jpeg
+  }
+  ```
+
+  Note that the value can also be `nil`, if no image is selected.
+
+  ## Options
+
+    * `:format` - the format to read the image as, either of:
+
+      * `:rgb` (default) - the binary includes raw pixel values, each
+        encoded as a single byte in the HWC order. Such binary can be
+        directly converted to an `Nx` tensor, with no additional decoding
+
+      * `:png`
+
+      * `:jpeg` (or `:jpg`)
+
+    * `:size` - the size to fit the image into, given as `{height, width}`
+
+    * `:fit` - the strategy of fitting the image into `:size`, either of:
+
+      * `:match` (default) - resizes the image to `:size`, with no
+        respect for aspect ratio
+
+      * `:contain` - resizes the image, such that it fits in a box of
+        `:size`, but preserving the aspect ratio. The resulting image
+        can be smaller or equal to `:size`
+
+      * `:pad` - same as `:contain`, but pads the image to match `:size`
+        exactly
+
+      * `:crop` - resizes the image, such that one edge fits in `:size`
+        and the other overflows, then center-crops the image to match
+        `:size` exactly
+
+  """
+  @spec image(String.t(), keyword()) :: t()
+  def image(label, opts \\ []) do
+    format =
+      case Keyword.get(opts, :format, :rgb) do
+        :rgb ->
+          :rgb
+
+        :png ->
+          :png
+
+        :jpeg ->
+          :jpeg
+
+        :jpg ->
+          :jpeg
+
+        other ->
+          raise ArgumentError,
+                "expected :format to be either of :rgb, :png or :jpeg/:jpg, got: #{inspect(other)}"
+      end
+
+    size = Keyword.get(opts, :size, nil)
+    fit = Keyword.get(opts, :fit, :match)
+
+    unless fit in [:match, :contain, :pad, :crop] do
+      raise ArgumentError,
+            "expected :fit to be either of :match, :contain, :pad or :crop, got: #{inspect(fit)}"
+    end
+
+    new(%{type: :image, label: label, default: nil, size: size, format: format, fit: fit})
+  end
+
+  @doc """
   Synchronously reads the current input value.
 
   Note that to retrieve the value, the input must be rendered first,
