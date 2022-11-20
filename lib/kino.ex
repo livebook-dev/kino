@@ -89,6 +89,14 @@ defmodule Kino do
 
   Also see `Kino.animate/3`.
 
+  ### Kino.Tree
+
+  `Kino.Tree` displays arbitrarily nested data structure as a
+  tree view.
+
+      data = Process.info(self())
+      Kino.Tree.new(data)
+
   ### User interactions
 
   `Kino.Input` and `Kino.Control` provide a set of widgets for
