@@ -18,9 +18,9 @@ defmodule Kino.DataTableTest do
                  %{key: "1", label: ":name"}
                ],
                rows: [
-                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
-                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
-                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
+                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
+                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
+                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
                ],
                order: :asc,
                order_by: nil,
@@ -39,9 +39,9 @@ defmodule Kino.DataTableTest do
                  %{key: "1", label: ":name"}
                ],
                rows: [
-                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
-                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}},
-                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}}
+                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
+                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
+                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}}
                ],
                order: :desc,
                order_by: "0",
@@ -144,9 +144,9 @@ defmodule Kino.DataTableTest do
                  %{key: "1", label: ":name"}
                ],
                rows: [
-                 %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}},
-                 %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
-                 %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}}
+                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
+                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
+                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
                ],
                order: :asc,
                order_by: nil,
@@ -170,9 +170,9 @@ defmodule Kino.DataTableTest do
         %{key: "1", label: ":name"}
       ],
       rows: [
-        %{fields: %{"0" => "2", "1" => ~s/"Terry Jeffords"/}},
-        %{fields: %{"0" => "1", "1" => ~s/"Jake Peralta"/}},
-        %{fields: %{"0" => "3", "1" => ~s/"Amy Santiago"/}}
+        %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
+        %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
+        %{fields: %{"0" => "3", "1" => "Amy Santiago"}}
       ],
       order: :desc,
       order_by: "1"

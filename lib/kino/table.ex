@@ -142,7 +142,7 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
-    sample_data = List.first(rows)
+    sample_data = if rows, do: List.first(rows)
 
     columns =
       if sample_data,
@@ -173,12 +173,14 @@ defmodule Kino.Table do
   defp type_of("http" <> _rest), do: "uri"
 
   defp type_of(data) do
-    case Float.parse(data) do
-      {_, ""} -> "number"
-      _ -> if date?(data) or date_time?(data), do: "date", else: "text"
+    cond do
+      number?(data) -> "number"
+      date?(data) or date_time?(data) -> "date"
+      true -> "text"
     end
   end
 
+  defp number?(value), do: match?({_, ""}, Float.parse(value))
   defp date?(value), do: match?({:ok, _}, Date.from_iso8601(value))
   defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
 
