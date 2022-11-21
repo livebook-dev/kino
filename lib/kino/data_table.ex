@@ -240,5 +240,4 @@ defmodule Kino.DataTable do
   defp value_to_string(value) do
     if String.Chars.impl_for(value), do: "#{value}", else: "#{inspect(value)}"
   end
-
 end
