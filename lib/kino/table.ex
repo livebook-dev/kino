@@ -143,14 +143,16 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
-    sample_data = if rows, do: List.first(rows)
-
     columns =
-      if sample_data,
-        do:
-          infer_types(sample_data)
-          |> Enum.zip_with(columns, fn type, column -> Map.put_new(column, :type, type) end),
-        else: columns
+      if sample_row = List.first(rows) do
+        sample_row
+        |> infer_types()
+        |> Enum.zip_with(columns, fn type, column ->
+          Map.put_new(column, :type, type)
+        end)
+      else
+        columns
+      end
 
     content = %{
       rows: rows,
@@ -167,7 +169,7 @@ defmodule Kino.Table do
   end
 
   defp infer_types(row) do
-    fields = Map.values(row.fields) |> Enum.map(&String.trim(&1, "\""))
+    fields = Map.values(row.fields)
     Enum.map(fields, &type_of/1)
   end
 

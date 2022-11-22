@@ -72,8 +72,7 @@ export function init(ctx, data) {
     "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
   );
 
-  const container = document.getElementById("root");
-  const root = createRoot(container);
+  const root = createRoot(ctx.root);
   root.render(<App ctx={ctx} data={data} />);
 }
 
@@ -180,14 +179,25 @@ function App({ ctx, data }) {
           </span>
         </div>
         <div className="navigation__space"></div>
-        {hasRefetch && <Refetch />}
-        <Search toggleSearch={toggleSearch} />
-        <Limit limit={content.limit} totalRows={totalRows} ctx={ctx} />
+        {hasRefetch && (
+          <RefetchButton onRefetch={() => ctx.pushEvent("refetch")} />
+        )}
+        <SearchButton toggleSearch={toggleSearch} />
+        <LimitSelect
+          limit={content.limit}
+          totalRows={totalRows}
+          onChange={(limit) => ctx.pushEvent("limit", { limit })}
+        />
         {hasPagination && (
           <Pagination
             page={content.page}
             maxPage={content.max_page}
-            ctx={ctx}
+            onPrev={() =>
+              ctx.pushEvent("show_page", { page: content.page - 1 })
+            }
+            onNext={() =>
+              ctx.pushEvent("show_page", { page: content.page + 1 })
+            }
           />
         )}
       </div>
@@ -222,19 +232,15 @@ function App({ ctx, data }) {
   );
 }
 
-function Refetch() {
-  const refetch = () => {
-    ctx.pushEvent("refetch");
-  };
-
+function RefetchButton({ onRefetch }) {
   return (
-    <button className="icon-button" aria-label="refresh" onClick={refetch}>
+    <button className="icon-button" aria-label="refresh" onClick={onRefetch}>
       <RiRefreshLine />
     </button>
   );
 }
 
-function Search({ toggleSearch }) {
+function SearchButton({ toggleSearch }) {
   return (
     <span className="tooltip right" data-tooltip="Current page search">
       <button
@@ -248,16 +254,16 @@ function Search({ toggleSearch }) {
   );
 }
 
-function Limit({ limit, totalRows, ctx }) {
-  const handleChange = (event) => {
-    ctx.pushEvent("limit", { limit: parseInt(event.target.value) });
-  };
-
+function LimitSelect({ limit, totalRows, onChange }) {
   return (
     <div>
       <form>
         <label className="input-label">Show</label>
-        <select className="input" value={limit} onChange={handleChange}>
+        <select
+          className="input"
+          value={limit}
+          onChange={(event) => onChange(parseInt(event.target.value))}
+        >
           <option value="10">10</option>
           <option value="15">15</option>
           <option value="20">20</option>
@@ -268,20 +274,12 @@ function Limit({ limit, totalRows, ctx }) {
   );
 }
 
-function Pagination({ page, maxPage, ctx }) {
-  const prev = () => {
-    ctx.pushEvent("show_page", { page: page - 1 });
-  };
-
-  const next = () => {
-    ctx.pushEvent("show_page", { page: page + 1 });
-  };
-
+function Pagination({ page, maxPage, onPrev, onNext }) {
   return (
     <div className="pagination">
       <button
         className="pagination__button"
-        onClick={prev}
+        onClick={onPrev}
         disabled={page === 1}
       >
         <RiArrowLeftSLine />
@@ -294,7 +292,7 @@ function Pagination({ page, maxPage, ctx }) {
       </div>
       <button
         className="pagination__button"
-        onClick={next}
+        onClick={onNext}
         disabled={page === maxPage}
       >
         <span>Next</span>
