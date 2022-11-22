@@ -224,6 +224,7 @@ function App({ ctx, data }) {
           smoothScrollX={true}
           smoothScrollY={true}
           onColumnResize={onColumnResize}
+          columnSelect="none"
         />
       )}
       {!hasData && <p className="no-data">No data</p>}
