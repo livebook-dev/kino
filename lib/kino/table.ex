@@ -42,7 +42,7 @@ defmodule Kino.Table do
                  total_rows: non_neg_integer() | nil
                }, state()}
 
-  use Kino.JS, assets_path: "lib/assets/data_table"
+  use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
 
   @limit 10
@@ -98,6 +98,11 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
+  def handle_event("limit", %{"limit" => limit}, ctx) do
+    ctx = if limit == ctx.assigns.content.total_rows, do: assign(ctx, page: 1), else: ctx
+    {:noreply, ctx |> assign(limit: limit) |> broadcast_update()}
+  end
+
   def handle_event("order_by", %{"key" => key_string, "order" => order}, ctx) do
     order = String.to_existing_atom(order)
 
@@ -138,6 +143,17 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
+    columns =
+      if sample_row = List.first(rows) do
+        sample_row
+        |> infer_types()
+        |> Enum.zip_with(columns, fn type, column ->
+          Map.put_new(column, :type, type)
+        end)
+      else
+        columns
+      end
+
     content = %{
       rows: rows,
       columns: columns,
@@ -145,11 +161,31 @@ defmodule Kino.Table do
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: ctx.assigns.order,
-      order_by: key_to_string[ctx.assigns.order_by]
+      order_by: key_to_string[ctx.assigns.order_by],
+      limit: ctx.assigns.limit
     }
 
     {content, ctx}
   end
+
+  defp infer_types(row) do
+    fields = Map.values(row.fields)
+    Enum.map(fields, &type_of/1)
+  end
+
+  defp type_of("http" <> _rest), do: "uri"
+
+  defp type_of(data) do
+    cond do
+      number?(data) -> "number"
+      date?(data) or date_time?(data) -> "date"
+      true -> "text"
+    end
+  end
+
+  defp number?(value), do: match?({_, ""}, Float.parse(value))
+  defp date?(value), do: match?({:ok, _}, Date.from_iso8601(value))
+  defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
 
   # Map keys to string representation for the client side
   defp stringify_keys(columns, rows, key_to_string) do

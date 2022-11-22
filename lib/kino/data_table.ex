@@ -214,7 +214,7 @@ defmodule Kino.DataTable do
 
     rows =
       Enum.map(records, fn record ->
-        %{fields: Map.new(record, fn {key, value} -> {key, inspect(value)} end)}
+        %{fields: Map.new(record, fn {key, value} -> {key, value_to_string(value)} end)}
       end)
 
     total_rows = count || state.total_rows
@@ -235,5 +235,9 @@ defmodule Kino.DataTable do
     else
       slicing_fun.(rows_spec.offset, rows_spec.limit, slicing_cache)
     end
+  end
+
+  defp value_to_string(value) do
+    if String.Chars.impl_for(value), do: "#{value}", else: "#{inspect(value)}"
   end
 end
