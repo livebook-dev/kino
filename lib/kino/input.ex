@@ -290,12 +290,12 @@ defmodule Kino.Input do
 
     * `:fit` - the strategy of fitting the image into `:size`, either of:
 
-      * `:match` (default) - resizes the image to `:size`, with no
-        respect for aspect ratio
+      * `:contain` (default) - resizes the image, such that it fits in
+        a box of `:size`, but preserving the aspect ratio. The resulting
+        image can be smaller or equal to `:size`
 
-      * `:contain` - resizes the image, such that it fits in a box of
-        `:size`, but preserving the aspect ratio. The resulting image
-        can be smaller or equal to `:size`
+      * `:match` - resizes the image to `:size`, with no respect for
+        aspect ratio
 
       * `:pad` - same as `:contain`, but pads the image to match `:size`
         exactly
@@ -327,11 +327,11 @@ defmodule Kino.Input do
       end
 
     size = Keyword.get(opts, :size, nil)
-    fit = Keyword.get(opts, :fit, :match)
+    fit = Keyword.get(opts, :fit, :contain)
 
     unless fit in [:match, :contain, :pad, :crop] do
       raise ArgumentError,
-            "expected :fit to be either of :match, :contain, :pad or :crop, got: #{inspect(fit)}"
+            "expected :fit to be either of :contain, :match, :pad or :crop, got: #{inspect(fit)}"
     end
 
     new(%{type: :image, label: label, default: nil, size: size, format: format, fit: fit})
