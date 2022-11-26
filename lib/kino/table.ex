@@ -99,7 +99,8 @@ defmodule Kino.Table do
   end
 
   def handle_event("limit", %{"limit" => limit}, ctx) do
-    ctx = if limit == ctx.assigns.content.total_rows, do: assign(ctx, page: 1), else: ctx
+    max_page = ceil(ctx.assigns.content.total_rows / limit)
+    ctx = if ctx.assigns.content.page > max_page, do: assign(ctx, page: max_page), else: ctx
     {:noreply, ctx |> assign(limit: limit) |> broadcast_update()}
   end
 
