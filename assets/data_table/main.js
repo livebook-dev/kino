@@ -350,13 +350,13 @@ function HeaderMenu({ layerProps, orderBy }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item" onClick={() => orderBy("asc")}>
-        ascending
+        Sort: ascending
       </div>
       <div className="header-menu-item" onClick={() => orderBy("desc")}>
-        descending
+        Sort: descending
       </div>
       <div className="header-menu-item" onClick={() => orderBy(null)}>
-        none
+        Sort: none
       </div>
     </div>
   );
