@@ -10,6 +10,7 @@ import {
   RiArrowRightSLine,
   RiSearch2Line,
 } from "react-icons/ri";
+import { useLayer } from "react-laag";
 
 import "@glideapps/glide-data-grid/dist/index.css";
 import "./main.css";
@@ -83,6 +84,7 @@ function App({ ctx, data }) {
       id: column.key,
       width: columnWidth[column.type] || 300,
       icon: headerIcons[column.type] || GridCellKind.Text,
+      hasMenu: true,
     };
   });
 
@@ -102,6 +104,8 @@ function App({ ctx, data }) {
   const [showSearch, setShowSearch] = useState(false);
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
+  const [menu, setMenu] = useState(undefined);
+  const [showMenu, setShowMenu] = useState(false);
 
   const infiniteScroll = content.limit === totalRows;
   const height = totalRows >= 10 && infiniteScroll ? 484 : null;
@@ -132,11 +136,28 @@ function App({ ctx, data }) {
     setShowSearch(!showSearch);
   };
 
-  const orderBy = (colIndex) => {
-    const newKey = columns[colIndex].id;
-    const [key, order] = reorder(content.order_by, content.order, newKey);
-    ctx.pushEvent("order_by", { key, order });
+  const orderBy = (order) => {
+    const key = order ? columns[menu.column].id : null;
+    ctx.pushEvent("order_by", { key, order: order ?? "asc" });
   };
+
+  const { layerProps, renderLayer } = useLayer({
+    isOpen: showMenu,
+    auto: false,
+    placement: "bottom-end",
+    triggerOffset: 0,
+    onOutsideClick: () => setMenu(undefined),
+    trigger: {
+      getBounds: () => ({
+        left: menu?.bounds.x ?? 0,
+        top: menu?.bounds.y ?? 0,
+        width: menu?.bounds.width ?? 0,
+        height: menu?.bounds.height ?? 0,
+        right: (menu?.bounds.x ?? 0) + (menu?.bounds.width ?? 0),
+        bottom: (menu?.bounds.y ?? 0) + (menu?.bounds.height ?? 0),
+      }),
+    },
+  });
 
   const onColumnResize = useCallback((column, newSize) => {
     setColSizes((prevColSizes) => {
@@ -145,6 +166,10 @@ function App({ ctx, data }) {
         [column.title]: newSize,
       };
     });
+  }, []);
+
+  const onHeaderMenuClick = useCallback((column, bounds) => {
+    setMenu({ column, bounds });
   }, []);
 
   useEffect(() => {
@@ -168,6 +193,21 @@ function App({ ctx, data }) {
     });
     setColumns(newColumns);
   }, [colSizes]);
+
+  useEffect(() => {
+    const currentMenu = menu ? columns[menu.column].id : null;
+    const themeOverride = { bgHeader: "#F0F5F9" };
+    const newColumns = columns.map((header) => ({
+      ...header,
+      themeOverride: header.id === currentMenu ? themeOverride : null,
+    }));
+    setColumns(newColumns);
+  }, [showMenu]);
+
+  useEffect(() => {
+    const showMenu = menu ? true : false;
+    setShowMenu(showMenu);
+  }, [menu]);
 
   return (
     <div className="app">
@@ -214,7 +254,8 @@ function App({ ctx, data }) {
           headerHeight={44}
           verticalBorder={false}
           rowMarkers="both"
-          onHeaderClicked={orderBy}
+          onHeaderMenuClick={onHeaderMenuClick}
+          onCellContextMenu={(_, e) => e.preventDefault()}
           showSearch={showSearch}
           getCellsForSelection={true}
           onSearchClose={toggleSearch}
@@ -227,6 +268,8 @@ function App({ ctx, data }) {
           columnSelect="none"
         />
       )}
+      {showMenu &&
+        renderLayer(<HeaderMenu layerProps={layerProps} orderBy={orderBy} />)}
       {!hasData && <p className="no-data">No data</p>}
       <div id="portal" />
     </div>
@@ -303,14 +346,18 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function reorder(orderBy, order, key) {
-  if (orderBy === key) {
-    if (order === "asc") {
-      return [key, "desc"];
-    } else {
-      return [null, "asc"];
-    }
-  } else {
-    return [key, "asc"];
-  }
+function HeaderMenu({ layerProps, orderBy }) {
+  return (
+    <div className="header-menu" {...layerProps}>
+      <div className="header-menu-item" onClick={() => orderBy("asc")}>
+        ascending
+      </div>
+      <div className="header-menu-item" onClick={() => orderBy("desc")}>
+        descending
+      </div>
+      <div className="header-menu-item" onClick={() => orderBy(null)}>
+        none
+      </div>
+    </div>
+  );
 }
