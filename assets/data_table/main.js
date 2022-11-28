@@ -104,7 +104,7 @@ function App({ ctx, data }) {
   const [showSearch, setShowSearch] = useState(false);
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
-  const [menu, setMenu] = useState(undefined);
+  const [menu, setMenu] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
 
   const infiniteScroll = content.limit === totalRows;
@@ -146,7 +146,7 @@ function App({ ctx, data }) {
     auto: false,
     placement: "bottom-end",
     triggerOffset: 0,
-    onOutsideClick: () => setMenu(undefined),
+    onOutsideClick: () => setMenu(null),
     trigger: {
       getBounds: () => ({
         left: menu?.bounds.x ?? 0,
