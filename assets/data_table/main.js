@@ -58,13 +58,7 @@ const theme = {
   bgHeaderHovered: "#F0F5F9",
   bgHeaderHasFocus: "#E1E8F0",
   bgSearchResult: "#FFF7EC",
-};
-
-const columnWidth = {
-  text: 300,
-  number: 150,
-  uri: 250,
-  date: 150,
+  headerIconSize: 22,
 };
 
 export function init(ctx, data) {
@@ -82,14 +76,13 @@ function App({ ctx, data }) {
     return {
       title: column.label,
       id: column.key,
-      width: columnWidth[column.type] || 300,
       icon: headerIcons[column.type] || GridCellKind.Text,
       hasMenu: true,
     };
   });
 
   const columnsInitSize = columnsInitData.map((column) => {
-    return { [column.title]: column.width };
+    return { [column.title]: 250 };
   });
 
   const hasRefetch = data.features.includes("refetch");

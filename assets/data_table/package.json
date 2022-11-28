@@ -5,7 +5,7 @@
     "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/data_table/build/main.js --format=esm --loader:.js=jsx --watch"
   },
   "dependencies": {
-    "@glideapps/glide-data-grid": "^5.1.4",
+    "@glideapps/glide-data-grid": "^5.2.0",
     "lodash": "^4.17.21",
     "marked": "^4.2.2",
     "react": "^18.2.0",
@@ -13,5 +13,8 @@
     "react-icons": "^4.6.0",
     "react-laag": "^2.0.4",
     "react-responsive-carousel": "^3.2.23"
+  },
+  "devDependencies": {
+    "esbuild": "^0.15.16"
   }
 }
