@@ -329,8 +329,33 @@ select option {
   top: 50%;
   left: 100%;
   transform: translate(var(--distance), -50%);
-
   border-left: none;
   border-top-color: transparent;
   border-bottom-color: transparent;
+}
+
+.header-menu {
+  width: 150px;
+  padding: 8px;
+  border-radius: 6px;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e1e8f0;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+
+.header-menu-item {
+  font-size: 13px;
+  font-weight: 400;
+  font-family: "JetBrains Mono", monospace;
+  padding: 4px;
+  color: #304254;
+}
+
+.header-menu-item:hover {
+  cursor: pointer;
+  background-color: #f0f5f9;
 }
