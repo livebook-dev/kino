@@ -202,11 +202,7 @@ function App({ ctx, data }) {
       themeOverride: header.id === currentMenu ? themeOverride : null,
     }));
     setColumns(newColumns);
-  }, [showMenu]);
-
-  useEffect(() => {
-    const showMenu = menu ? true : false;
-    setShowMenu(showMenu);
+    setShowMenu(menu ? true : false);
   }, [menu]);
 
   return (
@@ -255,7 +251,6 @@ function App({ ctx, data }) {
           verticalBorder={false}
           rowMarkers="both"
           onHeaderMenuClick={onHeaderMenuClick}
-          onCellContextMenu={(_, e) => e.preventDefault()}
           showSearch={showSearch}
           getCellsForSelection={true}
           onSearchClose={toggleSearch}
