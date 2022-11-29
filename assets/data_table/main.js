@@ -15,7 +15,6 @@ import { useLayer } from "react-laag";
 
 import "@glideapps/glide-data-grid/dist/index.css";
 import "./main.css";
-import { get } from "lodash";
 
 const customHeaderIcons = {
   arrowUp: (
