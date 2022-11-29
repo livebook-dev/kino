@@ -108,6 +108,7 @@ function App({ ctx, data }) {
 
   const infiniteScroll = content.limit === totalRows;
   const height = totalRows >= 10 && infiniteScroll ? 484 : null;
+  const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
@@ -271,6 +272,7 @@ function App({ ctx, data }) {
           columnSelect="none"
           gridSelection={selection}
           onGridSelectionChange={setSelection}
+          rowMarkerStartIndex={rowMarkerStartIndex}
         />
       )}
       {showMenu &&
