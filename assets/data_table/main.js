@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import DataEditor, {
   GridCellKind,
   GridColumnIcon,
+  CompactSelection,
 } from "@glideapps/glide-data-grid";
 import {
   RiRefreshLine,
@@ -14,6 +15,7 @@ import { useLayer } from "react-laag";
 
 import "@glideapps/glide-data-grid/dist/index.css";
 import "./main.css";
+import { get } from "lodash";
 
 const customHeaderIcons = {
   arrowUp: (
@@ -99,6 +101,10 @@ function App({ ctx, data }) {
   const [colSizes, setColSizes] = useState(columnsInitSize);
   const [menu, setMenu] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [selection, setSelection] = useState({
+    rows: CompactSelection.empty(),
+    columns: CompactSelection.empty(),
+  });
 
   const infiniteScroll = content.limit === totalRows;
   const height = totalRows >= 10 && infiniteScroll ? 484 : null;
@@ -132,6 +138,14 @@ function App({ ctx, data }) {
   const orderBy = (order) => {
     const key = order ? columns[menu.column].id : null;
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
+  };
+
+  const selectAllCurrent = () => {
+    const newSelection = {
+      ...selection,
+      columns: CompactSelection.fromSingleSelection(menu.column),
+    };
+    setSelection(newSelection);
   };
 
   const { layerProps, renderLayer } = useLayer({
@@ -254,10 +268,18 @@ function App({ ctx, data }) {
           smoothScrollY={true}
           onColumnResize={onColumnResize}
           columnSelect="none"
+          gridSelection={selection}
+          onGridSelectionChange={setSelection}
         />
       )}
       {showMenu &&
-        renderLayer(<HeaderMenu layerProps={layerProps} orderBy={orderBy} />)}
+        renderLayer(
+          <HeaderMenu
+            layerProps={layerProps}
+            orderBy={orderBy}
+            selectAllCurrent={selectAllCurrent}
+          />
+        )}
       {!hasData && <p className="no-data">No data</p>}
       <div id="portal" />
     </div>
@@ -334,7 +356,7 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({ layerProps, orderBy }) {
+function HeaderMenu({ layerProps, orderBy, selectAllCurrent }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item" onClick={() => orderBy("asc")}>
@@ -345,6 +367,9 @@ function HeaderMenu({ layerProps, orderBy }) {
       </div>
       <div className="header-menu-item" onClick={() => orderBy(null)}>
         Sort: none
+      </div>
+      <div className="header-menu-item" onClick={selectAllCurrent}>
+        Select: all current
       </div>
     </div>
   );
