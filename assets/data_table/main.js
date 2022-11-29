@@ -371,7 +371,7 @@ function HeaderMenu({ layerProps, orderBy, selectAllCurrent }) {
         Sort: none
       </div>
       <div className="header-menu-item" onClick={selectAllCurrent}>
-        Select: all current
+        Select: current page
       </div>
     </div>
   );
