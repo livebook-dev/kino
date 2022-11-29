@@ -150,8 +150,9 @@ function App({ ctx, data }) {
 
   const { layerProps, renderLayer } = useLayer({
     isOpen: showMenu,
-    auto: false,
+    auto: true,
     placement: "bottom-end",
+    possiblePlacements: ["bottom-end", "bottom-center", "bottom-start"],
     triggerOffset: 0,
     onOutsideClick: () => setMenu(null),
     trigger: {
