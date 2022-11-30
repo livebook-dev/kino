@@ -360,12 +360,11 @@ defmodule Kino.Process do
   end
 
   defp generate_participant_entry(pid, idx) do
-    case Process.info(pid, :registered_name) do
-      {:registered_name, name} when is_atom(name) ->
-        "participant #{idx} AS #{module_or_atom_to_string(name)};"
-
-      _ ->
-        "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
+    try do
+      {:registered_name, name} = Process.info(pid, :registered_name)
+      "participant #{idx} AS #{module_or_atom_to_string(name)};"
+    rescue
+      _ -> "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
     end
   end
 
