@@ -79,6 +79,7 @@ function App({ ctx, data }) {
       id: column.key,
       icon: headerIcons[column.type] || GridCellKind.Text,
       hasMenu: true,
+      summary: data.content.summary?.[column.key],
     };
   });
 
@@ -108,11 +109,139 @@ function App({ ctx, data }) {
   const infiniteScroll = content.limit === totalRows;
   const height = totalRows >= 10 && infiniteScroll ? 484 : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
+  const headerHeight = content.summary ? 132 : 44;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
       ? totalRows % content.limit
       : content.limit;
+
+  const drawHeader = useCallback((args) => {
+    const {
+      ctx,
+      theme,
+      rect,
+      column,
+      menuBounds,
+      isHovered,
+      isSelected,
+      spriteManager,
+    } = args;
+
+    if (column.sourceIndex === 0) {
+      return true;
+    }
+
+    ctx.rect(rect.x, rect.y, rect.width, rect.height);
+
+    const fillStyle = isSelected ? theme.textHeaderSelected : theme.textHeader;
+    const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
+    const shouldDrawMenu = column.hasMenu === true && isHovered;
+    const hasSummary = column.summary ? true : false;
+
+    if (shouldDrawMenu && rect.width > 35) {
+      const fadeWidth = 35;
+      const fadeStart = rect.width - fadeWidth;
+      const fadeEnd = rect.width - fadeWidth * 0.7;
+
+      const fadeStartPercent = fadeStart / rect.width;
+      const fadeEndPercent = fadeEnd / rect.width;
+
+      const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
+      const trans = "rgba(48, 66, 84, 0)";
+
+      grad.addColorStop(0, fillStyle);
+      grad.addColorStop(fadeStartPercent, fillStyle);
+      grad.addColorStop(fadeEndPercent, trans);
+      grad.addColorStop(1, trans);
+      ctx.fillStyle = grad;
+  } else {
+      ctx.fillStyle = fillStyle;
+  }
+
+    if (column.icon) {
+      const variant = isSelected
+        ? "selected"
+        : column.style === "highlight"
+        ? "special"
+        : "normal";
+
+      const headerSize = theme.headerIconSize;
+
+      spriteManager.drawSprite(
+        column.icon,
+        variant,
+        ctx,
+        rect.x + 10,
+        rect.y + 10,
+        headerSize,
+        theme
+      );
+
+      if (column.overlayIcon) {
+        spriteManager.drawSprite(
+          column.overlayIcon,
+          isSelected ? "selected" : "special",
+          ctx,
+          rect.x + 19,
+          rect.y + 19,
+          18,
+          theme
+        );
+      }
+    }
+
+    ctx.fillText(
+      column.title,
+      menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
+      hasSummary
+        ? menuBounds.y - (theme.headerIconSize + 8)
+        : menuBounds.y + menuBounds.height / 2
+    );
+
+    if (hasSummary) {
+      const numericInfo = {
+        Min: column.summary.min ?? 0,
+        Max: column.summary.max ?? 0,
+        Mean: column.summary.mean ?? 0,
+        Nulls: column.summary.nulls ?? "",
+      };
+
+      const categoricalInfo = {
+        Unique: column.summary.unique ?? 0,
+        Top: column.summary.top ?? "",
+        "Top freq": column.summary.freq ?? "",
+        Nulls: column.summary.nulls ?? 0,
+      };
+
+      const summaryData =
+        column.summary.kind === "categorical" ? categoricalInfo : numericInfo;
+
+      ctx.fillStyle = fillInfoStyle;
+      Object.entries(summaryData).forEach(([key, value], index) => {
+        ctx.font = "bold 14px JetBrains Mono";
+        ctx.fillText(`${key}:`, rect.x + 12, rect.y + 8 * 3 * (index + 1) + 24);
+        ctx.font = "14px JetBrains Mono";
+        ctx.fillText(
+          value,
+          rect.x + ctx.measureText(key).width + 24,
+          rect.y + 8 * 3 * (index + 1) + 24
+        );
+      });
+    }
+
+    if (shouldDrawMenu) {
+      const arrowX = menuBounds.x + menuBounds.width / 2 - 5.5;
+      const arrowY = hasSummary
+        ? menuBounds.y + menuBounds.height / 2 - 3
+        : rect.height / 4;
+      const p = new Path2D("M12 16l-6-6h12z");
+      ctx.translate(arrowX - 8, arrowY);
+      ctx.fill(p);
+    }
+
+    return true;
+  }, []);
 
   const getData = useCallback(
     ([col, row]) => {
@@ -255,7 +384,8 @@ function App({ ctx, data }) {
           width="100%"
           height={height}
           rowHeight={44}
-          headerHeight={44}
+          headerHeight={headerHeight}
+          drawHeader={drawHeader}
           verticalBorder={false}
           rowMarkers="both"
           onHeaderMenuClick={onHeaderMenuClick}

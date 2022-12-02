@@ -163,7 +163,8 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
-      limit: ctx.assigns.limit
+      limit: ctx.assigns.limit,
+      summary: summary(columns)
     }
 
     {content, ctx}
@@ -211,4 +212,19 @@ defmodule Kino.Table do
 
     {columns, rows, key_to_string}
   end
+
+  # fake data - placeholders
+  def summary(data) do
+    for c <- data,
+        do: %{
+          "key" => c.key,
+          "min" => 10,
+          "max" => 50,
+          "mean" => 30,
+          "nulls" => "5%",
+          "kind" => "numeric"
+        }
+  end
 end
+
+231
