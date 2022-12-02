@@ -21,13 +21,16 @@ defmodule Kino.Image do
           }
 
   @type mime_type :: binary()
-  @type common_image_type :: :jpeg | :jpg | :png | :gif | :svg
+  @type common_image_type :: :jpeg | :jpg | :png | :gif | :svg | :pixel
 
   @doc """
   Creates a new kino displaying the given binary image.
 
-  The given type be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`
+  The given type be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`, `:pixel`
   or a string with image MIME type.
+
+  Note that a special `:pixel` format is supported, see `t:Kino.Output.image/0`
+  for the specification.
   """
   @spec new(binary(), common_image_type() | mime_type()) :: t()
   def new(content, type) do
@@ -39,10 +42,44 @@ defmodule Kino.Image do
   defp mime_type!(:png), do: "image/png"
   defp mime_type!(:gif), do: "image/gif"
   defp mime_type!(:svg), do: "image/svg+xml"
+  defp mime_type!(:pixel), do: "image/x-pixel"
   defp mime_type!("image/" <> _ = mime_type), do: mime_type
 
   defp mime_type!(other) do
     raise ArgumentError,
-          "expected image type to be either :jpeg, :png, :gif, :svg or an image MIME type string, got: #{inspect(other)}"
+          "expected image type to be either :jpeg, :png, :gif, :svg, :pixel or an image MIME type string, got: #{inspect(other)}"
+  end
+
+  @compile {:no_warn_undefined, Nx}
+
+  @doc """
+  Creates a new kino similarly to `new/2` from a compatible term.
+
+  Currently the supported terms are:
+
+    * `Nx.Tensor` in HWC order
+
+  """
+  @spec new(struct()) :: t()
+  def new(tensor) when is_struct(tensor, Nx.Tensor) do
+    type = Nx.type(tensor)
+
+    unless type == {:u, 8} do
+      raise ArgumentError, "expected Nx.Tensor to have type {:u, 8}, got: #{inspect(type)}"
+    end
+
+    {height, width, channels} =
+      case Nx.shape(tensor) do
+        shape = {_height, _width, channels} when channels in 1..4 ->
+          shape
+
+        shape ->
+          raise ArgumentError,
+                "expected Nx.Tensor to have shape {height, width, channels}, got: #{inspect(shape)}"
+      end
+
+    data = Nx.to_binary(tensor)
+    content = <<height::32-big, width::32-big, channels::8, data::binary>>
+    new(content, :pixel)
   end
 end

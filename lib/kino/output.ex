@@ -43,6 +43,20 @@ defmodule Kino.Output do
 
   @typedoc """
   A raw image in the given format.
+
+  ## Pixel data
+
+  Note that a special `image/x-pixel` MIME type is supported. The
+  binary consists of the following consecutive parts:
+
+    * height - 32 bits (unsigned big-endian integer)
+    * width - 32 bits (unsigned big-endian integer)
+    * channels - 8 bits (unsigned integer)
+    * data - pixel data in HWC order
+
+  Pixel data consists of 8-bit unsigned integers. The number of channels
+  can be either: 1 (grayscale), 2 (grayscale + alpha), 3 (RGB), or 4
+  (RGB + alpha).
   """
   @type image :: {:image, content :: binary(), mime_type :: binary()}
 
