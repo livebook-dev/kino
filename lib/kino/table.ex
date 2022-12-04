@@ -83,7 +83,8 @@ defmodule Kino.Table do
     payload = %{
       name: ctx.assigns.info.name,
       features: ctx.assigns.info.features,
-      content: ctx.assigns.content
+      content: ctx.assigns.content,
+      summary: ctx.assigns.info.summary
     }
 
     {:ok, payload, ctx}
@@ -163,8 +164,7 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
-      limit: ctx.assigns.limit,
-      summary: summary(columns)
+      limit: ctx.assigns.limit
     }
 
     {content, ctx}
@@ -212,19 +212,4 @@ defmodule Kino.Table do
 
     {columns, rows, key_to_string}
   end
-
-  # fake data - placeholders
-  def summary(data) do
-    for c <- data,
-        do: %{
-          "key" => c.key,
-          "min" => 10,
-          "max" => 50,
-          "mean" => 30,
-          "nulls" => "5%",
-          "kind" => "numeric"
-        }
-  end
 end
-
-231

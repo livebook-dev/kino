@@ -79,7 +79,6 @@ function App({ ctx, data }) {
       id: column.key,
       icon: headerIcons[column.type] || GridCellKind.Text,
       hasMenu: true,
-      summary: data.content.summary?.[column.key],
     };
   });
 
@@ -109,7 +108,7 @@ function App({ ctx, data }) {
   const infiniteScroll = content.limit === totalRows;
   const height = totalRows >= 10 && infiniteScroll ? 484 : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
-  const headerHeight = content.summary ? 132 : 44;
+  const headerHeight = data.summary ? 132 : 44;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
@@ -137,7 +136,7 @@ function App({ ctx, data }) {
     const fillStyle = isSelected ? theme.textHeaderSelected : theme.textHeader;
     const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
     const shouldDrawMenu = column.hasMenu === true && isHovered;
-    const hasSummary = column.summary ? true : false;
+    const hasSummary = data.summary ? true : false;
 
     if (shouldDrawMenu && rect.width > 35) {
       const fadeWidth = 35;
@@ -200,22 +199,23 @@ function App({ ctx, data }) {
     );
 
     if (hasSummary) {
+      const summary = data.summary.find(col => col.label === column.title);
+
       const numericInfo = {
-        Min: column.summary.min ?? 0,
-        Max: column.summary.max ?? 0,
-        Mean: column.summary.mean ?? 0,
-        Nulls: column.summary.nulls ?? "",
+        Min: summary.min ?? "",
+        Max: summary.max ?? "",
+        Mean: summary.mean ?? "",
+        Nulls: summary.nulls ?? "",
       };
 
       const categoricalInfo = {
-        Unique: column.summary.unique ?? 0,
-        Top: column.summary.top ?? "",
-        "Top freq": column.summary.freq ?? "",
-        Nulls: column.summary.nulls ?? 0,
+        Unique: summary.unique ?? "",
+        Top: summary.top ?? "",
+        "Top freq": summary.top_freq ?? "",
+        Nulls: summary.nulls ?? "",
       };
 
-      const summaryData =
-        column.summary.kind === "categorical" ? categoricalInfo : numericInfo;
+      const summaryData = summary.kind === "categorical" ? categoricalInfo : numericInfo;
 
       ctx.fillStyle = fillInfoStyle;
       Object.entries(summaryData).forEach(([key, value], index) => {
