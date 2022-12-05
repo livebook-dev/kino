@@ -251,23 +251,8 @@ defmodule Kino do
         when state: term()
   def animate(stream_or_interval_ms, state, fun)
 
-  def animate(interval_ms, state, fun) when is_integer(interval_ms) do
+  def animate(interval_ms, state, fun) when is_integer(interval_ms) and is_function(fun, 2) do
     frame = Kino.Frame.new()
-
-    fun =
-      cond do
-        is_function(fun, 1) ->
-          # TODO: remove on Kino v0.8
-          IO.warn(
-            "Passing arity-1 function to Kino.animate/3 is deprecated, " <>
-              "please use Kino.animate/2 or pass an arity-2 function"
-          )
-
-          fn _i, state -> fun.(state) end
-
-        is_function(fun, 2) ->
-          fun
-      end
 
     Kino.Frame.periodically(frame, interval_ms, {0, state}, fn {i, state} ->
       case fun.(i, state) do
