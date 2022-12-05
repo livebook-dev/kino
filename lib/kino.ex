@@ -112,6 +112,22 @@ defmodule Kino do
 
   Kino makes it possible to define custom JavaScript powered
   kinos, see `Kino.JS` and `Kino.JS.Live` for more details.
+
+  > #### Packaging {: .info}
+  >
+  > When publishing custom kinos and smart cells, please consider
+  > the following guidelines:
+  >
+  >   * prefix package name with `kino_`, usually followed by the
+  >     name of the integration, such as `kino_vega_lite`, `kino_ecto`
+  >
+  >   * namespace all modules under `KinoExample`, not `Kino.Example`.
+  >     Note that official packages maintained by the Livebook team
+  >     expose public APIs under `Kino.`, because they are essentially
+  >     direct extensions of `Kino` and we make sure no conflicting
+  >     modules exist. Unofficial packages should follow the usual
+  >     Elixir conventions with respect to module names
+  >
   '''
 
   import Kernel, except: [inspect: 1]
@@ -251,23 +267,8 @@ defmodule Kino do
         when state: term()
   def animate(stream_or_interval_ms, state, fun)
 
-  def animate(interval_ms, state, fun) when is_integer(interval_ms) do
+  def animate(interval_ms, state, fun) when is_integer(interval_ms) and is_function(fun, 2) do
     frame = Kino.Frame.new()
-
-    fun =
-      cond do
-        is_function(fun, 1) ->
-          # TODO: remove on Kino v0.8
-          IO.warn(
-            "Passing arity-1 function to Kino.animate/3 is deprecated, " <>
-              "please use Kino.animate/2 or pass an arity-2 function"
-          )
-
-          fn _i, state -> fun.(state) end
-
-        is_function(fun, 2) ->
-          fun
-      end
 
     Kino.Frame.periodically(frame, interval_ms, {0, state}, fn {i, state} ->
       case fun.(i, state) do

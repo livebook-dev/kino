@@ -324,24 +324,6 @@ defmodule Kino.Control do
     stream([source])
   end
 
-  # TODO: remove on Kino v0.8
-  @deprecated "Use Kino.Control.stream/1 and Kino.listen/2 instead"
-  def stream(source, fun) when is_function(fun, 1) do
-    source
-    |> stream()
-    |> Kino.listen(fun)
-  end
-
-  # TODO: remove on Kino v0.8
-  @deprecated "Use Kino.Control.stream/1 and Kino.listen/3 instead"
-  def stream(source, state, fun) when is_function(fun, 2) do
-    source
-    |> stream()
-    |> Kino.listen(state, fn event, state ->
-      {:cont, fun.(event, state)}
-    end)
-  end
-
   @doc """
   Same as `stream/1`, but attaches custom tag to every stream item.
 
@@ -372,24 +354,6 @@ defmodule Kino.Control do
     tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
 
     build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
-  end
-
-  # TODO: remove on Kino v0.8
-  @deprecated "Use Kino.Control.tagged_stream/1 and Kino.listen/2 instead"
-  def tagged_stream(entries, fun) when is_list(entries) and is_function(fun, 1) do
-    entries
-    |> tagged_stream()
-    |> Kino.listen(fun)
-  end
-
-  # TODO: remove on Kino v0.8
-  @deprecated "Use Kino.Control.tagged_stream/1 and Kino.listen/3 instead"
-  def tagged_stream(entries, state, fun) when is_list(entries) and is_function(fun, 2) do
-    entries
-    |> tagged_stream()
-    |> Kino.listen(state, fn event, state ->
-      {:cont, fun.(event, state)}
-    end)
   end
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok
