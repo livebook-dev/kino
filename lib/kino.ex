@@ -126,7 +126,7 @@ defmodule Kino do
   >     expose public APIs under `Kino.`, because they are essentially
   >     direct extensions of `Kino` and we make sure no conflicting
   >     modules exist. Unofficial packages should follow the usual
-  >     Elixir conventions with respect to modules names
+  >     Elixir conventions with respect to module names
   >
   '''
 
