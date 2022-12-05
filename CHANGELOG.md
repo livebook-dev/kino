@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.8.0](https://github.com/livebook-dev/kino/tree/v0.8.0) (2022-12-05)
+
+### Added
+
+* Support for multi-chunk smart cell source ([#209](https://github.com/livebook-dev/kino/pull/209))
+* Added `Kino.Input.image/2` for images ([#210](https://github.com/livebook-dev/kino/pull/210))
+* Added `Kino.Tree` for structured term inspection ([#208](https://github.com/livebook-dev/kino/pull/208))
+* Support for directly rendering tensors as image via `Kino.Image.new/1` ([#218](https://github.com/livebook-dev/kino/pull/218))
+
+### Changed
+
+* Updated `Kino.DataTable` to use Glide Data Grid for richer interactions ([#211](https://github.com/livebook-dev/kino/pull/211), [#213](https://github.com/livebook-dev/kino/pull/213), [#216](https://github.com/livebook-dev/kino/pull/216))
+
 ## [v0.7.0](https://github.com/livebook-dev/kino/tree/v0.7.0) (2022-10-07)
 
 ### Added
