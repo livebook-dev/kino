@@ -112,6 +112,22 @@ defmodule Kino do
 
   Kino makes it possible to define custom JavaScript powered
   kinos, see `Kino.JS` and `Kino.JS.Live` for more details.
+
+  > #### Packaging {: .info}
+  >
+  > When publishing custom kinos and smart cells, please consider
+  > the following guidelines:
+  >
+  >   * prefix package name with `kino_`, usually followed by the
+  >     name of the integration, such as `kino_vega_lite`, `kino_ecto`
+  >
+  >   * namespace all modules under `KinoExample`, not `Kino.Example`.
+  >     Note that official packages maintained by the Livebook team
+  >     expose public APIs under `Kino.`, because they are essentially
+  >     direct extensions of `Kino` and we make sure no conflicting
+  >     modules exist. Unofficial packages should follow the regular
+  >     Elixir conventions with respect to modules names
+  >
   '''
 
   import Kernel, except: [inspect: 1]
