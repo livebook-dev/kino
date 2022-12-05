@@ -4,6 +4,8 @@ import DataEditor, {
   GridCellKind,
   GridColumnIcon,
   CompactSelection,
+  withAlpha,
+  getMiddleCenterBias,
 } from "@glideapps/glide-data-grid";
 import {
   RiRefreshLine,
@@ -79,6 +81,7 @@ function App({ ctx, data }) {
       id: column.key,
       icon: headerIcons[column.type] || GridCellKind.Text,
       hasMenu: true,
+      summary: data.summary?.find((col) => col.label === column.label),
     };
   });
 
@@ -133,30 +136,35 @@ function App({ ctx, data }) {
 
     ctx.rect(rect.x, rect.y, rect.width, rect.height);
 
+    const basePadding = 10;
+    const overlayIconSize = 19;
+
     const fillStyle = isSelected ? theme.textHeaderSelected : theme.textHeader;
     const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
     const shouldDrawMenu = column.hasMenu === true && isHovered;
-    const hasSummary = data.summary ? true : false;
+    const hasSummary = column.summary ? true : false;
 
-    if (shouldDrawMenu && rect.width > 35) {
-      const fadeWidth = 35;
-      const fadeStart = rect.width - fadeWidth;
-      const fadeEnd = rect.width - fadeWidth * 0.7;
+    const fadeWidth = 35;
+    const fadeStart = rect.width - fadeWidth;
+    const fadeEnd = rect.width - fadeWidth * 0.7;
 
-      const fadeStartPercent = fadeStart / rect.width;
-      const fadeEndPercent = fadeEnd / rect.width;
+    const fadeStartPercent = fadeStart / rect.width;
+    const fadeEndPercent = fadeEnd / rect.width;
 
-      const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
-      const trans = "rgba(48, 66, 84, 0)";
+    const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
+    const trans = withAlpha(fillStyle, 0);
 
-      grad.addColorStop(0, fillStyle);
-      grad.addColorStop(fadeStartPercent, fillStyle);
-      grad.addColorStop(fadeEndPercent, trans);
-      grad.addColorStop(1, trans);
-      ctx.fillStyle = grad;
-  } else {
-      ctx.fillStyle = fillStyle;
-  }
+    const middleCenter = getMiddleCenterBias(
+      ctx,
+      `${theme.headerFontStyle} ${theme.fontFamily}`
+    );
+
+    grad.addColorStop(0, fillStyle);
+    grad.addColorStop(fadeStartPercent, fillStyle);
+    grad.addColorStop(fadeEndPercent, trans);
+    grad.addColorStop(1, trans);
+
+    ctx.fillStyle = shouldDrawMenu ? grad : fillStyle;
 
     if (column.icon) {
       const variant = isSelected
@@ -171,8 +179,8 @@ function App({ ctx, data }) {
         column.icon,
         variant,
         ctx,
-        rect.x + 10,
-        rect.y + 10,
+        rect.x + basePadding,
+        rect.y + basePadding,
         headerSize,
         theme
       );
@@ -182,9 +190,9 @@ function App({ ctx, data }) {
           column.overlayIcon,
           isSelected ? "selected" : "special",
           ctx,
-          rect.x + 19,
-          rect.y + 19,
-          18,
+          rect.x + basePadding + overlayIconSize / 2,
+          rect.y + basePadding + overlayIconSize / 2,
+          overlayIconSize,
           theme
         );
       }
@@ -194,17 +202,17 @@ function App({ ctx, data }) {
       column.title,
       menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
       hasSummary
-        ? menuBounds.y - (theme.headerIconSize + 8)
-        : menuBounds.y + menuBounds.height / 2
+        ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
+        : menuBounds.y + menuBounds.height / 2 + middleCenter
     );
 
     if (hasSummary) {
-      const summary = data.summary.find(col => col.label === column.title);
+      const summary = column.summary;
 
       const numericInfo = {
         Min: summary.min ?? "",
         Max: summary.max ?? "",
-        Mean: summary.mean ?? "",
+        Mean: summary.mean?.toFixed(2) ?? "",
         Nulls: summary.nulls ?? "",
       };
 
@@ -215,22 +223,30 @@ function App({ ctx, data }) {
         Nulls: summary.nulls ?? "",
       };
 
-      const summaryData = summary.kind === "categorical" ? categoricalInfo : numericInfo;
+      const summaryData =
+        summary.kind === "categorical" ? categoricalInfo : numericInfo;
+
+      const padding = 24;
 
       ctx.fillStyle = fillInfoStyle;
       Object.entries(summaryData).forEach(([key, value], index) => {
         ctx.font = "bold 14px JetBrains Mono";
-        ctx.fillText(`${key}:`, rect.x + 12, rect.y + 8 * 3 * (index + 1) + 24);
+        ctx.fillText(
+          `${key}:`,
+          rect.x + padding / 2,
+          rect.y + padding * (index + 1) + padding
+        );
         ctx.font = "14px JetBrains Mono";
         ctx.fillText(
           value,
-          rect.x + ctx.measureText(key).width + 24,
-          rect.y + 8 * 3 * (index + 1) + 24
+          rect.x + ctx.measureText(key).width + padding,
+          rect.y + padding * (index + 1) + padding
         );
       });
     }
 
     if (shouldDrawMenu) {
+      ctx.fillStyle = grad;
       const arrowX = menuBounds.x + menuBounds.width / 2 - 5.5;
       const arrowY = hasSummary
         ? menuBounds.y + menuBounds.height / 2 - 3
@@ -402,6 +418,7 @@ function App({ ctx, data }) {
           gridSelection={selection}
           onGridSelectionChange={setSelection}
           rowMarkerStartIndex={rowMarkerStartIndex}
+          minColumnWidth={150}
         />
       )}
       {showMenu &&

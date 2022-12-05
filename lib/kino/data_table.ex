@@ -261,14 +261,13 @@ defmodule Kino.DataTable do
         "label" => column,
         "min" => min,
         "max" => max,
-        "mean" => (if type == "numeric", do: Float.round(mean, 2)),
+        "mean" => mean,
         "kind" => type,
-        "nulls" => Explorer.Series.nill_count(series),
+        "nulls" => Explorer.Series.nil_count(series),
         "top" => get_top(freq),
         "top_freq" => get_top_freq(freq),
         "unique" => unique
       }
-      |> IO.inspect()
     end
   end
 
