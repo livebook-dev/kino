@@ -240,6 +240,6 @@ defmodule Kino.DataTable do
   defp value_to_string(value) when is_atom(value), do: inspect(value)
 
   defp value_to_string(value) do
-    if String.Chars.impl_for(value), do: "#{value}", else: "#{inspect(value)}"
+    if mod = String.Chars.impl_for(value), do: mod.to_string(value), else: inspect(value)
   end
 end
