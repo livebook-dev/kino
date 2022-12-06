@@ -109,7 +109,10 @@ function App({ ctx, data }) {
   });
 
   const infiniteScroll = content.limit === totalRows;
-  const headerHeight = data.summary ? 132 : 44;
+  const headerItems = data.summary
+    ? Math.max(...data.summary.map((summary) => Object.keys(summary).length()))
+    : 1;
+  const headerHeight = headerItems * 22 + 22;
   const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
 
@@ -208,31 +211,13 @@ function App({ ctx, data }) {
 
     if (hasSummary) {
       const summary = column.summary;
-
-      const numericInfo = {
-        Min: summary.min ?? "",
-        Max: summary.max ?? "",
-        Mean: summary.mean?.toFixed(2) ?? "",
-        Nulls: summary.nulls ?? "",
-      };
-
-      const categoricalInfo = {
-        Unique: summary.unique ?? "",
-        Top: summary.top ?? "",
-        "Top freq": summary.top_freq ?? "",
-        Nulls: summary.nulls ?? "",
-      };
-
-      const summaryData =
-        summary.kind === "categorical" ? categoricalInfo : numericInfo;
-
       const fontSize = 13;
       const padding = fontSize + basePadding;
       const baseFont = `${fontSize}px ${theme.fontFamily}`;
       const titleFont = `bold ${baseFont}`;
 
       ctx.fillStyle = fillInfoStyle;
-      Object.entries(summaryData).forEach(([key, value], index) => {
+      Object.entries(summary).forEach(([key, value], index) => {
         ctx.font = titleFont;
         ctx.fillText(
           `${key}:`,

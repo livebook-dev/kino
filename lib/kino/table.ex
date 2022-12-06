@@ -83,8 +83,7 @@ defmodule Kino.Table do
     payload = %{
       name: ctx.assigns.info.name,
       features: ctx.assigns.info.features,
-      content: ctx.assigns.content,
-      summary: ctx.assigns.info.summary
+      content: ctx.assigns.content
     }
 
     {:ok, payload, ctx}

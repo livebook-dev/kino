@@ -48,7 +48,6 @@ defmodule Kino.DataTable do
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
-    summary = summary(tabular)
     tabular = normalize_tabular(tabular)
 
     name = Keyword.get(opts, :name, "Data")
@@ -69,7 +68,7 @@ defmodule Kino.DataTable do
         {rows, meta.columns}
       end
 
-    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled, summary})
+    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled})
   end
 
   defp normalize_tabular([%struct{} | _] = tabular) do
@@ -125,9 +124,9 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def init({data_rows, data_columns, count, name, sorting_enabled, summary}) do
+  def init({data_rows, data_columns, count, name, sorting_enabled}) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
-    info = %{name: name, features: features, summary: summary}
+    info = %{name: name, features: features}
 
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
@@ -238,57 +237,9 @@ defmodule Kino.DataTable do
     end
   end
 
+  defp value_to_string(value) when is_atom(value), do: inspect(value)
+
   defp value_to_string(value) do
     if String.Chars.impl_for(value), do: "#{value}", else: "#{inspect(value)}"
-  end
-
-  defp summary(%Explorer.DataFrame{} = df) do
-    describe =
-      df
-      |> Explorer.DataFrame.describe()
-      |> Explorer.DataFrame.slice([1, 3, 7])
-      |> Explorer.DataFrame.to_columns()
-      |> Map.delete("describe")
-
-    df_series = Explorer.DataFrame.to_series(df)
-
-    for {column, [mean, min, max]} <- describe,
-        series = Map.get(df_series, column),
-        type = get_type(series),
-        unique = get_unique(series),
-        freq = get_freq(series) do
-      %{
-        "label" => column,
-        "min" => min,
-        "max" => max,
-        "mean" => mean,
-        "kind" => type,
-        "nulls" => Explorer.Series.nil_count(series),
-        "top" => get_top(freq),
-        "top_freq" => get_top_freq(freq),
-        "unique" => unique
-      }
-    end
-  end
-
-  defp summary(_), do: nil
-
-  defp get_freq(data) do
-    data
-    |> Explorer.Series.frequencies()
-    |> Explorer.DataFrame.head(1)
-    |> Explorer.DataFrame.to_columns()
-  end
-
-  defp get_top(%{"values" => [top]}), do: top
-
-  defp get_top_freq(%{"counts" => [top_freq]}), do: top_freq
-
-  defp get_type(data) do
-    if Explorer.Series.dtype(data) in [:float, :integer], do: "numeric", else: "categorical"
-  end
-
-  defp get_unique(data) do
-    data |> Explorer.Series.distinct() |> Explorer.Series.count()
   end
 end

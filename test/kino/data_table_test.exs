@@ -78,7 +78,7 @@ defmodule Kino.DataTableTest do
 
     assert %{
              content: %{
-               columns: [%{key: "0", label: ~s/"b"/}, %{key: "1", label: ~s/"a"/}],
+               columns: [%{key: "0", label: "b"}, %{key: "1", label: "a"}],
                total_rows: 2
              }
            } = data
