@@ -71,7 +71,9 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `""`
-    * `:monospace` - display the textarea's contents in a monospace font. Defaults to `false`
+
+    * `:monospace` - whether to use a monospace font inside the textarea.
+      Defaults to `false`
   """
   @spec textarea(String.t(), keyword()) :: t()
   def textarea(label, opts \\ []) when is_binary(label) and is_list(opts) do
