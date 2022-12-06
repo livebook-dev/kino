@@ -136,7 +136,7 @@ defmodule Kino.DataTable do
        total_rows: count,
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,
-       columns: Enum.map(data_columns, fn key -> %{key: key, label: inspect(key)} end)
+       columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end)
      }}
   end
 
@@ -237,7 +237,9 @@ defmodule Kino.DataTable do
     end
   end
 
+  defp value_to_string(value) when is_atom(value), do: inspect(value)
+
   defp value_to_string(value) do
-    if String.Chars.impl_for(value), do: "#{value}", else: "#{inspect(value)}"
+    if mod = String.Chars.impl_for(value), do: mod.to_string(value), else: inspect(value)
   end
 end

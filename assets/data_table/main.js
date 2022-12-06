@@ -4,6 +4,8 @@ import DataEditor, {
   GridCellKind,
   GridColumnIcon,
   CompactSelection,
+  withAlpha,
+  getMiddleCenterBias,
 } from "@glideapps/glide-data-grid";
 import {
   RiRefreshLine,
@@ -79,6 +81,7 @@ function App({ ctx, data }) {
       id: column.key,
       icon: headerIcons[column.type] || GridCellKind.Text,
       hasMenu: true,
+      summary: data.summary?.find((col) => col.label === column.label),
     };
   });
 
@@ -106,13 +109,141 @@ function App({ ctx, data }) {
   });
 
   const infiniteScroll = content.limit === totalRows;
-  const height = totalRows >= 10 && infiniteScroll ? 484 : null;
+  const headerItems = data.summary
+    ? Math.max(...data.summary.map((summary) => Object.keys(summary).length()))
+    : 1;
+  const headerHeight = headerItems * 22 + 22;
+  const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
       ? totalRows % content.limit
       : content.limit;
+
+  const drawHeader = useCallback((args) => {
+    const {
+      ctx,
+      theme,
+      rect,
+      column,
+      menuBounds,
+      isHovered,
+      isSelected,
+      spriteManager,
+    } = args;
+
+    if (column.sourceIndex === 0) {
+      return true;
+    }
+
+    ctx.rect(rect.x, rect.y, rect.width, rect.height);
+
+    const basePadding = 10;
+    const overlayIconSize = 19;
+
+    const fillStyle = isSelected ? theme.textHeaderSelected : theme.textHeader;
+    const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
+    const shouldDrawMenu = column.hasMenu === true && isHovered;
+    const hasSummary = column.summary ? true : false;
+
+    const fadeWidth = 35;
+    const fadeStart = rect.width - fadeWidth;
+    const fadeEnd = rect.width - fadeWidth * 0.7;
+
+    const fadeStartPercent = fadeStart / rect.width;
+    const fadeEndPercent = fadeEnd / rect.width;
+
+    const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
+    const trans = withAlpha(fillStyle, 0);
+
+    const middleCenter = getMiddleCenterBias(
+      ctx,
+      `${theme.headerFontStyle} ${theme.fontFamily}`
+    );
+
+    grad.addColorStop(0, fillStyle);
+    grad.addColorStop(fadeStartPercent, fillStyle);
+    grad.addColorStop(fadeEndPercent, trans);
+    grad.addColorStop(1, trans);
+
+    ctx.fillStyle = shouldDrawMenu ? grad : fillStyle;
+
+    if (column.icon) {
+      const variant = isSelected
+        ? "selected"
+        : column.style === "highlight"
+        ? "special"
+        : "normal";
+
+      const headerSize = theme.headerIconSize;
+
+      spriteManager.drawSprite(
+        column.icon,
+        variant,
+        ctx,
+        rect.x + basePadding,
+        rect.y + basePadding,
+        headerSize,
+        theme
+      );
+
+      if (column.overlayIcon) {
+        spriteManager.drawSprite(
+          column.overlayIcon,
+          isSelected ? "selected" : "special",
+          ctx,
+          rect.x + basePadding + overlayIconSize / 2,
+          rect.y + basePadding + overlayIconSize / 2,
+          overlayIconSize,
+          theme
+        );
+      }
+    }
+
+    ctx.fillText(
+      column.title,
+      menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
+      hasSummary
+        ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
+        : menuBounds.y + menuBounds.height / 2 + middleCenter
+    );
+
+    if (hasSummary) {
+      const summary = column.summary;
+      const fontSize = 13;
+      const padding = fontSize + basePadding;
+      const baseFont = `${fontSize}px ${theme.fontFamily}`;
+      const titleFont = `bold ${baseFont}`;
+
+      ctx.fillStyle = fillInfoStyle;
+      Object.entries(summary).forEach(([key, value], index) => {
+        ctx.font = titleFont;
+        ctx.fillText(
+          `${key}:`,
+          rect.x + padding / 2,
+          rect.y + padding * (index + 1) + padding
+        );
+        ctx.font = baseFont;
+        ctx.fillText(
+          value,
+          rect.x + ctx.measureText(key).width + padding,
+          rect.y + padding * (index + 1) + padding
+        );
+      });
+    }
+
+    if (shouldDrawMenu) {
+      ctx.fillStyle = grad;
+      const arrowX = menuBounds.x + menuBounds.width / 2 - basePadding * 1.5;
+      const arrowY = theme.headerIconSize / 2 - 2;
+      const p = new Path2D("M12 16l-6-6h12z");
+      ctx.translate(arrowX, arrowY);
+      ctx.fill(p);
+    }
+
+    return true;
+  }, []);
 
   const getData = useCallback(
     ([col, row]) => {
@@ -177,8 +308,19 @@ function App({ ctx, data }) {
   }, []);
 
   const onHeaderMenuClick = useCallback((column, bounds) => {
-    setMenu({ column, bounds });
+    if (!columns[column].summary) {
+      setMenu({ column, bounds });
+    }
   }, []);
+
+  const onHeaderClicked = useCallback(
+    (column, { localEventX, localEventY, bounds }) => {
+      if (localEventX >= bounds.width - 50 && localEventY <= 25) {
+        setMenu({ column, bounds });
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
@@ -255,10 +397,13 @@ function App({ ctx, data }) {
           width="100%"
           height={height}
           rowHeight={44}
-          headerHeight={44}
+          headerHeight={headerHeight}
+          drawHeader={drawHeader}
           verticalBorder={false}
           rowMarkers="both"
+          rowMarkerWidth={32}
           onHeaderMenuClick={onHeaderMenuClick}
+          onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
           getCellsForSelection={true}
           onSearchClose={toggleSearch}
@@ -272,6 +417,7 @@ function App({ ctx, data }) {
           gridSelection={selection}
           onGridSelectionChange={setSelection}
           rowMarkerStartIndex={rowMarkerStartIndex}
+          minColumnWidth={150}
         />
       )}
       {showMenu &&
