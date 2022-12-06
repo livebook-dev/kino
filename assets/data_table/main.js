@@ -252,7 +252,7 @@ function App({ ctx, data }) {
         ? menuBounds.y + menuBounds.height / 2 - 3
         : rect.height / 4;
       const p = new Path2D("M12 16l-6-6h12z");
-      ctx.translate(arrowX - 8, arrowY);
+      ctx.translate(arrowX - 8, 9);
       ctx.fill(p);
     }
 
@@ -322,8 +322,19 @@ function App({ ctx, data }) {
   }, []);
 
   const onHeaderMenuClick = useCallback((column, bounds) => {
-    setMenu({ column, bounds });
+    if (!columns[column].summary) {
+      setMenu({ column, bounds });
+    }
   }, []);
+
+  const onHeaderClicked = useCallback(
+    (column, { localEventX, localEventY, bounds }) => {
+      if (localEventX >= bounds.width - 50 && localEventY <= 25) {
+        setMenu({ column, bounds });
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
@@ -405,6 +416,7 @@ function App({ ctx, data }) {
           verticalBorder={false}
           rowMarkers="both"
           onHeaderMenuClick={onHeaderMenuClick}
+          onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
           getCellsForSelection={true}
           onSearchClose={toggleSearch}
