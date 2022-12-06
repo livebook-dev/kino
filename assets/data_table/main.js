@@ -109,9 +109,9 @@ function App({ ctx, data }) {
   });
 
   const infiniteScroll = content.limit === totalRows;
-  const height = totalRows >= 10 && infiniteScroll ? 484 : null;
-  const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const headerHeight = data.summary ? 132 : 44;
+  const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
+  const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
@@ -228,8 +228,8 @@ function App({ ctx, data }) {
 
       const fontSize = 13;
       const padding = fontSize + basePadding;
-      const baseFont = `${fontSize}px ${theme.fontFamily}`
-      const titleFont = `bold ${baseFont}`
+      const baseFont = `${fontSize}px ${theme.fontFamily}`;
+      const titleFont = `bold ${baseFont}`;
 
       ctx.fillStyle = fillInfoStyle;
       Object.entries(summaryData).forEach(([key, value], index) => {
@@ -250,12 +250,10 @@ function App({ ctx, data }) {
 
     if (shouldDrawMenu) {
       ctx.fillStyle = grad;
-      const arrowX = menuBounds.x + menuBounds.width / 2 - 5.5;
-      const arrowY = hasSummary
-        ? menuBounds.y + menuBounds.height / 2 - 3
-        : rect.height / 4;
+      const arrowX = menuBounds.x + menuBounds.width / 2 - basePadding * 1.5;
+      const arrowY = theme.headerIconSize / 2 - 2;
       const p = new Path2D("M12 16l-6-6h12z");
-      ctx.translate(arrowX - 8, 9);
+      ctx.translate(arrowX, arrowY);
       ctx.fill(p);
     }
 
@@ -418,6 +416,7 @@ function App({ ctx, data }) {
           drawHeader={drawHeader}
           verticalBorder={false}
           rowMarkers="both"
+          rowMarkerWidth={32}
           onHeaderMenuClick={onHeaderMenuClick}
           onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
