@@ -225,6 +225,7 @@ defmodule Kino.Output do
               id: input_id(),
               label: String.t(),
               default: String.t(),
+              monospace: boolean(),
               destination: Process.dest()
             }
           | %{
