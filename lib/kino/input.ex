@@ -78,7 +78,7 @@ defmodule Kino.Input do
   @spec textarea(String.t(), keyword()) :: t()
   def textarea(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = opts |> Keyword.get(:default, "") |> to_string()
-    monospace = opts |> Keyword.get(:monospace, false)
+    monospace = Keyword.get(opts, :monospace, false)
 
     new(%{
       type: :textarea,
