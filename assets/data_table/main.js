@@ -115,6 +115,7 @@ function App({ ctx, data }) {
   const headerHeight = headerItems * 22 + 22;
   const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
+  const minColumnWidth = data.summary ? 150 : 50;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
@@ -255,7 +256,7 @@ function App({ ctx, data }) {
         data: cellData,
         displayData: cellData,
         allowOverlay: true,
-        allowWrapping: true,
+        allowWrapping: false,
         readonly: true,
       };
     },
@@ -417,7 +418,8 @@ function App({ ctx, data }) {
           gridSelection={selection}
           onGridSelectionChange={setSelection}
           rowMarkerStartIndex={rowMarkerStartIndex}
-          minColumnWidth={150}
+          minColumnWidth={minColumnWidth}
+          maxColumnAutoWidth={300}
         />
       )}
       {showMenu &&
