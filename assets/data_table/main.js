@@ -226,17 +226,20 @@ function App({ ctx, data }) {
       const summaryData =
         summary.kind === "categorical" ? categoricalInfo : numericInfo;
 
-      const padding = 24;
+      const fontSize = 13;
+      const padding = fontSize + basePadding;
+      const baseFont = `${fontSize}px ${theme.fontFamily}`
+      const titleFont = `bold ${baseFont}`
 
       ctx.fillStyle = fillInfoStyle;
       Object.entries(summaryData).forEach(([key, value], index) => {
-        ctx.font = "bold 14px JetBrains Mono";
+        ctx.font = titleFont;
         ctx.fillText(
           `${key}:`,
           rect.x + padding / 2,
           rect.y + padding * (index + 1) + padding
         );
-        ctx.font = "14px JetBrains Mono";
+        ctx.font = baseFont;
         ctx.fillText(
           value,
           rect.x + ctx.measureText(key).width + padding,
