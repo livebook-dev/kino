@@ -97,16 +97,19 @@ function App({ ctx, data }) {
     data.features.includes("pagination") &&
     (totalRows === null || totalRows > 0);
 
+  const emptySelection = {
+    rows: CompactSelection.empty(),
+    columns: CompactSelection.empty(),
+  };
+
   const [content, setContent] = useState(data.content);
   const [showSearch, setShowSearch] = useState(false);
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
   const [menu, setMenu] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [selection, setSelection] = useState({
-    rows: CompactSelection.empty(),
-    columns: CompactSelection.empty(),
-  });
+  const [selection, setSelection] = useState(emptySelection);
+  const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
 
   const infiniteScroll = content.limit === totalRows;
   const headerItems = data.summary
@@ -246,7 +249,7 @@ function App({ ctx, data }) {
     return true;
   }, []);
 
-  const getData = useCallback(
+  const getCellContent = useCallback(
     ([col, row]) => {
       const cellData = content.rows[row].fields[col];
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
@@ -323,6 +326,31 @@ function App({ ctx, data }) {
     []
   );
 
+  const getCellsForSelection = useCallback(
+    ({ x, y, width, height }) => {
+      const selected = [];
+      const max = content.columns.length;
+      const offSet = width >= max ? 0 : x + width >= max ? 0 : rowMarkerOffset;
+      const rows = [...Array(height).keys()].map((i) => i + y);
+      const cols = [...Array(width + offSet).keys()].map((j) => j + x);
+      rows.forEach((i) => {
+        const row = [];
+        cols.forEach((j) => {
+          row.push(getCellContent([j, i]));
+        });
+        selected.push(row);
+      });
+      return selected;
+    },
+    [rowMarkerOffset, getCellContent]
+  );
+
+  useEffect(() => {
+    selection.rows?.items.length > 0
+      ? setRowMarkerOffset(1)
+      : setRowMarkerOffset(0);
+  }, [selection]);
+
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
       setContent(content);
@@ -392,7 +420,7 @@ function App({ ctx, data }) {
         <DataEditor
           className="table-container"
           theme={theme}
-          getCellContent={getData}
+          getCellContent={getCellContent}
           columns={columns}
           rows={rows}
           width="100%"
@@ -401,12 +429,12 @@ function App({ ctx, data }) {
           headerHeight={headerHeight}
           drawHeader={drawHeader}
           verticalBorder={false}
-          rowMarkers="both"
+          rowMarkers="clickable-number"
           rowMarkerWidth={32}
           onHeaderMenuClick={onHeaderMenuClick}
           onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
-          getCellsForSelection={true}
+          getCellsForSelection={getCellsForSelection}
           onSearchClose={toggleSearch}
           headerIcons={customHeaderIcons}
           overscrollX={100}
@@ -416,10 +444,11 @@ function App({ ctx, data }) {
           onColumnResize={onColumnResize}
           columnSelect="none"
           gridSelection={selection}
-          onGridSelectionChange={setSelection}
+          onGridSelectionChange={(selection) => setSelection(selection)}
           rowMarkerStartIndex={rowMarkerStartIndex}
           minColumnWidth={minColumnWidth}
           maxColumnAutoWidth={300}
+          fillHandle={true}
         />
       )}
       {showMenu &&
