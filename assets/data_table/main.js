@@ -327,14 +327,19 @@ function App({ ctx, data }) {
     []
   );
 
-  const onItemHovered = useCallback((args) => {
-    const [col, row] = args.location;
-    row === -1 && col === -1 && args.kind === "header"
-      ? setHoverRows([...Array(rows).keys()])
-      : col === -1 && args.kind === "cell"
-      ? setHoverRows([row])
-      : setHoverRows(null);
-  }, [rows]);
+  const onItemHovered = useCallback(
+    (args) => {
+      const [col, row] = args.location;
+      if (row === -1 && col === -1 && args.kind === "header") {
+        setHoverRows([...Array.from({ length: rows }, (_, index) => index)]);
+      } else if (col === -1 && args.kind === "cell") {
+        setHoverRows([row]);
+      } else {
+        setHoverRows(null);
+      }
+    },
+    [rows]
+  );
 
   const getRowThemeOverride = useCallback(
     (row) =>
@@ -347,8 +352,10 @@ function App({ ctx, data }) {
       const selected = [];
       const max = content.columns.length;
       const offSet = width >= max ? 0 : x + width >= max ? 0 : rowMarkerOffset;
-      const rows = [...Array(height).keys()].map((i) => i + y);
-      const cols = [...Array(width + offSet).keys()].map((j) => j + x);
+      const rows = [...Array.from({ length: height }, (_, index) => index + y)];
+      const cols = [
+        ...Array.from({ length: width + offSet }, (_, index) => index + x),
+      ];
       rows.forEach((i) => {
         const row = [];
         cols.forEach((j) => {
