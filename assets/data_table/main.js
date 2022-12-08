@@ -278,7 +278,7 @@ function App({ ctx, data }) {
 
   const selectAllCurrent = () => {
     const newSelection = {
-      ...selection,
+      ...emptySelection,
       columns: CompactSelection.fromSingleSelection(menu.column),
     };
     setSelection(newSelection);
