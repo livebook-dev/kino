@@ -110,6 +110,7 @@ function App({ ctx, data }) {
   const [showMenu, setShowMenu] = useState(false);
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
+  const [hoverRows, setHoverRows] = useState(null);
 
   const infiniteScroll = content.limit === totalRows;
   const headerItems = data.summary
@@ -326,6 +327,21 @@ function App({ ctx, data }) {
     []
   );
 
+  const onItemHovered = useCallback((args) => {
+    const [col, row] = args.location;
+    row === -1 && col === -1
+      ? setHoverRows([...Array(rows).keys()])
+      : col === -1 && args.kind === "cell"
+      ? setHoverRows([row])
+      : setHoverRows(null);
+  }, []);
+
+  const getRowThemeOverride = useCallback(
+    (row) =>
+      hoverRows?.includes(row) ? { bgCell: theme.bgHeaderHovered } : null,
+    [hoverRows]
+  );
+
   const getCellsForSelection = useCallback(
     ({ x, y, width, height }) => {
       const selected = [];
@@ -449,6 +465,8 @@ function App({ ctx, data }) {
           minColumnWidth={minColumnWidth}
           maxColumnAutoWidth={300}
           fillHandle={true}
+          onItemHovered={onItemHovered}
+          getRowThemeOverride={getRowThemeOverride}
         />
       )}
       {showMenu &&
