@@ -329,12 +329,12 @@ function App({ ctx, data }) {
 
   const onItemHovered = useCallback((args) => {
     const [col, row] = args.location;
-    row === -1 && col === -1
+    row === -1 && col === -1 && args.kind === "header"
       ? setHoverRows([...Array(rows).keys()])
       : col === -1 && args.kind === "cell"
       ? setHoverRows([row])
       : setHoverRows(null);
-  }, []);
+  }, [rows]);
 
   const getRowThemeOverride = useCallback(
     (row) =>
