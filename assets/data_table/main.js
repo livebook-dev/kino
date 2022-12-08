@@ -97,16 +97,20 @@ function App({ ctx, data }) {
     data.features.includes("pagination") &&
     (totalRows === null || totalRows > 0);
 
+  const emptySelection = {
+    rows: CompactSelection.empty(),
+    columns: CompactSelection.empty(),
+  };
+
   const [content, setContent] = useState(data.content);
   const [showSearch, setShowSearch] = useState(false);
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
   const [menu, setMenu] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [selection, setSelection] = useState({
-    rows: CompactSelection.empty(),
-    columns: CompactSelection.empty(),
-  });
+  const [selection, setSelection] = useState(emptySelection);
+  const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
+  const [hoverRows, setHoverRows] = useState(null);
 
   const infiniteScroll = content.limit === totalRows;
   const headerItems = data.summary
@@ -115,6 +119,7 @@ function App({ ctx, data }) {
   const headerHeight = headerItems * 22 + 22;
   const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
+  const minColumnWidth = data.summary ? 150 : 50;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
@@ -245,7 +250,7 @@ function App({ ctx, data }) {
     return true;
   }, []);
 
-  const getData = useCallback(
+  const getCellContent = useCallback(
     ([col, row]) => {
       const cellData = content.rows[row].fields[col];
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
@@ -255,7 +260,7 @@ function App({ ctx, data }) {
         data: cellData,
         displayData: cellData,
         allowOverlay: true,
-        allowWrapping: true,
+        allowWrapping: false,
         readonly: true,
       };
     },
@@ -271,9 +276,19 @@ function App({ ctx, data }) {
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
   };
 
+  const onPrev = () => {
+    ctx.pushEvent("show_page", { page: content.page - 1 });
+    setSelection({ ...emptySelection, columns: selection.columns });
+  };
+
+  const onNext = () => {
+    ctx.pushEvent("show_page", { page: content.page + 1 });
+    setSelection({ ...emptySelection, columns: selection.columns });
+  };
+
   const selectAllCurrent = () => {
     const newSelection = {
-      ...selection,
+      ...emptySelection,
       columns: CompactSelection.fromSingleSelection(menu.column),
     };
     setSelection(newSelection);
@@ -321,6 +336,53 @@ function App({ ctx, data }) {
     },
     []
   );
+
+  const onItemHovered = useCallback(
+    (args) => {
+      const [col, row] = args.location;
+      if (row === -1 && col === -1 && args.kind === "header") {
+        setHoverRows([...Array.from({ length: rows }, (_, index) => index)]);
+      } else if (col === -1 && args.kind === "cell") {
+        setHoverRows([row]);
+      } else {
+        setHoverRows(null);
+      }
+    },
+    [rows]
+  );
+
+  const getRowThemeOverride = useCallback(
+    (row) =>
+      hoverRows?.includes(row) ? { bgCell: theme.bgHeaderHovered } : null,
+    [hoverRows]
+  );
+
+  const getCellsForSelection = useCallback(
+    ({ x, y, width, height }) => {
+      const selected = [];
+      const max = content.columns.length;
+      const offSet = width >= max ? 0 : x + width >= max ? 0 : rowMarkerOffset;
+      const rows = [...Array.from({ length: height }, (_, index) => index + y)];
+      const cols = [
+        ...Array.from({ length: width + offSet }, (_, index) => index + x),
+      ];
+      rows.forEach((i) => {
+        const row = [];
+        cols.forEach((j) => {
+          row.push(getCellContent([j, i]));
+        });
+        selected.push(row);
+      });
+      return selected;
+    },
+    [rowMarkerOffset, getCellContent]
+  );
+
+  useEffect(() => {
+    selection.rows?.items.length > 0
+      ? setRowMarkerOffset(1)
+      : setRowMarkerOffset(0);
+  }, [selection]);
 
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
@@ -378,12 +440,8 @@ function App({ ctx, data }) {
           <Pagination
             page={content.page}
             maxPage={content.max_page}
-            onPrev={() =>
-              ctx.pushEvent("show_page", { page: content.page - 1 })
-            }
-            onNext={() =>
-              ctx.pushEvent("show_page", { page: content.page + 1 })
-            }
+            onPrev={onPrev}
+            onNext={onNext}
           />
         )}
       </div>
@@ -391,7 +449,7 @@ function App({ ctx, data }) {
         <DataEditor
           className="table-container"
           theme={theme}
-          getCellContent={getData}
+          getCellContent={getCellContent}
           columns={columns}
           rows={rows}
           width="100%"
@@ -400,12 +458,12 @@ function App({ ctx, data }) {
           headerHeight={headerHeight}
           drawHeader={drawHeader}
           verticalBorder={false}
-          rowMarkers="both"
+          rowMarkers="clickable-number"
           rowMarkerWidth={32}
           onHeaderMenuClick={onHeaderMenuClick}
           onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
-          getCellsForSelection={true}
+          getCellsForSelection={getCellsForSelection}
           onSearchClose={toggleSearch}
           headerIcons={customHeaderIcons}
           overscrollX={100}
@@ -415,9 +473,13 @@ function App({ ctx, data }) {
           onColumnResize={onColumnResize}
           columnSelect="none"
           gridSelection={selection}
-          onGridSelectionChange={setSelection}
+          onGridSelectionChange={(selection) => setSelection(selection)}
           rowMarkerStartIndex={rowMarkerStartIndex}
-          minColumnWidth={150}
+          minColumnWidth={minColumnWidth}
+          maxColumnAutoWidth={300}
+          fillHandle={true}
+          onItemHovered={onItemHovered}
+          getRowThemeOverride={getRowThemeOverride}
         />
       )}
       {showMenu &&
