@@ -276,6 +276,16 @@ function App({ ctx, data }) {
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
   };
 
+  const onPrev = () => {
+    ctx.pushEvent("show_page", { page: content.page - 1 });
+    setSelection({ ...emptySelection, columns: selection.columns });
+  };
+
+  const onNext = () => {
+    ctx.pushEvent("show_page", { page: content.page + 1 });
+    setSelection({ ...emptySelection, columns: selection.columns });
+  };
+
   const selectAllCurrent = () => {
     const newSelection = {
       ...emptySelection,
@@ -430,12 +440,8 @@ function App({ ctx, data }) {
           <Pagination
             page={content.page}
             maxPage={content.max_page}
-            onPrev={() =>
-              ctx.pushEvent("show_page", { page: content.page - 1 })
-            }
-            onNext={() =>
-              ctx.pushEvent("show_page", { page: content.page + 1 })
-            }
+            onPrev={onPrev}
+            onNext={onNext}
           />
         )}
       </div>
