@@ -1,6 +1,15 @@
 defmodule Kino.Table do
   @moduledoc false
 
+  @type numeric_summary :: %{min: float(), max: float(), mean: float(), nulls: float()}
+
+  @type categorical_summary :: %{
+          top: String.t(),
+          top_freq: integer(),
+          unique: integer(),
+          nulls: float()
+        }
+
   @type info :: %{
           name: String.t(),
           features: list(:refetch | :pagination | :sorting)
@@ -16,7 +25,8 @@ defmodule Kino.Table do
   @type column :: %{
           :key => term(),
           :label => String.t(),
-          optional(:type) => String.t()
+          optional(:type) => String.t(),
+          optional(:summary) => numeric_summary() | categorical_summary()
         }
 
   @type row :: %{
