@@ -90,17 +90,14 @@ defmodule Kino.Explorer do
     for {column, [mean, min, max]} <- describe,
         series = Map.get(df_series, column),
         type = get_type(series),
-        freq = get_freq(series) do
-      %{
-        min: min,
-        max: max,
-        mean: mean,
-        nulls: Explorer.Series.nil_count(series),
-        top: get_top(freq),
-        top_freq: get_top_freq(freq),
-        unique: get_unique(series)
-      }
-      |> format_summary(column, type)
+        nulls = Explorer.Series.nil_count(series),
+        %{"counts" => [top_freq], "values" => [top]} = get_freq(series),
+        label = String.to_atom(column) do
+      if type == :numeric do
+        {label, %{min: min, max: max, mean: Float.round(mean, 2), nulls: nulls}}
+      else
+        {label, %{nulls: nulls, top: top, top_freq: top_freq, unique: get_unique(series)}}
+      end
     end
   end
 
@@ -111,25 +108,12 @@ defmodule Kino.Explorer do
     |> Explorer.DataFrame.to_columns()
   end
 
-  defp get_top(%{"values" => [top]}), do: top
-
-  defp get_top_freq(%{"counts" => [top_freq]}), do: top_freq
-
   defp get_type(data) do
     if Explorer.Series.dtype(data) in [:float, :integer], do: :numeric, else: :categorical
   end
 
   defp get_unique(data) do
     data |> Explorer.Series.distinct() |> Explorer.Series.count()
-  end
-
-  defp format_summary(summary, column, :categorical) do
-    {String.to_atom(column), Map.take(summary, [:unique, :top, :top_freq, :nulls])}
-  end
-
-  defp format_summary(summary, column, :numeric) do
-    summary = %{summary | mean: Float.round(summary.mean, 2)}
-    {String.to_atom(column), Map.take(summary, [:min, :max, :mean, :nulls])}
   end
 
   defp type_of(:integer), do: "number"
