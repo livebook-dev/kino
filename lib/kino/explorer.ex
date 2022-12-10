@@ -28,7 +28,7 @@ defmodule Kino.Explorer do
   def init({df}) do
     total_rows = Explorer.DataFrame.n_rows(df)
     dtypes = Explorer.DataFrame.dtypes(df)
-    summary = summary(df)
+    summaries = summary(df)
 
     columns =
       Enum.map(dtypes, fn {name, dtype} ->
@@ -36,7 +36,7 @@ defmodule Kino.Explorer do
           key: name,
           label: to_string(name),
           type: type_of(dtype),
-          summary: Enum.find(summary, &(&1["label"] == name))
+          summary: summaries[String.to_atom(name)]
         }
       end)
 
@@ -90,19 +90,17 @@ defmodule Kino.Explorer do
     for {column, [mean, min, max]} <- describe,
         series = Map.get(df_series, column),
         type = get_type(series),
-        unique = get_unique(series),
         freq = get_freq(series) do
       %{
-        "label" => column,
-        "min" => min,
-        "max" => max,
-        "mean" => mean,
-        "kind" => type,
-        "nulls" => Explorer.Series.nil_count(series),
-        "top" => get_top(freq),
-        "top_freq" => get_top_freq(freq),
-        "unique" => unique
+        min: min,
+        max: max,
+        mean: mean,
+        nulls: Explorer.Series.nil_count(series),
+        top: get_top(freq),
+        top_freq: get_top_freq(freq),
+        unique: get_unique(series)
       }
+      |> format_summary(column, type)
     end
   end
 
@@ -118,11 +116,20 @@ defmodule Kino.Explorer do
   defp get_top_freq(%{"counts" => [top_freq]}), do: top_freq
 
   defp get_type(data) do
-    if Explorer.Series.dtype(data) in [:float, :integer], do: "numeric", else: "categorical"
+    if Explorer.Series.dtype(data) in [:float, :integer], do: :numeric, else: :categorical
   end
 
   defp get_unique(data) do
     data |> Explorer.Series.distinct() |> Explorer.Series.count()
+  end
+
+  defp format_summary(summary, column, :categorical) do
+    {String.to_atom(column), Map.take(summary, [:unique, :top, :top_freq, :nulls])}
+  end
+
+  defp format_summary(summary, column, :numeric) do
+    summary = %{summary | mean: Float.round(summary.mean, 2)}
+    {String.to_atom(column), Map.take(summary, [:min, :max, :mean, :nulls])}
   end
 
   defp type_of(:integer), do: "number"
