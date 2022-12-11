@@ -86,7 +86,7 @@ function App({ ctx, data }) {
     return {
       title: title,
       id: column.key,
-      icon: headerIcons[column.type] || GridCellKind.Text,
+      icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
       hasMenu: true,
       summary: summary,
     };
