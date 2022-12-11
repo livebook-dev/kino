@@ -33,6 +33,8 @@ defmodule Kino.MixProject do
     [
       {:table, "~> 0.1.2"},
       {:nx, "~> 0.1", optional: true},
+      {:explorer, "~> 0.5.0-dev", github: "elixir-nx/explorer", optional: true},
+      {:rustler, "~> 0.26.0", optional: true},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
   end

@@ -92,11 +92,11 @@ defmodule Kino.Explorer do
         series = Map.get(df_series, column),
         type = get_type(series),
         nulls = Explorer.Series.nil_count(series),
-        %{"counts" => [top_freq], "values" => [top]} = get_freq(series),
         label = String.to_atom(column) do
       if type == :numeric do
         {label, %{min: min, max: max, mean: Float.round(mean, 2), nulls: nulls}}
       else
+        %{"counts" => [top_freq], "values" => [top]} = get_freq(series)
         {label, %{nulls: nulls, top: top, top_freq: top_freq, unique: get_unique(series)}}
       end
     end
