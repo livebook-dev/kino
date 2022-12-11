@@ -28,6 +28,7 @@ defmodule Kino.Explorer do
   def init({df}) do
     total_rows = Explorer.DataFrame.n_rows(df)
     dtypes = Explorer.DataFrame.dtypes(df)
+    sample_data = df |> Explorer.DataFrame.head(1) |> Explorer.DataFrame.to_columns()
     summaries = summary(df)
 
     columns =
@@ -35,7 +36,7 @@ defmodule Kino.Explorer do
         %{
           key: name,
           label: to_string(name),
-          type: type_of(dtype),
+          type: type_of(dtype, sample_data[name]),
           summary: summaries[String.to_atom(name)]
         }
       end)
@@ -116,7 +117,11 @@ defmodule Kino.Explorer do
     data |> Explorer.Series.distinct() |> Explorer.Series.count()
   end
 
-  defp type_of(:integer), do: "number"
-  defp type_of(:float), do: "number"
-  defp type_of(_), do: "text"
+  defp type_of(dtype, _) when dtype in [:integer, :float], do: "number"
+  defp type_of(dtype, _) when dtype in [:date, :datetime], do: "date"
+  defp type_of(:string, [data]), do: type_of_sample(data)
+  defp type_of(_, _), do: "text"
+
+  defp type_of_sample("http" <> _rest), do: "uri"
+  defp type_of_sample(_), do: "text"
 end
