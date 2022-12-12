@@ -83,4 +83,71 @@ defmodule Kino.ExplorerTest do
       rows: [%{fields: %{"0" => "11"}} | _]
     })
   end
+
+  test "supports pagination limit" do
+    df = Explorer.DataFrame.new(%{n: Enum.to_list(1..25)})
+
+    widget = Kino.Explorer.new(df)
+    data = connect(widget)
+
+    assert %{
+             content: %{
+               page: 1,
+               max_page: 3,
+               rows: [%{fields: %{"0" => "1"}} | _]
+             }
+           } = data
+
+    push_event(widget, "limit", %{"limit" => 15})
+
+    assert_broadcast_event(widget, "update_content", %{
+      page: 1,
+      max_page: 2,
+      rows: [%{fields: %{"0" => "1"}} | _]
+    })
+  end
+
+  test "supports data summary" do
+    df =
+      Explorer.DataFrame.new(%{
+        id: [3, 1, 2, nil],
+        name: ["Amy Santiago", "Jake Peralta", "Terry Jeffords", "Jake Peralta"]
+      })
+
+    widget = Kino.Explorer.new(df)
+    data = connect(widget)
+
+    assert %{
+             content: %{
+               columns: [
+                 %{
+                   key: "0",
+                   label: "id",
+                   summary: %{max: 3.0, mean: 2.0, min: 1.0, nulls: 1},
+                   type: "number"
+                 },
+                 %{
+                   key: "1",
+                   label: "name",
+                   summary: %{nulls: 0, top: "Jake Peralta", top_freq: 2, unique: 3},
+                   type: "text"
+                 }
+               ]
+             }
+           } = data
+  end
+
+  test "support types" do
+    df =
+      Explorer.DataFrame.new(
+        a: ["a", "b"],
+        b: [1, 2],
+        c: ["https://elixir-lang.org", "https://www.erlang.org"]
+      )
+
+    widget = Kino.Explorer.new(df)
+    data = connect(widget)
+
+    assert get_in(data.content.columns, [Access.all(), :type]) == ["text", "number", "uri"]
+  end
 end
