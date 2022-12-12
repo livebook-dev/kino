@@ -79,41 +79,43 @@ defmodule Kino.Explorer do
   end
 
   defp summary(df) do
-    describe =
-      df
-      |> Explorer.DataFrame.describe()
-      |> Explorer.DataFrame.slice([1, 3, 7])
-      |> Explorer.DataFrame.to_columns()
-      |> Map.delete("describe")
-
+    describe = describe(df)
     df_series = Explorer.DataFrame.to_series(df)
 
     for {column, [mean, min, max]} <- describe,
         series = Map.get(df_series, column),
-        type = get_type(series),
+        summary_type = summary_type(series),
         nulls = Explorer.Series.nil_count(series),
         label = String.to_atom(column) do
-      if type == :numeric do
+      if summary_type == :numeric do
         {label, %{min: min, max: max, mean: Float.round(mean, 2), nulls: nulls}}
       else
-        %{"counts" => [top_freq], "values" => [top]} = get_freq(series)
-        {label, %{nulls: nulls, top: top, top_freq: top_freq, unique: get_unique(series)}}
+        %{"counts" => [top_freq], "values" => [top]} = most_frequent(series)
+        {label, %{nulls: nulls, top: top, top_freq: top_freq, unique: count_unique(series)}}
       end
     end
   end
 
-  defp get_freq(data) do
+  defp describe(data) do
+    data
+    |> Explorer.DataFrame.describe()
+    |> Explorer.DataFrame.slice([1, 3, 7])
+    |> Explorer.DataFrame.to_columns()
+    |> Map.delete("describe")
+  end
+
+  defp most_frequent(data) do
     data
     |> Explorer.Series.frequencies()
     |> Explorer.DataFrame.head(1)
     |> Explorer.DataFrame.to_columns()
   end
 
-  defp get_type(data) do
+  defp summary_type(data) do
     if Explorer.Series.dtype(data) in [:float, :integer], do: :numeric, else: :categorical
   end
 
-  defp get_unique(data) do
+  defp count_unique(data) do
     data |> Explorer.Series.distinct() |> Explorer.Series.count()
   end
 
