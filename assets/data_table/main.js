@@ -123,11 +123,7 @@ function App({ ctx, data }) {
   const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
-
-  const rows =
-    content.page === content.max_page && !infiniteScroll
-      ? totalRows % content.limit
-      : content.limit;
+  const rows = content.page_length;
 
   const drawHeader = useCallback((args) => {
     const {
