@@ -24,13 +24,6 @@ defmodule Kino do
 
       Kino.DataTable.new(data)
 
-  ### Kino.Explorer
-
-   `Kino.Explorer` implements a data table output for [Explorer](https://github.com/elixir-nx/explorer)
-   data frames:
-       df = Explorer.Datasets.fossil_fuels()
-       Kino.Explorer.new(df)
-
   ### Kino.ETS
 
   `Kino.ETS` implements a data table output for ETS tables in the

@@ -11,6 +11,7 @@ defmodule Kino.Explorer do
   @type t :: Kino.JS.Live.t()
 
   @compile {:no_warn_undefined, Explorer.DataFrame}
+  @compile {:no_warn_undefined, Explorer.Series}
 
   @doc """
   Starts a widget process representing the given data frame.
