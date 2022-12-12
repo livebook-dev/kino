@@ -23,6 +23,12 @@ jobs:
           otp-version: ${{matrix.pair.otp}}
           elixir-version: ${{matrix.pair.elixir}}
 
+      # Setup Rust, necessary to compile Explorer
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
       - uses: actions/cache@v2
         with:
           path: |
