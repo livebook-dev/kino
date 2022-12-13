@@ -98,9 +98,13 @@ defmodule Kino.Explorer do
   end
 
   defp describe(data) do
+    mean_idx = 1
+    min_idx = 3
+    max_idx = 7
+
     data
     |> Explorer.DataFrame.describe()
-    |> Explorer.DataFrame.slice([1, 3, 7])
+    |> Explorer.DataFrame.slice([mean_idx, min_idx, max_idx])
     |> Explorer.DataFrame.to_columns()
     |> Map.delete("describe")
   end

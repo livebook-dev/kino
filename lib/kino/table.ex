@@ -26,7 +26,7 @@ defmodule Kino.Table do
           :key => term(),
           :label => String.t(),
           optional(:type) => String.t(),
-          optional(:summary) => numeric_summary() | categorical_summary()
+          optional(:summary) => %{String.t() => String.t()}
         }
 
   @type row :: %{
