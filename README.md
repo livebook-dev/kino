@@ -22,6 +22,9 @@ use cases. The officially supported ones are:
   * [`kino_vega_lite`](https://github.com/livebook-dev/kino_vega_lite) - for data charting
   * [`kino_db`](https://github.com/livebook-dev/kino_db) - for database integrations
   * [`kino_benchee`](https://github.com/livebook-dev/kino_benchee) - for rendering [Benchee](https://github.com/bencheeorg/benchee) results
+  * [`kino_maplibre`](https://github.com/livebook-dev/kino_maplibre) - for map plotting
+  * [`kino_bumblebee`](https://github.com/livebook-dev/kino_bumblebee) - for [Bumblebee](https://github.com/elixir-nx/bumblebee) integration
+  * [`kino_slack`](https://github.com/livebook-dev/kino_slack) - for Slack integration
 
 ## License
 
