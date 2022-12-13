@@ -75,23 +75,27 @@ export function init(ctx, data) {
 }
 
 function App({ ctx, data }) {
-  const columnsInitData = data.content.columns.map((column) => {
-    return {
-      title: column.label,
-      id: column.key,
-      icon: headerIcons[column.type] || GridCellKind.Text,
-      hasMenu: true,
-      summary: data.summary?.find((col) => col.label === column.label),
-    };
-  });
+  const summariesItems = [];
+  const columnsInitSize = [];
 
-  const columnsInitSize = columnsInitData.map((column) => {
-    return { [column.title]: 250 };
+  const columnsInitData = data.content.columns.map((column) => {
+    const summary = column.summary;
+    const title = column.label;
+    columnsInitSize.push({ [title]: 250 });
+    summary && summariesItems.push(Object.keys(summary).length);
+    return {
+      title: title,
+      id: column.key,
+      icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
+      hasMenu: true,
+      summary: summary,
+    };
   });
 
   const hasRefetch = data.features.includes("refetch");
   const hasData = data.content.columns.length !== 0;
   const totalRows = data.content.total_rows;
+  const hasSummaries = summariesItems.length > 0;
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -113,13 +117,12 @@ function App({ ctx, data }) {
   const [hoverRows, setHoverRows] = useState(null);
 
   const infiniteScroll = content.limit === totalRows;
-  const headerItems = data.summary
-    ? Math.max(...data.summary.map((summary) => Object.keys(summary).length()))
-    : 1;
-  const headerHeight = headerItems * 22 + 22;
+  const headerTitleSize = 44;
+  const headerItems = hasSummaries ? Math.max(...summariesItems) : 0;
+  const headerHeight = headerTitleSize + headerItems * 22;
   const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
-  const minColumnWidth = data.summary ? 150 : 50;
+  const minColumnWidth = hasSummaries ? 150 : 50;
 
   const rows =
     content.page === content.max_page && !infiniteScroll
