@@ -202,6 +202,9 @@ defmodule Kino.DataTable do
       {:suspended, {items, 0}, continuation} ->
         {Enum.reverse(items), amount, continuation}
 
+      {:halted, {items, left}} ->
+        {Enum.reverse(items), amount - left, nil}
+
       {:done, {items, left}} ->
         {Enum.reverse(items), amount - left, nil}
     end

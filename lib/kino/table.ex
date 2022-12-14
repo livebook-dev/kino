@@ -160,6 +160,7 @@ defmodule Kino.Table do
       rows: rows,
       columns: columns,
       page: ctx.assigns.page,
+      page_length: length(rows),
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: ctx.assigns.order,
