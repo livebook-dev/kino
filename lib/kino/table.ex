@@ -3,14 +3,17 @@ defmodule Kino.Table do
 
   @type info :: %{
           name: String.t(),
-          features: list(:refetch | :pagination | :sorting)
+          features: list(:refetch | :pagination | :sorting | :filtering)
         }
 
   @type rows_spec :: %{
           offset: non_neg_integer(),
           limit: pos_integer(),
           order_by: nil | term(),
-          order: :asc | :desc
+          order: :asc | :desc,
+          filter_by: nil | term(),
+          filter_value: nil | term(),
+          filter: :less | :less_eq | :equal | :not_equal | :greater_eq | :greater
         }
 
   @type column :: %{
@@ -67,7 +70,10 @@ defmodule Kino.Table do
        page: 1,
        limit: @limit,
        order_by: nil,
-       order: :asc
+       order: :asc,
+       filter_by: nil,
+       filter_value: nil,
+       filter: :equal
      )}
   end
 
@@ -124,6 +130,28 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
+  def handle_event("filter_by", %{"key" => key_string, "filter" => filter, "value" => value}, ctx) do
+    filter = String.to_existing_atom(filter)
+
+    ctx =
+      if key_string do
+        # Lookup key by the string representation received from the client
+        ctx.assigns.key_to_string
+        |> Enum.find(&match?({_key, ^key_string}, &1))
+        |> case do
+          {key, _key_string} ->
+            assign(ctx, filter_by: key, filter_value: value, filter: filter, page: 1)
+
+          _ ->
+            ctx
+        end
+      else
+        assign(ctx, filter_by: nil, filter_value: nil, filter: :equal, page: 1)
+      end
+
+    {:noreply, broadcast_update(ctx)}
+  end
+
   defp broadcast_update(ctx) do
     {content, ctx} = get_content(ctx)
     broadcast_event(ctx, "update_content", content)
@@ -135,7 +163,10 @@ defmodule Kino.Table do
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
       order_by: ctx.assigns.order_by,
-      order: ctx.assigns.order
+      order: ctx.assigns.order,
+      filter_by: ctx.assigns.filter_by,
+      filter_value: ctx.assigns.filter_value,
+      filter: ctx.assigns.filter
     }
 
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
@@ -165,6 +196,9 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
+      filter: ctx.assigns.filter,
+      filter_value: ctx.assigns.filter_value,
+      filter_by: key_to_string[ctx.assigns.filter_by],
       limit: ctx.assigns.limit
     }
 

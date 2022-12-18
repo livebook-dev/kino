@@ -64,6 +64,11 @@ const theme = {
   headerIconSize: 22,
 };
 
+const filtering = {
+  numeric: ["less", "less_eq", "equal", "not_equal", "greater_eq", "greater"],
+  categorical: ["equal", "not_equal"],
+};
+
 export function init(ctx, data) {
   ctx.importCSS("main.css");
   ctx.importCSS(
@@ -94,12 +99,8 @@ function App({ ctx, data }) {
 
   const hasRefetch = data.features.includes("refetch");
   const hasData = data.content.columns.length !== 0;
-  const totalRows = data.content.total_rows;
   const hasSummaries = summariesItems.length > 0;
-
-  const hasPagination =
-    data.features.includes("pagination") &&
-    (totalRows === null || totalRows > 0);
+  const hasFiltering = data.features.includes("filtering");
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -115,6 +116,17 @@ function App({ ctx, data }) {
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
+  const [filter, setFilter] = useState({
+    filter: data.content.filter,
+    filterValue: null,
+  });
+
+  const totalRows = content.total_rows;
+  const hasEntries = hasData && totalRows > 0;
+
+  const hasPagination =
+    data.features.includes("pagination") &&
+    (totalRows === null || totalRows > 0);
 
   const infiniteScroll = content.limit === totalRows;
   const headerTitleSize = 44;
@@ -125,133 +137,138 @@ function App({ ctx, data }) {
   const minColumnWidth = hasSummaries ? 150 : 50;
   const rows = content.page_length;
 
-  const drawHeader = useCallback((args) => {
-    const {
-      ctx,
-      theme,
-      rect,
-      column,
-      menuBounds,
-      isHovered,
-      isSelected,
-      spriteManager,
-    } = args;
-
-    if (column.sourceIndex === 0) {
-      return true;
-    }
-
-    ctx.rect(rect.x, rect.y, rect.width, rect.height);
-
-    const basePadding = 10;
-    const overlayIconSize = 19;
-
-    const fillStyle = isSelected ? theme.textHeaderSelected : theme.textHeader;
-    const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
-    const shouldDrawMenu = column.hasMenu === true && isHovered;
-    const hasSummary = column.summary ? true : false;
-
-    const fadeWidth = 35;
-    const fadeStart = rect.width - fadeWidth;
-    const fadeEnd = rect.width - fadeWidth * 0.7;
-
-    const fadeStartPercent = fadeStart / rect.width;
-    const fadeEndPercent = fadeEnd / rect.width;
-
-    const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
-    const trans = withAlpha(fillStyle, 0);
-
-    const middleCenter = getMiddleCenterBias(
-      ctx,
-      `${theme.headerFontStyle} ${theme.fontFamily}`
-    );
-
-    grad.addColorStop(0, fillStyle);
-    grad.addColorStop(fadeStartPercent, fillStyle);
-    grad.addColorStop(fadeEndPercent, trans);
-    grad.addColorStop(1, trans);
-
-    ctx.fillStyle = shouldDrawMenu ? grad : fillStyle;
-
-    if (column.icon) {
-      const variant = isSelected
-        ? "selected"
-        : column.style === "highlight"
-        ? "special"
-        : "normal";
-
-      const headerSize = theme.headerIconSize;
-
-      spriteManager.drawSprite(
-        column.icon,
-        variant,
+  const drawHeader = useCallback(
+    (args) => {
+      const {
         ctx,
-        rect.x + basePadding,
-        rect.y + basePadding,
-        headerSize,
-        theme
+        theme,
+        rect,
+        column,
+        menuBounds,
+        isHovered,
+        isSelected,
+        spriteManager,
+      } = args;
+
+      if (column.sourceIndex === 0) {
+        return true;
+      }
+
+      ctx.rect(rect.x, rect.y, rect.width, rect.height);
+
+      const basePadding = 10;
+      const overlayIconSize = 19;
+
+      const fillStyle = isSelected
+        ? theme.textHeaderSelected
+        : theme.textHeader;
+      const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
+      const shouldDrawMenu = column.hasMenu === true && isHovered;
+      const hasSummary = column.summary ? true : false;
+
+      const fadeWidth = 35;
+      const fadeStart = rect.width - fadeWidth;
+      const fadeEnd = rect.width - fadeWidth * 0.7;
+
+      const fadeStartPercent = fadeStart / rect.width;
+      const fadeEndPercent = fadeEnd / rect.width;
+
+      const grad = ctx.createLinearGradient(rect.x, 0, rect.x + rect.width, 0);
+      const trans = withAlpha(fillStyle, 0);
+
+      const middleCenter = getMiddleCenterBias(
+        ctx,
+        `${theme.headerFontStyle} ${theme.fontFamily}`
       );
 
-      if (column.overlayIcon) {
+      grad.addColorStop(0, fillStyle);
+      grad.addColorStop(fadeStartPercent, fillStyle);
+      grad.addColorStop(fadeEndPercent, trans);
+      grad.addColorStop(1, trans);
+
+      ctx.fillStyle = shouldDrawMenu ? grad : fillStyle;
+
+      if (column.icon) {
+        const variant = isSelected
+          ? "selected"
+          : column.style === "highlight"
+          ? "special"
+          : "normal";
+
+        const headerSize = theme.headerIconSize;
+
         spriteManager.drawSprite(
-          column.overlayIcon,
-          isSelected ? "selected" : "special",
+          column.icon,
+          variant,
           ctx,
-          rect.x + basePadding + overlayIconSize / 2,
-          rect.y + basePadding + overlayIconSize / 2,
-          overlayIconSize,
+          rect.x + basePadding,
+          rect.y + basePadding,
+          headerSize,
           theme
         );
+
+        if (column.overlayIcon) {
+          spriteManager.drawSprite(
+            column.overlayIcon,
+            isSelected ? "selected" : "special",
+            ctx,
+            rect.x + basePadding + overlayIconSize / 2,
+            rect.y + basePadding + overlayIconSize / 2,
+            overlayIconSize,
+            theme
+          );
+        }
       }
-    }
 
-    ctx.fillText(
-      column.title,
-      menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
-      hasSummary
-        ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
-        : menuBounds.y + menuBounds.height / 2 + middleCenter
-    );
+      ctx.fillText(
+        column.title,
+        menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
+        hasSummary
+          ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
+          : menuBounds.y + menuBounds.height / 2 + middleCenter
+      );
 
-    if (hasSummary) {
-      const summary = column.summary;
-      const fontSize = 13;
-      const padding = fontSize + basePadding;
-      const baseFont = `${fontSize}px ${theme.fontFamily}`;
-      const titleFont = `bold ${baseFont}`;
+      if (hasSummary) {
+        const summary = content.columns[column.sourceIndex - 1].summary;
+        const fontSize = 13;
+        const padding = fontSize + basePadding;
+        const baseFont = `${fontSize}px ${theme.fontFamily}`;
+        const titleFont = `bold ${baseFont}`;
 
-      ctx.fillStyle = fillInfoStyle;
-      Object.entries(summary).forEach(([key, value], index) => {
-        ctx.font = titleFont;
-        ctx.fillText(
-          `${key}:`,
-          rect.x + padding / 2,
-          rect.y + padding * (index + 1) + padding
-        );
-        ctx.font = baseFont;
-        ctx.fillText(
-          value,
-          rect.x + ctx.measureText(key).width + padding,
-          rect.y + padding * (index + 1) + padding
-        );
-      });
-    }
+        ctx.fillStyle = fillInfoStyle;
+        Object.entries(summary).forEach(([key, value], index) => {
+          ctx.font = titleFont;
+          ctx.fillText(
+            `${key}:`,
+            rect.x + padding / 2,
+            rect.y + padding * (index + 1) + padding
+          );
+          ctx.font = baseFont;
+          ctx.fillText(
+            value,
+            rect.x + ctx.measureText(key).width + padding,
+            rect.y + padding * (index + 1) + padding
+          );
+        });
+      }
 
-    if (shouldDrawMenu) {
-      ctx.fillStyle = grad;
-      const arrowX = menuBounds.x + menuBounds.width / 2 - basePadding * 1.5;
-      const arrowY = theme.headerIconSize / 2 - 2;
-      const p = new Path2D("M12 16l-6-6h12z");
-      ctx.translate(arrowX, arrowY);
-      ctx.fill(p);
-    }
+      if (shouldDrawMenu) {
+        ctx.fillStyle = grad;
+        const arrowX = menuBounds.x + menuBounds.width / 2 - basePadding * 1.5;
+        const arrowY = theme.headerIconSize / 2 - 2;
+        const p = new Path2D("M12 16l-6-6h12z");
+        ctx.translate(arrowX, arrowY);
+        ctx.fill(p);
+      }
 
-    return true;
-  }, []);
+      return true;
+    },
+    [content]
+  );
 
   const getCellContent = useCallback(
     ([col, row]) => {
-      const cellData = content.rows[row].fields[col];
+      const cellData = content.rows[row]?.fields[col] || "";
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
 
       return {
@@ -271,8 +288,14 @@ function App({ ctx, data }) {
   };
 
   const orderBy = (order) => {
-    const key = order ? columns[menu.column].id : null;
+    const key = order !== "none" ? columns[menu.column].id : null;
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
+  };
+
+  const filterBy = (filter, value) => {
+    const key = filter ? columns[menu.column].id : null;
+    setFilter({ filter: "equal", filterValue: null });
+    ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
   };
 
   const onPrev = () => {
@@ -444,7 +467,7 @@ function App({ ctx, data }) {
           />
         )}
       </div>
-      {hasData && (
+      {hasEntries && (
         <DataEditor
           className="table-container"
           theme={theme}
@@ -485,11 +508,24 @@ function App({ ctx, data }) {
         renderLayer(
           <HeaderMenu
             layerProps={layerProps}
+            columnType={content.columns[menu?.column]?.type}
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
+            hasFiltering={hasFiltering}
+            filterBy={filterBy}
+            filter={filter}
+            setFilter={setFilter}
           />
         )}
       {!hasData && <p className="no-data">No data</p>}
+      {hasData && !hasEntries && (
+        <div>
+          <p className="no-data">No entries found</p>
+          <button className="menu__button" onClick={() => filterBy(null, null)}>
+            <span>Reset filters</span>
+          </button>
+        </div>
+      )}
       <div id="portal" />
     </div>
   );
@@ -565,21 +601,92 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({ layerProps, orderBy, selectAllCurrent }) {
+function HeaderMenu({
+  layerProps,
+  columnType,
+  orderBy,
+  selectAllCurrent,
+  hasFiltering,
+  filterBy,
+  filter,
+  setFilter,
+}) {
+  const toOption = (option) => <option value={option}>{option}</option>;
+  const numericOptions = filtering.numeric.map((option) => toOption(option));
+  const categoricalOptions = filtering.categorical.map((option) =>
+    toOption(option)
+  );
+  const isNumber = columnType === "number";
+  const validFilter = filter.filterValue || filter.filterValue === 0;
   return (
     <div className="header-menu" {...layerProps}>
-      <div className="header-menu-item" onClick={() => orderBy("asc")}>
-        Sort: ascending
-      </div>
-      <div className="header-menu-item" onClick={() => orderBy("desc")}>
-        Sort: descending
-      </div>
-      <div className="header-menu-item" onClick={() => orderBy(null)}>
-        Sort: none
-      </div>
-      <div className="header-menu-item" onClick={selectAllCurrent}>
+      <div className="header-menu-item button" onClick={selectAllCurrent}>
         Select: current page
       </div>
+      <form>
+        <label className="header-menu-item input-label">Sort: </label>
+        <select
+          className="header-menu-input input"
+          onClick={(event) => orderBy(event.target.value)}
+        >
+          <option value="none">none</option>
+          <option value="asc">ascending</option>
+          <option value="desc">descending</option>
+        </select>
+      </form>
+      {hasFiltering && (
+        <div>
+          <label className="header-menu-item input-label">Filter: </label>
+          <div className="header-menu-item-wrapper">
+            <form>
+              <select
+                className="header-menu-input input"
+                onChange={(event) =>
+                  setFilter({ ...filter, filter: event.target.value })
+                }
+                value={filter.filter}
+              >
+                {isNumber ? numericOptions : categoricalOptions}
+              </select>
+              <input
+                type="text"
+                className="header-menu-input input input-text"
+                onChange={(event) =>
+                  setFilter({
+                    ...filter,
+                    filterValue: isNumber
+                      ? event.target.value.replace(/[^\d.,-]/g, "")
+                      : event.target.value,
+                  })
+                }
+                value={validFilter ? filter.filterValue : ""}
+              ></input>
+            </form>
+            <div className="inline-buttons">
+              <button
+                className="menu__button"
+                onClick={() =>
+                  filterBy(
+                    filter.filter,
+                    isNumber
+                      ? parseFloat(filter.filterValue)
+                      : filter.filterValue
+                  )
+                }
+                disabled={!validFilter}
+              >
+                <span>Filter</span>
+              </button>
+              <button
+                className="menu__button"
+                onClick={() => filterBy(null, null)}
+              >
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

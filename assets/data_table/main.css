@@ -355,7 +355,58 @@ select option {
   color: #304254;
 }
 
-.header-menu-item:hover {
+.header-menu-item-wrapper {
+  margin-top: 4px;
+  border: solid 1px #e1e8f0;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.header-menu-item.button:hover {
   cursor: pointer;
   background-color: #f0f5f9;
+}
+
+.header-menu-item.label:hover {
+  cursor: default;
+  background-color: white;
+}
+
+.header-menu-input {
+  border: 1px solid #91a4b7;
+  color: #61758a;
+  max-width: 145px;
+  margin-bottom: 4px;
+}
+
+.inline-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.menu__button {
+  padding: 4px 8px;
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  color: #61758a;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+.menu__button:hover {
+  color: #1c2a3a;
+  background-color: #f0f5f9;
+}
+
+.menu__button:focus {
+  outline: none;
+}
+
+.menu__button:disabled {
+  pointer-events: none;
+  color: #91a4b7;
 }
