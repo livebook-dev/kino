@@ -601,23 +601,7 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({
-  layerProps,
-  columnType,
-  orderBy,
-  selectAllCurrent,
-  hasFiltering,
-  filterBy,
-  filter,
-  setFilter,
-}) {
-  const toOption = (option) => <option value={option}>{option}</option>;
-  const numericOptions = filtering.numeric.map((option) => toOption(option));
-  const categoricalOptions = filtering.categorical.map((option) =>
-    toOption(option)
-  );
-  const isNumber = columnType === "number";
-  const validFilter = filter.filterValue || filter.filterValue === 0;
+function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item button" onClick={selectAllCurrent}>
@@ -634,59 +618,72 @@ function HeaderMenu({
           <option value="desc">descending</option>
         </select>
       </form>
-      {hasFiltering && (
-        <div>
-          <label className="header-menu-item input-label">Filter: </label>
-          <div className="header-menu-item-wrapper">
-            <form>
-              <select
-                className="header-menu-input input"
-                onChange={(event) =>
-                  setFilter({ ...filter, filter: event.target.value })
-                }
-                value={filter.filter}
-              >
-                {isNumber ? numericOptions : categoricalOptions}
-              </select>
-              <input
-                type="text"
-                className="header-menu-input input input-text"
-                onChange={(event) =>
-                  setFilter({
-                    ...filter,
-                    filterValue: isNumber
-                      ? event.target.value.replace(/[^\d.,-]/g, "")
-                      : event.target.value,
-                  })
-                }
-                value={validFilter ? filter.filterValue : ""}
-              ></input>
-            </form>
-            <div className="inline-buttons">
-              <button
-                className="menu__button"
-                onClick={() =>
-                  filterBy(
-                    filter.filter,
-                    isNumber
-                      ? parseFloat(filter.filterValue)
-                      : filter.filterValue
-                  )
-                }
-                disabled={!validFilter}
-              >
-                <span>Filter</span>
-              </button>
-              <button
-                className="menu__button"
-                onClick={() => filterBy(null, null)}
-              >
-                <span>Reset</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {props.hasFiltering && (
+        <Filtering
+          columnType={props.columnType}
+          filterBy={props.filterBy}
+          filter={props.filter}
+          setFilter={props.setFilter}
+        />
       )}
+    </div>
+  );
+}
+
+function Filtering({ columnType, filterBy, filter, setFilter }) {
+  const toOption = (option) => <option value={option}>{option}</option>;
+  const numericOptions = filtering.numeric.map((option) => toOption(option));
+  const categoricalOptions = filtering.categorical.map((option) =>
+    toOption(option)
+  );
+  const isNumber = columnType === "number";
+  const validFilter = filter.filterValue || filter.filterValue === 0;
+  return (
+    <div>
+      <label className="header-menu-item input-label">Filter: </label>
+      <div className="header-menu-item-wrapper">
+        <form>
+          <select
+            className="header-menu-input input"
+            onChange={(event) =>
+              setFilter({ ...filter, filter: event.target.value })
+            }
+            value={filter.filter}
+          >
+            {isNumber ? numericOptions : categoricalOptions}
+          </select>
+          <input
+            type="text"
+            className="header-menu-input input input-text"
+            onChange={(event) =>
+              setFilter({
+                ...filter,
+                filterValue: isNumber
+                  ? event.target.value.replace(/[^\d.,-]/g, "")
+                  : event.target.value,
+              })
+            }
+            value={validFilter ? filter.filterValue : ""}
+          ></input>
+        </form>
+        <div className="inline-buttons">
+          <button
+            className="menu__button"
+            onClick={() =>
+              filterBy(
+                filter.filter,
+                isNumber ? parseFloat(filter.filterValue) : filter.filterValue
+              )
+            }
+            disabled={!validFilter}
+          >
+            <span>Filter</span>
+          </button>
+          <button className="menu__button" onClick={() => filterBy(null, null)}>
+            <span>Reset</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
