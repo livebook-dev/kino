@@ -132,7 +132,10 @@ function App({ ctx, data }) {
   const headerTitleSize = 44;
   const headerItems = hasSummaries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const height = totalRows >= 10 && infiniteScroll ? 440 + headerHeight : null;
+  const menuHeight = hasFiltering ? 185 : 70;
+  const fixedHeight = 440 + headerHeight;
+  const autoHeight = totalRows < 5 && menu ? menuHeight + headerHeight : null;
+  const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
   const rows = content.page_length;
