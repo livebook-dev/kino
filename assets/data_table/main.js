@@ -298,8 +298,9 @@ function App({ ctx, data }) {
   };
 
   const filterBy = (filter, value) => {
-    const key = filter ? columns[menu.column].id : null;
-    const filterMessage = `(${columns[menu.column].title} ${filter} ${value})`;
+    const {id, title} = columns[menu.column];
+    const key = filter ? id : null;
+    const filterMessage = filter ? `(${title} ${filter} ${value})` : null;
     setFilter({ filter: "equal", filterValue: null, filterMessage });
     ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
   };
@@ -455,8 +456,11 @@ function App({ ctx, data }) {
           </span>
           {totalRows < data.content.total_rows && (
             <span className="navigation__details">
-              {filter.filterMessage} of {data.content.total_rows}
+              of {data.content.total_rows}
             </span>
+          )}
+          {filter.filterMessage && (
+            <span className="navigation__details filter__message">{filter.filterMessage}</span>
           )}
         </div>
         <div className="navigation__space"></div>

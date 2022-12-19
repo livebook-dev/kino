@@ -41,9 +41,13 @@ html {
 }
 
 .navigation__details {
-  margin-left: 12px;
+  margin-left: 9px;
   font-size: 0.875rem;
   line-height: 1;
+}
+
+.filter__message {
+  color: var(--gray-400);
 }
 
 .navigation__space {
