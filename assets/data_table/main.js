@@ -297,7 +297,8 @@ function App({ ctx, data }) {
 
   const filterBy = (filter, value) => {
     const key = filter ? columns[menu.column].id : null;
-    setFilter({ filter: "equal", filterValue: null });
+    const filterMessage = `(${columns[menu.column].title} ${filter} ${value})`;
+    setFilter({ filter: "equal", filterValue: null, filterMessage });
     ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
   };
 
@@ -448,8 +449,13 @@ function App({ ctx, data }) {
         <div className="navigation__info">
           <h2 className="navigation__name">{data.name}</h2>
           <span className="navigation__details">
-            {totalRows || "?"} entries
+            {totalRows || "?"} {totalRows > 1 ? "entries" : "entry"}
           </span>
+          {totalRows < data.content.total_rows && (
+            <span className="navigation__details">
+              {filter.filterMessage} of {data.content.total_rows}
+            </span>
+          )}
         </div>
         <div className="navigation__space"></div>
         {hasRefetch && (
