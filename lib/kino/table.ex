@@ -14,7 +14,14 @@ defmodule Kino.Table do
           filter_by: nil | term(),
           filter_value: nil | term(),
           filter:
-            :less | :less_equal | :equal | :contains | :not_equal | :greater_equal | :greater
+            :none
+            | :less
+            | :less_equal
+            | :equal
+            | :contains
+            | :not_equal
+            | :greater_equal
+            | :greater
         }
 
   @type column :: %{
@@ -74,7 +81,7 @@ defmodule Kino.Table do
        order: :asc,
        filter_by: nil,
        filter_value: nil,
-       filter: :equal
+       filter: :none
      )}
   end
 
@@ -147,7 +154,7 @@ defmodule Kino.Table do
             ctx
         end
       else
-        assign(ctx, filter_by: nil, filter_value: nil, filter: :equal, page: 1)
+        assign(ctx, filter_by: nil, filter_value: nil, filter: :none, page: 1)
       end
 
     {:noreply, broadcast_update(ctx)}

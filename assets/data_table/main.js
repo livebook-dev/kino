@@ -310,7 +310,7 @@ function App({ ctx, data }) {
       : { id: null, title: null };
     const key = filter ? id : null;
     const filterMessage = filter ? `(${title} ${filter} ${value})` : null;
-    setFilter({ filter: "equal", filterValue: null, filterMessage });
+    setFilter({ filter: "none", filterValue: "", filterMessage });
     ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
   };
 
@@ -703,6 +703,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
             }
             value={filter.filter}
           >
+            <option value="none" onClick={() => filterBy(null, null)}>none</option>
             {isNumber || isDate ? numericOptions : categoricalOptions}
           </select>
           <input
@@ -728,9 +729,6 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
             disabled={!validFilter}
           >
             <span>Filter</span>
-          </button>
-          <button className="menu__button" onClick={() => filterBy(null, null)}>
-            <span>Reset</span>
           </button>
         </div>
       </div>
