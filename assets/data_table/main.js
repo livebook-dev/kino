@@ -659,15 +659,31 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
   );
   const isNumber = columnType === "number";
   const isDate = columnType === "date";
+  const validFilter = isValidFilter(filter.filterValue);
 
-  function dateIsValid(value) {
+  function isValidDate(value) {
     const date = value ? new Date(value) : null;
     return date instanceof Date && !isNaN(date);
   }
 
-  const validFilter = isDate
-    ? dateIsValid(filter.filterValue)
-    : filter.filterValue || filter.filterValue === 0;
+  function isValidFilter(value) {
+    if (isDate) {
+      return isValidDate(value);
+    } else {
+      return filter.filterValue || filter.filterValue === 0;
+    }
+  }
+
+  function castFilterValue(value) {
+    if (isNumber) {
+      return parseFloat(value);
+    }
+    if (isDate) {
+      return new Date(value).toISOString();
+    } else {
+      return value;
+    }
+  }
   return (
     <div>
       <label className="header-menu-item input-label">Filter: </label>
@@ -689,7 +705,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
               setFilter({
                 ...filter,
                 filterValue: isNumber
-                  ? event.target.value.replace(/[^\d.,-]/g, "")
+                  ? event.target.value.replace(/[^\d.-]/g, "")
                   : event.target.value,
               })
             }
@@ -700,10 +716,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
           <button
             className="menu__button"
             onClick={() =>
-              filterBy(
-                filter.filter,
-                isNumber ? parseFloat(filter.filterValue) : filter.filterValue
-              )
+              filterBy(filter.filter, castFilterValue(filter.filterValue))
             }
             disabled={!validFilter}
           >
