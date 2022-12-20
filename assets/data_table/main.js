@@ -79,7 +79,8 @@ const filtering = {
 export function init(ctx, data) {
   ctx.importCSS("main.css");
   ctx.importCSS(
-    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap",
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
   );
 
   const root = createRoot(ctx.root);
@@ -633,7 +634,7 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item button" onClick={selectAllCurrent}>
-        Select: current page
+        <span className="header-menu-item label">Select: </span> current page
       </div>
       <form className="inline-form">
         <label className="header-menu-item input-label">Sort: </label>

@@ -3,7 +3,7 @@ html {
 }
 
 .app {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Inter";
   padding: 12px;
 
   --gray-50: #f8fafc;
@@ -354,9 +354,19 @@ select option {
 .header-menu-item {
   font-size: 13px;
   font-weight: 400;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Inter";
   padding: 4px;
   color: #304254;
+  margin-bottom: 2px;
+}
+
+.header-menu-item.input-label {
+  font-weight: 500;
+}
+
+.header-menu-item.label {
+  font-weight: 500;
+  padding-left: 0;
 }
 
 .header-menu-item-wrapper {
@@ -364,16 +374,12 @@ select option {
   border: solid 1px #e1e8f0;
   border-radius: 8px;
   padding: 6px;
+  padding-bottom: 2px;
 }
 
 .header-menu-item.button:hover {
   cursor: pointer;
   background-color: #f0f5f9;
-}
-
-.header-menu-item.label:hover {
-  cursor: default;
-  background-color: white;
 }
 
 .header-menu-input {
@@ -392,11 +398,12 @@ select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 160px;
+  margin-top: 2px;
 }
 
 .input-full {
-  min-width: 90%;
+  min-width: 63%;
+  padding-right: 50px;
 }
 
 .menu__button {
