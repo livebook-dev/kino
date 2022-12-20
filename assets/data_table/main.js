@@ -298,7 +298,9 @@ function App({ ctx, data }) {
   };
 
   const filterBy = (filter, value) => {
-    const {id, title} = columns[menu.column];
+    const { id, title } = menu
+      ? columns[menu.column]
+      : { id: null, title: null };
     const key = filter ? id : null;
     const filterMessage = filter ? `(${title} ${filter} ${value})` : null;
     setFilter({ filter: "equal", filterValue: null, filterMessage });
@@ -329,7 +331,9 @@ function App({ ctx, data }) {
     placement: "bottom-end",
     possiblePlacements: ["bottom-end", "bottom-center", "bottom-start"],
     triggerOffset: 0,
-    onOutsideClick: () => setMenu(null),
+    onOutsideClick: () => {
+      setMenu(null), setFilter({ ...filter, filterValue: null });
+    },
     trigger: {
       getBounds: () => ({
         left: menu?.bounds.x ?? 0,
@@ -460,7 +464,9 @@ function App({ ctx, data }) {
             </span>
           )}
           {filter.filterMessage && (
-            <span className="navigation__details filter__message">{filter.filterMessage}</span>
+            <span className="navigation__details filter__message">
+              {filter.filterMessage}
+            </span>
           )}
         </div>
         <div className="navigation__space"></div>
@@ -652,7 +658,16 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
     toOption(option)
   );
   const isNumber = columnType === "number";
-  const validFilter = filter.filterValue || filter.filterValue === 0;
+  const isDate = columnType === "date";
+
+  function dateIsValid(value) {
+    const date = value ? new Date(value) : null;
+    return date instanceof Date && !isNaN(date);
+  }
+
+  const validFilter = isDate
+    ? dateIsValid(filter.filterValue)
+    : filter.filterValue || filter.filterValue === 0;
   return (
     <div>
       <label className="header-menu-item input-label">Filter: </label>
@@ -665,7 +680,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
             }
             value={filter.filter}
           >
-            {isNumber ? numericOptions : categoricalOptions}
+            {isNumber || isDate ? numericOptions : categoricalOptions}
           </select>
           <input
             type="text"
@@ -678,7 +693,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
                   : event.target.value,
               })
             }
-            value={validFilter ? filter.filterValue : ""}
+            value={filter.filterValue}
           ></input>
         </form>
         <div className="inline-buttons">
