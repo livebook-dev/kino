@@ -41,9 +41,13 @@ html {
 }
 
 .navigation__details {
-  margin-left: 9px;
+  margin-left: 10px;
   font-size: 0.875rem;
   line-height: 1;
+}
+
+.navigation__details.filtered {
+  margin-left: 5px;
 }
 
 .filter__message {
@@ -387,6 +391,10 @@ select option {
   color: #61758a;
   width: 100%;
   margin-bottom: 4px;
+}
+
+.header-menu-input:disabled {
+  opacity: 50%;
 }
 
 .inline-form {

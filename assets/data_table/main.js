@@ -467,7 +467,7 @@ function App({ ctx, data }) {
             {totalRows || "?"} {totalRows > 1 ? "entries" : "entry"}
           </span>
           {totalRows < data.content.total_rows && (
-            <span className="navigation__details">
+            <span className="navigation__details filtered">
               of {data.content.total_rows}
             </span>
           )}
@@ -709,30 +709,33 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
             </option>
             {isNumber || isDate ? numericOptions : categoricalOptions}
           </select>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              className="header-menu-input input input-full"
-              onChange={(event) =>
-                setFilter({
-                  ...filter,
-                  filterValue: isNumber
-                    ? event.target.value.replace(/[^\d.-]/g, "")
-                    : event.target.value,
-                })
-              }
-              value={filter.filterValue}
-            ></input>
-            <button
-              className="menu__button"
-              onClick={() =>
-                filterBy(filter.filter, castFilterValue(filter.filterValue))
-              }
-              disabled={!validFilter}
-            >
-              <span>Filter</span>
-            </button>
-          </div>
+          {filter.filter !== "none" && (
+            <div className="input-wrapper">
+              <input
+                type="text"
+                className="header-menu-input input input-full"
+                onChange={(event) =>
+                  setFilter({
+                    ...filter,
+                    filterValue: isNumber
+                      ? event.target.value.replace(/[^\d.-]/g, "")
+                      : event.target.value,
+                  })
+                }
+                value={filter.filterValue}
+                disabled={filter.filter === "none"}
+              ></input>
+              <button
+                className="menu__button"
+                onClick={() =>
+                  filterBy(filter.filter, castFilterValue(filter.filterValue))
+                }
+                disabled={!validFilter}
+              >
+                <span>Filter</span>
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
