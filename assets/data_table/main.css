@@ -379,13 +379,24 @@ select option {
 .header-menu-input {
   border: 1px solid #91a4b7;
   color: #61758a;
-  max-width: 145px;
+  width: 100%;
   margin-bottom: 4px;
 }
 
-.inline-buttons {
+.inline-form {
+  display: flex;
+  margin-right: 7px;
+}
+
+.input-wrapper {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  width: 160px;
+}
+
+.input-full {
+  min-width: 90%;
 }
 
 .menu__button {
@@ -395,10 +406,17 @@ select option {
   border: none;
   cursor: pointer;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   color: #61758a;
   background-color: #f8fafc;
   border-radius: 8px;
+  border-left: 1px solid #91a4b7;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  position: relative;
+  right: 48px;
+  bottom: 2px;
+  height: 23px;
 }
 
 .menu__button:hover {
