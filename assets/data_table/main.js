@@ -66,7 +66,7 @@ const theme = {
 
 const filtering = {
   numeric: ["less", "less_eq", "equal", "not_equal", "greater_eq", "greater"],
-  categorical: ["equal", "not_equal"],
+  categorical: ["equal", "contains", "not_equal"],
 };
 
 export function init(ctx, data) {
