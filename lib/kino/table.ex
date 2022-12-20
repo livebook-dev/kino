@@ -13,7 +13,8 @@ defmodule Kino.Table do
           order: :asc | :desc,
           filter_by: nil | term(),
           filter_value: nil | term(),
-          filter: :less | :less_eq | :equal | :contains | :not_equal | :greater_eq | :greater
+          filter:
+            :less | :less_equal | :equal | :contains | :not_equal | :greater_equal | :greater
         }
 
   @type column :: %{

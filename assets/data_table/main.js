@@ -65,7 +65,14 @@ const theme = {
 };
 
 const filtering = {
-  numeric: ["less", "less_eq", "equal", "not_equal", "greater_eq", "greater"],
+  numeric: [
+    "less",
+    "less_equal",
+    "equal",
+    "not_equal",
+    "greater_equal",
+    "greater",
+  ],
   categorical: ["equal", "contains", "not_equal"],
 };
 
