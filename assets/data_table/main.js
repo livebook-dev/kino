@@ -635,9 +635,9 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
 function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
-      <div className="header-menu-item button" onClick={selectAllCurrent}>
-        Select current page
-      </div>
+      <button className="header-menu-item button" onClick={selectAllCurrent}>
+        Select this column
+      </button>
       <form className="inline-form">
         <label className="header-menu-item input-label">Sort </label>
         <select
@@ -697,67 +697,60 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
     }
   }
   return (
-    <div>
-      <div className="header-menu-item-wrapper">
-        <form>
-          <div className="inline-form">
-            <label className="header-menu-item input-label">Filter </label>
-            <select
-              className="header-menu-input input"
-              onChange={(event) =>
-                setFilter({ ...filter, filter: event.target.value })
-              }
-              value={filter.filter}
-            >
-              <option value="none" onClick={() => filterBy(null, null)}>
-                none
+    <form>
+      <div className="inline-form">
+        <label className="header-menu-item input-label">Filter </label>
+        <select
+          className="header-menu-input input"
+          onChange={(event) =>
+            setFilter({ ...filter, filter: event.target.value })
+          }
+          value={filter.filter}
+        >
+          <option value="none" onClick={() => filterBy(null, null)}>
+            none
+          </option>
+          {(isNumber || isDate) && numericOptions}
+          {isCategorical && categoricalOptions}
+          {isBoolean && (
+            <>
+              <option value="true" onClick={() => filterBy("equal", true)}>
+                true
               </option>
-              {(isNumber || isDate) && numericOptions}
-              {isCategorical && categoricalOptions}
-              {isBoolean && (
-                <>
-                  <option value="true" onClick={() => filterBy("equal", true)}>
-                    true
-                  </option>
-                  <option
-                    value="false"
-                    onClick={() => filterBy("equal", false)}
-                  >
-                    false
-                  </option>
-                </>
-              )}
-            </select>
-          </div>
-          {filter.filter !== "none" && (
-            <div className="input-wrapper">
-              <input
-                type="text"
-                className="header-menu-input input input-full"
-                onChange={(event) =>
-                  setFilter({
-                    ...filter,
-                    filterValue: isNumber
-                      ? event.target.value.replace(/[^\d.-]/g, "")
-                      : event.target.value,
-                  })
-                }
-                value={filter.filterValue}
-                disabled={filter.filter === "none"}
-              ></input>
-              <button
-                className="menu__button"
-                onClick={() =>
-                  filterBy(filter.filter, castFilterValue(filter.filterValue))
-                }
-                disabled={!validFilter}
-              >
-                <span>Filter</span>
-              </button>
-            </div>
+              <option value="false" onClick={() => filterBy("equal", false)}>
+                false
+              </option>
+            </>
           )}
-        </form>
+        </select>
       </div>
-    </div>
+      {filter.filter !== "none" && (
+        <div className="input-wrapper">
+          <input
+            type="text"
+            className="header-menu-input input input-full"
+            onChange={(event) =>
+              setFilter({
+                ...filter,
+                filterValue: isNumber
+                  ? event.target.value.replace(/[^\d.-]/g, "")
+                  : event.target.value,
+              })
+            }
+            value={filter.filterValue}
+            disabled={filter.filter === "none"}
+          ></input>
+          <button
+            className="input__button"
+            onClick={() =>
+              filterBy(filter.filter, castFilterValue(filter.filterValue))
+            }
+            disabled={!validFilter}
+          >
+            <span>Filter</span>
+          </button>
+        </div>
+      )}
+    </form>
   );
 }
