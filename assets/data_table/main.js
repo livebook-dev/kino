@@ -634,7 +634,7 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item button" onClick={selectAllCurrent}>
-        <span className="header-menu-item label">Select: </span> current page
+        <span className="header-menu-item label">Select current page </span>
       </div>
       <form className="inline-form">
         <label className="header-menu-item input-label">Sort: </label>
@@ -696,32 +696,37 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
   }
   return (
     <div>
-      <label className="header-menu-item input-label">Filter: </label>
       <div className="header-menu-item-wrapper">
         <form>
-          <select
-            className="header-menu-input input"
-            onChange={(event) =>
-              setFilter({ ...filter, filter: event.target.value })
-            }
-            value={filter.filter}
-          >
-            <option value="none" onClick={() => filterBy(null, null)}>
-              none
-            </option>
-            {(isNumber || isDate) && numericOptions}
-            {isCategorical && categoricalOptions}
-            {isBoolean && (
-              <>
-                <option value="true" onClick={() => filterBy("equal", true)}>
-                  true
-                </option>
-                <option value="false" onClick={() => filterBy("equal", false)}>
-                  false
-                </option>
-              </>
-            )}
-          </select>
+          <div className="inline-form">
+            <label className="header-menu-item input-label">Filter: </label>
+            <select
+              className="header-menu-input input"
+              onChange={(event) =>
+                setFilter({ ...filter, filter: event.target.value })
+              }
+              value={filter.filter}
+            >
+              <option value="none" onClick={() => filterBy(null, null)}>
+                none
+              </option>
+              {(isNumber || isDate) && numericOptions}
+              {isCategorical && categoricalOptions}
+              {isBoolean && (
+                <>
+                  <option value="true" onClick={() => filterBy("equal", true)}>
+                    true
+                  </option>
+                  <option
+                    value="false"
+                    onClick={() => filterBy("equal", false)}
+                  >
+                    false
+                  </option>
+                </>
+              )}
+            </select>
+          </div>
           {filter.filter !== "none" && (
             <div className="input-wrapper">
               <input

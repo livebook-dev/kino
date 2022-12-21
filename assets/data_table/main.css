@@ -377,8 +377,7 @@ select option {
   margin-top: 4px;
   border: solid 1px #e1e8f0;
   border-radius: 8px;
-  padding: 6px;
-  padding-bottom: 2px;
+  padding: 4px 0;
 }
 
 .header-menu-item.button:hover {
@@ -406,7 +405,7 @@ select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 2px;
+  margin: 4px;
 }
 
 .input-full {
