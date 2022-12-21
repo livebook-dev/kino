@@ -151,6 +151,16 @@ defmodule Kino.Bridge do
     end
   end
 
+  @doc """
+  Checks if the caller is running within Livebook context (group leader).
+  """
+  @spec within_livebook?() :: boolean()
+  def within_livebook?() do
+    # We make a Livebook-specific side-effect-free request and see if
+    # it is recognized
+    match?({:ok, _}, io_request(:livebook_get_evaluation_file))
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
