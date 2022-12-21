@@ -161,6 +161,21 @@ html {
   border-width: 0;
 }
 
+.button {
+  appearance: none;
+  font-weight: 500;
+  background-color: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 5px 10px;
+  margin-bottom: 5px;
+}
+
+.button:hover {
+  cursor: pointer;
+  background-color: var(--gray-200);
+}
+
 .input {
   appearance: none;
   padding: 4px 8px;
@@ -291,14 +306,10 @@ select option {
 }
 
 .header-menu-item.button {
-  appearance: none;
   font-weight: 500;
   background-color: #f0f5f9;
   border: 1px solid #e1e8f0;
-  border-radius: 8px;
-  padding: 5px 10px;
   width: 100%;
-  margin-bottom: 5px;
 }
 
 .header-menu-item.button:hover {

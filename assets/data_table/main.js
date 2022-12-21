@@ -466,7 +466,7 @@ function App({ ctx, data }) {
         <div className="navigation__info">
           <h2 className="navigation__name">{data.name}</h2>
           <span className="navigation__details">
-            {totalRows || "?"} {totalRows > 1 ? "entries" : "entry"}
+            {totalRows || "?"} {totalRows === 1 ? "entry" : "entries"}
           </span>
           {totalRows < data.content.total_rows && (
             <span className="navigation__details filtered">
@@ -552,7 +552,7 @@ function App({ ctx, data }) {
       {hasData && !hasEntries && (
         <div>
           <p className="no-data">No entries found</p>
-          <button className="menu__button" onClick={() => filterBy(null, null)}>
+          <button className="button" onClick={() => filterBy(null, null)}>
             <span>Reset filters</span>
           </button>
         </div>
@@ -642,8 +642,9 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
         <label className="header-menu-item input-label">Sort </label>
         <select
           className="header-menu-input input"
-          onClick={(event) => orderBy(event.target.value)}
+          onChange={(event) => orderBy(event.target.value)}
         >
+          <option value="none"></option>
           <option value="none">none</option>
           <option value="asc">ascending</option>
           <option value="desc">descending</option>

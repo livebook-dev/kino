@@ -14,7 +14,7 @@ defmodule Kino.Table do
           filter_by: nil | term(),
           filter_value: nil | term(),
           filter:
-            :none
+            nil
             | :less
             | :less_equal
             | :equal
