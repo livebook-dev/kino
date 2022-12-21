@@ -667,6 +667,8 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
   );
   const isNumber = columnType === "number";
   const isDate = columnType === "date";
+  const isBoolean = columnType === "boolean";
+  const isCategorical = columnType === "text";
   const validFilter = isValidFilter(filter.filterValue);
 
   function isValidDate(value) {
@@ -707,7 +709,18 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
             <option value="none" onClick={() => filterBy(null, null)}>
               none
             </option>
-            {isNumber || isDate ? numericOptions : categoricalOptions}
+            {(isNumber || isDate) && numericOptions}
+            {isCategorical && categoricalOptions}
+            {isBoolean && (
+              <>
+                <option value="true" onClick={() => filterBy("equal", true)}>
+                  true
+                </option>
+                <option value="false" onClick={() => filterBy("equal", false)}>
+                  false
+                </option>
+              </>
+            )}
           </select>
           {filter.filter !== "none" && (
             <div className="input-wrapper">
