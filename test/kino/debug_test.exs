@@ -190,4 +190,10 @@ defmodule Kino.Debug.Test do
       %{call_count: 5} = connect(kino)
     end
   end
+
+  test "falls back to the default dbg implementation when outside livebook context" do
+    # Capturing IO switches the group leader, so the function effectively
+    # runs outside the livebook context
+    assert ExUnit.CaptureIO.capture_io(fn -> call_dbg(:ok) end) =~ ":ok"
+  end
 end

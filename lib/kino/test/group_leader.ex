@@ -43,6 +43,10 @@ defmodule Kino.Test.GroupLeader do
     {:ok, state.target}
   end
 
+  defp io_request(:livebook_get_evaluation_file, _state) do
+    {:ok, "#cell:xyz"}
+  end
+
   defp io_request(_request, _state) do
     # Forward everything else to the default group leader
     :forward

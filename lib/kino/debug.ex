@@ -11,15 +11,26 @@ defmodule Kino.Debug do
   falls back to the default backend otherwise.
   """
   @spec dbg(Macro.t(), Macro.t(), Macro.Env.t()) :: Macro.t()
-  def dbg(ast, _options, %Macro.Env{} = env) do
+  def dbg(ast, options, %Macro.Env{} = env) do
     dbg_id = System.unique_integer()
 
-    case ast do
-      {:|>, _meta, _args} ->
-        dbg_pipeline_ast(ast, dbg_id, env)
+    kino_ast =
+      case ast do
+        {:|>, _meta, _args} ->
+          dbg_pipeline_ast(ast, dbg_id, env)
 
-      _ ->
-        dbg_default_ast(ast, dbg_id, env)
+        _ ->
+          dbg_default_ast(ast, dbg_id, env)
+      end
+
+    fallback_ast = Macro.dbg(ast, options, env)
+
+    quote do
+      if Kino.Bridge.within_livebook?() do
+        unquote(kino_ast)
+      else
+        unquote(fallback_ast)
+      end
     end
   end
 
