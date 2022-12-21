@@ -243,7 +243,7 @@ html {
   appearance: none;
   padding: 4px 8px;
   border: 1px solid var(--gray-400);
-  font-size: .875rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-500);
   border-radius: 8px;
@@ -348,7 +348,8 @@ select option {
   border-radius: 6px;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid #e1e8f0;
   display: flex;
   flex-direction: column;
@@ -356,8 +357,7 @@ select option {
 }
 
 .header-menu-item {
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 0.975rem;
   font-family: "Inter";
   padding: 4px;
   color: #304254;
@@ -368,16 +368,18 @@ select option {
   font-weight: 500;
 }
 
-.header-menu-item.label {
-  font-weight: 500;
-  padding-left: 0;
-}
-
 .header-menu-item-wrapper {
   margin-top: 4px;
   border: solid 1px #e1e8f0;
   border-radius: 8px;
-  padding: 4px 0;
+  padding: 8px 0;
+}
+
+.header-menu-item.button {
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 4px;
 }
 
 .header-menu-item.button:hover {
@@ -390,6 +392,7 @@ select option {
   color: #61758a;
   width: 100%;
   margin-bottom: 4px;
+  font-size: 0.975rem;
 }
 
 .header-menu-input:disabled {
@@ -406,10 +409,11 @@ select option {
   justify-content: space-between;
   align-items: center;
   margin: 4px;
+  margin-bottom: 0;
 }
 
 .input-full {
-  min-width: 63%;
+  min-width: 62%;
   padding-right: 50px;
 }
 
@@ -430,7 +434,7 @@ select option {
   position: relative;
   right: 48px;
   bottom: 2px;
-  height: 23px;
+  height: 25px;
 }
 
 .menu__button:hover {

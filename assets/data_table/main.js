@@ -634,10 +634,10 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
       <div className="header-menu-item button" onClick={selectAllCurrent}>
-        <span className="header-menu-item label">Select current page </span>
+        Select current page
       </div>
       <form className="inline-form">
-        <label className="header-menu-item input-label">Sort: </label>
+        <label className="header-menu-item input-label">Sort </label>
         <select
           className="header-menu-input input"
           onClick={(event) => orderBy(event.target.value)}
@@ -699,7 +699,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
       <div className="header-menu-item-wrapper">
         <form>
           <div className="inline-form">
-            <label className="header-menu-item input-label">Filter: </label>
+            <label className="header-menu-item input-label">Filter </label>
             <select
               className="header-menu-input input"
               onChange={(event) =>
