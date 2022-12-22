@@ -108,7 +108,7 @@ function App({ ctx, data }) {
     const title = column.label;
     const id = column.key;
     columnsInitSize.push({ [title]: 250 });
-    initialFilters.push({ title, id, filter: null, value: null });
+    initialFilters.push({ title, key: id, filter: null, value: null });
     summary && summariesItems.push(Object.keys(summary).length);
     return {
       title: title,
@@ -323,22 +323,19 @@ function App({ ctx, data }) {
 
   const resetFilters = () => {
     setFilters(initialFilters);
-    ctx.pushEvent("filter_by", { key: null, filter: "equal", value: null });
+    ctx.pushEvent("filter_by", { filters: initialFilters });
   };
 
-  const filterBy = (filter, value, current) => {
-    const { id, title } = menu
-      ? columns[menu.column]
-      : { id: null, title: null };
-    const key = filter ? id : null;
-    const newFilters = (array, index, ...items) => [
+  const filterBy = (current) => {
+    const updateFilters = (array, index, ...item) => [
       ...array.slice(0, index),
-      ...items,
+      ...item,
       ...array.slice(index + 1),
     ];
+    const newFilters = updateFilters(filters, menu.column, current);
     setCurrentFilter(current);
-    setFilters(newFilters(filters, menu.column, current));
-    ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
+    setFilters(newFilters);
+    ctx.pushEvent("filter_by", { filters: newFilters });
   };
 
   const onPrev = () => {
@@ -751,11 +748,11 @@ function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
   function columnFilter(value) {
     if (value === "none") {
       const current = { ...currentFilter, filter: null, value: null };
-      filterBy(null, null, current);
+      filterBy(current);
     } else if (isBoolean) {
       const filterValue = value === "true";
       const current = { ...currentFilter, filter: "equal", value: filterValue };
-      filterBy("equal", filterValue, current);
+      filterBy(current);
     } else {
       setCurrentFilter({ ...currentFilter, filter: value });
     }
@@ -794,11 +791,10 @@ function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
           <button
             className="input__button"
             onClick={() =>
-              filterBy(
-                currentFilter.filter,
-                castFilterValue(currentFilter.value),
-                currentFilter
-              )
+              filterBy({
+                ...currentFilter,
+                value: castFilterValue(currentFilter.value),
+              })
             }
             disabled={!validFilter}
           >

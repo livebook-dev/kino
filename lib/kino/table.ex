@@ -11,17 +11,7 @@ defmodule Kino.Table do
           limit: pos_integer(),
           order_by: nil | term(),
           order: :asc | :desc,
-          filter_by: nil | term(),
-          filter_value: nil | term(),
-          filter:
-            nil
-            | :less
-            | :less_equal
-            | :equal
-            | :contains
-            | :not_equal
-            | :greater_equal
-            | :greater
+          filters: nil | list(%{String.t() => String.t()})
         }
 
   @type column :: %{
@@ -79,9 +69,7 @@ defmodule Kino.Table do
        limit: @limit,
        order_by: nil,
        order: :asc,
-       filter_by: nil,
-       filter_value: nil,
-       filter: :none
+       filters: nil
      )}
   end
 
@@ -119,44 +107,22 @@ defmodule Kino.Table do
     {:noreply, ctx |> assign(limit: limit) |> broadcast_update()}
   end
 
+  def handle_event("order_by", %{"key" => nil}, ctx) do
+    {:noreply, ctx |> assign(order_by: nil, order: :asc) |> broadcast_update()}
+  end
+
   def handle_event("order_by", %{"key" => key_string, "order" => order}, ctx) do
     order = String.to_existing_atom(order)
-
-    ctx =
-      if key_string do
-        # Lookup key by the string representation received from the client
-        ctx.assigns.key_to_string
-        |> Enum.find(&match?({_key, ^key_string}, &1))
-        |> case do
-          {key, _key_string} -> assign(ctx, order_by: key, order: order)
-          _ -> ctx
-        end
-      else
-        assign(ctx, order_by: nil, order: :asc)
-      end
-
+    key = lookup_key(ctx, key_string)
+    ctx = if key, do: assign(ctx, order_by: key, order: order), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("filter_by", %{"key" => key_string, "filter" => filter, "value" => value}, ctx) do
-    filter = String.to_existing_atom(filter)
-
-    ctx =
-      if key_string do
-        # Lookup key by the string representation received from the client
-        ctx.assigns.key_to_string
-        |> Enum.find(&match?({_key, ^key_string}, &1))
-        |> case do
-          {key, _key_string} ->
-            assign(ctx, filter_by: key, filter_value: value, filter: filter, page: 1)
-
-          _ ->
-            ctx
-        end
-      else
-        assign(ctx, filter_by: nil, filter_value: nil, filter: :none, page: 1)
-      end
-
+  def handle_event("filter_by", %{"filters" => filters}, ctx) do
+    filters = Enum.filter(filters, & &1["filter"])
+    keys = Enum.map(filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
+    filters = if filters != [], do: filters
+    ctx = if keys, do: assign(ctx, filters: filters), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
@@ -172,9 +138,7 @@ defmodule Kino.Table do
       limit: ctx.assigns.limit,
       order_by: ctx.assigns.order_by,
       order: ctx.assigns.order,
-      filter_by: ctx.assigns.filter_by,
-      filter_value: ctx.assigns.filter_value,
-      filter: ctx.assigns.filter
+      filters: ctx.assigns.filters
     }
 
     {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
@@ -204,9 +168,7 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
-      filter: ctx.assigns.filter,
-      filter_value: ctx.assigns.filter_value,
-      filter_by: key_to_string[ctx.assigns.filter_by],
+      filter: ctx.assigns.filters,
       limit: ctx.assigns.limit
     }
 
@@ -254,5 +216,14 @@ defmodule Kino.Table do
       end)
 
     {columns, rows, key_to_string}
+  end
+
+  defp lookup_key(ctx, key_string) do
+    ctx.assigns.key_to_string
+    |> Enum.find(&match?({_key, ^key_string}, &1))
+    |> case do
+      {key, _key_string} -> key
+      _ -> nil
+    end
   end
 end
