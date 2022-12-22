@@ -66,14 +66,22 @@ const theme = {
 
 const filtering = {
   numeric: [
-    "less",
-    "less_equal",
-    "equal",
-    "not_equal",
-    "greater_equal",
-    "greater",
+    { value: "less", label: "less" },
+    { value: "less_equal", label: "less equal" },
+    { value: "equal", label: "equal" },
+    { value: "not_equal", label: "not equal" },
+    { value: "greater_equal", label: "greater equal" },
+    { value: "greater", label: "greater" },
   ],
-  categorical: ["equal", "contains", "not_equal"],
+  categorical: [
+    { value: "equal", label: "equal" },
+    { value: "contains", label: "contains" },
+    { value: "not_equal", label: "not equal" },
+  ],
+  boolean: [
+    { value: true, label: "true" },
+    { value: false, label: "false" },
+  ],
 };
 
 export function init(ctx, data) {
@@ -663,8 +671,11 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
 }
 
 function Filtering({ columnType, filterBy, filter, setFilter }) {
-  const toOption = (option) => <option value={option}>{option}</option>;
+  const toOption = (option) => (
+    <option value={option.value}>{option.label}</option>
+  );
   const numericOptions = filtering.numeric.map((option) => toOption(option));
+  const booleanOptions = filtering.boolean.map((option) => toOption(option));
   const categoricalOptions = filtering.categorical.map((option) =>
     toOption(option)
   );
@@ -682,9 +693,8 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
   function isValidFilter(value) {
     if (isDate) {
       return isValidDate(value);
-    } else {
-      return filter.filterValue || filter.filterValue === 0;
     }
+    return filter.filterValue || filter.filterValue === 0;
   }
 
   function castFilterValue(value) {
@@ -693,9 +703,8 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
     }
     if (isDate) {
       return new Date(value).toISOString();
-    } else {
-      return value;
     }
+    return value;
   }
   return (
     <form>
@@ -704,25 +713,19 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
         <select
           className="header-menu-input input"
           onChange={(event) =>
-            setFilter({ ...filter, filter: event.target.value })
+            event.target.value === "none"
+              ? filterBy(null, null)
+              : isBoolean
+              ? filterBy("equal", event.target.value === "true")
+              : setFilter({ ...filter, filter: event.target.value })
           }
           value={filter.filter}
         >
-          <option value="none" onClick={() => filterBy(null, null)}>
-            none
-          </option>
+          <option value="none"></option>
+          <option value="none">none</option>
           {(isNumber || isDate) && numericOptions}
           {isCategorical && categoricalOptions}
-          {isBoolean && (
-            <>
-              <option value="true" onClick={() => filterBy("equal", true)}>
-                true
-              </option>
-              <option value="false" onClick={() => filterBy("equal", false)}>
-                false
-              </option>
-            </>
-          )}
+          {isBoolean && booleanOptions}
         </select>
       </div>
       {filter.filter !== "none" && (
