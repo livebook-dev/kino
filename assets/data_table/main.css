@@ -388,3 +388,10 @@ select option {
   pointer-events: none;
   color: #91a4b7;
 }
+
+.filter__info {
+  display: flex;
+  align-items: center;
+  margin-top: -16px;
+  margin-bottom: 6px;
+}

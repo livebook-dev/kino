@@ -12,6 +12,7 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiSearch2Line,
+  RiFilterOffLine,
 } from "react-icons/ri";
 import { useLayer } from "react-laag";
 
@@ -155,9 +156,9 @@ function App({ ctx, data }) {
   const headerTitleSize = 44;
   const headerItems = hasSummaries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const menuHeight = hasFiltering ? 185 : 70;
+  const menuHeight = hasFiltering ? 140 : 70;
   const fixedHeight = 440 + headerHeight;
-  const minRowsToFitMenu = hasFiltering ? 5 : 2;
+  const minRowsToFitMenu = hasFiltering ? 3 : 2;
   const autoHeight =
     totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
@@ -318,6 +319,11 @@ function App({ ctx, data }) {
   const orderBy = (order) => {
     const key = order !== "none" ? columns[menu.column].id : null;
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
+  };
+
+  const resetFilters = () => {
+    setFilters(initialFilters);
+    ctx.pushEvent("filter_by", { key: null, filter: "equal", value: null });
   };
 
   const filterBy = (filter, value, current) => {
@@ -494,14 +500,6 @@ function App({ ctx, data }) {
               of {data.content.total_rows}
             </span>
           )}
-          {isFiltering && (
-            <span className="navigation__details filter__message">
-              |
-              {filteringBy.map(
-                (msg) => ` ${msg.title} ${msg.filter} ${msg.value} |`
-              )}
-            </span>
-          )}
         </div>
         <div className="navigation__space"></div>
         {hasRefetch && (
@@ -522,6 +520,17 @@ function App({ ctx, data }) {
           />
         )}
       </div>
+      {isFiltering && hasEntries && (
+        <div className="filter__info">
+          <ResetFiltersButton onReset={resetFilters} />
+          <span className="navigation__details filter__message">
+            |
+            {filteringBy.map(
+              (msg) => ` ${msg.title} ${msg.filter} ${msg.value} |`
+            )}
+          </span>
+        </div>
+      )}
       {hasEntries && (
         <DataEditor
           className="table-container"
@@ -576,13 +585,27 @@ function App({ ctx, data }) {
       {hasData && !hasEntries && (
         <div>
           <p className="no-data">No entries found</p>
-          <button className="button" onClick={() => filterBy(null, null)}>
+          <button className="button" onClick={resetFilters}>
             <span>Reset filters</span>
           </button>
         </div>
       )}
       <div id="portal" />
     </div>
+  );
+}
+
+function ResetFiltersButton({ onReset }) {
+  return (
+    <span className="tooltip right" data-tooltip="Reset filters">
+      <button
+        className="icon-button"
+        aria-label="reset filters"
+        onClick={onReset}
+      >
+        <RiFilterOffLine />
+      </button>
+    </span>
   );
 }
 
