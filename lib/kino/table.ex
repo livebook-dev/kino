@@ -168,7 +168,7 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
-      filter: ctx.assigns.filters,
+      filters: ctx.assigns.filters,
       limit: ctx.assigns.limit
     }
 

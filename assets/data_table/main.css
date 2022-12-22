@@ -54,10 +54,6 @@ html {
   flex-grow: 1;
 }
 
-.filter__message {
-  color: var(--gray-600);
-}
-
 .pagination {
   display: flex;
 }
@@ -393,5 +389,10 @@ select option {
   display: flex;
   align-items: center;
   margin-top: -16px;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.filter__message {
+  color: var(--gray-600);
+  margin-left: 0;
 }

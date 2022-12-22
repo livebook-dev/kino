@@ -108,7 +108,7 @@ function App({ ctx, data }) {
     const title = column.label;
     const id = column.key;
     columnsInitSize.push({ [title]: 250 });
-    initialFilters.push({ title, key: id, filter: null, value: null });
+    initialFilters.push({ column: title, key: id, filter: null, value: null });
     summary && summariesItems.push(Object.keys(summary).length);
     return {
       title: title,
@@ -143,10 +143,10 @@ function App({ ctx, data }) {
 
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
-  const filteringBy = filters.filter(
+  const filteringBy = content.filters?.filter(
     (filter) => filter.filter && filter.filter !== "none"
   );
-  const isFiltering = filteringBy.length > 0;
+  const isFiltering = filteringBy?.length > 0;
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -520,12 +520,7 @@ function App({ ctx, data }) {
       {isFiltering && hasEntries && (
         <div className="filter__info">
           <ResetFiltersButton onReset={resetFilters} />
-          <span className="navigation__details filter__message">
-            |
-            {filteringBy.map(
-              (msg) => ` ${msg.title} ${msg.filter} ${msg.value} |`
-            )}
-          </span>
+          <FiltersInfo filtering={filteringBy} />
         </div>
       )}
       {hasEntries && (
@@ -589,6 +584,21 @@ function App({ ctx, data }) {
       )}
       <div id="portal" />
     </div>
+  );
+}
+
+function FiltersInfo({ filtering }) {
+  const filterInfo = ({ column, filter, value }, idx) => {
+    const msg = `${column} ${filter.replace("_", " ")} ${value}`;
+    if (idx + 1 === filtering.length) {
+      return msg;
+    }
+    return msg + " and ";
+  };
+  return (
+    <span className="navigation__details filter__message">
+      {filtering.map((filter, idx) => filterInfo(filter, idx))}
+    </span>
   );
 }
 
