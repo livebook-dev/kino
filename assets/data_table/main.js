@@ -100,15 +100,18 @@ export function init(ctx, data) {
 function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
+  const initialFilters = [];
 
   const columnsInitData = data.content.columns.map((column) => {
     const summary = column.summary;
     const title = column.label;
+    const id = column.key;
     columnsInitSize.push({ [title]: 250 });
+    initialFilters.push({ title, id, filter: null, value: null });
     summary && summariesItems.push(Object.keys(summary).length);
     return {
       title: title,
-      id: column.key,
+      id: id,
       icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
       hasMenu: true,
       summary: summary,
@@ -134,13 +137,15 @@ function App({ ctx, data }) {
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
-  const [filter, setFilter] = useState({
-    filter: data.content.filter,
-    filterValue: null,
-  });
+  const [filters, setFilters] = useState(initialFilters);
+  const [currentFilter, setCurrentFilter] = useState(null);
 
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
+  const filteringBy = filters.filter(
+    (filter) => filter.filter && filter.filter !== "none"
+  );
+  const isFiltering = filteringBy.length > 0;
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -315,13 +320,18 @@ function App({ ctx, data }) {
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
   };
 
-  const filterBy = (filter, value) => {
+  const filterBy = (filter, value, current) => {
     const { id, title } = menu
       ? columns[menu.column]
       : { id: null, title: null };
     const key = filter ? id : null;
-    const filterMessage = filter ? `(${title} ${filter} ${value})` : null;
-    setFilter({ filter: "none", filterValue: "", filterMessage });
+    const newFilters = (array, index, ...items) => [
+      ...array.slice(0, index),
+      ...items,
+      ...array.slice(index + 1),
+    ];
+    setCurrentFilter(current);
+    setFilters(newFilters(filters, menu.column, current));
     ctx.pushEvent("filter_by", { key, filter: filter ?? "equal", value });
   };
 
@@ -349,9 +359,7 @@ function App({ ctx, data }) {
     placement: "bottom-end",
     possiblePlacements: ["bottom-end", "bottom-center", "bottom-start"],
     triggerOffset: 0,
-    onOutsideClick: () => {
-      setMenu(null), setFilter({ ...filter, filterValue: null });
-    },
+    onOutsideClick: () => setMenu(null),
     trigger: {
       getBounds: () => ({
         left: menu?.bounds.x ?? 0,
@@ -373,19 +381,24 @@ function App({ ctx, data }) {
     });
   }, []);
 
-  const onHeaderMenuClick = useCallback((column, bounds) => {
-    if (!columns[column].summary) {
-      setMenu({ column, bounds });
-    }
-  }, []);
+  const onHeaderMenuClick = useCallback(
+    (column, bounds) => {
+      if (!columns[column].summary) {
+        setMenu({ column, bounds });
+        setCurrentFilter(filters[column]);
+      }
+    },
+    [filters]
+  );
 
   const onHeaderClicked = useCallback(
     (column, { localEventX, localEventY, bounds }) => {
       if (localEventX >= bounds.width - 50 && localEventY <= 25) {
         setMenu({ column, bounds });
+        setCurrentFilter(filters[column]);
       }
     },
-    []
+    [filters]
   );
 
   const onItemHovered = useCallback(
@@ -481,9 +494,12 @@ function App({ ctx, data }) {
               of {data.content.total_rows}
             </span>
           )}
-          {filter.filterMessage && (
+          {isFiltering && (
             <span className="navigation__details filter__message">
-              {filter.filterMessage}
+              |
+              {filteringBy.map(
+                (msg) => ` ${msg.title} ${msg.filter} ${msg.value} |`
+              )}
             </span>
           )}
         </div>
@@ -552,8 +568,8 @@ function App({ ctx, data }) {
             selectAllCurrent={selectAllCurrent}
             hasFiltering={hasFiltering}
             filterBy={filterBy}
-            filter={filter}
-            setFilter={setFilter}
+            currentFilter={currentFilter}
+            setCurrentFilter={setCurrentFilter}
           />
         )}
       {!hasData && <p className="no-data">No data</p>}
@@ -662,15 +678,15 @@ function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
         <Filtering
           columnType={props.columnType}
           filterBy={props.filterBy}
-          filter={props.filter}
-          setFilter={props.setFilter}
+          currentFilter={props.currentFilter}
+          setCurrentFilter={props.setCurrentFilter}
         />
       )}
     </div>
   );
 }
 
-function Filtering({ columnType, filterBy, filter, setFilter }) {
+function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
   const toOption = (option) => (
     <option value={option.value}>{option.label}</option>
   );
@@ -679,11 +695,14 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
   const categoricalOptions = filtering.categorical.map((option) =>
     toOption(option)
   );
+
   const isNumber = columnType === "number";
   const isDate = columnType === "date";
   const isBoolean = columnType === "boolean";
   const isCategorical = columnType === "text";
-  const validFilter = isValidFilter(filter.filterValue);
+  const validFilter = isValidFilter(currentFilter.value);
+  const filterInput =
+    !isBoolean && currentFilter.filter && currentFilter.filter !== "none";
 
   function isValidDate(value) {
     const date = value ? new Date(value) : null;
@@ -694,7 +713,7 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
     if (isDate) {
       return isValidDate(value);
     }
-    return filter.filterValue || filter.filterValue === 0;
+    return currentFilter.value || currentFilter.value === 0;
   }
 
   function castFilterValue(value) {
@@ -706,48 +725,57 @@ function Filtering({ columnType, filterBy, filter, setFilter }) {
     }
     return value;
   }
+  function columnFilter(value) {
+    if (value === "none") {
+      const current = { ...currentFilter, filter: null, value: null };
+      filterBy(null, null, current);
+    } else if (isBoolean) {
+      const filterValue = value === "true";
+      const current = { ...currentFilter, filter: "equal", value: filterValue };
+      filterBy("equal", filterValue, current);
+    } else {
+      setCurrentFilter({ ...currentFilter, filter: value });
+    }
+  }
   return (
     <form>
       <div className="inline-form">
         <label className="header-menu-item input-label">Filter </label>
         <select
           className="header-menu-input input"
-          onChange={(event) =>
-            event.target.value === "none"
-              ? filterBy(null, null)
-              : isBoolean
-              ? filterBy("equal", event.target.value === "true")
-              : setFilter({ ...filter, filter: event.target.value })
-          }
-          value={filter.filter}
+          onChange={(event) => columnFilter(event.target.value)}
+          value={isBoolean ? currentFilter.value : currentFilter.filter}
         >
-          <option value="none"></option>
           <option value="none">none</option>
           {(isNumber || isDate) && numericOptions}
           {isCategorical && categoricalOptions}
           {isBoolean && booleanOptions}
         </select>
       </div>
-      {filter.filter !== "none" && (
+      {filterInput && (
         <div className="input-wrapper">
           <input
             type="text"
             className="header-menu-input input input-full"
             onChange={(event) =>
-              setFilter({
-                ...filter,
-                filterValue: isNumber
+              setCurrentFilter({
+                ...currentFilter,
+                value: isNumber
                   ? event.target.value.replace(/[^\d.-]/g, "")
                   : event.target.value,
               })
             }
-            value={filter.filterValue}
-            disabled={filter.filter === "none"}
+            value={currentFilter.value}
+            disabled={currentFilter.filter === "none"}
           ></input>
           <button
             className="input__button"
             onClick={() =>
-              filterBy(filter.filter, castFilterValue(filter.filterValue))
+              filterBy(
+                currentFilter.filter,
+                castFilterValue(currentFilter.value),
+                currentFilter
+              )
             }
             disabled={!validFilter}
           >
