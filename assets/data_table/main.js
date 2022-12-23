@@ -111,6 +111,7 @@ function App({ ctx, data }) {
     return {
       title: title,
       id: id,
+      type: column.type,
       icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
       hasMenu: true,
       summary: summary,
@@ -121,6 +122,7 @@ function App({ ctx, data }) {
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasFiltering = data.features.includes("filtering");
+  const hasSorting = data.features.includes("sorting");
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -396,7 +398,8 @@ function App({ ctx, data }) {
     );
     const currentFilter = oldFilter || emptyFilter;
     return {
-      menuKey: id,
+      columnKey: id,
+      columnType: columns[column].type,
       filter: currentFilter,
       sort: { order: content.order, key: content.order_by === id ? id : null },
     };
@@ -584,10 +587,10 @@ function App({ ctx, data }) {
         renderLayer(
           <HeaderMenu
             layerProps={layerProps}
-            columnType={content.columns[menu?.column]?.type}
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
             hasFiltering={hasFiltering}
+            hasSorting={hasSorting}
             filterBy={filterBy}
             currentMenuForm={currentMenuForm}
             setCurrentMenuForm={setCurrentMenuForm}
@@ -712,14 +715,15 @@ function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
       <button className="header-menu-item button" onClick={selectAllCurrent}>
         Select this column
       </button>
-      <Sorting
-        orderBy={props.orderBy}
-        currentMenuForm={props.currentMenuForm}
-        setCurrentMenuForm={props.setCurrentMenuForm}
-      />
+      {props.hasSorting && (
+        <Sorting
+          orderBy={props.orderBy}
+          currentMenuForm={props.currentMenuForm}
+          setCurrentMenuForm={props.setCurrentMenuForm}
+        />
+      )}
       {props.hasFiltering && (
         <Filtering
-          columnType={props.columnType}
           filterBy={props.filterBy}
           currentMenuForm={props.currentMenuForm}
           setCurrentMenuForm={props.setCurrentMenuForm}
@@ -729,14 +733,14 @@ function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
   );
 }
 
-function Sorting({ orderBy, currentMenuForm: { menuKey, sort } }) {
+function Sorting({ orderBy, currentMenuForm: { columnKey, sort } }) {
   return (
     <form className="inline-form">
       <label className="header-menu-item input-label">Sort </label>
       <select
         className="header-menu-input input"
         onChange={(event) => orderBy(event.target.value)}
-        value={sort.key === menuKey ? sort.order : null}
+        value={sort.key === columnKey ? sort.order : null}
       >
         <option value="none"></option>
         <option value="asc">ascending</option>
@@ -746,12 +750,7 @@ function Sorting({ orderBy, currentMenuForm: { menuKey, sort } }) {
   );
 }
 
-function Filtering({
-  columnType,
-  filterBy,
-  currentMenuForm,
-  setCurrentMenuForm,
-}) {
+function Filtering({ filterBy, currentMenuForm, setCurrentMenuForm }) {
   const toOption = (option) => (
     <option value={option.value}>{option.label}</option>
   );
@@ -762,6 +761,7 @@ function Filtering({
   );
 
   const currentFilter = currentMenuForm.filter;
+  const columnType = currentMenuForm.columnType;
 
   const isNumber = columnType === "number";
   const isDate = columnType === "date";
