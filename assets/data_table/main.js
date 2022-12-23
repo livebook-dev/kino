@@ -316,6 +316,10 @@ function App({ ctx, data }) {
 
   const orderBy = (order) => {
     const key = order !== "none" ? columns[menu.column].id : null;
+    setCurrentMenuForm({
+      ...currentMenuForm,
+      sort: { order: order, key: key },
+    });
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
   };
 
@@ -406,7 +410,7 @@ function App({ ctx, data }) {
         setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters, content.order_by]
+    [filters, content.order_by, content.order]
   );
 
   const onHeaderClicked = useCallback(
@@ -417,7 +421,7 @@ function App({ ctx, data }) {
         setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters, content.order_by]
+    [filters, content.order_by, content.order]
   );
 
   const onItemHovered = useCallback(
