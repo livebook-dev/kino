@@ -107,7 +107,7 @@ function App({ ctx, data }) {
     const title = column.label;
     const id = column.key;
     columnsInitSize.push({ [title]: 250 });
-    summary && summariesItems.push(Object.keys(summary).length);
+    summary && summariesItems.push(summary.keys.length);
     return {
       title: title,
       id: id,
@@ -136,7 +136,6 @@ function App({ ctx, data }) {
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
-  const [currentFilter, setCurrentFilter] = useState(null);
   const [currentMenuForm, setCurrentMenuForm] = useState(null);
 
   const totalRows = content.total_rows;
@@ -255,13 +254,16 @@ function App({ ctx, data }) {
 
       if (hasSummary) {
         const summary = content.columns[column.sourceIndex - 1].summary;
+        const formattedSummary = Object.fromEntries(
+          summary.keys.map((k, i) => [k, summary.values[i]])
+        );
         const fontSize = 13;
         const padding = fontSize + basePadding;
         const baseFont = `${fontSize}px ${theme.fontFamily}`;
         const titleFont = `bold ${baseFont}`;
 
         ctx.fillStyle = fillInfoStyle;
-        Object.entries(summary).forEach(([key, value], index) => {
+        Object.entries(formattedSummary).forEach(([key, value], index) => {
           ctx.font = titleFont;
           ctx.fillText(
             `${key}:`,
@@ -323,7 +325,7 @@ function App({ ctx, data }) {
 
   const filterBy = (current) => {
     const oldFilter = filters?.find((filter) => filter.key === current.key);
-    setCurrentMenuForm({...currentMenuForm, filter: current});
+    setCurrentMenuForm({ ...currentMenuForm, filter: current });
     if (oldFilter && !current.filter) {
       ctx.pushEvent("remove_filter", current);
     } else if (oldFilter || current.filter) {
