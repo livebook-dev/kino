@@ -118,12 +118,26 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("filter_by", %{"filters" => filters}, ctx) do
-    filters = Enum.filter(filters, & &1["filter"])
+  def handle_event("filter_by", %{"key" => key} = filter, ctx) do
+    filters = if ctx.assigns.filters, do: ctx.assigns.filters, else: []
+    idx = Enum.find_index(filters, &(&1["key"] == key))
+    updated_filters = if idx, do: List.replace_at(filters, idx, filter), else: filters ++ [filter]
     keys = Enum.map(filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
-    filters = if filters != [], do: filters
-    ctx = if keys, do: assign(ctx, filters: filters), else: ctx
+    ctx = if keys, do: assign(ctx, filters: updated_filters), else: ctx
     {:noreply, broadcast_update(ctx)}
+  end
+
+  def handle_event("remove_filter", %{"key" => key}, ctx) do
+    idx = Enum.find_index(ctx.assigns.filters, &(&1["key"] == key))
+    updated_filters = List.delete_at(ctx.assigns.filters, idx)
+    keys = Enum.map(updated_filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
+    if updated_filters !== [], do: updated_filters
+    ctx = if keys, do: assign(ctx, filters: updated_filters), else: ctx
+    {:noreply, broadcast_update(ctx)}
+  end
+
+  def handle_event("reset_filters", _, ctx) do
+    {:noreply, ctx |> assign(filters: nil) |> broadcast_update()}
   end
 
   defp broadcast_update(ctx) do

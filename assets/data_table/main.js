@@ -101,14 +101,12 @@ export function init(ctx, data) {
 function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
-  const initialFilters = [];
 
   const columnsInitData = data.content.columns.map((column) => {
     const summary = column.summary;
     const title = column.label;
     const id = column.key;
     columnsInitSize.push({ [title]: 250 });
-    initialFilters.push({ column: title, key: id, filter: null, value: null });
     summary && summariesItems.push(Object.keys(summary).length);
     return {
       title: title,
@@ -138,15 +136,13 @@ function App({ ctx, data }) {
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
-  const [filters, setFilters] = useState(initialFilters);
   const [currentFilter, setCurrentFilter] = useState(null);
+  const [currentMenuForm, setCurrentMenuForm] = useState(null);
 
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
-  const filteringBy = content.filters?.filter(
-    (filter) => filter.filter && filter.filter !== "none"
-  );
-  const isFiltering = filteringBy?.length > 0;
+  const filters = content.filters;
+  const isFiltering = filters && filters.length > 0;
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -322,20 +318,17 @@ function App({ ctx, data }) {
   };
 
   const resetFilters = () => {
-    setFilters(initialFilters);
-    ctx.pushEvent("filter_by", { filters: initialFilters });
+    ctx.pushEvent("reset_filters", null);
   };
 
   const filterBy = (current) => {
-    const updateFilters = (array, index, ...item) => [
-      ...array.slice(0, index),
-      ...item,
-      ...array.slice(index + 1),
-    ];
-    const newFilters = updateFilters(filters, menu.column, current);
-    setCurrentFilter(current);
-    setFilters(newFilters);
-    ctx.pushEvent("filter_by", { filters: newFilters });
+    const oldFilter = filters?.find((filter) => filter.key === current.key);
+    setCurrentMenuForm({...currentMenuForm, filter: current});
+    if (oldFilter && !current.filter) {
+      ctx.pushEvent("remove_filter", current);
+    } else if (oldFilter || current.filter) {
+      ctx.pushEvent("filter_by", current);
+    }
   };
 
   const onPrev = () => {
@@ -384,24 +377,45 @@ function App({ ctx, data }) {
     });
   }, []);
 
+  const getCurrentMenuForm = (column) => {
+    const id = columns[column].id;
+    const emptyFilter = {
+      column: columns[column].title,
+      key: id,
+      filter: null,
+      value: null,
+    };
+    const oldFilter = filters?.find(
+      (filter) => filter.key === columns[column].id
+    );
+    const currentFilter = oldFilter || emptyFilter;
+    return {
+      menuKey: id,
+      filter: currentFilter,
+      sort: { order: content.order, key: content.order_by === id ? id : null },
+    };
+  };
+
   const onHeaderMenuClick = useCallback(
     (column, bounds) => {
       if (!columns[column].summary) {
         setMenu({ column, bounds });
-        setCurrentFilter(filters[column]);
+        const currentMenuForm = getCurrentMenuForm(column);
+        setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters]
+    [filters, content.order_by]
   );
 
   const onHeaderClicked = useCallback(
     (column, { localEventX, localEventY, bounds }) => {
       if (localEventX >= bounds.width - 50 && localEventY <= 25) {
         setMenu({ column, bounds });
-        setCurrentFilter(filters[column]);
+        const currentMenuForm = getCurrentMenuForm(column);
+        setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters]
+    [filters, content.order_by]
   );
 
   const onItemHovered = useCallback(
@@ -520,7 +534,7 @@ function App({ ctx, data }) {
       {isFiltering && hasEntries && (
         <div className="filter__info">
           <ResetFiltersButton onReset={resetFilters} />
-          <FiltersInfo filtering={filteringBy} />
+          <FiltersInfo filters={filters} />
         </div>
       )}
       {hasEntries && (
@@ -569,8 +583,8 @@ function App({ ctx, data }) {
             selectAllCurrent={selectAllCurrent}
             hasFiltering={hasFiltering}
             filterBy={filterBy}
-            currentFilter={currentFilter}
-            setCurrentFilter={setCurrentFilter}
+            currentMenuForm={currentMenuForm}
+            setCurrentMenuForm={setCurrentMenuForm}
           />
         )}
       {!hasData && <p className="no-data">No data</p>}
@@ -587,17 +601,17 @@ function App({ ctx, data }) {
   );
 }
 
-function FiltersInfo({ filtering }) {
+function FiltersInfo({ filters }) {
   const filterInfo = ({ column, filter, value }, idx) => {
     const msg = `${column} ${filter.replace("_", " ")} ${value}`;
-    if (idx + 1 === filtering.length) {
+    if (idx + 1 === filters.length) {
       return msg;
     }
     return msg + " and ";
   };
   return (
     <span className="navigation__details filter__message">
-      {filtering.map((filter, idx) => filterInfo(filter, idx))}
+      {filters.map((filter, idx) => filterInfo(filter, idx))}
     </span>
   );
 }
@@ -686,37 +700,52 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({ layerProps, selectAllCurrent, orderBy, ...props }) {
+function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
   return (
     <div className="header-menu" {...layerProps}>
       <button className="header-menu-item button" onClick={selectAllCurrent}>
         Select this column
       </button>
-      <form className="inline-form">
-        <label className="header-menu-item input-label">Sort </label>
-        <select
-          className="header-menu-input input"
-          onChange={(event) => orderBy(event.target.value)}
-        >
-          <option value="none"></option>
-          <option value="none">none</option>
-          <option value="asc">ascending</option>
-          <option value="desc">descending</option>
-        </select>
-      </form>
+      <Sorting
+        orderBy={props.orderBy}
+        currentMenuForm={props.currentMenuForm}
+        setCurrentMenuForm={props.setCurrentMenuForm}
+      />
       {props.hasFiltering && (
         <Filtering
           columnType={props.columnType}
           filterBy={props.filterBy}
-          currentFilter={props.currentFilter}
-          setCurrentFilter={props.setCurrentFilter}
+          currentMenuForm={props.currentMenuForm}
+          setCurrentMenuForm={props.setCurrentMenuForm}
         />
       )}
     </div>
   );
 }
 
-function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
+function Sorting({ orderBy, currentMenuForm: { menuKey, sort } }) {
+  return (
+    <form className="inline-form">
+      <label className="header-menu-item input-label">Sort </label>
+      <select
+        className="header-menu-input input"
+        onChange={(event) => orderBy(event.target.value)}
+        value={sort.key === menuKey ? sort.order : null}
+      >
+        <option value="none"></option>
+        <option value="asc">ascending</option>
+        <option value="desc">descending</option>
+      </select>
+    </form>
+  );
+}
+
+function Filtering({
+  columnType,
+  filterBy,
+  currentMenuForm,
+  setCurrentMenuForm,
+}) {
   const toOption = (option) => (
     <option value={option.value}>{option.label}</option>
   );
@@ -725,6 +754,8 @@ function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
   const categoricalOptions = filtering.categorical.map((option) =>
     toOption(option)
   );
+
+  const currentFilter = currentMenuForm.filter;
 
   const isNumber = columnType === "number";
   const isDate = columnType === "date";
@@ -764,7 +795,10 @@ function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
       const current = { ...currentFilter, filter: "equal", value: filterValue };
       filterBy(current);
     } else {
-      setCurrentFilter({ ...currentFilter, filter: value });
+      setCurrentMenuForm({
+        ...currentMenuForm,
+        filter: { ...currentFilter, filter: value },
+      });
     }
   }
   return (
@@ -788,11 +822,14 @@ function Filtering({ columnType, filterBy, currentFilter, setCurrentFilter }) {
             type="text"
             className="header-menu-input input input-full"
             onChange={(event) =>
-              setCurrentFilter({
-                ...currentFilter,
-                value: isNumber
-                  ? event.target.value.replace(/[^\d.-]/g, "")
-                  : event.target.value,
+              setCurrentMenuForm({
+                ...currentMenuForm,
+                filter: {
+                  ...currentFilter,
+                  value: isNumber
+                    ? event.target.value.replace(/[^\d.-]/g, "")
+                    : event.target.value,
+                },
               })
             }
             value={currentFilter.value}
