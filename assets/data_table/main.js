@@ -318,11 +318,8 @@ function App({ ctx, data }) {
 
   const orderBy = (order) => {
     const key = order !== "none" ? columns[menu.column].id : null;
-    setCurrentMenuForm({
-      ...currentMenuForm,
-      sort: { order: order, key: key },
-    });
     ctx.pushEvent("order_by", { key, order: order ?? "asc" });
+    setMenu(null);
   };
 
   const resetFilters = () => {
@@ -331,12 +328,12 @@ function App({ ctx, data }) {
 
   const filterBy = (current) => {
     const oldFilter = filters?.find((filter) => filter.key === current.key);
-    setCurrentMenuForm({ ...currentMenuForm, filter: current });
     if (oldFilter && !current.filter) {
       ctx.pushEvent("remove_filter", current);
     } else if (oldFilter || current.filter) {
       ctx.pushEvent("filter_by", current);
     }
+    setMenu(null);
   };
 
   const onPrev = () => {
@@ -355,6 +352,7 @@ function App({ ctx, data }) {
       columns: CompactSelection.fromSingleSelection(menu.column),
     };
     setSelection(newSelection);
+    setMenu(null);
   };
 
   const { layerProps, renderLayer } = useLayer({
