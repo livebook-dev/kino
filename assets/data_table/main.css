@@ -299,6 +299,7 @@ select option {
 
 .header-menu-item.input-label {
   font-weight: 500;
+  padding-left: 2px;
 }
 
 .header-menu-item.button {
@@ -330,7 +331,7 @@ select option {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-right: 7px;
+  margin-right: 2px;
 }
 
 .inline-form .input {
@@ -346,12 +347,11 @@ select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 4px;
-  margin-bottom: 0;
+  margin-top: 4px;
 }
 
 .input-full {
-  min-width: 62%;
+  min-width: 65%;
   padding-right: 50px;
 }
 
