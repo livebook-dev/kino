@@ -331,12 +331,12 @@ function App({ ctx, data }) {
 
   const filterBy = (current) => {
     const oldFilter = filters?.find((filter) => filter.key === current.key);
-    setCurrentMenuForm({ ...currentMenuForm, filter: current });
     if (oldFilter && !current.filter) {
       ctx.pushEvent("remove_filter", current);
     } else if (oldFilter || current.filter) {
       ctx.pushEvent("filter_by", current);
     }
+    setMenu(null);
   };
 
   const onPrev = () => {
@@ -355,6 +355,7 @@ function App({ ctx, data }) {
       columns: CompactSelection.fromSingleSelection(menu.column),
     };
     setSelection(newSelection);
+    setMenu(null);
   };
 
   const { layerProps, renderLayer } = useLayer({
