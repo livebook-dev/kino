@@ -11,7 +11,12 @@ defmodule Kino.Table do
           limit: pos_integer(),
           order_by: nil | term(),
           order: :asc | :desc,
-          filters: nil | list(%{String.t() => String.t()})
+          filters: %{
+            filter:
+              :less | :less_equal | :equal | :not_equal | :greater_equal | :greater | :contains,
+            value: term(),
+            key: term()
+          }
         }
 
   @type column :: %{
@@ -69,7 +74,7 @@ defmodule Kino.Table do
        limit: @limit,
        order_by: nil,
        order: :asc,
-       filters: nil
+       filters: []
      )}
   end
 
@@ -118,22 +123,26 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("filter_by", %{"key" => key} = filter, ctx) do
-    filters = if ctx.assigns.filters, do: ctx.assigns.filters, else: []
-    updated_filters = Enum.reject(filters, &(&1["key"] == key)) |> Kernel.++([filter])
-    keys = Enum.map(updated_filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
-    ctx = if keys, do: assign(ctx, filters: updated_filters), else: ctx
+  def handle_event("filter_by", %{"key" => key_string} = filter, ctx) do
+    updated_filters =
+      Enum.reject(ctx.assigns.content.filters, &(&1["key"] == key_string))
+      |> Kernel.++([filter])
+      |> Enum.map(&%{&1 | "key" => lookup_key(ctx, &1["key"])})
+
+    ctx = if lookup_key(ctx, key_string), do: assign(ctx, filters: updated_filters), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("remove_filter", %{"key" => key}, ctx) do
-    updated_filters = Enum.reject(ctx.assigns.filters, &(&1["key"] == key))
-    if updated_filters !== [], do: updated_filters
+  def handle_event("remove_filter", %{"key" => key_string}, ctx) do
+    updated_filters =
+      Enum.reject(ctx.assigns.content.filters, &(&1["key"] == key_string))
+      |> Enum.map(&%{&1 | "key" => lookup_key(ctx, &1["key"])})
+
     {:noreply, ctx |> assign(filters: updated_filters) |> broadcast_update()}
   end
 
   def handle_event("reset_filters", _, ctx) do
-    {:noreply, ctx |> assign(filters: nil) |> broadcast_update()}
+    {:noreply, ctx |> assign(filters: []) |> broadcast_update()}
   end
 
   defp broadcast_update(ctx) do
@@ -169,6 +178,8 @@ defmodule Kino.Table do
         columns
       end
 
+    filters = Enum.map(ctx.assigns.filters, &%{&1 | "key" => key_to_string[&1["key"]]})
+
     content = %{
       rows: rows,
       columns: columns,
@@ -178,7 +189,7 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: ctx.assigns.order,
       order_by: key_to_string[ctx.assigns.order_by],
-      filters: ctx.assigns.filters,
+      filters: filters,
       limit: ctx.assigns.limit
     }
 
