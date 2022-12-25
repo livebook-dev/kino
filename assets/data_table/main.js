@@ -319,7 +319,7 @@ function App({ ctx, data }) {
 
   const orderBy = (order) => {
     const key = order !== "none" ? columns[menu.column].id : null;
-    ctx.pushEvent("order_by", { key, order: order ?? "asc" });
+    ctx.pushEvent("order_by", { key, direction: order ?? "asc" });
     setMenu(null);
   };
 
@@ -399,7 +399,7 @@ function App({ ctx, data }) {
       columnKey: id,
       columnType: columns[column].type,
       filter: currentFilter,
-      sort: { order: content.order, key: content.order_by === id ? id : null },
+      sort: content.order,
     };
   };
 
@@ -411,7 +411,7 @@ function App({ ctx, data }) {
         setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters, content.order_by, content.order]
+    [filters, content.order]
   );
 
   const onHeaderClicked = useCallback(
@@ -422,7 +422,7 @@ function App({ ctx, data }) {
         setCurrentMenuForm(currentMenuForm);
       }
     },
-    [filters, content.order_by, content.order]
+    [filters, content.order]
   );
 
   const onItemHovered = useCallback(
@@ -479,13 +479,13 @@ function App({ ctx, data }) {
   }, []);
 
   useEffect(() => {
-    const icon = content.order === "asc" ? "arrowUp" : "arrowDown";
+    const icon = content.order?.direction === "asc" ? "arrowUp" : "arrowDown";
     const newColumns = columns.map((header) => ({
       ...header,
-      overlayIcon: header.id === content.order_by ? icon : null,
+      overlayIcon: header.id === content.order?.key ? icon : null,
     }));
     setColumns(newColumns);
-  }, [content.order, content.order_by]);
+  }, [content.order]);
 
   useEffect(() => {
     const newColumns = columns.map((header) => {
@@ -747,7 +747,7 @@ function Sorting({ orderBy, currentMenuForm: { columnKey, sort } }) {
       <select
         className="header-menu-input input"
         onChange={(event) => orderBy(event.target.value)}
-        value={sort.key === columnKey ? sort.order : null}
+        value={sort?.key === columnKey ? sort?.direction : null}
       >
         <option value="none"></option>
         <option value="asc">ascending</option>
