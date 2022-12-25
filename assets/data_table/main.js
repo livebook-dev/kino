@@ -386,7 +386,6 @@ function App({ ctx, data }) {
   const getCurrentMenuForm = (column) => {
     const id = columns[column].id;
     const emptyFilter = {
-      column: columns[column].title,
       key: id,
       filter: null,
       value: null,
@@ -541,7 +540,7 @@ function App({ ctx, data }) {
       {isFiltering && hasEntries && (
         <div className="filter__info">
           <ResetFiltersButton onReset={resetFilters} />
-          <FiltersInfo filters={filters} />
+          <FiltersInfo filters={filters} columns={columns} />
         </div>
       )}
       {hasEntries && (
@@ -608,9 +607,10 @@ function App({ ctx, data }) {
   );
 }
 
-function FiltersInfo({ filters }) {
-  const filterInfo = ({ column, filter, value }, idx) => {
-    const msg = `${column} ${filter.replace("_", " ")} ${value}`;
+function FiltersInfo({ filters, columns }) {
+  const filterInfo = ({ key, filter, value }, idx) => {
+    const { title } = columns.find((column) => column.id === key);
+    const msg = `${title} ${filter.replace("_", " ")} ${value}`;
     if (idx + 1 === filters.length) {
       return msg;
     }
