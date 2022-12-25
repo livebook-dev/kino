@@ -144,6 +144,7 @@ function App({ ctx, data }) {
   const hasEntries = hasData && totalRows > 0;
   const filters = content.filters;
   const isFiltering = filters && filters.length > 0;
+  const lastFilter = filters[filters.length - 1];
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -595,10 +596,18 @@ function App({ ctx, data }) {
         )}
       {!hasData && <p className="no-data">No data</p>}
       {hasData && !hasEntries && (
-        <div>
-          <p className="no-data">No entries found</p>
+        <div className="inline-buttons">
+          <p className="no-entries">No entries found</p>
           <button className="button" onClick={resetFilters}>
             <span>Reset filters</span>
+          </button>
+          <button
+            className="button"
+            onClick={() =>
+              filterBy({ ...lastFilter, filter: null, value: null })
+            }
+          >
+            <span>Undo last filter</span>
           </button>
         </div>
       )}
