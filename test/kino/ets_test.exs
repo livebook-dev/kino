@@ -69,8 +69,7 @@ defmodule Kino.ETSTest do
                ],
                page: 1,
                max_page: 1,
-               order_by: nil,
-               order: :asc
+               order: nil
              }
            } = data
   end

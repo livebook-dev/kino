@@ -22,13 +22,12 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
                  %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
                ],
-               order: :asc,
-               order_by: nil,
+               order: nil,
                total_rows: 3
              }
            } = data
 
-    push_event(kino, "order_by", %{"key" => "0", "order" => "desc"})
+    push_event(kino, "order_by", %{"key" => "0", "direction" => "desc"})
 
     data = connect(kino)
 
@@ -43,8 +42,7 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
                  %{fields: %{"0" => "1", "1" => "Jake Peralta"}}
                ],
-               order: :desc,
-               order_by: "0",
+               order: %{"key" => "0", "direction" => :desc},
                total_rows: 3
              }
            } = data
@@ -148,8 +146,7 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
                  %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
                ],
-               order: :asc,
-               order_by: nil,
+               order: nil,
                page: 1,
                max_page: 1
              }
@@ -162,7 +159,7 @@ defmodule Kino.DataTableTest do
     # Get initial data to populate the key-string mapping
     connect(kino)
 
-    push_event(kino, "order_by", %{"key" => "1", "order" => "desc"})
+    push_event(kino, "order_by", %{"key" => "1", "direction" => "desc"})
 
     assert_broadcast_event(kino, "update_content", %{
       columns: [
@@ -174,8 +171,7 @@ defmodule Kino.DataTableTest do
         %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
         %{fields: %{"0" => "3", "1" => "Amy Santiago"}}
       ],
-      order: :desc,
-      order_by: "1"
+      order: %{"key" => "1", "direction" => :desc}
     })
   end
 
