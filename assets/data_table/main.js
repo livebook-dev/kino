@@ -399,7 +399,7 @@ function App({ ctx, data }) {
       columnKey: id,
       columnType: columns[column].type,
       filter: currentFilter,
-      sort: content.order,
+      order: content.order,
     };
   };
 
@@ -740,14 +740,14 @@ function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
   );
 }
 
-function Sorting({ orderBy, currentMenuForm: { columnKey, sort } }) {
+function Sorting({ orderBy, currentMenuForm: { columnKey, order } }) {
   return (
     <form className="inline-form">
       <label className="header-menu-item input-label">Sort </label>
       <select
         className="header-menu-input input"
         onChange={(event) => orderBy(event.target.value)}
-        value={sort?.key === columnKey ? sort?.direction : null}
+        value={order?.key === columnKey ? order?.direction : null}
       >
         <option value="none"></option>
         <option value="asc">ascending</option>
