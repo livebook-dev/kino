@@ -42,7 +42,7 @@ defmodule Kino.DataTableTest do
                  %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
                  %{fields: %{"0" => "1", "1" => "Jake Peralta"}}
                ],
-               order: %{"key" => "0", "direction" => :desc},
+               order: %{key: "0", direction: :desc},
                total_rows: 3
              }
            } = data
@@ -171,7 +171,7 @@ defmodule Kino.DataTableTest do
         %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
         %{fields: %{"0" => "3", "1" => "Amy Santiago"}}
       ],
-      order: %{"key" => "1", "direction" => :desc}
+      order: %{key: "1", direction: :desc}
     })
   end
 

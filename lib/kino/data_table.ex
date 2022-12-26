@@ -232,7 +232,7 @@ defmodule Kino.DataTable do
 
   defp query(data, slicing_fun, slicing_cache, rows_spec) do
     if order = rows_spec[:order] do
-      sorted = Enum.sort_by(data, & &1[order["key"]], order["direction"])
+      sorted = Enum.sort_by(data, & &1[order.key], order.direction)
       records = Enum.slice(sorted, rows_spec.offset, rows_spec.limit)
       {records, Enum.count(sorted), slicing_cache}
     else
