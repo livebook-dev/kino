@@ -317,7 +317,7 @@ function App({ ctx, data }) {
   };
 
   const orderBy = (order) => {
-    const key = order !== "none" ? columns[menu.column].id : null;
+    const key = order !== "none" ? menu.columnKey : null;
     ctx.pushEvent("order_by", { key, direction: order ?? "asc" });
     setMenu(null);
   };
@@ -384,25 +384,17 @@ function App({ ctx, data }) {
   }, []);
 
   const onHeaderMenuClick = useCallback((column, bounds) => {
-    if (!columns[column].summary) {
-      setMenu({
-        column,
-        bounds,
-        columnKey: columns[column].id,
-        columnType: columns[column].type,
-      });
+    const { summary, id, type } = columns[column];
+    if (!summary) {
+      setMenu({ column, bounds, columnKey: id, columnType: type });
     }
   }, []);
 
   const onHeaderClicked = useCallback(
     (column, { localEventX, localEventY, bounds }) => {
+      const { id, type } = columns[column];
       if (localEventX >= bounds.width - 50 && localEventY <= 25) {
-        setMenu({
-          column,
-          bounds,
-          columnKey: columns[column].id,
-          columnType: columns[column].type,
-        });
+        setMenu({ column, bounds, columnKey: id, columnType: type });
       }
     },
     []
@@ -478,7 +470,7 @@ function App({ ctx, data }) {
   }, [colSizes]);
 
   useEffect(() => {
-    const currentMenu = menu ? columns[menu.column].id : null;
+    const currentMenu = menu?.columnKey;
     const themeOverride = { bgHeader: "#F0F5F9" };
     const newColumns = columns.map((header) => ({
       ...header,
