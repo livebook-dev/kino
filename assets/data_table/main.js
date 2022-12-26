@@ -142,7 +142,7 @@ function App({ ctx, data }) {
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
   const filters = content.filters;
-  const isFiltering = filters && filters.length > 0;
+  const isFiltering = filters.length > 0;
   const lastFilter = filters[filters.length - 1];
 
   const hasPagination =
@@ -151,7 +151,8 @@ function App({ ctx, data }) {
 
   const infiniteScroll = content.limit === totalRows;
   const headerTitleSize = 44;
-  const headerItems = hasSummaries ? Math.max(...summariesItems) : 0;
+  const headerItems =
+    hasSummaries && hasEntries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
   const menuHeight = hasFiltering ? 140 : 70;
   const fixedHeight = 440 + headerHeight;
@@ -162,6 +163,7 @@ function App({ ctx, data }) {
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
   const rows = content.page_length;
+  const showResetFilters = isFiltering && hasData && !hasEntries;
 
   const drawHeader = useCallback(
     (args) => {
@@ -178,6 +180,10 @@ function App({ ctx, data }) {
 
       if (column.sourceIndex === 0) {
         return true;
+      }
+
+      if (!hasEntries) {
+        return false;
       }
 
       ctx.rect(rect.x, rect.y, rect.width, rect.height);
@@ -519,7 +525,14 @@ function App({ ctx, data }) {
           <FiltersInfo filters={filters} columns={columns} />
         </div>
       )}
-      {hasEntries && (
+      {showResetFilters && (
+        <ResetFilters
+          resetFilters={resetFilters}
+          filterBy={filterBy}
+          lastFilter={lastFilter}
+        />
+      )}
+      {hasData && (
         <DataEditor
           className="table-container"
           theme={theme}
@@ -571,22 +584,6 @@ function App({ ctx, data }) {
           />
         )}
       {!hasData && <p className="no-data">No data</p>}
-      {hasData && !hasEntries && (
-        <div className="inline-buttons">
-          <p className="no-entries">No entries found</p>
-          <button className="button" onClick={resetFilters}>
-            <span>Reset filters</span>
-          </button>
-          <button
-            className="button"
-            onClick={() =>
-              filterBy({ ...lastFilter, filter: null, value: null })
-            }
-          >
-            <span>Undo last filter</span>
-          </button>
-        </div>
-      )}
       <div id="portal" />
     </div>
   );
@@ -605,6 +602,23 @@ function FiltersInfo({ filters, columns }) {
     <span className="navigation__details filter__message">
       {filters.map((filter, idx) => filterInfo(filter, idx))}
     </span>
+  );
+}
+
+function ResetFilters({ resetFilters, filterBy, lastFilter }) {
+  return (
+    <div className="inline-buttons">
+      <p className="no-entries">No entries found</p>
+      <button className="button" onClick={resetFilters}>
+        <span>Reset filters</span>
+      </button>
+      <button
+        className="button"
+        onClick={() => filterBy({ ...lastFilter, filter: null, value: null })}
+      >
+        <span>Undo last filter</span>
+      </button>
+    </div>
   );
 }
 
