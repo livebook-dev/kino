@@ -9,9 +9,14 @@ defmodule Kino.Table do
   @type rows_spec :: %{
           offset: non_neg_integer(),
           limit: pos_integer(),
-          order_by: nil | term(),
-          order: :asc | :desc,
-          filters: nil | list(%{String.t() => String.t()})
+          order: nil | %{direction: :asc | :desc, key: term()},
+          filters:
+            list(%{
+              filter:
+                :less | :less_equal | :equal | :not_equal | :greater_equal | :greater | :contains,
+              value: term(),
+              key: term()
+            })
         }
 
   @type column :: %{
@@ -67,9 +72,8 @@ defmodule Kino.Table do
        # Data specification
        page: 1,
        limit: @limit,
-       order_by: nil,
-       order: :asc,
-       filters: nil
+       order: nil,
+       filters: []
      )}
   end
 
@@ -108,36 +112,36 @@ defmodule Kino.Table do
   end
 
   def handle_event("order_by", %{"key" => nil}, ctx) do
-    {:noreply, ctx |> assign(order_by: nil, order: :asc) |> broadcast_update()}
+    {:noreply, ctx |> assign(order: nil) |> broadcast_update()}
   end
 
-  def handle_event("order_by", %{"key" => key_string, "order" => order}, ctx) do
-    order = String.to_existing_atom(order)
+  def handle_event("order_by", %{"key" => key_string, "direction" => direction}, ctx) do
+    direction = String.to_existing_atom(direction)
     key = lookup_key(ctx, key_string)
-    ctx = if key, do: assign(ctx, order_by: key, order: order), else: ctx
+    ctx = if key, do: assign(ctx, order: %{key: key, direction: direction}), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("filter_by", %{"key" => key} = filter, ctx) do
-    filters = if ctx.assigns.filters, do: ctx.assigns.filters, else: []
-    idx = Enum.find_index(filters, &(&1["key"] == key))
-    updated_filters = if idx, do: List.replace_at(filters, idx, filter), else: filters ++ [filter]
-    keys = Enum.map(filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
-    ctx = if keys, do: assign(ctx, filters: updated_filters), else: ctx
+  def handle_event("filter_by", %{"key" => key_string, "filter" => filter, "value" => value}, ctx) do
+    ctx =
+      if key = lookup_key(ctx, key_string) do
+        Enum.reject(ctx.assigns.filters, &(&1.key == key))
+        |> Kernel.++([%{key: key, filter: filter, value: value}])
+        |> then(&assign(ctx, filters: &1))
+      else
+        ctx
+      end
+
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("remove_filter", %{"key" => key}, ctx) do
-    idx = Enum.find_index(ctx.assigns.filters, &(&1["key"] == key))
-    updated_filters = List.delete_at(ctx.assigns.filters, idx)
-    keys = Enum.map(updated_filters, &lookup_key(ctx, &1["key"])) |> Enum.all?()
-    if updated_filters !== [], do: updated_filters
-    ctx = if keys, do: assign(ctx, filters: updated_filters), else: ctx
-    {:noreply, broadcast_update(ctx)}
+  def handle_event("remove_filter", %{"key" => key_string}, ctx) do
+    updated_filters = Enum.reject(ctx.assigns.filters, &(&1.key == lookup_key(ctx, key_string)))
+    {:noreply, ctx |> assign(filters: updated_filters) |> broadcast_update()}
   end
 
   def handle_event("reset_filters", _, ctx) do
-    {:noreply, ctx |> assign(filters: nil) |> broadcast_update()}
+    {:noreply, ctx |> assign(filters: []) |> broadcast_update()}
   end
 
   defp broadcast_update(ctx) do
@@ -150,7 +154,6 @@ defmodule Kino.Table do
     rows_spec = %{
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
-      order_by: ctx.assigns.order_by,
       order: ctx.assigns.order,
       filters: ctx.assigns.filters
     }
@@ -173,6 +176,12 @@ defmodule Kino.Table do
         columns
       end
 
+    filters = Enum.map(ctx.assigns.filters, &%{&1 | key: key_to_string[&1.key]})
+
+    order =
+      if ctx.assigns.order,
+        do: %{ctx.assigns.order | key: key_to_string[ctx.assigns.order.key]}
+
     content = %{
       rows: rows,
       columns: columns,
@@ -180,9 +189,8 @@ defmodule Kino.Table do
       page_length: length(rows),
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
-      order: ctx.assigns.order,
-      order_by: key_to_string[ctx.assigns.order_by],
-      filters: ctx.assigns.filters,
+      order: order,
+      filters: filters,
       limit: ctx.assigns.limit
     }
 

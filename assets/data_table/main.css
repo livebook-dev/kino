@@ -135,6 +135,11 @@ html {
   color: var(--gray-700);
 }
 
+.no-entries {
+  color: var(--gray-700);
+  font-weight: 500;
+}
+
 .invisible {
   visibility: hidden;
 }
@@ -395,4 +400,9 @@ select option {
 .filter__message {
   color: var(--gray-600);
   margin-left: 0;
+}
+
+.inline-buttons {
+  display: flex;
+  gap: 12px
 }
