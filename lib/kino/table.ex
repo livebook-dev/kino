@@ -123,20 +123,20 @@ defmodule Kino.Table do
   end
 
   def handle_event("filter_by", %{"key" => key_string, "filter" => filter, "value" => value}, ctx) do
-    updated_filters =
-      Enum.reject(ctx.assigns.content.filters, &(&1.key == key_string))
-      |> Kernel.++([%{key: key_string, filter: filter, value: value}])
-      |> Enum.map(&%{&1 | key: lookup_key(ctx, &1.key)})
+    ctx =
+      if key = lookup_key(ctx, key_string) do
+        Enum.reject(ctx.assigns.filters, &(&1.key == key))
+        |> Kernel.++([%{key: key, filter: filter, value: value}])
+        |> then(&assign(ctx, filters: &1))
+      else
+        ctx
+      end
 
-    ctx = if lookup_key(ctx, key_string), do: assign(ctx, filters: updated_filters), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
   def handle_event("remove_filter", %{"key" => key_string}, ctx) do
-    updated_filters =
-      Enum.reject(ctx.assigns.content.filters, &(&1.key == key_string))
-      |> Enum.map(&%{&1 | key: lookup_key(ctx, &1.key)})
-
+    updated_filters = Enum.reject(ctx.assigns.filters, &(&1.key == lookup_key(ctx, key_string)))
     {:noreply, ctx |> assign(filters: updated_filters) |> broadcast_update()}
   end
 

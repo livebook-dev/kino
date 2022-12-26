@@ -460,7 +460,7 @@ function App({ ctx, data }) {
       overlayIcon: header.id === content.order?.key ? icon : null,
     }));
     setColumns(newColumns);
-  }, [content.order]);
+  }, [content.order?.direction, content.order?.key]);
 
   useEffect(() => {
     const newColumns = columns.map((header) => {
