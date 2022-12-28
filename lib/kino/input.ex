@@ -273,14 +273,12 @@ defmodule Kino.Input do
 
   The input value is a map, with the image binary and metadata:
 
-  ```elixir
-  %{
-    data: binary(),
-    height: pos_integer(),
-    width: pos_integer(),
-    format: :rgb | :png | :jpeg
-  }
-  ```
+      %{
+        data: binary(),
+        height: pos_integer(),
+        width: pos_integer(),
+        format: :rgb | :png | :jpeg
+      }
 
   Note that the value can also be `nil`, if no image is selected.
 
@@ -345,6 +343,46 @@ defmodule Kino.Input do
     end
 
     new(%{type: :image, label: label, default: nil, size: size, format: format, fit: fit})
+  end
+
+  @doc """
+  Creates a new audio input.
+
+  The input value is a map, with the audio binary and metadata:
+
+      %{
+        data: binary(),
+        num_channels: pos_integer(),
+        sampling_rate: pos_integer()
+      }
+
+  Note that the value can also be `nil`, if no audio is selected.
+
+  ## Options
+
+    * `:format` - the format to read the audio as, either of:
+
+      * `:pcm_f32` (default) - the PCM (32-bit float) format. Note that
+        the binary uses native system endianness. Such binary can be
+        directly converted to an `Nx` tensor, with no additional decoding
+
+      * `:wav`
+
+    * `:sampling_rate` - the sampling rate (samples per second) of
+      the audio data. Defaults to `48_000`
+
+  """
+  @spec audio(String.t(), keyword()) :: t()
+  def audio(label, opts \\ []) do
+    format = Keyword.get(opts, :format, :pcm_f32)
+    sampling_rate = Keyword.get(opts, :sampling_rate, 48_000)
+
+    unless format in [:pcm_f32, :wav] do
+      raise ArgumentError,
+            "expected :format to be either of :pcm_f32 or :wav, got: #{inspect(format)}"
+    end
+
+    new(%{type: :audio, label: label, default: nil, format: format, sampling_rate: sampling_rate})
   end
 
   @doc """
