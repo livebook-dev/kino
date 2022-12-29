@@ -42,7 +42,7 @@ defmodule Kino.ETSTest do
     assert %{
              content: %{
                columns: [%{key: "0", label: "row", type: "tuple"}],
-               rows: []
+               data: []
              }
            } = data
   end
@@ -62,7 +62,7 @@ defmodule Kino.ETSTest do
                columns: [
                  %{key: "0", label: "row", type: "tuple"}
                ],
-               rows: [
+               data: [
                  %{fields: %{"0" => "{1, \"Jake Peralta\"}"}},
                  %{fields: %{"0" => "{2, \"Terry Jeffords\"}"}},
                  %{fields: %{"0" => "{3, \"Amy Santiago\"}"}}
@@ -106,7 +106,7 @@ defmodule Kino.ETSTest do
              content: %{
                page: 1,
                max_page: 3,
-               rows: [%{fields: %{"0" => "{1}"}} | _]
+               data: [%{fields: %{"0" => "{1}"}} | _]
              }
            } = data
 
@@ -115,7 +115,7 @@ defmodule Kino.ETSTest do
     assert_broadcast_event(kino, "update_content", %{
       page: 2,
       max_page: 3,
-      rows: [%{fields: %{"0" => "{11}"}} | _]
+      data: [%{fields: %{"0" => "{11}"}} | _]
     })
   end
 end

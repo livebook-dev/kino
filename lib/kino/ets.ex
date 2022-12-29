@@ -49,10 +49,10 @@ defmodule Kino.ETS do
   @impl true
   def get_data(rows_spec, state) do
     records = get_records(state.tid, rows_spec)
-    rows = Enum.map(records, fn record -> %{fields: %{0 => inspect(record)}} end)
+    data = Enum.map(records, fn record -> %{fields: %{0 => inspect(record)}} end)
     total_rows = :ets.info(state.tid, :size)
     columns = [%{key: 0, label: "row", type: "tuple"}]
-    {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state}
+    {:ok, %{columns: columns, data: data, total_rows: total_rows}, state}
   end
 
   defp get_records(tid, rows_spec) do

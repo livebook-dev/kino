@@ -31,6 +31,10 @@ defmodule Kino.Table do
           fields: list(%{term() => String.t()})
         }
 
+  @type row_based :: list(row())
+
+  @type columnar :: %{term() => list(String.t())}
+
   @type state :: term()
 
   @doc """
@@ -45,7 +49,7 @@ defmodule Kino.Table do
               {:ok,
                %{
                  columns: list(column()),
-                 rows: list(row()),
+                 data: columnar() | row_based(),
                  total_rows: non_neg_integer() | nil
                }, state()}
 
@@ -158,22 +162,20 @@ defmodule Kino.Table do
       filters: ctx.assigns.filters
     }
 
-    {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
+    {:ok, %{columns: columns, data: data, total_rows: total_rows}, state} =
       ctx.assigns.module.get_data(rows_spec, ctx.assigns.state)
 
-    {columns, rows, key_to_string} = stringify_keys(columns, rows, ctx.assigns.key_to_string)
+    {columns, data, key_to_string} = stringify_keys(columns, data, ctx.assigns.key_to_string)
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
-    page_length =
-      if is_list(rows),
-        do: length(rows),
-        else: Enum.at(rows, 0) |> elem(1) |> length()
+    row_based = is_list(data)
+    page_length = if row_based, do: length(data), else: Enum.at(data, 0) |> elem(1) |> length()
 
     sample_data =
-      if is_list(rows), do: List.first(rows), else: Map.values(rows) |> Enum.map(&List.first/1)
+      if row_based, do: List.first(data), else: Map.values(data) |> Enum.map(&List.first/1)
 
-    has_sample_data = if is_list(rows), do: sample_data, else: Enum.any?(sample_data)
+    has_sample_data = if row_based, do: sample_data, else: Enum.any?(sample_data)
 
     columns =
       if has_sample_data do
@@ -193,7 +195,7 @@ defmodule Kino.Table do
         do: %{ctx.assigns.order | key: key_to_string[ctx.assigns.order.key]}
 
     content = %{
-      rows: rows,
+      data: data,
       columns: columns,
       page: ctx.assigns.page,
       page_length: page_length,
@@ -227,7 +229,7 @@ defmodule Kino.Table do
   defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
 
   # Map keys to string representation for the client side
-  defp stringify_keys(columns, rows, key_to_string) do
+  defp stringify_keys(columns, data, key_to_string) do
     {columns, key_to_string} =
       Enum.map_reduce(columns, key_to_string, fn column, key_to_string ->
         key_to_string =
@@ -240,18 +242,18 @@ defmodule Kino.Table do
         {column, key_to_string}
       end)
 
-    rows =
-      if is_list(rows) do
-        update_in(rows, [Access.all(), :fields], fn fields ->
+    data =
+      if is_list(data) do
+        update_in(data, [Access.all(), :fields], fn fields ->
           Map.new(fields, fn {key, value} ->
             {key_to_string[key], value}
           end)
         end)
       else
-        Map.new(rows, fn {key, value} -> {key_to_string[key], value} end)
+        Map.new(data, fn {key, value} -> {key_to_string[key], value} end)
       end
 
-    {columns, rows, key_to_string}
+    {columns, data, key_to_string}
   end
 
   defp lookup_key(ctx, key_string) do
