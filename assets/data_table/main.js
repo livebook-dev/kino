@@ -303,8 +303,10 @@ function App({ ctx, data }) {
 
   const getCellContent = useCallback(
     ([col, row]) => {
-      const cellData = content.rows[row]?.fields[col] || "";
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
+      const cellData = Array.isArray(content.rows)
+        ? content.rows[row]?.fields[col]
+        : content.rows[col][row];
 
       return {
         kind: kind,

@@ -165,9 +165,19 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
+    page_length =
+      if is_list(rows),
+        do: length(rows),
+        else: Enum.at(rows, 0) |> elem(1) |> length()
+
+    sample_data =
+      if is_list(rows), do: List.first(rows), else: Map.values(rows) |> Enum.map(&List.first/1)
+
+    has_sample_data = if is_list(rows), do: sample_data, else: Enum.any?(sample_data)
+
     columns =
-      if sample_row = List.first(rows) do
-        sample_row
+      if has_sample_data do
+        sample_data
         |> infer_types()
         |> Enum.zip_with(columns, fn type, column ->
           Map.put_new(column, :type, type)
@@ -186,7 +196,7 @@ defmodule Kino.Table do
       rows: rows,
       columns: columns,
       page: ctx.assigns.page,
-      page_length: length(rows),
+      page_length: page_length,
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: order,
@@ -197,9 +207,9 @@ defmodule Kino.Table do
     {content, ctx}
   end
 
-  defp infer_types(row) do
-    fields = Map.values(row.fields)
-    Enum.map(fields, &type_of/1)
+  defp infer_types(sample_data) do
+    sample_data = if is_map(sample_data), do: Map.values(sample_data.fields), else: sample_data
+    Enum.map(sample_data, &type_of/1)
   end
 
   defp type_of("http" <> _rest), do: "uri"
@@ -231,11 +241,15 @@ defmodule Kino.Table do
       end)
 
     rows =
-      update_in(rows, [Access.all(), :fields], fn fields ->
-        Map.new(fields, fn {key, value} ->
-          {key_to_string[key], value}
+      if is_list(rows) do
+        update_in(rows, [Access.all(), :fields], fn fields ->
+          Map.new(fields, fn {key, value} ->
+            {key_to_string[key], value}
+          end)
         end)
-      end)
+      else
+        Map.new(rows, fn {key, value} -> {key_to_string[key], value} end)
+      end
 
     {columns, rows, key_to_string}
   end
