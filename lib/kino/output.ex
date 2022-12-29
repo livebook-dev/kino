@@ -299,6 +299,16 @@ defmodule Kino.Output do
               size: {pos_integer(), pos_integer()} | nil,
               fit: :match | :contain | :pad | :crop
             }
+          | %{
+              type: :audio,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: nil,
+              destination: Process.dest(),
+              format: :pcm_f32 | :wav,
+              sampling_rate: pos_integer()
+            }
 
   @typedoc """
   A control widget.
