@@ -217,7 +217,7 @@ defmodule Kino.DataTable do
 
     data =
       Enum.map(records, fn record ->
-        %{fields: Map.new(record, fn {key, value} -> {key, value_to_string(value)} end)}
+        Enum.map(state.columns, &(Map.fetch!(record, &1.key) |> value_to_string()))
       end)
 
     total_rows = count || state.total_rows
@@ -225,7 +225,7 @@ defmodule Kino.DataTable do
     {:ok,
      %{
        columns: state.columns,
-       data: data,
+       data: {:row_based, data},
        total_rows: total_rows
      }, %{state | total_rows: total_rows, slicing_cache: slicing_cache}}
   end

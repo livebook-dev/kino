@@ -304,9 +304,10 @@ function App({ ctx, data }) {
   const getCellContent = useCallback(
     ([col, row]) => {
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
-      const cellData = Array.isArray(content.data)
-        ? content.data[row]?.fields[col]
-        : content.data[col][row];
+      const columnar = content.data_orientation === "columnar";
+      const cellData = columnar
+        ? content.data[col][row]
+        : content.data[row][col];
 
       return {
         kind: kind,
