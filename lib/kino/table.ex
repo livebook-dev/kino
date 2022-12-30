@@ -40,7 +40,7 @@ defmodule Kino.Table do
               {:ok,
                %{
                  columns: list(column()),
-                 data: {:columnar | :row_based, list(list(String.t()))},
+                 data: {:columns | :rows, list(list(String.t()))},
                  total_rows: non_neg_integer() | nil
                }, state()}
 
@@ -160,10 +160,13 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
-    row_based = orientation == :row_based
-    page_length = if row_based, do: length(data), else: hd(data) |> length()
-    sample_data = if row_based, do: List.first(data), else: Enum.map(data, &List.first(&1))
-    has_sample_data = if row_based, do: sample_data, else: Enum.any?(sample_data)
+    {page_length, sample_data} =
+      case orientation do
+        :rows -> {length(data), List.first(data)}
+        :columns -> {hd(data) |> length(), Enum.map(data, &List.first(&1))}
+      end
+
+    has_sample_data = if is_list(sample_data), do: Enum.any?(sample_data)
 
     columns =
       if has_sample_data do

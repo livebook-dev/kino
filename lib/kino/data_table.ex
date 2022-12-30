@@ -225,7 +225,7 @@ defmodule Kino.DataTable do
     {:ok,
      %{
        columns: state.columns,
-       data: {:row_based, data},
+       data: {:rows, data},
        total_rows: total_rows
      }, %{state | total_rows: total_rows, slicing_cache: slicing_cache}}
   end
