@@ -60,12 +60,12 @@ defmodule Kino.DataTable do
 
     {data_rows, data_columns} =
       if keys do
-        rows = Table.to_rows(reader, only: keys)
+        data = Table.to_rows(reader, only: keys)
         nonexistent = keys -- meta.columns
-        {rows, keys -- nonexistent}
+        {data, keys -- nonexistent}
       else
-        rows = Table.to_rows(reader)
-        {rows, meta.columns}
+        data = Table.to_rows(reader)
+        {data, meta.columns}
       end
 
     Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled})
@@ -215,9 +215,9 @@ defmodule Kino.DataTable do
     {records, count, slicing_cache} =
       query(state.data_rows, state.slicing_fun, state.slicing_cache, rows_spec)
 
-    rows =
+    data =
       Enum.map(records, fn record ->
-        %{fields: Map.new(record, fn {key, value} -> {key, value_to_string(value)} end)}
+        Enum.map(state.columns, &(Map.fetch!(record, &1.key) |> value_to_string()))
       end)
 
     total_rows = count || state.total_rows
@@ -225,7 +225,7 @@ defmodule Kino.DataTable do
     {:ok,
      %{
        columns: state.columns,
-       rows: rows,
+       data: {:rows, data},
        total_rows: total_rows
      }, %{state | total_rows: total_rows, slicing_cache: slicing_cache}}
   end

@@ -26,11 +26,6 @@ defmodule Kino.Table do
           optional(:summary) => %{String.t() => String.t()}
         }
 
-  @type row :: %{
-          # A string value for every column key
-          fields: list(%{term() => String.t()})
-        }
-
   @type state :: term()
 
   @doc """
@@ -45,7 +40,7 @@ defmodule Kino.Table do
               {:ok,
                %{
                  columns: list(column()),
-                 rows: list(row()),
+                 data: {:columns | :rows, list(list(String.t()))},
                  total_rows: non_neg_integer() | nil
                }, state()}
 
@@ -158,16 +153,24 @@ defmodule Kino.Table do
       filters: ctx.assigns.filters
     }
 
-    {:ok, %{columns: columns, rows: rows, total_rows: total_rows}, state} =
+    {:ok, %{columns: columns, data: {orientation, data}, total_rows: total_rows}, state} =
       ctx.assigns.module.get_data(rows_spec, ctx.assigns.state)
 
-    {columns, rows, key_to_string} = stringify_keys(columns, rows, ctx.assigns.key_to_string)
+    {columns, key_to_string} = stringify_keys(columns, ctx.assigns.key_to_string)
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
+    {page_length, sample_data} =
+      case orientation do
+        :rows -> {length(data), List.first(data)}
+        :columns -> {hd(data) |> length(), Enum.map(data, &List.first(&1))}
+      end
+
+    has_sample_data = if is_list(sample_data), do: Enum.any?(sample_data)
+
     columns =
-      if sample_row = List.first(rows) do
-        sample_row
+      if has_sample_data do
+        sample_data
         |> infer_types()
         |> Enum.zip_with(columns, fn type, column ->
           Map.put_new(column, :type, type)
@@ -183,10 +186,11 @@ defmodule Kino.Table do
         do: %{ctx.assigns.order | key: key_to_string[ctx.assigns.order.key]}
 
     content = %{
-      rows: rows,
+      data: data,
+      data_orientation: orientation,
       columns: columns,
       page: ctx.assigns.page,
-      page_length: length(rows),
+      page_length: page_length,
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: order,
@@ -197,9 +201,8 @@ defmodule Kino.Table do
     {content, ctx}
   end
 
-  defp infer_types(row) do
-    fields = Map.values(row.fields)
-    Enum.map(fields, &type_of/1)
+  defp infer_types(sample_data) do
+    Enum.map(sample_data, &type_of/1)
   end
 
   defp type_of("http" <> _rest), do: "uri"
@@ -217,7 +220,7 @@ defmodule Kino.Table do
   defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
 
   # Map keys to string representation for the client side
-  defp stringify_keys(columns, rows, key_to_string) do
+  defp stringify_keys(columns, key_to_string) do
     {columns, key_to_string} =
       Enum.map_reduce(columns, key_to_string, fn column, key_to_string ->
         key_to_string =
@@ -230,14 +233,7 @@ defmodule Kino.Table do
         {column, key_to_string}
       end)
 
-    rows =
-      update_in(rows, [Access.all(), :fields], fn fields ->
-        Map.new(fields, fn {key, value} ->
-          {key_to_string[key], value}
-        end)
-      end)
-
-    {columns, rows, key_to_string}
+    {columns, key_to_string}
   end
 
   defp lookup_key(ctx, key_string) do

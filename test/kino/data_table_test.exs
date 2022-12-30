@@ -17,11 +17,7 @@ defmodule Kino.DataTableTest do
                  %{key: "0", label: ":id"},
                  %{key: "1", label: ":name"}
                ],
-               rows: [
-                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
-                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
-                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
-               ],
+               data: [["3", "Amy Santiago"], ["1", "Jake Peralta"], ["2", "Terry Jeffords"]],
                order: nil,
                total_rows: 3
              }
@@ -37,11 +33,7 @@ defmodule Kino.DataTableTest do
                  %{key: "0", label: ":id"},
                  %{key: "1", label: ":name"}
                ],
-               rows: [
-                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
-                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
-                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}}
-               ],
+               data: [["3", "Amy Santiago"], ["2", "Terry Jeffords"], ["1", "Jake Peralta"]],
                order: %{key: "0", direction: :desc},
                total_rows: 3
              }
@@ -110,11 +102,7 @@ defmodule Kino.DataTableTest do
     kino = Kino.DataTable.new(@people_entries, keys: [:id])
     data = connect(kino)
 
-    assert data.content.rows == [
-             %{fields: %{"0" => "3"}},
-             %{fields: %{"0" => "1"}},
-             %{fields: %{"0" => "2"}}
-           ]
+    assert data.content.data == [["3"], ["1"], ["2"]]
   end
 
   test "respects :keys order" do
@@ -141,11 +129,7 @@ defmodule Kino.DataTableTest do
                  %{key: "0", label: ":id"},
                  %{key: "1", label: ":name"}
                ],
-               rows: [
-                 %{fields: %{"0" => "3", "1" => "Amy Santiago"}},
-                 %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
-                 %{fields: %{"0" => "2", "1" => "Terry Jeffords"}}
-               ],
+               data: [["3", "Amy Santiago"], ["1", "Jake Peralta"], ["2", "Terry Jeffords"]],
                order: nil,
                page: 1,
                max_page: 1
@@ -166,11 +150,7 @@ defmodule Kino.DataTableTest do
         %{key: "0", label: ":id"},
         %{key: "1", label: ":name"}
       ],
-      rows: [
-        %{fields: %{"0" => "2", "1" => "Terry Jeffords"}},
-        %{fields: %{"0" => "1", "1" => "Jake Peralta"}},
-        %{fields: %{"0" => "3", "1" => "Amy Santiago"}}
-      ],
+      data: [["2", "Terry Jeffords"], ["1", "Jake Peralta"], ["3", "Amy Santiago"]],
       order: %{key: "1", direction: :desc}
     })
   end
@@ -185,7 +165,7 @@ defmodule Kino.DataTableTest do
              content: %{
                page: 1,
                max_page: 3,
-               rows: [%{fields: %{"0" => "1"}} | _]
+               data: [["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"]]
              }
            } = data
 
@@ -194,7 +174,7 @@ defmodule Kino.DataTableTest do
     assert_broadcast_event(kino, "update_content", %{
       page: 2,
       max_page: 3,
-      rows: [%{fields: %{"0" => "11"}} | _]
+      data: [["11"], ["12"], ["13"] | _]
     })
   end
 
@@ -213,11 +193,7 @@ defmodule Kino.DataTableTest do
     assert %{
              content: %{
                columns: [%{key: "0", label: ":x"}, %{key: "1", label: ":y"}],
-               rows: [
-                 %{fields: %{"0" => "1", "1" => "1"}},
-                 %{fields: %{"0" => "2", "1" => "2"}},
-                 %{fields: %{"0" => "3", "1" => "3"}}
-               ],
+               data: [["1", "1"], ["2", "2"], ["3", "3"]],
                total_rows: 3
              }
            } = data
@@ -232,7 +208,7 @@ defmodule Kino.DataTableTest do
     assert %{
              content: %{
                columns: [%{key: "0", label: ":x"}, %{key: "1", label: ":y"}],
-               rows: [%{fields: %{"0" => "1", "1" => "1"}} | _] = rows,
+               data: [["1", "1"], ["2", "2"], ["3", "3"] | _] = rows,
                total_rows: 30
              }
            } = data
@@ -242,13 +218,13 @@ defmodule Kino.DataTableTest do
     push_event(kino, "show_page", %{"page" => 2})
 
     assert_broadcast_event(kino, "update_content", %{
-      rows: [%{fields: %{"0" => "11", "1" => "11"}} | _]
+      data: [["11", "11"], ["12", "12"] | _]
     })
 
     push_event(kino, "show_page", %{"page" => 1})
 
     assert_broadcast_event(kino, "update_content", %{
-      rows: [%{fields: %{"0" => "1", "1" => "1"}} | _]
+      data: [["1", "1"], ["2", "2"] | _]
     })
   end
 end
