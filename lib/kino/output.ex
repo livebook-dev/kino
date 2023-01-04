@@ -309,6 +309,15 @@ defmodule Kino.Output do
               format: :pcm_f32 | :wav,
               sampling_rate: pos_integer()
             }
+          | %{
+              type: :file,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: String.t(),
+              destination: Process.dest(),
+              accept: list(String.t()) | :any
+            }
 
   @typedoc """
   A control widget.
