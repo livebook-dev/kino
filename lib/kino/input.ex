@@ -386,6 +386,43 @@ defmodule Kino.Input do
   end
 
   @doc """
+  Creates a new file input.
+
+  The input value is a map, with the file path and metadata:
+
+      %{
+        path: String.t(),
+        client_name: String.t()
+      }
+
+  Note that the value can also be `nil`, if no file is selected.
+
+  ## Options
+
+    * `:accept` - the list of accepted file types (either extensions
+      or MIME types) or `:any`. Defaults to `:any`
+
+  """
+
+  @spec file(String.t(), keyword()) :: t()
+  def file(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    accept = Keyword.get(opts, :accept, :any)
+
+    case accept do
+      :any ->
+        :ok
+
+      [_ | _] ->
+        :ok
+
+      other ->
+        raise ArgumentError, "expected :accept to be a non-empty list, got: #{inspect(other)}"
+    end
+
+    new(%{type: :file, label: label, default: nil, accept: accept})
+  end
+
+  @doc """
   Synchronously reads the current input value.
 
   Note that to retrieve the value, the input must be rendered first,
