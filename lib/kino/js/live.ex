@@ -360,4 +360,14 @@ defmodule Kino.JS.Live do
   def call(kino, term, timeout \\ 5_000) do
     Kino.JS.Live.Server.call(kino.pid, term, timeout)
   end
+
+  @doc """
+  Starts monitoring the kino server from the calling process.
+
+  Refer to `Process.monitor/1` for more details.
+  """
+  @spec monitor(t()) :: reference()
+  def monitor(kino) do
+    Process.monitor(kino.pid)
+  end
 end

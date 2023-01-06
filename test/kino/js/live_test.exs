@@ -53,4 +53,12 @@ defmodule Kino.JS.LiveTest do
     send(kino.pid, {:ping, self(), :metadata, %{ref: ref}})
     assert_receive {:pong, :metadata, %{ref: ^ref}}
   end
+
+  test "monitor/1" do
+    %{pid: pid} = kino = LiveCounter.new(0)
+    ref = Kino.JS.Live.monitor(kino)
+    assert is_reference(ref)
+    Process.exit(pid, :kill)
+    assert_receive {:DOWN, ^ref, :process, ^pid, :killed}
+  end
 end
