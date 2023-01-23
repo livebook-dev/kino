@@ -140,6 +140,7 @@ function App({ ctx, data }) {
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
+  const maxColumnAutoWidth = data.content.columns.length === 1 ? 800 : 350;
   const rows = content.page_length;
 
   const drawHeader = useCallback(
@@ -530,7 +531,7 @@ function App({ ctx, data }) {
           onGridSelectionChange={(selection) => setSelection(selection)}
           rowMarkerStartIndex={rowMarkerStartIndex}
           minColumnWidth={minColumnWidth}
-          maxColumnAutoWidth={300}
+          maxColumnAutoWidth={maxColumnAutoWidth}
           fillHandle={true}
           onItemHovered={onItemHovered}
           getRowThemeOverride={getRowThemeOverride}
