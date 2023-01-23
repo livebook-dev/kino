@@ -129,9 +129,9 @@ function App({ ctx, data }) {
   const headerItems =
     hasSummaries && hasEntries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const menuHeight = 70;
+  const menuHeight = hasSorting ? 140 : 70;
   const fixedHeight = 440 + headerHeight;
-  const minRowsToFitMenu = 2;
+  const minRowsToFitMenu = hasSorting ? 3 : 2;
   const autoHeight =
     totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
@@ -522,7 +522,6 @@ function App({ ctx, data }) {
             layerProps={layerProps}
             menu={menu}
             orderBy={orderBy}
-            order={content.order}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
           />
@@ -603,37 +602,25 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
+function HeaderMenu({ layerProps, selectAllCurrent, hasSorting, orderBy }) {
   return (
     <div className="header-menu" {...layerProps}>
       <button className="header-menu-item button" onClick={selectAllCurrent}>
         Select this column
       </button>
-      {props.hasSorting && (
-        <Sorting
-          orderBy={props.orderBy}
-          order={props.order}
-          menu={props.menu}
-        />
+      {hasSorting && (
+        <>
+          <div className="header-menu-item" onClick={() => orderBy("asc")}>
+            Sort: ascending
+          </div>
+          <div className="header-menu-item" onClick={() => orderBy("desc")}>
+            Sort: descending
+          </div>
+          <div className="header-menu-item" onClick={() => orderBy("none")}>
+            Sort: none
+          </div>
+        </>
       )}
     </div>
-  );
-}
-
-function Sorting({ orderBy, order, menu }) {
-  const columnKey = menu?.columnKey;
-  return (
-    <form className="inline-form">
-      <label className="header-menu-item input-label">Sort </label>
-      <select
-        className="header-menu-input input"
-        onChange={(event) => orderBy(event.target.value)}
-        value={order?.key === columnKey ? order?.direction : null}
-      >
-        <option value="none"></option>
-        <option value="asc">ascending</option>
-        <option value="desc">descending</option>
-      </select>
-    </form>
   );
 }

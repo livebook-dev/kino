@@ -298,6 +298,11 @@ select option {
   margin-bottom: 2px;
 }
 
+.header-menu-item:hover {
+  cursor: pointer;
+  background-color: #f0f5f9;
+}
+
 .header-menu-item.input-label {
   font-weight: 500;
   padding-left: 2px;
