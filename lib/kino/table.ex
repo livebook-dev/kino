@@ -3,7 +3,7 @@ defmodule Kino.Table do
 
   @type info :: %{
           name: String.t(),
-          features: list(:refetch | :pagination | :sorting | :filtering)
+          features: list(:refetch | :pagination | :sorting)
         }
 
   @type rows_spec :: %{
