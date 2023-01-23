@@ -46,10 +46,6 @@ html {
   line-height: 1;
 }
 
-.navigation__details.filtered {
-  margin-left: 5px;
-}
-
 .navigation__space {
   flex-grow: 1;
 }
@@ -390,20 +386,8 @@ select option {
   color: #91a4b7;
 }
 
-.filter__info {
-  display: flex;
-  align-items: center;
-  margin-top: -16px;
-  margin-bottom: 12px;
-}
-
-.filter__message {
-  color: var(--gray-600);
-  margin-left: 0;
-}
-
 .inline-buttons {
   display: flex;
   align-items: center;
-  gap: 12px
+  gap: 12px;
 }
