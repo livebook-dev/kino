@@ -65,26 +65,6 @@ const theme = {
   headerIconSize: 22,
 };
 
-const filtering = {
-  numeric: [
-    { value: "less", label: "less" },
-    { value: "less_equal", label: "less equal" },
-    { value: "equal", label: "equal" },
-    { value: "not_equal", label: "not equal" },
-    { value: "greater_equal", label: "greater equal" },
-    { value: "greater", label: "greater" },
-  ],
-  categorical: [
-    { value: "equal", label: "equal" },
-    { value: "contains", label: "contains" },
-    { value: "not_equal", label: "not equal" },
-  ],
-  boolean: [
-    { value: true, label: "true" },
-    { value: false, label: "false" },
-  ],
-};
-
 export function init(ctx, data) {
   ctx.importCSS("main.css");
   ctx.importCSS(
@@ -121,7 +101,6 @@ function App({ ctx, data }) {
   const hasRefetch = data.features.includes("refetch");
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
-  const hasFiltering = data.features.includes("filtering");
   const hasSorting = data.features.includes("sorting");
 
   const emptySelection = {
@@ -142,7 +121,6 @@ function App({ ctx, data }) {
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
   const filters = content.filters;
-  const isFiltering = filters.length > 0;
   const lastFilter = filters[filters.length - 1];
 
   const hasPagination =
@@ -154,16 +132,15 @@ function App({ ctx, data }) {
   const headerItems =
     hasSummaries && hasEntries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const menuHeight = hasFiltering ? 140 : 70;
+  const menuHeight = 70;
   const fixedHeight = 440 + headerHeight;
-  const minRowsToFitMenu = hasFiltering ? 3 : 2;
+  const minRowsToFitMenu = 2;
   const autoHeight =
     totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
   const rows = content.page_length;
-  const showResetFilters = isFiltering && hasData && !hasEntries;
 
   const drawHeader = useCallback(
     (args) => {
@@ -522,19 +499,6 @@ function App({ ctx, data }) {
           />
         )}
       </div>
-      {isFiltering && hasEntries && (
-        <div className="filter__info">
-          <ResetFiltersButton onReset={resetFilters} />
-          <FiltersInfo filters={filters} columns={columns} />
-        </div>
-      )}
-      {showResetFilters && (
-        <ResetFilters
-          resetFilters={resetFilters}
-          filterBy={filterBy}
-          lastFilter={lastFilter}
-        />
-      )}
       {hasData && (
         <DataEditor
           className="table-container"
@@ -580,7 +544,6 @@ function App({ ctx, data }) {
             orderBy={orderBy}
             order={content.order}
             selectAllCurrent={selectAllCurrent}
-            hasFiltering={hasFiltering}
             hasSorting={hasSorting}
             filterBy={filterBy}
             filters={content.filters}
@@ -722,13 +685,6 @@ function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
           menu={props.menu}
         />
       )}
-      {props.hasFiltering && (
-        <Filtering
-          filterBy={props.filterBy}
-          filters={props.filters}
-          menu={props.menu}
-        />
-      )}
     </div>
   );
 }
@@ -747,121 +703,6 @@ function Sorting({ orderBy, order, menu }) {
         <option value="asc">ascending</option>
         <option value="desc">descending</option>
       </select>
-    </form>
-  );
-}
-
-function Filtering({ filterBy, filters, menu }) {
-  const columnKey = menu?.columnKey;
-  const columnType = menu?.columnType;
-
-  const emptyFilter = {
-    key: columnKey,
-    filter: null,
-    value: null,
-  };
-
-  const oldFilter = filters?.find((filter) => filter.key === columnKey);
-  const [currentFilter, setCurrentFilter] = useState(oldFilter || emptyFilter);
-
-  const toOption = (option) => (
-    <option value={option.value}>{option.label}</option>
-  );
-  const numericOptions = filtering.numeric.map((option) => toOption(option));
-  const booleanOptions = filtering.boolean.map((option) => toOption(option));
-  const categoricalOptions = filtering.categorical.map((option) =>
-    toOption(option)
-  );
-
-  const isNumber = columnType === "number";
-  const isDate = columnType === "date";
-  const isBoolean = columnType === "boolean";
-  const isCategorical = columnType === "text";
-  const validFilter = isValidFilter(currentFilter.value);
-  const filterInput =
-    !isBoolean && currentFilter.filter && currentFilter.filter !== "none";
-
-  function isValidDate(value) {
-    const date = value ? new Date(value) : null;
-    return date instanceof Date && !isNaN(date);
-  }
-
-  function isValidFilter(value) {
-    if (isDate) {
-      return isValidDate(value);
-    }
-    return currentFilter.value || currentFilter.value === 0;
-  }
-
-  function castFilterValue(value) {
-    if (isNumber) {
-      return parseFloat(value);
-    }
-    if (isDate) {
-      return new Date(value).toISOString();
-    }
-    return value;
-  }
-  function columnFilter(value) {
-    if (value === "none") {
-      const current = { ...currentFilter, filter: null, value: null };
-      filterBy(current);
-    } else if (isBoolean) {
-      const filterValue = value === "true";
-      const current = { ...currentFilter, filter: "equal", value: filterValue };
-      filterBy(current);
-    } else {
-      setCurrentFilter({
-        ...currentFilter,
-        filter: value,
-      });
-    }
-  }
-  return (
-    <form>
-      <div className="inline-form">
-        <label className="header-menu-item input-label">Filter </label>
-        <select
-          className="header-menu-input input"
-          onChange={(event) => columnFilter(event.target.value)}
-          value={isBoolean ? currentFilter.value : currentFilter.filter}
-        >
-          <option value="none">none</option>
-          {(isNumber || isDate) && numericOptions}
-          {isCategorical && categoricalOptions}
-          {isBoolean && booleanOptions}
-        </select>
-      </div>
-      {filterInput && (
-        <div className="input-wrapper">
-          <input
-            type="text"
-            className="header-menu-input input input-full"
-            onChange={(event) =>
-              setCurrentFilter({
-                ...currentFilter,
-                value: isNumber
-                  ? event.target.value.replace(/[^\d.-]/g, "")
-                  : event.target.value,
-              })
-            }
-            value={currentFilter.value}
-            disabled={currentFilter.filter === "none"}
-          ></input>
-          <button
-            className="input__button"
-            onClick={() =>
-              filterBy({
-                ...currentFilter,
-                value: castFilterValue(currentFilter.value),
-              })
-            }
-            disabled={!validFilter}
-          >
-            <span>Filter</span>
-          </button>
-        </div>
-      )}
     </form>
   );
 }
