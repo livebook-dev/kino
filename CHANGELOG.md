@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Added a `:monospace` option to `Kino.Input.textarea/2` ([#220](https://github.com/livebook-dev/kino/pull/220))
-* Summary view to table columns ([#221](https://github.com/livebook-dev/kino/pull/221))
 * Added `Kino.Input.audio/2` ([#239](https://github.com/livebook-dev/kino/pull/239))
 * Added `Kino.Input.file/2` ([#241](https://github.com/livebook-dev/kino/pull/241))
 * Added `Kino.JS.Live.monitor/1` ([#242](https://github.com/livebook-dev/kino/pull/242))
