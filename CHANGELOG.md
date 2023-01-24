@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.8.1](https://github.com/livebook-dev/kino/tree/v0.8.1) (2023-01-24)
+
+### Added
+
+* Added a `:monospace` option to `Kino.Input.textarea/2` ([#220](https://github.com/livebook-dev/kino/pull/220))
+* Summary view to table columns ([#221](https://github.com/livebook-dev/kino/pull/221))
+* Added `Kino.Input.audio/2` ([#239](https://github.com/livebook-dev/kino/pull/239))
+* Added `Kino.Input.file/2` ([#241](https://github.com/livebook-dev/kino/pull/241))
+* Added `Kino.JS.Live.monitor/1` ([#242](https://github.com/livebook-dev/kino/pull/242))
+
+
+### Changed
+
+* Improved table view ([#223](https://github.com/livebook-dev/kino/pull/223), [#235](https://github.com/livebook-dev/kino/pull/235), [#247](https://github.com/livebook-dev/kino/pull/247))
+* `dbg` backend to fall back to the default `dbg` when called outside Livebook context ([#231](https://github.com/livebook-dev/kino/pull/231))
+
+### Fixed
+
+* `Kino.DataTable` not showing the last page ([#225](https://github.com/livebook-dev/kino/pull/225))
+
 ## [v0.8.0](https://github.com/livebook-dev/kino/tree/v0.8.0) (2022-12-05)
 
 ### Added
