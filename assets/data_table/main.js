@@ -12,6 +12,9 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiSearch2Line,
+  RiSortAsc,
+  RiSortDesc,
+  RiAlignJustify,
 } from "react-icons/ri";
 import { useLayer } from "react-laag";
 
@@ -611,13 +614,16 @@ function HeaderMenu({ layerProps, selectAllCurrent, hasSorting, orderBy }) {
       {hasSorting && (
         <>
           <div className="header-menu-item" onClick={() => orderBy("asc")}>
-            Sort: ascending
+            <RiSortAsc />
+            <span>Sort: ascending</span>
           </div>
           <div className="header-menu-item" onClick={() => orderBy("desc")}>
-            Sort: descending
+            <RiSortDesc />
+            <span>Sort: descending</span>
           </div>
           <div className="header-menu-item" onClick={() => orderBy("none")}>
-            Sort: none
+            <RiAlignJustify />
+            <span>Sort: none</span>
           </div>
         </>
       )}
