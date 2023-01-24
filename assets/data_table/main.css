@@ -295,8 +295,7 @@ select option {
   font-family: "Inter";
   padding: 4px;
   color: #304254;
-  margin: 2px 0;
-  padding-top: 2px;
+  padding: 4px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -319,7 +318,7 @@ select option {
   border: 1px solid #e1e8f0;
   width: 100%;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .header-menu-item.button:hover {
