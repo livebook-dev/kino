@@ -9,14 +9,7 @@ defmodule Kino.Table do
   @type rows_spec :: %{
           offset: non_neg_integer(),
           limit: pos_integer(),
-          order: nil | %{direction: :asc | :desc, key: term()},
-          filters:
-            list(%{
-              filter:
-                :less | :less_equal | :equal | :not_equal | :greater_equal | :greater | :contains,
-              value: term(),
-              key: term()
-            })
+          order: nil | %{direction: :asc | :desc, key: term()}
         }
 
   @type column :: %{
@@ -67,8 +60,7 @@ defmodule Kino.Table do
        # Data specification
        page: 1,
        limit: @limit,
-       order: nil,
-       filters: []
+       order: nil
      )}
   end
 
@@ -117,28 +109,6 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("filter_by", %{"key" => key_string, "filter" => filter, "value" => value}, ctx) do
-    ctx =
-      if key = lookup_key(ctx, key_string) do
-        Enum.reject(ctx.assigns.filters, &(&1.key == key))
-        |> Kernel.++([%{key: key, filter: filter, value: value}])
-        |> then(&assign(ctx, filters: &1))
-      else
-        ctx
-      end
-
-    {:noreply, broadcast_update(ctx)}
-  end
-
-  def handle_event("remove_filter", %{"key" => key_string}, ctx) do
-    updated_filters = Enum.reject(ctx.assigns.filters, &(&1.key == lookup_key(ctx, key_string)))
-    {:noreply, ctx |> assign(filters: updated_filters) |> broadcast_update()}
-  end
-
-  def handle_event("reset_filters", _, ctx) do
-    {:noreply, ctx |> assign(filters: []) |> broadcast_update()}
-  end
-
   defp broadcast_update(ctx) do
     {content, ctx} = get_content(ctx)
     broadcast_event(ctx, "update_content", content)
@@ -149,8 +119,7 @@ defmodule Kino.Table do
     rows_spec = %{
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
-      order: ctx.assigns.order,
-      filters: ctx.assigns.filters
+      order: ctx.assigns.order
     }
 
     {:ok, %{columns: columns, data: {orientation, data}, total_rows: total_rows}, state} =
@@ -179,8 +148,6 @@ defmodule Kino.Table do
         columns
       end
 
-    filters = Enum.map(ctx.assigns.filters, &%{&1 | key: key_to_string[&1.key]})
-
     order =
       if ctx.assigns.order,
         do: %{ctx.assigns.order | key: key_to_string[ctx.assigns.order.key]}
@@ -194,7 +161,6 @@ defmodule Kino.Table do
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: order,
-      filters: filters,
       limit: ctx.assigns.limit
     }
 

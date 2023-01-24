@@ -12,7 +12,9 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiSearch2Line,
-  RiFilterOffLine,
+  RiSortAsc,
+  RiSortDesc,
+  RiAlignJustify,
 } from "react-icons/ri";
 import { useLayer } from "react-laag";
 
@@ -120,8 +122,6 @@ function App({ ctx, data }) {
 
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
-  const filters = content.filters;
-  const lastFilter = filters[filters.length - 1];
 
   const hasPagination =
     data.features.includes("pagination") &&
@@ -132,9 +132,9 @@ function App({ ctx, data }) {
   const headerItems =
     hasSummaries && hasEntries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const menuHeight = 70;
+  const menuHeight = hasSorting ? 140 : 70;
   const fixedHeight = 440 + headerHeight;
-  const minRowsToFitMenu = 2;
+  const minRowsToFitMenu = hasSorting ? 3 : 2;
   const autoHeight =
     totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
@@ -309,20 +309,6 @@ function App({ ctx, data }) {
     setMenu(null);
   };
 
-  const resetFilters = () => {
-    ctx.pushEvent("reset_filters", null);
-  };
-
-  const filterBy = (current) => {
-    const oldFilter = filters?.find((filter) => filter.key === current.key);
-    if (oldFilter && !current.filter) {
-      ctx.pushEvent("remove_filter", current);
-    } else if (oldFilter || current.filter) {
-      ctx.pushEvent("filter_by", current);
-    }
-    setMenu(null);
-  };
-
   const onPrev = () => {
     ctx.pushEvent("show_page", { page: content.page - 1 });
     setSelection({ ...emptySelection, columns: selection.columns });
@@ -475,11 +461,7 @@ function App({ ctx, data }) {
           <span className="navigation__details">
             {totalRows || "?"} {totalRows === 1 ? "entry" : "entries"}
           </span>
-          {totalRows < data.content.total_rows && (
-            <span className="navigation__details filtered">
-              of {data.content.total_rows}
-            </span>
-          )}
+          {totalRows < data.content.total_rows}
         </div>
         <div className="navigation__space"></div>
         {hasRefetch && (
@@ -543,63 +525,13 @@ function App({ ctx, data }) {
             layerProps={layerProps}
             menu={menu}
             orderBy={orderBy}
-            order={content.order}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
-            filterBy={filterBy}
-            filters={content.filters}
           />
         )}
       {!hasData && <p className="no-data">No data</p>}
       <div id="portal" />
     </div>
-  );
-}
-
-function FiltersInfo({ filters, columns }) {
-  const filterInfo = ({ key, filter, value }, idx) => {
-    const { title } = columns.find((column) => column.id === key);
-    const msg = `${title} ${filter.replace("_", " ")} ${value}`;
-    if (idx + 1 === filters.length) {
-      return msg;
-    }
-    return msg + " and ";
-  };
-  return (
-    <span className="navigation__details filter__message">
-      {filters.map((filter, idx) => filterInfo(filter, idx))}
-    </span>
-  );
-}
-
-function ResetFilters({ resetFilters, filterBy, lastFilter }) {
-  return (
-    <div className="inline-buttons">
-      <p className="no-entries">No entries found</p>
-      <button className="button" onClick={resetFilters}>
-        <span>Reset filters</span>
-      </button>
-      <button
-        className="button"
-        onClick={() => filterBy({ ...lastFilter, filter: null, value: null })}
-      >
-        <span>Undo last filter</span>
-      </button>
-    </div>
-  );
-}
-
-function ResetFiltersButton({ onReset }) {
-  return (
-    <span className="tooltip right" data-tooltip="Reset filters">
-      <button
-        className="icon-button"
-        aria-label="reset filters"
-        onClick={onReset}
-      >
-        <RiFilterOffLine />
-      </button>
-    </span>
   );
 }
 
@@ -673,37 +605,28 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
   );
 }
 
-function HeaderMenu({ layerProps, selectAllCurrent, ...props }) {
+function HeaderMenu({ layerProps, selectAllCurrent, hasSorting, orderBy }) {
   return (
     <div className="header-menu" {...layerProps}>
       <button className="header-menu-item button" onClick={selectAllCurrent}>
         Select this column
       </button>
-      {props.hasSorting && (
-        <Sorting
-          orderBy={props.orderBy}
-          order={props.order}
-          menu={props.menu}
-        />
+      {hasSorting && (
+        <>
+          <div className="header-menu-item" onClick={() => orderBy("asc")}>
+            <RiSortAsc />
+            <span>Sort: ascending</span>
+          </div>
+          <div className="header-menu-item" onClick={() => orderBy("desc")}>
+            <RiSortDesc />
+            <span>Sort: descending</span>
+          </div>
+          <div className="header-menu-item" onClick={() => orderBy("none")}>
+            <RiAlignJustify />
+            <span>Sort: none</span>
+          </div>
+        </>
       )}
     </div>
-  );
-}
-
-function Sorting({ orderBy, order, menu }) {
-  const columnKey = menu?.columnKey;
-  return (
-    <form className="inline-form">
-      <label className="header-menu-item input-label">Sort </label>
-      <select
-        className="header-menu-input input"
-        onChange={(event) => orderBy(event.target.value)}
-        value={order?.key === columnKey ? order?.direction : null}
-      >
-        <option value="none"></option>
-        <option value="asc">ascending</option>
-        <option value="desc">descending</option>
-      </select>
-    </form>
   );
 }
