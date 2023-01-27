@@ -11,6 +11,13 @@ defmodule Kino.FrameTest do
     assert_output({:frame, [{:markdown, "_hey_"}], %{type: :replace}})
   end
 
+  test "render/2 sends output to a specific client when the :to is given" do
+    frame = Kino.Frame.new()
+
+    Kino.Frame.render(frame, 1, to: "client1")
+    assert_output_to("client1", {:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+  end
+
   test "append/2 formats the given value into output and sends as :append frame" do
     frame = Kino.Frame.new()
 

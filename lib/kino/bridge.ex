@@ -32,6 +32,15 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Sends the given output as intermediate evaluation result to
+  a specific client.
+  """
+  @spec put_output_to(term(), Kino.Output.t()) :: :ok | {:error, request_error()}
+  def put_output_to(client_id, output) do
+    with {:ok, reply} <- io_request({:livebook_put_output_to, client_id, output}), do: reply
+  end
+
+  @doc """
   Requests the current value of input with the given id.
 
   Note that the input must be known to Livebook, otherwise
