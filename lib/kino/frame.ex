@@ -57,26 +57,50 @@ defmodule Kino.Frame do
 
   This works similarly to `Kino.render/1`, but the rendered
   output replaces existing frame contents.
+
+  ## Options
+
+    * `:to` - the client id to whom the update is directed. This
+      option is useful when updating frame in response to client
+      events, such as form submission
+
   """
-  @spec render(t(), term()) :: :ok
-  def render(frame, term) do
-    GenServer.cast(frame.pid, {:render, term})
+  @spec render(t(), term(), keyword()) :: :ok
+  def render(frame, term, opts \\ []) do
+    opts = Keyword.validate!(opts, [:to])
+    GenServer.cast(frame.pid, {:render, term, opts[:to]})
   end
 
   @doc """
   Renders and appends the given term to the frame.
+
+  ## Options
+
+    * `:to` - the client id to whom the update is directed. This
+      option is useful when updating frame in response to client
+      events, such as form submission
+
   """
-  @spec append(t(), term()) :: :ok
-  def append(frame, term) do
-    GenServer.cast(frame.pid, {:append, term})
+  @spec append(t(), term(), keyword()) :: :ok
+  def append(frame, term, opts \\ []) do
+    opts = Keyword.validate!(opts, [:to])
+    GenServer.cast(frame.pid, {:append, term, opts[:to]})
   end
 
   @doc """
   Removes all outputs within the given frame.
+
+  ## Options
+
+    * `:to` - the client id to whom the update is directed. This
+      option is useful when updating frame in response to client
+      events, such as form submission
+
   """
-  @spec clear(t()) :: :ok
-  def clear(frame) do
-    GenServer.cast(frame.pid, :clear)
+  @spec clear(t(), keyword()) :: :ok
+  def clear(frame, opts \\ []) do
+    opts = Keyword.validate!(opts, [:to])
+    GenServer.cast(frame.pid, {:clear, opts[:to]})
   end
 
   @doc """
@@ -108,22 +132,22 @@ defmodule Kino.Frame do
   end
 
   @impl true
-  def handle_cast({:render, term}, state) do
+  def handle_cast({:render, term, to}, state) do
     output = Kino.Render.to_livebook(term)
-    put_update(state.ref, [output], :replace)
+    put_update(to, state.ref, [output], :replace)
     state = %{state | outputs: [output]}
     {:noreply, state}
   end
 
-  def handle_cast({:append, term}, state) do
+  def handle_cast({:append, term, to}, state) do
     output = Kino.Render.to_livebook(term)
-    put_update(state.ref, [output], :append)
+    put_update(to, state.ref, [output], :append)
     state = %{state | outputs: [output | state.outputs]}
     {:noreply, state}
   end
 
-  def handle_cast(:clear, state) do
-    put_update(state.ref, [], :replace)
+  def handle_cast({:clear, to}, state) do
+    put_update(to, state.ref, [], :replace)
     state = %{state | outputs: []}
     {:noreply, state}
   end
@@ -154,8 +178,13 @@ defmodule Kino.Frame do
     end
   end
 
-  defp put_update(ref, outputs, type) do
+  defp put_update(to, ref, outputs, type) do
     output = Kino.Output.frame(outputs, %{ref: ref, type: type})
-    Kino.Bridge.put_output(output)
+
+    if to do
+      Kino.Bridge.put_output_to(to, output)
+    else
+      Kino.Bridge.put_output(output)
+    end
   end
 end

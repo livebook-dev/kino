@@ -23,7 +23,7 @@ defmodule Kino.Test do
   end
 
   @doc """
-  Asserts the given output is sent to within `timeout`.
+  Asserts the given output is sent within `timeout`.
 
   ## Examples
 
@@ -33,6 +33,21 @@ defmodule Kino.Test do
   defmacro assert_output(output, timeout \\ 100) do
     quote do
       assert_receive {:livebook_put_output, unquote(output)}, unquote(timeout)
+    end
+  end
+
+  @doc """
+  Asserts the given output is sent to the given client within `timeout`.
+
+  ## Examples
+
+      assert_output_to("client1", {:markdown, "_hey_"})
+
+  """
+  defmacro assert_output_to(client_id, output, timeout \\ 100) do
+    quote do
+      assert_receive {:livebook_put_output_to, unquote(client_id), unquote(output)},
+                     unquote(timeout)
     end
   end
 
