@@ -14,6 +14,11 @@ defmodule Kino.Input do
 
       name = Kino.Input.read(input)
 
+  All inputs are shared by default: once you change the input,
+  your changes will be immediately replicated to all users
+  reading the notebook. Use `Kino.Control.form/2` if you want
+  each user to have their own input.
+
   ## Async API
 
   You can subscribe to input changes or use the `Stream`
@@ -282,6 +287,13 @@ defmodule Kino.Input do
 
   Note that the value can also be `nil`, if no image is selected.
 
+  > ### Warning {.warning}
+  >
+  > The image input is shared by default: once you upload a image,
+  > the image will be replicated to all users reading the notebook.
+  > Use `Kino.Control.form/2` if you want each user to have a distinct
+  > image upload with an explicit submission button.
+
   ## Options
 
     * `:format` - the format to read the image as, either of:
@@ -358,6 +370,13 @@ defmodule Kino.Input do
 
   Note that the value can also be `nil`, if no audio is selected.
 
+  > ### Warning {.warning}
+  >
+  > The audio input is shared by default: once you upload an audio,
+  > the audio will be replicated to all users reading the notebook.
+  > Use `Kino.Control.form/2` if you want each user to have a distinct
+  > audio upload with an explicit submission button.
+
   ## Options
 
     * `:format` - the format to read the audio as, either of:
@@ -396,6 +415,13 @@ defmodule Kino.Input do
       }
 
   Note that the value can also be `nil`, if no file is selected.
+
+  > ### Warning {.warning}
+  >
+  > The file input is shared by default: once you upload a file,
+  > the file will be replicated to all users reading the notebook.
+  > Use `Kino.Control.form/2` if you want each user to have a distinct
+  > file upload with an explicit submission button.
 
   ## Options
 
