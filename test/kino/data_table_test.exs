@@ -98,6 +98,29 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
+  test "supports non-charlist List values" do
+    entries = [
+      [
+        {"a", [1, "b"]},
+        {"b", [~N"2000-01-01 00:00:00", %User{id: 1, name: "User"}]}
+      ]
+    ]
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               data: [
+                 [
+                   <<1, 98>>,
+                   ~s/[~N[2000-01-01 00:00:00], %Kino.DataTableTest.User{__meta__: nil, id: 1, name: "User"}]/
+                 ]
+               ]
+             }
+           } = data
+  end
+
   test "sends only relevant fields if user-specified keys are given" do
     kino = Kino.DataTable.new(@people_entries, keys: [:id])
     data = connect(kino)

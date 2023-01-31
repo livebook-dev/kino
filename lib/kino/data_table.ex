@@ -242,6 +242,15 @@ defmodule Kino.DataTable do
 
   defp value_to_string(value) when is_atom(value), do: inspect(value)
 
+  defp value_to_string(value) when is_list(value) do
+    try do
+      List.to_string(value)
+    rescue
+      ArgumentError ->
+        inspect(value)
+    end
+  end
+
   defp value_to_string(value) do
     if mod = String.Chars.impl_for(value), do: mod.to_string(value), else: inspect(value)
   end
