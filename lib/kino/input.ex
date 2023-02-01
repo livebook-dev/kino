@@ -410,7 +410,7 @@ defmodule Kino.Input do
   The input value is a map, with the file path and metadata:
 
       %{
-        file_id: String.t(),
+        file_ref: String.t(),
         client_name: String.t()
       }
 
@@ -424,6 +424,18 @@ defmodule Kino.Input do
   > the file will be replicated to all users reading the notebook.
   > Use `Kino.Control.form/2` if you want each user to have a distinct
   > file upload with an explicit submission button.
+
+  ## Considerations
+
+  Note that a file may be deleted in certain cases, specifically:
+
+    * when the file is reuploaded
+    * when used with a form and the uploading user leaves
+    * when the input is removed
+
+  The deletion is not immediate and you are unlikely to run into this
+  in practice, however theoretically `file_path/1` may point to a
+  non-existing file.
 
   ## Options
 
@@ -441,7 +453,7 @@ defmodule Kino.Input do
       # [Cell 2]
 
       value = Kino.Input.read(input)
-      path = Kino.Input.file_path(value.file_id)
+      path = Kino.Input.file_path(value.file_ref)
       File.read!(path)
 
   And here's how we could process an asynchronous form submission:
@@ -455,7 +467,7 @@ defmodule Kino.Input do
       form
       |> Kino.Control.stream()
       |> Kino.listen(fn event ->
-        path = Kino.Input.file_path(event.data.file.file_id)
+        path = Kino.Input.file_path(event.data.file.file_ref)
         content = File.read!(path)
         IO.inspect(content)
       end)
@@ -506,14 +518,15 @@ defmodule Kino.Input do
   @doc """
   Returns file path for the given file identifier.
   """
-  @spec file_path(String.t()) :: String.t()
-  def file_path(file_id) do
-    case Kino.Bridge.get_file_path(file_id) do
+  @spec file_path(file_ref) :: String.t() when file_ref: {:file, id :: String.t()}
+  def file_path({:file, file_id} = file_ref) do
+    case Kino.Bridge.get_file_path(file_ref) do
       {:ok, path} ->
         path
 
-      {:error, reason} ->
-        raise "could not resolve the file path, reason: #{inspect(reason)}"
+      {:error, _reason} ->
+        # Return a non-existing path for consistency
+        Path.join([System.tmp_dir!(), "nonexistent", file_id])
     end
   end
 end

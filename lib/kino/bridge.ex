@@ -54,9 +54,10 @@ defmodule Kino.Bridge do
   @doc """
   Requests the file path for the given file id.
   """
-  @spec get_file_path(String.t()) :: {:ok, term()} | {:error, request_error() | :not_found}
-  def get_file_path(file_id) do
-    with {:ok, reply} <- io_request({:livebook_get_file_path, file_id}), do: reply
+  @spec get_file_path({:file, String.t()}) ::
+          {:ok, term()} | {:error, request_error() | :not_found}
+  def get_file_path(file_ref) do
+    with {:ok, reply} <- io_request({:livebook_get_file_path, file_ref}), do: reply
   end
 
   @doc """
