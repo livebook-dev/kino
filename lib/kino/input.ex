@@ -430,6 +430,36 @@ defmodule Kino.Input do
     * `:accept` - the list of accepted file types (either extensions
       or MIME types) or `:any`. Defaults to `:any`
 
+  ## Examples
+
+  To read the content of currently uploaded file we would do:
+
+      # [Cell 1]
+
+      input = Kino.Input.file("File")
+
+      # [Cell 2]
+
+      value = Kino.Input.read(input)
+      path = Kino.Input.file_path(value.file_id)
+      File.read!(path)
+
+  And here's how we could process an asynchronous form submission:
+
+      # [Cell 1]
+
+      form = Kino.Control.form([file: Kino.Input.file("File")], submit: "Send")
+
+      # [Cell 2]
+
+      form
+      |> Kino.Control.stream()
+      |> Kino.listen(fn event ->
+        path = Kino.Input.file_path(event.data.file.file_id)
+        content = File.read!(path)
+        IO.inspect(content)
+      end)
+
   """
 
   @spec file(String.t(), keyword()) :: t()
