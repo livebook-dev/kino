@@ -46,18 +46,18 @@ defmodule Kino.Bridge do
   Note that the input must be known to Livebook, otherwise
   an error is returned.
   """
-  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, request_error()}
+  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, request_error() | :not_found}
   def get_input_value(input_id) do
-    with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}) do
-      case reply do
-        {:ok, value} ->
-          {:ok, value}
+    with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}), do: reply
+  end
 
-        {:error, :not_found} ->
-          raise ArgumentError,
-                "failed to read input value, no input found for id #{inspect(input_id)}"
-      end
-    end
+  @doc """
+  Requests the file path for the given file id.
+  """
+  @spec get_file_path({:file, String.t()}) ::
+          {:ok, term()} | {:error, request_error() | :not_found}
+  def get_file_path(file_ref) do
+    with {:ok, reply} <- io_request({:livebook_get_file_path, file_ref}), do: reply
   end
 
   @doc """
