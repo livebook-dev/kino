@@ -287,7 +287,7 @@ defmodule Kino.Input do
 
   Note that the value can also be `nil`, if no image is selected.
 
-  > ### Warning {.warning}
+  > #### Warning {: .warning}
   >
   > The image input is shared by default: once you upload a image,
   > the image will be replicated to all users reading the notebook.
@@ -370,7 +370,7 @@ defmodule Kino.Input do
 
   Note that the value can also be `nil`, if no audio is selected.
 
-  > ### Warning {.warning}
+  > #### Warning {: .warning}
   >
   > The audio input is shared by default: once you upload an audio,
   > the audio will be replicated to all users reading the notebook.
@@ -410,13 +410,15 @@ defmodule Kino.Input do
   The input value is a map, with the file path and metadata:
 
       %{
-        path: String.t(),
+        file_id: String.t(),
         client_name: String.t()
       }
 
   Note that the value can also be `nil`, if no file is selected.
 
-  > ### Warning {.warning}
+  The file path can then be accessed using `file_path/1`.
+
+  > #### Warning {: .warning}
   >
   > The file input is shared by default: once you upload a file,
   > the file will be replicated to all users reading the notebook.
@@ -468,6 +470,20 @@ defmodule Kino.Input do
 
       {:error, reason} ->
         raise "failed to read input value, reason: #{inspect(reason)}"
+    end
+  end
+
+  @doc """
+  Returns file path for the given file identifier.
+  """
+  @spec file_path(String.t()) :: String.t()
+  def file_path(file_id) do
+    case Kino.Bridge.get_file_path(file_id) do
+      {:ok, path} ->
+        path
+
+      {:error, reason} ->
+        raise "could not resolve the file path, reason: #{inspect(reason)}"
     end
   end
 end
