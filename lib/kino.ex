@@ -97,6 +97,16 @@ defmodule Kino do
       data = Process.info(self())
       Kino.Tree.new(data)
 
+  ### Kino.HTML
+
+  `Kino.HTML` displays arbitrary static HTML.
+
+      Kino.HTML.new("""
+      <h3>Look!</h3>
+
+      <p>I wrote this HTML from <strong>Kino</strong>!</p>
+      """)
+
   ### User interactions
 
   `Kino.Input` and `Kino.Control` provide a set of widgets for
