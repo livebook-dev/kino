@@ -361,7 +361,9 @@ defmodule Kino.Control do
     tagged_topics = for {tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}
     tagged_intervals = for {tag, ms} when is_integer(ms) <- entries, do: {tag, ms}
 
-    Kino.SubscriptionManager.stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
+    Kino.SubscriptionManager.stream(tagged_topics, tagged_intervals, fn tag, event ->
+      {tag, event}
+    end)
   end
 
   defp assert_stream_source!(item) do

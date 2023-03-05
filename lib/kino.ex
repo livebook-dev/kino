@@ -240,7 +240,7 @@ defmodule Kino do
         Kino.Markdown.new("**Iteration: `#{i}`**")
       end)
   """
-  @spec animate(Enumerable.t() | pos_integer(), (term() -> any())) :: nothing()
+  @spec animate(Enumerable.t() | interval(), (term() -> any())) :: nothing()
   def animate(stream_or_interval_ms, fun) when is_function(fun, 1) do
     animate(stream_or_interval_ms, nil, fn item, nil ->
       {:cont, fun.(item), nil}
