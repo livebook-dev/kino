@@ -28,6 +28,59 @@ defmodule Kino.SubscriptionManager do
   end
 
   @doc """
+  Returns if the data structure is streamable.
+  """
+  def streamable?(%Kino.Control{}), do: true
+  def streamable?(%Kino.Input{}), do: true
+  def streamable?(ms) when is_integer(ms) and ms > 0, do: true
+  def streamable?(_), do: false
+
+  @doc """
+  Builds a stream with tagged topics and tagged intervals.
+  """
+  def stream(tagged_topics, tagged_intervals, mapper) do
+    Stream.resource(
+      fn ->
+        ref = make_ref()
+
+        for {tag, topic} <- tagged_topics do
+          subscribe(topic, self(), {ref, tag}, notify_clear: true)
+        end
+
+        for {tag, ms} <- tagged_intervals do
+          Process.send_after(self(), {{ref, tag}, :__interval__, ms, 0}, ms)
+        end
+
+        topics = Enum.map(tagged_topics, &elem(&1, 1))
+
+        {ref, topics}
+      end,
+      fn {ref, topics} ->
+        receive do
+          {{^ref, tag}, event} ->
+            {[mapper.(tag, event)], {ref, topics}}
+
+          {{^ref, _tag}, :topic_cleared, topic} ->
+            case topics -- [topic] do
+              [] -> {:halt, {ref, []}}
+              topics -> {[], {ref, topics}}
+            end
+
+          {{^ref, tag}, :__interval__, ms, i} ->
+            Process.send_after(self(), {{ref, tag}, :__interval__, ms, i + 1}, ms)
+            event = %{type: :interval, iteration: i}
+            {[mapper.(tag, event)], {ref, topics}}
+        end
+      end,
+      fn {_ref, topics} ->
+        for topic <- topics do
+          unsubscribe(topic, self())
+        end
+      end
+    )
+  end
+
+  @doc """
   Subscribes the given process to events under `topic`.
 
   All events are sent as `{tag, info}`, where `tag` is

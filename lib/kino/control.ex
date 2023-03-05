@@ -34,7 +34,7 @@ defmodule Kino.Control do
 
   @opaque t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
 
-  @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
+  @opaque interval :: non_neg_integer()
 
   @type event_source :: t() | Kino.Input.t() | interval()
 
@@ -259,18 +259,10 @@ defmodule Kino.Control do
     Kino.SubscriptionManager.unsubscribe(source.attrs.ref, self())
   end
 
-  @doc """
-  Returns a new interval event source.
-
-  This can be used as event source for `stream/1` and `tagged_stream/1`.
-  The events are emitted periodically with an increasing value, starting
-  from 0 and have the form:
-
-      %{type: :interval, iteration: non_neg_integer()}
-  """
-  @spec interval(non_neg_integer()) :: interval()
+  @doc false
+  @deprecated "Pass an integer instead"
   def interval(milliseconds) when is_number(milliseconds) and milliseconds > 0 do
-    {:interval, milliseconds}
+    milliseconds
   end
 
   @doc """
@@ -284,6 +276,10 @@ defmodule Kino.Control do
     * `Kino.Input` - emitting value on value change
 
   You can then consume the stream to access its events.
+
+  Prefer to use `Kino.listen/2`, which will automatically convert
+  inputs and controls to stream and listen to events. Only use this
+  API when you need to explicitly convert to Elixir streams.
 
   ## Example
 
@@ -299,9 +295,9 @@ defmodule Kino.Control do
 
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
-      interval = Kino.Control.interval(1000)
+      interval_in_ms = 1000
 
-      for event <- Kino.Control.stream([button, input, interval]) do
+      for event <- Kino.Control.stream([button, input, interval_in_ms]) do
         IO.inspect(event)
       end
       #=> %{type: :interval, iteration: 0}
@@ -314,10 +310,14 @@ defmodule Kino.Control do
   def stream(sources) when is_list(sources) do
     for source <- sources, do: assert_stream_source!(source)
 
-    tagged_topics = for %{attrs: %{ref: ref}} <- sources, do: {nil, ref}
-    tagged_intervals = for {:interval, ms} <- sources, do: {nil, ms}
+    if sources == [] do
+      raise ArgumentError, "expected a non-empty list to convert to stream"
+    end
 
-    build_stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
+    tagged_topics = for %{attrs: %{ref: ref}} <- sources, do: {nil, ref}
+    tagged_intervals = for ms when is_integer(ms) <- sources, do: {nil, ms}
+
+    Kino.SubscriptionManager.stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
   end
 
   def stream(source) do
@@ -326,6 +326,10 @@ defmodule Kino.Control do
 
   @doc """
   Same as `stream/1`, but attaches custom tag to every stream item.
+
+  Prefer to use `Kino.listen/2`, which will automatically convert
+  inputs and controls to stream and listen to events. Only use this
+  API when you need to explicitly convert to Elixir streams.
 
   ## Example
 
@@ -338,8 +342,8 @@ defmodule Kino.Control do
       #=> {:hello, %{origin: "client1", type: :click}}
       #=> {:check, %{origin: "client1", type: :change, value: true}}
   """
-  @spec tagged_stream(list({atom(), event_source()})) :: Enumerable.t()
-  def tagged_stream(entries) when is_list(entries) do
+  @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
+  def tagged_stream([_ | _] = entries) when is_list(entries) do
     for entry <- entries do
       case entry do
         {tag, source} when is_atom(tag) ->
@@ -350,60 +354,20 @@ defmodule Kino.Control do
       end
     end
 
+    if entries == [] do
+      raise ArgumentError, "expected a non-empty list to convert to stream"
+    end
+
     tagged_topics = for {tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}
-    tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
+    tagged_intervals = for {tag, ms} when is_integer(ms) <- entries, do: {tag, ms}
 
-    build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
+    Kino.SubscriptionManager.stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
   end
-
-  defp assert_stream_source!(%Kino.Control{}), do: :ok
-  defp assert_stream_source!(%Kino.Input{}), do: :ok
-  defp assert_stream_source!({:interval, ms}) when is_number(ms) and ms > 0, do: :ok
 
   defp assert_stream_source!(item) do
-    raise ArgumentError,
-          "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: #{inspect(item)}"
-  end
-
-  defp build_stream(tagged_topics, tagged_intervals, mapper) do
-    Stream.resource(
-      fn ->
-        ref = make_ref()
-
-        for {tag, topic} <- tagged_topics do
-          Kino.SubscriptionManager.subscribe(topic, self(), {ref, tag}, notify_clear: true)
-        end
-
-        for {tag, ms} <- tagged_intervals do
-          Process.send_after(self(), {{ref, tag}, :__interval__, ms, 0}, ms)
-        end
-
-        topics = Enum.map(tagged_topics, &elem(&1, 1))
-
-        {ref, topics}
-      end,
-      fn {ref, topics} ->
-        receive do
-          {{^ref, tag}, event} ->
-            {[mapper.(tag, event)], {ref, topics}}
-
-          {{^ref, _tag}, :topic_cleared, topic} ->
-            case topics -- [topic] do
-              [] -> {:halt, {ref, []}}
-              topics -> {[], {ref, topics}}
-            end
-
-          {{^ref, tag}, :__interval__, ms, i} ->
-            Process.send_after(self(), {{ref, tag}, :__interval__, ms, i + 1}, ms)
-            event = %{type: :interval, iteration: i}
-            {[mapper.(tag, event)], {ref, topics}}
-        end
-      end,
-      fn {_ref, topics} ->
-        for topic <- topics do
-          Kino.SubscriptionManager.unsubscribe(topic, self())
-        end
-      end
-    )
+    unless Kino.SubscriptionManager.streamable?(item) do
+      raise ArgumentError,
+            "expected source to be either %Kino.Control{}, %Kino.Input{} or interval_in_ms, got: #{inspect(item)}"
+    end
   end
 end

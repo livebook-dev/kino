@@ -59,14 +59,11 @@ defmodule KinoTest do
       assert_receive {:item, 1}
     end
 
-    test "with control events stream" do
+    test "with control events" do
       button = Kino.Control.button("Click")
-
       myself = self()
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(fn event ->
+      Kino.listen(button, fn event ->
         send(myself, event)
       end)
 
@@ -77,6 +74,40 @@ defmodule KinoTest do
 
       assert_receive ^info
       assert_receive ^info
+    end
+
+    test "with many control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+
+      Kino.listen([button], fn event ->
+        send(myself, event)
+      end)
+
+      Process.sleep(1)
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive ^info
+      assert_receive ^info
+    end
+
+    test "with tagged control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+
+      Kino.listen([hello: button], fn event ->
+        send(myself, event)
+      end)
+
+      Process.sleep(1)
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive {:hello, ^info}
+      assert_receive {:hello, ^info}
     end
   end
 
@@ -97,12 +128,45 @@ defmodule KinoTest do
 
     test "with control events" do
       button = Kino.Control.button("Click")
-
       myself = self()
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(0, fn _event, counter ->
+      Kino.listen(button, 0, fn _event, counter ->
+        send(myself, {:counter, counter + 1})
+        {:cont, counter + 1}
+      end)
+
+      Process.sleep(1)
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive {:counter, 1}
+      assert_receive {:counter, 2}
+    end
+
+    test "with many control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+
+      Kino.listen([button], 0, fn _event, counter ->
+        send(myself, {:counter, counter + 1})
+        {:cont, counter + 1}
+      end)
+
+      Process.sleep(1)
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive {:counter, 1}
+      assert_receive {:counter, 2}
+    end
+
+    test "with tagged control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+
+      Kino.listen([hello: button], 0, fn _event, counter ->
         send(myself, {:counter, counter + 1})
         {:cont, counter + 1}
       end)

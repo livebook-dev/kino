@@ -70,9 +70,9 @@ defmodule Kino.ControlTest do
   describe "stream/1" do
     test "raises on invalid argument" do
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or interval_in_ms, got: :oops",
                    fn ->
-                     Kino.Control.stream(10)
+                     Kino.Control.stream(:oops)
                    end
     end
 
@@ -92,7 +92,7 @@ defmodule Kino.ControlTest do
     end
 
     test "supports interval" do
-      events = 1 |> Kino.Control.interval() |> Kino.Control.stream() |> Enum.take(2)
+      events = 1 |> Kino.Control.stream() |> Enum.take(2)
       assert events == [%{type: :interval, iteration: 0}, %{type: :interval, iteration: 1}]
     end
 
@@ -114,9 +114,9 @@ defmodule Kino.ControlTest do
   describe "stream/1 with a list of sources" do
     test "raises on invalid source" do
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or interval_in_ms, got: :oops",
                    fn ->
-                     Kino.Control.stream([10])
+                     Kino.Control.stream([:oops])
                    end
     end
 
@@ -139,14 +139,14 @@ defmodule Kino.ControlTest do
 
   describe "tagged_stream/1" do
     test "raises on invalid argument" do
-      assert_raise ArgumentError, "expected a keyword list, got: [0]", fn ->
-        Kino.Control.tagged_stream([0])
+      assert_raise ArgumentError, "expected a keyword list, got: [:oops]", fn ->
+        Kino.Control.tagged_stream([:oops])
       end
 
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{} or interval_in_ms, got: :oops",
                    fn ->
-                     Kino.Control.tagged_stream(name: 10)
+                     Kino.Control.tagged_stream(name: :oops)
                    end
     end
 

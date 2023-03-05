@@ -143,6 +143,8 @@ defmodule Kino do
   import Kernel, except: [inspect: 1]
 
   @type nothing :: :"do not show this result in output"
+  @type interval :: non_neg_integer()
+  @type event_source :: Kino.Control.t() | Kino.Input.t() | interval()
 
   @doc """
   Renders the given term as cell output.
@@ -314,7 +316,18 @@ defmodule Kino do
   end
 
   @doc ~S"""
-  Asynchronously consumes a stream with `fun`.
+  Asynchronously consumes controls, inputs, or a stream with `fun`.
+
+  It expects one of:
+
+    * a Kino.Control, a Kino.Input, or a positive integer in milliseconds
+
+    * a list of Kino.Control, a Kino.Input, or a positive integer in milliseconds
+
+    * a keyword list of Kino.Control, a Kino.Input, or a positive integer in milliseconds,
+      the keys of the keyword become tags of the events
+
+    * an Elixir stream
 
   ## Examples
 
@@ -322,18 +335,14 @@ defmodule Kino do
 
       button = Kino.Control.button("Greet")
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(fn event -> IO.inspect(event) end)
+      Kino.listen(button, fn event -> IO.inspect(event) end)
 
   Or in the tagged version:
 
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
 
-      stream = Kino.Control.tagged_stream([hello: button, check: input])
-
-      Kino.listen(stream, fn
+      Kino.listen([hello: button, check: input], fn
         {:hello, event} -> ...
         {:check, event} -> ...
       end)
@@ -344,19 +353,33 @@ defmodule Kino do
       |> Stream.take(10)
       |> Kino.listen(fn i -> IO.puts("Ping #{i}") end)
 
-  Finally, an integer may be passed as a shorthand for `Stream.interval/1`:
-
-      Kino.listen(100, fn i -> IO.puts("Ping #{i}") end)
-
   """
-  @spec listen(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
-  def listen(stream_or_interval_ms, fun)
+  @spec listen(
+          event_source() | list(event_source()) | keyword(event_source()) | Enumerable.t(),
+          (term() -> any())
+        ) :: :ok
+  def listen(stream_or_event_source, fun)
 
-  def listen(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
-    listen(Stream.interval(interval_ms), fun)
+  def listen([{_, _} | _] = keyword, fun) when is_function(fun, 1) do
+    keyword
+    |> Kino.Control.tagged_stream()
+    |> listen(fun)
   end
 
-  def listen(stream, fun) when is_function(fun, 1) do
+  def listen(list, fun) when is_list(list) and is_function(fun, 1) do
+    list
+    |> Kino.Control.stream()
+    |> listen(fun)
+  end
+
+  def listen(stream_or_event_source, fun) when is_function(fun, 1) do
+    stream =
+      if Kino.SubscriptionManager.streamable?(stream_or_event_source) do
+        Kino.Control.stream(stream_or_event_source)
+      else
+        stream_or_event_source
+      end
+
     async(fn -> Enum.each(stream, fun) end)
   end
 
@@ -373,9 +396,7 @@ defmodule Kino do
 
       button = Kino.Control.button("Click")
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(0, fn _event, counter ->
+      Kino.listen(button, 0, fn _event, counter ->
         new_counter = counter + 1
         IO.puts("Clicks: #{new_counter}")
         {:cont, new_counter}
@@ -383,18 +404,33 @@ defmodule Kino do
 
   """
   @spec listen(
-          Enumerable.t() | pos_integer(),
+          event_source() | list(event_source()) | keyword(event_source()) | Enumerable.t(),
           state,
           (term(), state -> {:cont, state} | :halt)
         ) :: :ok
         when state: term()
-  def listen(stream_or_interval_ms, state, fun)
+  def listen(stream_or_event_source, state, fun)
 
-  def listen(interval_ms, state, fun) when is_integer(interval_ms) and is_function(fun, 2) do
-    listen(Stream.interval(interval_ms), state, fun)
+  def listen([{_, _} | _] = keyword, state, fun) when is_function(fun, 2) do
+    keyword
+    |> Kino.Control.tagged_stream()
+    |> listen(state, fun)
   end
 
-  def listen(stream, state, fun) when is_function(fun, 2) do
+  def listen([_ | _] = list, state, fun) when is_list(list) and is_function(fun, 2) do
+    list
+    |> Kino.Control.stream()
+    |> listen(state, fun)
+  end
+
+  def listen(stream_or_event_source, state, fun) when is_function(fun, 2) do
+    stream =
+      if Kino.SubscriptionManager.streamable?(stream_or_event_source) do
+        Kino.Control.stream(stream_or_event_source)
+      else
+        stream_or_event_source
+      end
+
     async(fn ->
       Enum.reduce_while(stream, state, fn item, state ->
         case fun.(item, state) do
