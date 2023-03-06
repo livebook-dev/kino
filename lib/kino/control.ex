@@ -274,7 +274,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Returns a `stream` of control events.
+  Merges several inputs and controls into a single `stream` of events.
 
   It accepts a single source or a list of sources, where each
   source is either of:
@@ -284,26 +284,19 @@ defmodule Kino.Control do
     * `Kino.Input` - emitting value on value change
 
   You can then consume the stream to access its events.
+  The stream is typically consumed via `Kino.listen/2`.
 
   ## Example
-
-      button = Kino.Control.button("Hello")
-
-      for event <- Kino.Control.stream(button) do
-        IO.inspect(event)
-      end
-      #=> %{origin: "client1", type: :click}
-      #=> %{origin: "client1", type: :click}
-
-  Or with multiple sources:
 
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
       interval = Kino.Control.interval(1000)
 
-      for event <- Kino.Control.stream([button, input, interval]) do
+      [button, input, interval]
+      |> Kino.Control.stream()
+      |> Kino.listen(fn event ->
         IO.inspect(event)
-      end
+      end)
       #=> %{type: :interval, iteration: 0}
       #=> %{origin: "client1", type: :click}
       #=> %{origin: "client1", type: :change, value: true}
@@ -332,13 +325,15 @@ defmodule Kino.Control do
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
 
-      for event <- Kino.Control.tagged_stream([hello: button, check: input]) do
+      [hello: button, check: input]
+      |> Kino.Control.tagged_stream()
+      |> Kino.listen(fn event ->
         IO.inspect(event)
-      end
+      end)
       #=> {:hello, %{origin: "client1", type: :click}}
       #=> {:check, %{origin: "client1", type: :change, value: true}}
   """
-  @spec tagged_stream(list({atom(), event_source()})) :: Enumerable.t()
+  @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do
     for entry <- entries do
       case entry do
@@ -406,4 +401,11 @@ defmodule Kino.Control do
       end
     )
   end
+end
+
+defimpl Enumerable, for: Kino.Control do
+  def reduce(control, acc, fun), do: Enumerable.reduce(Kino.Control.stream([control]), acc, fun)
+  def member?(_control, _value), do: {:error, __MODULE__}
+  def count(_control), do: {:error, __MODULE__}
+  def slice(_control), do: {:error, __MODULE__}
 end

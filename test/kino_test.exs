@@ -59,14 +59,11 @@ defmodule KinoTest do
       assert_receive {:item, 1}
     end
 
-    test "with control events stream" do
+    test "with control events" do
       button = Kino.Control.button("Click")
-
       myself = self()
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(fn event ->
+      Kino.listen(button, fn event ->
         send(myself, event)
       end)
 
@@ -97,11 +94,9 @@ defmodule KinoTest do
 
     test "with control events" do
       button = Kino.Control.button("Click")
-
       myself = self()
 
       button
-      |> Kino.Control.stream()
       |> Kino.listen(0, fn _event, counter ->
         send(myself, {:counter, counter + 1})
         {:cont, counter + 1}
