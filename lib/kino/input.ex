@@ -530,3 +530,10 @@ defmodule Kino.Input do
     end
   end
 end
+
+defimpl Enumerable, for: Kino.Input do
+  def reduce(input, acc, fun), do: Enumerable.reduce(Kino.Control.stream([input]), acc, fun)
+  def member?(_input, _value), do: {:error, __MODULE__}
+  def count(_input), do: {:error, __MODULE__}
+  def slice(_input), do: {:error, __MODULE__}
+end

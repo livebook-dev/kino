@@ -320,13 +320,11 @@ defmodule Kino do
 
   This function is primarily useful to consume `Kino.Control` events:
 
-      button = Kino.Control.button("Greet")
-
-      button
-      |> Kino.Control.stream()
+      Kino.Control.button("Greet")
       |> Kino.listen(fn event -> IO.inspect(event) end)
 
-  Or in the tagged version:
+  You can also merge multiple controls into a single stream. For example,
+  in order to merge them and tag each with a distinct event:
 
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
@@ -373,9 +371,7 @@ defmodule Kino do
 
       button = Kino.Control.button("Click")
 
-      button
-      |> Kino.Control.stream()
-      |> Kino.listen(0, fn _event, counter ->
+      Kino.listen(button, 0, fn _event, counter ->
         new_counter = counter + 1
         IO.puts("Clicks: #{new_counter}")
         {:cont, new_counter}
