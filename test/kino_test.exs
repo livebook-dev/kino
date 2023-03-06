@@ -62,12 +62,15 @@ defmodule KinoTest do
     test "with control events" do
       button = Kino.Control.button("Click")
       myself = self()
+      trace_subscription()
 
       Kino.listen(button, fn event ->
         send(myself, event)
       end)
 
-      Process.sleep(1)
+      assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
+                     when button.attrs.ref == ref
+
       info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
       send(button.attrs.destination, {:event, button.attrs.ref, info})
@@ -95,6 +98,7 @@ defmodule KinoTest do
     test "with control events" do
       button = Kino.Control.button("Click")
       myself = self()
+      trace_subscription()
 
       button
       |> Kino.listen(0, fn _event, counter ->
@@ -102,7 +106,9 @@ defmodule KinoTest do
         {:cont, counter + 1}
       end)
 
-      Process.sleep(1)
+      assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
+                     when button.attrs.ref == ref
+
       info = %{origin: "client1"}
       send(button.attrs.destination, {:event, button.attrs.ref, info})
       send(button.attrs.destination, {:event, button.attrs.ref, info})
@@ -115,5 +121,10 @@ defmodule KinoTest do
   defp await_process(pid) do
     ref = Process.monitor(pid)
     assert_receive {:DOWN, ^ref, :process, _object, _reason}
+  end
+
+  defp trace_subscription do
+    :erlang.trace(Process.whereis(Kino.SubscriptionManager), true, [:receive, tracer: self()])
+    :erlang.trace_pattern(:receive, [], [])
   end
 end
