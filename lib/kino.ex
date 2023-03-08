@@ -142,6 +142,8 @@ defmodule Kino do
 
   import Kernel, except: [inspect: 1]
 
+  require Logger
+
   @type nothing :: :"do not show this result in output"
 
   @doc """
@@ -281,7 +283,7 @@ defmodule Kino do
     frame = Kino.Frame.new()
 
     Kino.Frame.periodically(frame, interval_ms, {0, state}, fn {i, state} ->
-      case safe_apply(fun, [i, state]) do
+      case safe_apply(fun, [i, state], "Kino.animate") do
         {:ok, {:cont, term, state}} ->
           Kino.Frame.render(frame, term)
           {:cont, {i + 1, state}}
@@ -303,7 +305,7 @@ defmodule Kino do
     frame = Kino.Frame.new() |> Kino.render()
 
     listen(stream, state, fn item, state ->
-      case safe_apply(fun, [item, state]) do
+      case safe_apply(fun, [item, state], "Kino.animate") do
         {:ok, {:cont, term, state}} ->
           Kino.Frame.render(frame, term)
           {:cont, state}
@@ -361,7 +363,7 @@ defmodule Kino do
   end
 
   def listen(stream, fun) when is_function(fun, 1) do
-    async(fn -> Enum.each(stream, &safe_apply(fun, [&1])) end)
+    async(fn -> Enum.each(stream, &safe_apply(fun, [&1], "Kino.listen")) end)
   end
 
   @doc ~S"""
@@ -399,7 +401,7 @@ defmodule Kino do
   def listen(stream, state, fun) when is_function(fun, 2) do
     async(fn ->
       Enum.reduce_while(stream, state, fn item, state ->
-        case safe_apply(fun, [item, state]) do
+        case safe_apply(fun, [item, state], "Kino.listen") do
           {:ok, {:cont, state}} -> {:cont, state}
           {:ok, :halt} -> {:halt, state}
           {:error, _, _} -> {:cont, state}
@@ -408,11 +410,16 @@ defmodule Kino do
     end)
   end
 
-  defp safe_apply(fun, args) do
+  defp safe_apply(fun, args, context) do
     try do
       {:ok, apply(fun, args)}
     catch
       kind, error ->
+        Logger.error(
+          "#{context} with #{Kernel.inspect(fun)} failed with reason:\n\n" <>
+            Exception.format(kind, error, __STACKTRACE__)
+        )
+
         {:error, kind, error}
     end
   end

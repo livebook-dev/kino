@@ -1,6 +1,8 @@
 defmodule KinoTest do
   use Kino.LivebookCase, async: true
 
+  import ExUnit.CaptureLog
+
   describe "inspect/2" do
     test "sends a text output to the group leader" do
       gl =
@@ -31,15 +33,21 @@ defmodule KinoTest do
     end
 
     test "ignores failures" do
-      Stream.iterate(0, &(&1 + 1))
-      |> Stream.take(2)
-      |> Kino.animate(fn i ->
-        1 = i
-        i
-      end)
+      log =
+        capture_log(fn ->
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(2)
+          |> Kino.animate(fn i ->
+            1 = i
+            i
+          end)
 
-      assert_output({:frame, [], %{ref: ref, type: :default}})
-      assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+          assert_output({:frame, [], %{ref: ref, type: :default}})
+          assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+        end)
+
+      assert log =~ "Kino.animate"
+      assert log =~ "(MatchError) no match of right hand side value: 0"
     end
   end
 
@@ -57,16 +65,22 @@ defmodule KinoTest do
     end
 
     test "ignores failures" do
-      Stream.iterate(0, &(&1 + 1))
-      |> Stream.take(4)
-      |> Kino.animate(0, fn i, state ->
-        true = i in [1, 3]
-        {:cont, i + state, i + state}
-      end)
+      log =
+        capture_log(fn ->
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(4)
+          |> Kino.animate(0, fn i, state ->
+            true = i in [1, 3]
+            {:cont, i + state, i + state}
+          end)
 
-      assert_output({:frame, [], %{ref: ref, type: :default}})
-      assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
-      assert_output({:frame, [{:text, "\e[34m4\e[0m"}], %{ref: ^ref, type: :replace}})
+          assert_output({:frame, [], %{ref: ref, type: :default}})
+          assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+          assert_output({:frame, [{:text, "\e[34m4\e[0m"}], %{ref: ^ref, type: :replace}})
+        end)
+
+      assert log =~ "Kino.animate"
+      assert log =~ "** (MatchError) no match of right hand side value: false"
     end
   end
 
@@ -105,17 +119,23 @@ defmodule KinoTest do
     end
 
     test "ignores failures" do
-      myself = self()
+      log =
+        capture_log(fn ->
+          myself = self()
 
-      Stream.iterate(0, &(&1 + 1))
-      |> Stream.take(2)
-      |> Kino.listen(fn i ->
-        1 = i
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(2)
+          |> Kino.listen(fn i ->
+            1 = i
 
-        send(myself, {:item, i})
-      end)
+            send(myself, {:item, i})
+          end)
 
-      assert_receive {:item, 1}
+          assert_receive {:item, 1}
+        end)
+
+      assert log =~ "Kino.listen"
+      assert log =~ "** (MatchError) no match of right hand side value: 0"
     end
   end
 
@@ -157,18 +177,24 @@ defmodule KinoTest do
     end
 
     test "ignores failures" do
-      myself = self()
+      log =
+        capture_log(fn ->
+          myself = self()
 
-      Stream.iterate(0, &(&1 + 1))
-      |> Stream.take(4)
-      |> Kino.listen(0, fn i, state ->
-        true = i in [1, 3]
-        send(myself, {:item, i + state})
-        {:cont, i + state}
-      end)
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(4)
+          |> Kino.listen(0, fn i, state ->
+            true = i in [1, 3]
+            send(myself, {:item, i + state})
+            {:cont, i + state}
+          end)
 
-      assert_receive {:item, 1}
-      assert_receive {:item, 4}
+          assert_receive {:item, 1}
+          assert_receive {:item, 4}
+        end)
+
+      assert log =~ "Kino.listen"
+      assert log =~ "** (MatchError) no match of right hand side value: false"
     end
   end
 
