@@ -142,6 +142,8 @@ defmodule Kino do
 
   import Kernel, except: [inspect: 1]
 
+  require Logger
+
   @type nothing :: :"do not show this result in output"
 
   @doc """
@@ -281,13 +283,16 @@ defmodule Kino do
     frame = Kino.Frame.new()
 
     Kino.Frame.periodically(frame, interval_ms, {0, state}, fn {i, state} ->
-      case fun.(i, state) do
-        {:cont, term, state} ->
+      case safe_apply(fun, [i, state], "Kino.animate") do
+        {:ok, {:cont, term, state}} ->
           Kino.Frame.render(frame, term)
           {:cont, {i + 1, state}}
 
-        :halt ->
+        {:ok, :halt} ->
           :halt
+
+        {:error, _, _} ->
+          {:cont, {i + 1, state}}
       end
     end)
 
@@ -300,13 +305,16 @@ defmodule Kino do
     frame = Kino.Frame.new() |> Kino.render()
 
     listen(stream, state, fn item, state ->
-      case fun.(item, state) do
-        {:cont, term, state} ->
+      case safe_apply(fun, [item, state], "Kino.animate") do
+        {:ok, {:cont, term, state}} ->
           Kino.Frame.render(frame, term)
           {:cont, state}
 
-        :halt ->
+        {:ok, :halt} ->
           :halt
+
+        {:error, _, _} ->
+          {:cont, state}
       end
     end)
 
@@ -355,7 +363,7 @@ defmodule Kino do
   end
 
   def listen(stream, fun) when is_function(fun, 1) do
-    async(fn -> Enum.each(stream, fun) end)
+    async(fn -> Enum.each(stream, &safe_apply(fun, [&1], "Kino.listen")) end)
   end
 
   @doc ~S"""
@@ -393,16 +401,38 @@ defmodule Kino do
   def listen(stream, state, fun) when is_function(fun, 2) do
     async(fn ->
       Enum.reduce_while(stream, state, fn item, state ->
-        case fun.(item, state) do
-          {:cont, state} -> {:cont, state}
-          :halt -> {:halt, state}
+        case safe_apply(fun, [item, state], "Kino.listen") do
+          {:ok, {:cont, state}} -> {:cont, state}
+          {:ok, :halt} -> {:halt, state}
+          {:error, _, _} -> {:cont, state}
         end
       end)
     end)
   end
 
+  defp safe_apply(fun, args, context) do
+    try do
+      {:ok, apply(fun, args)}
+    catch
+      kind, error ->
+        Logger.error(
+          "#{context} with #{Kernel.inspect(fun)} failed with reason:\n\n" <>
+            Exception.format(kind, error, __STACKTRACE__)
+        )
+
+        {:error, kind, error}
+    end
+  end
+
   defp async(fun) do
-    Kino.start_child({Task, fun})
+    {:ok, pid} = Kino.start_child({Task, fun})
+    # In case the stream breaks we want to propagate the failure
+    try do
+      Process.link(pid)
+    catch
+      :error, :noproc -> :ok
+    end
+
     :ok
   end
 
