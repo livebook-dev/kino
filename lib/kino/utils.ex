@@ -42,7 +42,7 @@ defmodule Kino.Utils do
   end
 
   @doc """
-  Gets the image type of a file by the magic number
+  Determines image type looking for the magic number in the binary.
   """
   @spec get_image_type(bitstring()) :: {:ok, Kino.Image.common_image_type()} | :not_found
   def get_image_type(<<0xFF, 0xD8, 0xFF, 0xE0, _rest::binary>>), do: {:ok, :jpeg}
