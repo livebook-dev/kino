@@ -157,14 +157,14 @@ end
 defimpl Kino.Render, for: BitString do
   def to_livebook(string) do
     case Kino.Utils.get_image_type(string) do
-      {:ok, type} ->
+      nil ->
+        Kino.Output.inspect(string)
+
+      type ->
         raw = Kino.Inspect.new(string)
         image = Kino.Image.new(string, type)
         tabs = Kino.Layout.tabs(Image: image, Raw: raw)
         Kino.Render.to_livebook(tabs)
-
-      _ ->
-        Kino.Output.inspect(string)
     end
   end
 end
