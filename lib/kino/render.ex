@@ -153,3 +153,18 @@ defimpl Kino.Render, for: PID do
     end
   end
 end
+
+defimpl Kino.Render, for: BitString do
+  def to_livebook(string) do
+    case Kino.Utils.get_image_type(string) do
+      {:ok, type} ->
+        raw = Kino.Inspect.new(string)
+        image = Kino.Image.new(string, type)
+        tabs = Kino.Layout.tabs(Image: image, Raw: raw)
+        Kino.Render.to_livebook(tabs)
+
+      _ ->
+        Kino.Output.inspect(string)
+    end
+  end
+end
