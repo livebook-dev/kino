@@ -44,7 +44,7 @@ defmodule Kino.Utils do
   @doc """
   Determines image type looking for the magic number in the binary.
   """
-  @spec get_image_type(bitstring()) :: {:ok, Kino.Image.common_image_type()} | :not_found
+  @spec image_type(binary()) :: Kino.Image.common_image_type() | nil
   def get_image_type(<<0xFF, 0xD8, 0xFF, 0xE0, _rest::binary>>), do: {:ok, :jpeg}
 
   def get_image_type(<<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, _rest::binary>>),
