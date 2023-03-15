@@ -27,7 +27,7 @@ defmodule Kino.Layout do
       ])
 
   """
-  @spec tabs(list({String.t(), term()})) :: t()
+  @spec tabs(list({String.t() | atom(), term()})) :: t()
   def tabs(tabs) do
     {labels, terms} = Enum.unzip(tabs)
     labels = Enum.map(labels, &to_string/1)

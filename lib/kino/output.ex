@@ -12,6 +12,7 @@ defmodule Kino.Output do
           ignored()
           | stdout()
           | text()
+          | plain_text()
           | markdown()
           | image()
           | js()
@@ -27,14 +28,25 @@ defmodule Kino.Output do
   @type ignored :: :ignored
 
   @typedoc """
-  IO text output, adjacent such outputs are treated as a whole
+  IO text output, adjacent such outputs are treated as a whole.
+
+  Supports ANSI escape codes.
   """
   @type stdout :: {:stdout, binary()}
 
   @typedoc """
-  Standalone text block.
+  Standalone text block visually matching `t:stdout/0`.
+
+  Supports ANSI escape codes.
   """
   @type text :: {:text, binary()}
+
+  @typedoc """
+  Plain text content.
+
+  Similar to `t:markdown/0`, but with no special markup.
+  """
+  @type plain_text :: {:plain_text, binary()}
 
   @typedoc """
   Markdown content.
@@ -374,6 +386,14 @@ defmodule Kino.Output do
   @spec text(binary()) :: t()
   def text(text) when is_binary(text) do
     {:text, text}
+  end
+
+  @doc """
+  See `t:plain_text/0`.
+  """
+  @spec plain_text(binary()) :: t()
+  def plain_text(text) do
+    {:plain_text, text}
   end
 
   @doc """
