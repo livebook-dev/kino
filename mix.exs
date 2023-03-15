@@ -49,11 +49,13 @@ defmodule Kino.MixProject do
           Kino.Download,
           Kino.ETS,
           Kino.Frame,
+          Kino.HTML,
           Kino.Image,
           Kino.Layout,
           Kino.Markdown,
           Kino.Mermaid,
           Kino.Process,
+          Kino.Text,
           Kino.Tree
         ],
         Inputs: [

@@ -63,6 +63,13 @@ defmodule Kino do
       | 2  | Erlang | https://www.erlang.org  |
       """)
 
+  ### Kino.Text
+
+  `Kino.Text` renders plain text content. It is similar to `Kino.Markdown`,
+  however doesn't interpret any markup.
+
+      Kino.Text.new("Hello!")
+
   ### Kino.Mermaid
 
   `Kino.Mermaid` renders Mermaid graphs:
