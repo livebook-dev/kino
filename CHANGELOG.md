@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.0](https://github.com/livebook-dev/kino/tree/v0.9.0) (2023-03-17)
+
+### Added
+
+* Support for sending frame updates to a specific client ([#250](https://github.com/livebook-dev/kino/pull/250))
+* Added `Kino.HTML` ([#259](https://github.com/livebook-dev/kino/pull/259))
+* Made controls and inputs enumerable ([#262](https://github.com/livebook-dev/kino/pull/262))
+* Automatic detection of image binary ([#264](https://github.com/livebook-dev/kino/pull/264))
+* Added `Kino.Text` ([#265](https://github.com/livebook-dev/kino/pull/265))
+* Introduced public `Kino.Table` behaviour ([#266](https://github.com/livebook-dev/kino/pull/266))
+* Added `Kino.async_listen/2` ([#268](https://github.com/livebook-dev/kino/pull/268))
+
+### Changed
+
+* **(Breaking)** Changed API for accessing file input value ([#253](https://github.com/livebook-dev/kino/pull/253))
+* Failures in listen and animate callback to be ignored ([#263](https://github.com/livebook-dev/kino/pull/263))
+
+### Fixed
+
+* Support for non-charlist list values in DataTable ([#252](https://github.com/livebook-dev/kino/pull/252))
+
 ## [v0.8.1](https://github.com/livebook-dev/kino/tree/v0.8.1) (2023-01-24)
 
 ### Added
