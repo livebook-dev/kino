@@ -29,7 +29,7 @@ defmodule Kino.DataTable do
 
   @behaviour Kino.Table
 
-  @type t :: Kino.JS.Live.t()
+  @type t :: Kino.Table.t()
 
   @doc """
   Creates a new kino displaying given tabular data.

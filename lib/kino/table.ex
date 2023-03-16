@@ -1,5 +1,10 @@
 defmodule Kino.Table do
-  @moduledoc false
+  @moduledoc """
+  A behaviour module for implementing tabular kinos.
+
+  This module implements table visualization and delegates data
+  fetching and traversal to the behaviour implementation.
+  """
 
   @type info :: %{
           name: String.t(),
@@ -40,8 +45,15 @@ defmodule Kino.Table do
   use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
 
+  @type t :: Kino.JS.Live.t()
+
   @limit 10
 
+  @doc """
+  Creates a new tabular kino using the given module as data
+  specification.
+  """
+  @spec new(module(), term()) :: t()
   def new(module, init_arg) do
     Kino.JS.Live.new(__MODULE__, {module, init_arg})
   end

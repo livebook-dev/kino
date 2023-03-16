@@ -12,7 +12,7 @@ defmodule Kino.ETS do
 
   @behaviour Kino.Table
 
-  @type t :: Kino.JS.Live.t()
+  @type t :: Kino.Table.t()
 
   @doc """
   Creates a new kino displaying the given ETS table.
