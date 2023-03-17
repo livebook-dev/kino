@@ -432,13 +432,12 @@ defmodule Kino do
   end
 
   defp async(fun) do
-    {:ok, pid} = Kino.start_child({Task, fun})
-    # In case the stream breaks we want to propagate the failure
-    try do
-      Process.link(pid)
-    catch
-      :error, :noproc -> :ok
-    end
+    {:ok, _pid} =
+      Kino.start_child(%{
+        id: Task,
+        start: {Kino.Terminator, :start_task, [self(), fun]},
+        restart: :temporary
+      })
 
     :ok
   end
@@ -478,37 +477,7 @@ defmodule Kino do
     %{start: start} = child_spec = Supervisor.child_spec(child_spec, [])
     parent = self()
     gl = Process.group_leader()
-    child_spec = %{child_spec | start: {Kino, :__start_override__, [start, parent, gl]}}
+    child_spec = %{child_spec | start: {Kino.Terminator, :start_child, [start, parent, gl]}}
     DynamicSupervisor.start_child(Kino.DynamicSupervisor, child_spec)
-  end
-
-  @doc false
-  def __start_override__({mod, fun, args}, parent, gl) do
-    # We switch the group leader, so that the newly started
-    # process gets the same group leader as the caller
-    initial_gl = Process.group_leader()
-
-    Process.group_leader(self(), gl)
-
-    try do
-      {resp, pid} =
-        case apply(mod, fun, args) do
-          {:ok, pid} = resp -> {resp, pid}
-          {:ok, pid, _info} = resp -> {resp, pid}
-          resp -> {resp, nil}
-        end
-
-      if pid do
-        Kino.Bridge.reference_object(pid, parent)
-
-        Kino.Bridge.monitor_object(pid, Kino.Terminator.cross_node_name(), {:terminate, pid},
-          ack?: true
-        )
-      end
-
-      resp
-    after
-      Process.group_leader(self(), initial_gl)
-    end
   end
 end
