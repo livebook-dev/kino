@@ -11,15 +11,20 @@ defmodule Kino.ProcessTest do
 
   describe "sup_tree/2" do
     test "shows supervision tree with children" do
-      {:ok, pid} =
-        Supervisor.start_link(
-          [
-            {Agent, fn -> :ok end},
-            %{id: :child, start: {Agent, :start_link, [fn -> :ok end, [name: :agent_child]]}}
-          ],
-          name: :supervisor_parent,
-          strategy: :one_for_one
-        )
+      pid =
+        start_supervised!(%{
+          id: Supervisor,
+          start:
+            {Supervisor, :start_link,
+             [
+               [
+                 {Agent, fn -> :ok end},
+                 %{id: :child, start: {Agent, :start_link, [fn -> :ok end, [name: :agent_child]]}}
+               ],
+               [name: :supervisor_parent, strategy: :one_for_one]
+             ]},
+          restart: :temporary
+        })
 
       [_, {_, agent, _, _}] = Supervisor.which_children(pid)
 
@@ -33,15 +38,20 @@ defmodule Kino.ProcessTest do
     end
 
     test "shows supervision tree with children alongside non-started children" do
-      {:ok, pid} =
-        Supervisor.start_link(
-          [
-            {Agent, fn -> :ok end},
-            %{id: :not_started, start: {Function, :identity, [:ignore]}}
-          ],
-          name: :supervisor_parent,
-          strategy: :one_for_one
-        )
+      pid =
+        start_supervised!(%{
+          id: Supervisor,
+          start:
+            {Supervisor, :start_link,
+             [
+               [
+                 {Agent, fn -> :ok end},
+                 %{id: :not_started, start: {Function, :identity, [:ignore]}}
+               ],
+               [name: :supervisor_parent, strategy: :one_for_one]
+             ]},
+          restart: :temporary
+        })
 
       [{:not_started, :undefined, _, _}, {_, agent, _, _}] = Supervisor.which_children(pid)
 
