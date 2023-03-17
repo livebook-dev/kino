@@ -85,7 +85,7 @@ defmodule KinoTest do
   end
 
   describe "listen/2" do
-    test "asynchronously consumes stream items" do
+    test "consumes stream items" do
       myself = self()
 
       Stream.iterate(0, &(&1 + 1))
@@ -140,7 +140,7 @@ defmodule KinoTest do
   end
 
   describe "listen/3" do
-    test "asynchronously consumes stream items and accumulates state" do
+    test "consumes stream items and accumulates state" do
       myself = self()
 
       Stream.iterate(0, &(&1 + 1))
@@ -198,13 +198,13 @@ defmodule KinoTest do
     end
   end
 
-  describe "listen_all/2" do
+  describe "async_listen/2" do
     test "concurrently processes stream items" do
       myself = self()
 
       Stream.iterate(0, &(&1 + 1))
       |> Stream.take(2)
-      |> Kino.listen_all(fn i ->
+      |> Kino.async_listen(fn i ->
         send(myself, {:item, i})
         Process.sleep(:infinity)
       end)
@@ -218,7 +218,7 @@ defmodule KinoTest do
       myself = self()
       trace_subscription()
 
-      Kino.listen_all(button, fn event ->
+      Kino.async_listen(button, fn event ->
         send(myself, event)
         Process.sleep(:infinity)
       end)
@@ -241,7 +241,7 @@ defmodule KinoTest do
 
           Stream.iterate(0, &(&1 + 1))
           |> Stream.take(2)
-          |> Kino.listen_all(fn i ->
+          |> Kino.async_listen(fn i ->
             send(myself, {:item, self()})
             1 = i
           end)
@@ -252,7 +252,7 @@ defmodule KinoTest do
           await_process(pid2)
         end)
 
-      assert log =~ "Kino.listen_all"
+      assert log =~ "Kino.async_listen"
       assert log =~ "** (MatchError) no match of right hand side value: 0"
     end
   end
