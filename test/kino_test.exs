@@ -266,6 +266,25 @@ defmodule KinoTest do
       assert log =~ "Kino.async_listen"
       assert log =~ "** (MatchError) no match of right hand side value: 0"
     end
+
+    test "processes keep running when the stream finishes" do
+      myself = self()
+
+      Stream.iterate(0, &(&1 + 1))
+      |> Stream.take(2)
+      |> Kino.async_listen(fn _i ->
+        send(myself, {:item, self()})
+        Process.sleep(:infinity)
+      end)
+
+      assert_receive {:item, pid1}
+      assert_receive {:item, pid2}
+
+      Process.sleep(1)
+
+      assert Process.alive?(pid1)
+      assert Process.alive?(pid2)
+    end
   end
 
   defp await_process(pid) do

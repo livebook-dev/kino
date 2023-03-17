@@ -470,6 +470,16 @@ defmodule Kino do
       end
 
       after_fun = fn task_supervisor ->
+        for {_, pid, _, _} <- DynamicSupervisor.which_children(task_supervisor),
+            is_pid(pid),
+            Process.alive?(pid) do
+          ref = Process.monitor(pid)
+
+          receive do
+            {:DOWN, ^ref, _, _, _} -> :ok
+          end
+        end
+
         DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, task_supervisor)
       end
 
