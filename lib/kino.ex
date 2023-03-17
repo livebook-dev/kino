@@ -331,6 +331,9 @@ defmodule Kino do
   @doc ~S"""
   Asynchronously consumes a stream with `fun`.
 
+  Note that events are processed by `fun` sequentially. If you want
+  to process them concurrently, use `listen_all/2`.
+
   ## Examples
 
   This function is primarily useful to consume `Kino.Control` events:
@@ -371,6 +374,44 @@ defmodule Kino do
 
   def listen(stream, fun) when is_function(fun, 1) do
     async(fn -> Enum.each(stream, &safe_apply(fun, [&1], "Kino.listen")) end)
+  end
+
+  @doc """
+  Same as `listen/2`, except each event is processed concurrently.
+  """
+  @spec listen_all(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
+  def listen_all(stream_or_interval_ms, fun)
+
+  def listen_all(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
+    listen_all(Stream.interval(interval_ms), fun)
+  end
+
+  def listen_all(stream, fun) when is_function(fun, 1) do
+    async(fn ->
+      # For organization purposes we start all tasks under a separate
+      # supervisor and only that supervisor is started with Kino.start_child/1
+
+      start_fun = fn ->
+        {:ok, task_supervisor} = start_child(Task.Supervisor)
+        task_supervisor
+      end
+
+      reducer = fn event, task_supervisor ->
+        {[{event, task_supervisor}], task_supervisor}
+      end
+
+      after_fun = fn task_supervisor ->
+        DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, task_supervisor)
+      end
+
+      stream
+      |> Stream.transform(start_fun, reducer, after_fun)
+      |> Enum.each(fn {event, task_supervisor} ->
+        Task.Supervisor.start_child(task_supervisor, fn ->
+          safe_apply(fun, [event], "Kino.listen_all")
+        end)
+      end)
+    end)
   end
 
   @doc ~S"""

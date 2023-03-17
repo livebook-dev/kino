@@ -198,6 +198,65 @@ defmodule KinoTest do
     end
   end
 
+  describe "listen_all/2" do
+    test "concurrently processes stream items" do
+      myself = self()
+
+      Stream.iterate(0, &(&1 + 1))
+      |> Stream.take(2)
+      |> Kino.listen_all(fn i ->
+        send(myself, {:item, i})
+        Process.sleep(:infinity)
+      end)
+
+      assert_receive {:item, 0}
+      assert_receive {:item, 1}
+    end
+
+    test "with control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+      trace_subscription()
+
+      Kino.listen_all(button, fn event ->
+        send(myself, event)
+        Process.sleep(:infinity)
+      end)
+
+      assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
+                     when button.attrs.ref == ref
+
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive ^info
+      assert_receive ^info
+    end
+
+    test "ignores failures" do
+      log =
+        capture_log(fn ->
+          myself = self()
+
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(2)
+          |> Kino.listen_all(fn i ->
+            send(myself, {:item, self()})
+            1 = i
+          end)
+
+          assert_receive {:item, pid1}
+          assert_receive {:item, pid2}
+          await_process(pid1)
+          await_process(pid2)
+        end)
+
+      assert log =~ "Kino.listen_all"
+      assert log =~ "** (MatchError) no match of right hand side value: 0"
+    end
+  end
+
   defp await_process(pid) do
     ref = Process.monitor(pid)
     assert_receive {:DOWN, ^ref, :process, _object, _reason}
