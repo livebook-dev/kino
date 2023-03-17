@@ -85,7 +85,7 @@ defmodule KinoTest do
   end
 
   describe "listen/2" do
-    test "asynchronously consumes stream items" do
+    test "consumes stream items" do
       myself = self()
 
       Stream.iterate(0, &(&1 + 1))
@@ -140,7 +140,7 @@ defmodule KinoTest do
   end
 
   describe "listen/3" do
-    test "asynchronously consumes stream items and accumulates state" do
+    test "consumes stream items and accumulates state" do
       myself = self()
 
       Stream.iterate(0, &(&1 + 1))
@@ -195,6 +195,65 @@ defmodule KinoTest do
 
       assert log =~ "Kino.listen"
       assert log =~ "** (MatchError) no match of right hand side value: false"
+    end
+  end
+
+  describe "async_listen/2" do
+    test "concurrently processes stream items" do
+      myself = self()
+
+      Stream.iterate(0, &(&1 + 1))
+      |> Stream.take(2)
+      |> Kino.async_listen(fn i ->
+        send(myself, {:item, i})
+        Process.sleep(:infinity)
+      end)
+
+      assert_receive {:item, 0}
+      assert_receive {:item, 1}
+    end
+
+    test "with control events" do
+      button = Kino.Control.button("Click")
+      myself = self()
+      trace_subscription()
+
+      Kino.async_listen(button, fn event ->
+        send(myself, event)
+        Process.sleep(:infinity)
+      end)
+
+      assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
+                     when button.attrs.ref == ref
+
+      info = %{origin: "client1"}
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.attrs.destination, {:event, button.attrs.ref, info})
+
+      assert_receive ^info
+      assert_receive ^info
+    end
+
+    test "ignores failures" do
+      log =
+        capture_log(fn ->
+          myself = self()
+
+          Stream.iterate(0, &(&1 + 1))
+          |> Stream.take(2)
+          |> Kino.async_listen(fn i ->
+            send(myself, {:item, self()})
+            1 = i
+          end)
+
+          assert_receive {:item, pid1}
+          assert_receive {:item, pid2}
+          await_process(pid1)
+          await_process(pid2)
+        end)
+
+      assert log =~ "Kino.async_listen"
+      assert log =~ "** (MatchError) no match of right hand side value: 0"
     end
   end
 

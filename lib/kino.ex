@@ -329,7 +329,10 @@ defmodule Kino do
   end
 
   @doc ~S"""
-  Asynchronously consumes a stream with `fun`.
+  Consumes a stream with `fun` without blocking execution.
+
+  Note that events are processed by `fun` sequentially. If you want
+  to process them concurrently, use `async_listen/2`.
 
   ## Examples
 
@@ -441,6 +444,44 @@ defmodule Kino do
     end
 
     :ok
+  end
+
+  @doc """
+  Same as `listen/2`, except each event is processed concurrently.
+  """
+  @spec async_listen(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
+  def async_listen(stream_or_interval_ms, fun)
+
+  def async_listen(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
+    async_listen(Stream.interval(interval_ms), fun)
+  end
+
+  def async_listen(stream, fun) when is_function(fun, 1) do
+    async(fn ->
+      # For organization purposes we start all tasks under a separate
+      # supervisor and only that supervisor is started with Kino.start_child/1
+
+      start_fun = fn ->
+        {:ok, task_supervisor} = start_child(Task.Supervisor)
+        task_supervisor
+      end
+
+      reducer = fn event, task_supervisor ->
+        {[{event, task_supervisor}], task_supervisor}
+      end
+
+      after_fun = fn task_supervisor ->
+        DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, task_supervisor)
+      end
+
+      stream
+      |> Stream.transform(start_fun, reducer, after_fun)
+      |> Enum.each(fn {event, task_supervisor} ->
+        Task.Supervisor.start_child(task_supervisor, fn ->
+          safe_apply(fun, [event], "Kino.async_listen")
+        end)
+      end)
+    end)
   end
 
   @doc """
