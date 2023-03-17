@@ -137,6 +137,17 @@ defmodule KinoTest do
       assert log =~ "Kino.listen"
       assert log =~ "** (MatchError) no match of right hand side value: 0"
     end
+
+    @tag :capture_log
+    test "kills parent if stream itself fails" do
+      Process.flag(:trap_exit, true)
+
+      1..10
+      |> Stream.map(fn _ -> exit(:oops) end)
+      |> Kino.listen(&IO.inspect/1)
+
+      assert_receive {:EXIT, _, :oops}
+    end
   end
 
   describe "listen/3" do
