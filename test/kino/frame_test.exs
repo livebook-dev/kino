@@ -18,6 +18,23 @@ defmodule Kino.FrameTest do
     assert_output_to("client1", {:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
   end
 
+  test "render/2 sends output directly to clients when :history is false" do
+    frame = Kino.Frame.new()
+
+    Kino.Frame.render(frame, 1, history: false)
+    assert_output_to_clients({:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+  end
+
+  test "render/2 raises when :to and :history is given" do
+    frame = Kino.Frame.new()
+
+    assert_raise ArgumentError,
+                 "direct updates sent via :to are never part of the frame history, passing :history is not supported",
+                 fn ->
+                   Kino.Frame.render(frame, 1, to: "client1", history: true)
+                 end
+  end
+
   test "append/2 formats the given value into output and sends as :append frame" do
     frame = Kino.Frame.new()
 
