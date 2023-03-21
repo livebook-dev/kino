@@ -64,32 +64,33 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
-    * `:history` - if the update will be part of the frame history.
-      Defaults to `true`, unless `:to` is given. Direct updates are
-      never a part of the history
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
 
   """
   @spec render(t(), term(), keyword()) :: :ok
   def render(frame, term, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to, :history])
+    opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
     GenServer.cast(frame.pid, {:render, term, destination})
   end
 
   defp update_destination_from_opts!(opts) do
     if to = opts[:to] do
-      if opts[:history] do
+      if opts[:temporary] == false do
         raise ArgumentError,
               "direct updates sent via :to are never part of the frame history," <>
-                " passing :history is not supported"
+                " disabling :temporary is not supported"
       end
 
       {:client, to}
     else
-      if Keyword.get(opts, :history, true) do
-        :default
-      else
+      if Keyword.get(opts, :temporary, false) do
         :clients
+      else
+        :default
       end
     end
   end
@@ -103,14 +104,15 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
-    * `:history` - if the update will be part of the frame history.
-      Defaults to `true`, unless `:to` is given. Direct updates are
-      never a part of the history
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
 
   """
   @spec append(t(), term(), keyword()) :: :ok
   def append(frame, term, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to, :history])
+    opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
     GenServer.cast(frame.pid, {:append, term, destination})
   end
@@ -124,14 +126,15 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
-    * `:history` - if the update will be part of the frame history.
-      Defaults to `true`, unless `:to` is given. Direct updates are
-      never a part of the history
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
 
   """
   @spec clear(t(), keyword()) :: :ok
   def clear(frame, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to, :history])
+    opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
     GenServer.cast(frame.pid, {:clear, destination})
   end
