@@ -16,6 +16,8 @@ defmodule Kino.FrameTest do
 
     Kino.Frame.render(frame, 1, to: "client1")
     assert_output_to("client1", {:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+
+    assert Kino.Frame.get_outputs(frame) == []
   end
 
   test "render/2 sends output directly to clients when :temporary is true" do
@@ -23,6 +25,8 @@ defmodule Kino.FrameTest do
 
     Kino.Frame.render(frame, 1, temporary: true)
     assert_output_to_clients({:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+
+    assert Kino.Frame.get_outputs(frame) == []
   end
 
   test "render/2 raises when :to and :temporary is disabled" do

@@ -171,20 +171,41 @@ defmodule Kino.Frame do
   def handle_cast({:render, term, destination}, state) do
     output = Kino.Render.to_livebook(term)
     put_update(destination, state.ref, [output], :replace)
-    state = %{state | outputs: [output]}
+
+    state =
+      if destination == :default do
+        %{state | outputs: [output]}
+      else
+        state
+      end
+
     {:noreply, state}
   end
 
   def handle_cast({:append, term, destination}, state) do
     output = Kino.Render.to_livebook(term)
     put_update(destination, state.ref, [output], :append)
-    state = %{state | outputs: [output | state.outputs]}
+
+    state =
+      if destination == :default do
+        %{state | outputs: [output | state.outputs]}
+      else
+        state
+      end
+
     {:noreply, state}
   end
 
   def handle_cast({:clear, destination}, state) do
     put_update(destination, state.ref, [], :replace)
-    state = %{state | outputs: []}
+
+    state =
+      if destination == :default do
+        %{state | outputs: []}
+      else
+        state
+      end
+
     {:noreply, state}
   end
 
