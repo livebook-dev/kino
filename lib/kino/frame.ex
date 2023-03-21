@@ -64,11 +64,35 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
+
   """
   @spec render(t(), term(), keyword()) :: :ok
   def render(frame, term, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to])
-    GenServer.cast(frame.pid, {:render, term, opts[:to]})
+    opts = Keyword.validate!(opts, [:to, :temporary])
+    destination = update_destination_from_opts!(opts)
+    GenServer.cast(frame.pid, {:render, term, destination})
+  end
+
+  defp update_destination_from_opts!(opts) do
+    if to = opts[:to] do
+      if opts[:temporary] == false do
+        raise ArgumentError,
+              "direct updates sent via :to are never part of the frame history," <>
+                " disabling :temporary is not supported"
+      end
+
+      {:client, to}
+    else
+      if Keyword.get(opts, :temporary, false) do
+        :clients
+      else
+        :default
+      end
+    end
   end
 
   @doc """
@@ -80,11 +104,17 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
+
   """
   @spec append(t(), term(), keyword()) :: :ok
   def append(frame, term, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to])
-    GenServer.cast(frame.pid, {:append, term, opts[:to]})
+    opts = Keyword.validate!(opts, [:to, :temporary])
+    destination = update_destination_from_opts!(opts)
+    GenServer.cast(frame.pid, {:append, term, destination})
   end
 
   @doc """
@@ -96,11 +126,17 @@ defmodule Kino.Frame do
       option is useful when updating frame in response to client
       events, such as form submission
 
+    * `:temporary` - when `true`, the update is applied only to
+      the connected clients and doesn't become a part of frame
+      history. Defaults to `false`, unless `:to` is given. Direct
+      updates are never a part of frame history
+
   """
   @spec clear(t(), keyword()) :: :ok
   def clear(frame, opts \\ []) do
-    opts = Keyword.validate!(opts, [:to])
-    GenServer.cast(frame.pid, {:clear, opts[:to]})
+    opts = Keyword.validate!(opts, [:to, :temporary])
+    destination = update_destination_from_opts!(opts)
+    GenServer.cast(frame.pid, {:clear, destination})
   end
 
   @doc """
@@ -132,23 +168,23 @@ defmodule Kino.Frame do
   end
 
   @impl true
-  def handle_cast({:render, term, to}, state) do
+  def handle_cast({:render, term, destination}, state) do
     output = Kino.Render.to_livebook(term)
-    put_update(to, state.ref, [output], :replace)
-    state = %{state | outputs: [output]}
+    put_update(destination, state.ref, [output], :replace)
+    state = update_outputs(state, destination, fn _ -> [output] end)
     {:noreply, state}
   end
 
-  def handle_cast({:append, term, to}, state) do
+  def handle_cast({:append, term, destination}, state) do
     output = Kino.Render.to_livebook(term)
-    put_update(to, state.ref, [output], :append)
-    state = %{state | outputs: [output | state.outputs]}
+    put_update(destination, state.ref, [output], :append)
+    state = update_outputs(state, destination, &[output | &1])
     {:noreply, state}
   end
 
-  def handle_cast({:clear, to}, state) do
-    put_update(to, state.ref, [], :replace)
-    state = %{state | outputs: []}
+  def handle_cast({:clear, destination}, state) do
+    put_update(destination, state.ref, [], :replace)
+    state = update_outputs(state, destination, fn _ -> [] end)
     {:noreply, state}
   end
 
@@ -178,13 +214,19 @@ defmodule Kino.Frame do
     end
   end
 
-  defp put_update(to, ref, outputs, type) do
+  defp update_outputs(state, :default, update_fun) do
+    update_in(state.outputs, update_fun)
+  end
+
+  defp update_outputs(state, _destination, _update_fun), do: state
+
+  defp put_update(destination, ref, outputs, type) do
     output = Kino.Output.frame(outputs, %{ref: ref, type: type})
 
-    if to do
-      Kino.Bridge.put_output_to(to, output)
-    else
-      Kino.Bridge.put_output(output)
+    case destination do
+      :default -> Kino.Bridge.put_output(output)
+      {:client, to} -> Kino.Bridge.put_output_to(to, output)
+      :clients -> Kino.Bridge.put_output_to_clients(output)
     end
   end
 end

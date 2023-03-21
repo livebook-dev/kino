@@ -32,12 +32,28 @@ defmodule Kino.Bridge do
   end
 
   @doc """
-  Sends the given output as intermediate evaluation result to
-  a specific client.
+  Sends the given output as intermediate evaluation result directly
+  to a specific client.
   """
   @spec put_output_to(term(), Kino.Output.t()) :: :ok | {:error, request_error()}
   def put_output_to(client_id, output) do
     with {:ok, reply} <- io_request({:livebook_put_output_to, client_id, output}), do: reply
+  end
+
+  @doc """
+  Sends the given output as intermediate evaluation result directly
+  to all connected client.
+  """
+  @spec put_output_to_clients(Kino.Output.t()) :: :ok | {:error, request_error()}
+  def put_output_to_clients(output) do
+    io_request_result =
+      with {:error, :unsupported} <-
+             io_request({:livebook_put_output_to_clients, output}),
+           # Livebook v0.8.0 doesn't support direct clients output,
+           # so we fallback to a regular one
+           do: io_request({:livebook_put_output, output})
+
+    with {:ok, reply} <- io_request_result, do: reply
   end
 
   @doc """
