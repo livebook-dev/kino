@@ -323,8 +323,15 @@ defmodule Kino.JS.Live do
   @spec new(module(), term()) :: t()
   def new(module, init_arg) do
     ref = Kino.Output.random_ref()
-    {:ok, pid} = Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref}})
-    %__MODULE__{module: module, pid: pid, ref: ref}
+
+    case Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref}}) do
+      {:ok, pid} ->
+        %__MODULE__{module: module, pid: pid, ref: ref}
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "could not start Kino.JS.Live for #{module}, #{Exception.format_exit(reason)}"
+    end
   end
 
   @doc false
