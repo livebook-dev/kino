@@ -28,7 +28,7 @@ defmodule Kino.JS.LiveTest do
     test "handle_call/3 :noreply" do
       kino = LiveCounter.new(0)
       LiveCounter.bump(kino, 1)
-      count = LiveCounter.read_after(kino, 200)
+      count = LiveCounter.read_after(kino, 0)
       assert count == 1
     end
 
