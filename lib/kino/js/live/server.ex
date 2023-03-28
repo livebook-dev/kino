@@ -17,6 +17,8 @@ defmodule Kino.JS.Live.Server do
 
   defdelegate call(pid, term, timeout), to: GenServer
 
+  defdelegate reply(client, term), to: GenServer
+
   def broadcast_event(ctx, event, payload) do
     ref = ctx.__private__.ref
     Kino.Bridge.broadcast("js_live", ref, {:event, event, payload, %{ref: ref}})
@@ -47,8 +49,10 @@ defmodule Kino.JS.Live.Server do
 
   @impl true
   def handle_call(msg, from, state) do
-    {:reply, reply, ctx} = state.module.handle_call(msg, from, state.ctx)
-    {:reply, reply, %{state | ctx: ctx}}
+    case state.module.handle_call(msg, from, state.ctx) do
+      {:reply, reply, ctx} -> {:reply, reply, %{state | ctx: ctx}}
+      {:noreply, ctx} -> {:noreply, %{state | ctx: ctx}}
+    end
   end
 
   @impl true

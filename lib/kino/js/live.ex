@@ -190,6 +190,8 @@ defmodule Kino.JS.Live do
 
   @type payload :: term() | {:binary, info :: term(), binary()}
 
+  @type from :: GenServer.from()
+
   @doc """
   Invoked when the server is started.
 
@@ -263,7 +265,7 @@ defmodule Kino.JS.Live do
 
   See `c:GenServer.handle_call/3` for more details.
   """
-  @callback handle_call(msg :: term(), from :: term(), ctx :: Context.t()) ::
+  @callback handle_call(msg :: term(), from(), ctx :: Context.t()) ::
               {:noreply, ctx :: Context.t()} | {:reply, term(), ctx :: Context.t()}
 
   @doc """
@@ -366,6 +368,20 @@ defmodule Kino.JS.Live do
   @spec call(t(), term(), timeout()) :: term()
   def call(kino, term, timeout \\ 5_000) do
     Kino.JS.Live.Server.call(kino.pid, term, timeout)
+  end
+
+  @doc """
+  Replies to the kino server.
+
+  This function can be used to explicitly send a reply to the kino server
+  that called `call/3` when the reply cannot be specified in the return
+  value of `handle_call/3`.
+
+  See `GenServer.reply/2` for more details.
+  """
+  @spec reply(from(), term()) :: :ok
+  def reply(kino, term) do
+    Kino.JS.Live.Server.reply(kino, term)
   end
 
   @doc """

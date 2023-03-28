@@ -25,6 +25,13 @@ defmodule Kino.JS.LiveTest do
       assert count == 1
     end
 
+    test "handle_call/3 :noreply" do
+      kino = LiveCounter.new(0)
+      LiveCounter.bump(kino, 1)
+      count = LiveCounter.read_after(kino, 200)
+      assert count == 1
+    end
+
     test "handle_info/2" do
       kino = LiveCounter.new(0)
       send(kino.pid, {:ping, self()})
