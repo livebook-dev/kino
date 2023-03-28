@@ -14,6 +14,10 @@ defmodule Kino.TestModules.LiveCounter do
     Kino.JS.Live.call(kino, :read)
   end
 
+  def read_after(kino, after_ms) do
+    Kino.JS.Live.call(kino, {:read, after_ms})
+  end
+
   @impl true
   def init(count, ctx) do
     {:ok, assign(ctx, count: count)}
@@ -45,8 +49,20 @@ defmodule Kino.TestModules.LiveCounter do
   end
 
   @impl true
+  def handle_call({:read, after_ms}, from, ctx) do
+    Process.send_after(self(), {:read_reply, from}, after_ms)
+    {:noreply, ctx}
+  end
+
+  @impl true
   def handle_info({:ping, from}, ctx) do
     send(from, :pong)
+    {:noreply, ctx}
+  end
+
+  @impl true
+  def handle_info({:read_reply, from}, ctx) do
+    Kino.JS.Live.reply(from, ctx.assigns.count)
     {:noreply, ctx}
   end
 
