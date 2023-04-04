@@ -568,8 +568,9 @@ function LimitSelect({ limit, totalRows, onChange }) {
           onChange={(event) => onChange(parseInt(event.target.value))}
         >
           <option value="10">10</option>
-          <option value="15">15</option>
           <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
           <option value={totalRows}>All</option>
         </select>
       </form>
