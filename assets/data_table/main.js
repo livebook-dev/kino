@@ -363,15 +363,10 @@ function App({ ctx, data }) {
     }
   }, []);
 
-  const onHeaderClicked = useCallback(
-    (column, { localEventX, localEventY, bounds }) => {
-      const { id, type } = columns[column];
-      if (localEventX >= bounds.width - 50 && localEventY <= 25) {
-        setMenu({ column, bounds, columnKey: id, columnType: type });
-      }
-    },
-    []
-  );
+  const onHeaderClicked = useCallback((column, { bounds }) => {
+    const { id, type } = columns[column];
+    setMenu({ column, bounds, columnKey: id, columnType: type });
+  }, []);
 
   const onItemHovered = useCallback(
     (args) => {
