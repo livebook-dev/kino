@@ -507,6 +507,11 @@ defmodule Kino do
   The process is automatically terminated when the current process
   terminates or the current cell reevaluates.
 
+  If you want to terminate the started process, use
+  `terminate_child/1`. If you terminate the process manually,
+  the Kino supervisor might restart it if the child's `:restart`
+  strategy says so.
+
   > #### Nested start {: .warning}
   >
   > It is not possible to use `start_child/1` while initializing
@@ -530,5 +535,17 @@ defmodule Kino do
     gl = Process.group_leader()
     child_spec = %{child_spec | start: {Kino.Terminator, :start_child, [start, parent, gl]}}
     DynamicSupervisor.start_child(Kino.DynamicSupervisor, child_spec)
+  end
+
+  @doc """
+  Terminates a child started with `start_child/1`.
+
+  Returns `:ok` if the child was found and terminated, or
+  `{:error, :not_found}` if the child was not found.
+  """
+  @doc since: "0.9.1"
+  @spec terminate_child(pid()) :: :ok | {:error, :not_found}
+  def terminate_child(pid) when is_pid(pid) do
+    DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
   end
 end
