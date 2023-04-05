@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.1](https://github.com/livebook-dev/kino/tree/v0.9.1) (2023-03-29)
+
+### Added
+
+* Support for transient frame updates ([#272](https://github.com/livebook-dev/kino/pull/272))
+* Support for deferred reply in `Kino.JS.Live.handle_call/3` ([#274](https://github.com/livebook-dev/kino/pull/274))
+* More options for the number of table rows to show ([#275](https://github.com/livebook-dev/kino/pull/275))
+* Added `Kino.terminate_child/1` ([#276](https://github.com/livebook-dev/kino/pull/276))
+
 ## [v0.9.0](https://github.com/livebook-dev/kino/tree/v0.9.0) (2023-03-17)
 
 ### Added
