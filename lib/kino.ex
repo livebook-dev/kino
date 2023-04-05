@@ -543,7 +543,7 @@ defmodule Kino do
   Returns `:ok` if the child was found and terminated, or
   `{:error, :not_found}` if the child was not found.
   """
-  @doc since: "0.10.0"
+  @doc since: "0.9.1"
   @spec terminate_child(pid()) :: :ok | {:error, :not_found}
   def terminate_child(pid) when is_pid(pid) do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
