@@ -74,7 +74,7 @@ defmodule Kino.Frame do
   def render(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.cast(frame.pid, {:render, term, destination})
+    GenServer.call(frame.pid, {:render, term, destination})
   end
 
   defp update_destination_from_opts!(opts) do
@@ -114,7 +114,7 @@ defmodule Kino.Frame do
   def append(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.cast(frame.pid, {:append, term, destination})
+    GenServer.call(frame.pid, {:append, term, destination})
   end
 
   @doc """
@@ -168,20 +168,6 @@ defmodule Kino.Frame do
   end
 
   @impl true
-  def handle_cast({:render, term, destination}, state) do
-    output = Kino.Render.to_livebook(term)
-    put_update(destination, state.ref, [output], :replace)
-    state = update_outputs(state, destination, fn _ -> [output] end)
-    {:noreply, state}
-  end
-
-  def handle_cast({:append, term, destination}, state) do
-    output = Kino.Render.to_livebook(term)
-    put_update(destination, state.ref, [output], :append)
-    state = update_outputs(state, destination, &[output | &1])
-    {:noreply, state}
-  end
-
   def handle_cast({:clear, destination}, state) do
     put_update(destination, state.ref, [], :replace)
     state = update_outputs(state, destination, fn _ -> [] end)
@@ -194,6 +180,20 @@ defmodule Kino.Frame do
   end
 
   @impl true
+  def handle_call({:render, term, destination}, _from, state) do
+    output = Kino.Render.to_livebook(term)
+    put_update(destination, state.ref, [output], :replace)
+    state = update_outputs(state, destination, fn _ -> [output] end)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:append, term, destination}, _from, state) do
+    output = Kino.Render.to_livebook(term)
+    put_update(destination, state.ref, [output], :append)
+    state = update_outputs(state, destination, &[output | &1])
+    {:reply, :ok, state}
+  end
+
   def handle_call(:get_outputs, _from, state) do
     {:reply, state.outputs, state}
   end

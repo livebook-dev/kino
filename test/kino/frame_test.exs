@@ -39,6 +39,28 @@ defmodule Kino.FrameTest do
                  end
   end
 
+  test "render/2 references rendered kino before the caller terminates" do
+    frame = Kino.Frame.new()
+
+    myself = self()
+
+    Kino.async_listen([0], fn _i ->
+      kino = Kino.HTML.new("Hello")
+      send(myself, {:process, self(), kino.ref})
+      Kino.Frame.render(frame, kino)
+    end)
+
+    assert_receive {:process, pid, kino_ref}
+    ref = Process.monitor(pid)
+
+    frame_pid = frame.pid
+
+    assert_receive {:livebook_reference_object, ^kino_ref, ^pid}
+    assert_receive {:DOWN, ^ref, :process, _object, _reason}
+    # We should've already received the reference from the frame
+    assert_received {:livebook_reference_object, ^kino_ref, ^frame_pid}
+  end
+
   test "append/2 formats the given value into output and sends as :append frame" do
     frame = Kino.Frame.new()
 
