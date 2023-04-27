@@ -287,8 +287,7 @@ defmodule Kino do
   def animate(stream_or_interval_ms, state, fun)
 
   def animate(interval_ms, state, fun) when is_integer(interval_ms) and is_function(fun, 2) do
-    stream = Stream.interval(interval_ms) |> Stream.take(interval_ms)
-    animate(stream, state, fun)
+    animate(Stream.interval(interval_ms), state, fun)
   end
 
   def animate(stream, state, fun) when is_function(fun, 2) do
