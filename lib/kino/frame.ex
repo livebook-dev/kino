@@ -21,10 +21,10 @@ defmodule Kino.Frame do
 
       frame = Kino.Frame.new() |> Kino.render()
 
-      Kino.Frame.periodically(frame, 50, 0, fn i ->
+      Kino.listen(50, fn i ->
         Kino.Frame.render(frame, i)
-        {:cont, i + 1}
       end)
+
   """
 
   @doc false
@@ -139,21 +139,10 @@ defmodule Kino.Frame do
     GenServer.cast(frame.pid, {:clear, destination})
   end
 
-  @doc """
-  Registers a callback to run periodically in the frame process.
-
-  The callback is run every `interval_ms` milliseconds and receives
-  the accumulated value. The callback should return either of:
-
-    * `{:cont, acc}` - the continue with the new accumulated value
-
-    * `:halt` - to no longer schedule callback evaluation
-
-  The callback is run for the first time immediately upon registration.
-  """
-  @spec periodically(t(), pos_integer(), term(), (term() -> {:cont, term()} | :halt)) :: :ok
-  def periodically(frame, interval_ms, acc, fun) do
-    GenServer.cast(frame.pid, {:periodically, interval_ms, acc, fun})
+  # TODO: remove on v0.11.0
+  @deprecated "Use Kino.listen/3 instead"
+  def periodically(_frame, interval_ms, acc, fun) do
+    Kino.listen(interval_ms, acc, fn _i, acc -> fun.(acc) end)
   end
 
   @doc false
@@ -174,11 +163,6 @@ defmodule Kino.Frame do
     {:noreply, state}
   end
 
-  def handle_cast({:periodically, interval_ms, acc, fun}, state) do
-    periodically_iter(interval_ms, acc, fun)
-    {:noreply, state}
-  end
-
   @impl true
   def handle_call({:render, term, destination}, _from, state) do
     output = Kino.Render.to_livebook(term)
@@ -196,22 +180,6 @@ defmodule Kino.Frame do
 
   def handle_call(:get_outputs, _from, state) do
     {:reply, state.outputs, state}
-  end
-
-  @impl true
-  def handle_info({:periodically_iter, interval_ms, acc, fun}, state) do
-    periodically_iter(interval_ms, acc, fun)
-    {:noreply, state}
-  end
-
-  defp periodically_iter(interval_ms, acc, fun) do
-    case fun.(acc) do
-      {:cont, acc} ->
-        Process.send_after(self(), {:periodically_iter, interval_ms, acc, fun}, interval_ms)
-
-      :halt ->
-        :ok
-    end
   end
 
   defp update_outputs(state, :default, update_fun) do
