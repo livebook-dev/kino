@@ -136,7 +136,7 @@ function App({ ctx, data }) {
   const fixedHeight = 440 + headerHeight;
   const minRowsToFitMenu = hasSorting ? 3 : 2;
   const autoHeight =
-    totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
+    totalRows && totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
@@ -474,6 +474,7 @@ function App({ ctx, data }) {
             maxPage={content.max_page}
             onPrev={onPrev}
             onNext={onNext}
+            rows={rows}
           />
         )}
       </div>
@@ -566,14 +567,14 @@ function LimitSelect({ limit, totalRows, onChange }) {
           <option value="20">20</option>
           <option value="50">50</option>
           <option value="100">100</option>
-          <option value={totalRows}>All</option>
+          {totalRows ? <option value={totalRows}>All</option> : null}
         </select>
       </form>
     </div>
   );
 }
 
-function Pagination({ page, maxPage, onPrev, onNext }) {
+function Pagination({ page, maxPage, onPrev, onNext, rows }) {
   return (
     <div className="pagination">
       <button
@@ -592,7 +593,7 @@ function Pagination({ page, maxPage, onPrev, onNext }) {
       <button
         className="pagination__button"
         onClick={onNext}
-        disabled={page === maxPage}
+        disabled={page === maxPage || rows === 0}
       >
         <span>Next</span>
         <RiArrowRightSLine />
