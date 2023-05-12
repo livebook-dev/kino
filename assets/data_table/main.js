@@ -101,9 +101,11 @@ function App({ ctx, data }) {
   });
 
   const hasRefetch = data.features.includes("refetch");
+  const hasExport = data.features.includes("export");
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
+  const supportedFormats = data.info.export;
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -136,7 +138,9 @@ function App({ ctx, data }) {
   const fixedHeight = 440 + headerHeight;
   const minRowsToFitMenu = hasSorting ? 3 : 2;
   const autoHeight =
-    totalRows && totalRows < minRowsToFitMenu && menu ? menuHeight + headerHeight : null;
+    totalRows && totalRows < minRowsToFitMenu && menu
+      ? menuHeight + headerHeight
+      : null;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
@@ -422,6 +426,16 @@ function App({ ctx, data }) {
   }, []);
 
   useEffect(() => {
+    ctx.handleEvent("download_content", ({ data, filename, type, format }) => {
+      const blob = new Blob([data], { type: type });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `${filename}-${+new Date()}.${format}`;
+      link.click();
+    });
+  }, []);
+
+  useEffect(() => {
     const icon = content.order?.direction === "asc" ? "arrowUp" : "arrowDown";
     const newColumns = columns.map((header) => ({
       ...header,
@@ -458,6 +472,12 @@ function App({ ctx, data }) {
           </span>
           {totalRows < data.content.total_rows}
         </div>
+        {hasExport && (
+          <DownloadExported
+            supportedFormats={supportedFormats}
+            onDownload={(format) => ctx.pushEvent("download", { format })}
+          />
+        )}
         <div className="navigation__space"></div>
         {hasRefetch && (
           <RefetchButton onRefetch={() => ctx.pushEvent("refetch")} />
@@ -527,6 +547,44 @@ function App({ ctx, data }) {
         )}
       {!hasData && <p className="no-data">No data</p>}
       <div id="portal" />
+    </div>
+  );
+}
+
+function DownloadExported({ supportedFormats, onDownload }) {
+  const multipleFormats =
+    supportedFormats && supportedFormats.toString() !== ["csv"].toString();
+
+  if (multipleFormats) {
+    const formatsList = supportedFormats.map((format) => (
+      <option>{format}</option>
+    ));
+    return (
+      <div>
+        <form>
+          <select
+            className="input"
+            value=""
+            onChange={(event) => onDownload(event.target.value)}
+          >
+            <option selected disabled value="">
+              Export to
+            </option>
+            {formatsList}
+          </select>
+        </form>
+      </div>
+    );
+  }
+  return (
+    <div className="nav-button">
+      <button
+        className="button button--transparent"
+        aria-label="download"
+        onClick={() => onDownload("csv")}
+      >
+        Export to csv
+      </button>
     </div>
   );
 }

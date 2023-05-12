@@ -172,6 +172,19 @@ html {
   background-color: var(--gray-200);
 }
 
+.button--transparent {
+  background: transparent;
+  padding: 4px 8px;
+  border: 1px solid var(--gray-400);
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--gray-500);border-radius: 8px;
+}
+
+.button--transparent:hover {
+  background-color: var(--gray-100);
+}
+
 .input {
   appearance: none;
   padding: 4px 8px;
@@ -400,4 +413,9 @@ select option {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.nav-button {
+  position: relative;
+  top: 2px;
 }
