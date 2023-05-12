@@ -105,7 +105,8 @@ function App({ ctx, data }) {
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
-  const supportedFormats = data.info.export.formats || ["csv"];
+  const supportedFormats = hasExport ? data.export?.formats : null;
+  const showDownload = hasExport && supportedFormats;
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -472,7 +473,7 @@ function App({ ctx, data }) {
           </span>
           {totalRows < data.content.total_rows}
         </div>
-        {hasExport && (
+        {showDownload && (
           <DownloadExported
             supportedFormats={supportedFormats}
             onDownload={(format) => ctx.pushEvent("download", { format })}

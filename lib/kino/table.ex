@@ -100,7 +100,7 @@ defmodule Kino.Table do
     payload = %{
       name: ctx.assigns.info.name,
       features: ctx.assigns.info.features,
-      info: ctx.assigns.info,
+      export: ctx.assigns.info[:export],
       content: ctx.assigns.content
     }
 
