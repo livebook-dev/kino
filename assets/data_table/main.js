@@ -105,7 +105,7 @@ function App({ ctx, data }) {
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
-  const supportedFormats = data.info.export;
+  const supportedFormats = data.info.export || ["csv"];
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -552,39 +552,24 @@ function App({ ctx, data }) {
 }
 
 function DownloadExported({ supportedFormats, onDownload }) {
-  const multipleFormats =
-    supportedFormats && supportedFormats.toString() !== ["csv"].toString();
+  const formatsList = supportedFormats.map((format) => (
+    <option>{format}</option>
+  ));
 
-  if (multipleFormats) {
-    const formatsList = supportedFormats.map((format) => (
-      <option>{format}</option>
-    ));
-    return (
-      <div>
-        <form>
-          <select
-            className="input"
-            value=""
-            onChange={(event) => onDownload(event.target.value)}
-          >
-            <option selected disabled value="">
-              Export to
-            </option>
-            {formatsList}
-          </select>
-        </form>
-      </div>
-    );
-  }
   return (
-    <div className="nav-button">
-      <button
-        className="button button--transparent"
-        aria-label="download"
-        onClick={() => onDownload("csv")}
-      >
-        Export to csv
-      </button>
+    <div>
+      <form>
+        <select
+          className="input__icon"
+          value=""
+          onChange={(event) => onDownload(event.target.value)}
+        >
+          <option selected disabled value="">
+            Export to
+          </option>
+          {formatsList}
+        </select>
+      </form>
     </div>
   );
 }
