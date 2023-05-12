@@ -554,19 +554,21 @@ function DownloadExported({ supportedFormats, onDownload }) {
     <option>{format}</option>
   ));
   return (
-    <div>
-      <form>
-        <select
-          className="input__icon"
-          value=""
-          onChange={(event) => onDownload(event.target.value)}
-        >
-          <option selected disabled value="">
-            Export to
-          </option>
-          {formatsList}
-        </select>
-      </form>
+    <div className="download">
+      <span className="tooltip right" data-tooltip="Export to">
+        <form>
+          <select
+            className="input__icon"
+            value=""
+            onChange={(event) => onDownload(event.target.value)}
+          >
+            <option selected disabled value="">
+              Export to
+            </option>
+            {formatsList}
+          </select>
+        </form>
+      </span>
     </div>
   );
 }
@@ -587,7 +589,7 @@ function SearchButton({ toggleSearch }) {
         aria-label="search"
         onClick={toggleSearch}
       >
-        <RiSearch2Line />
+        <RiSearch2Line className="search-icon"/>
       </button>
     </span>
   );
