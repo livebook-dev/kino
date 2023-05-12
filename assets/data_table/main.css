@@ -172,6 +172,19 @@ html {
   background-color: var(--gray-200);
 }
 
+.button--transparent {
+  background: transparent;
+  padding: 4px 8px;
+  border: 1px solid var(--gray-400);
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--gray-500);border-radius: 8px;
+}
+
+.button--transparent:hover {
+  background-color: var(--gray-100);
+}
+
 .input {
   appearance: none;
   padding: 4px 8px;
@@ -205,6 +218,27 @@ select.input {
 
 select option {
   color: black;
+}
+
+select.input__icon {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 12H16L12 16L8 12H11V8H13V12ZM15 4H5V20H19V8H15V4ZM3 2.9918C3 2.44405 3.44749 2 3.9985 2H16L20.9997 7L21 20.9925C21 21.5489 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.5447 3 21.0082V2.9918Z' fill='rgba(97,117,138,1)'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center right 10px;
+  background-size: 14px;
+  padding-right: 28px;
+  border: none;
+  color: white;
+  width: 18px;
+}
+
+select.input__icon:hover {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 12H16L12 16L8 12H11V8H13V12ZM15 4H5V20H19V8H15V4ZM3 2.9918C3 2.44405 3.44749 2 3.9985 2H16L20.9997 7L21 20.9925C21 21.5489 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.5447 3 21.0082V2.9918Z' fill='rgba(28,42,58,1)'%3E%3C/path%3E%3C/svg%3E");
+}
+
+select.input__icon:focus {
+  outline: none;
 }
 
 .tooltip {

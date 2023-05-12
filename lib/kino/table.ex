@@ -7,8 +7,9 @@ defmodule Kino.Table do
   """
 
   @type info :: %{
-          name: String.t(),
-          features: list(:refetch | :pagination | :sorting)
+          :name => String.t(),
+          :features => list(:export | :refetch | :pagination | :sorting),
+          optional(:export) => %{formats: list(atom())}
         }
 
   @type rows_spec :: %{
@@ -41,6 +42,16 @@ defmodule Kino.Table do
                  data: {:columns | :rows, list(list(String.t()))},
                  total_rows: non_neg_integer() | nil
                }, state()}
+
+  @doc """
+  Exports the data for download.
+
+  The returned map must contain the binary, the file extension and the mime type.
+  """
+  @callback export_data(state(), atom()) ::
+              {:ok, %{data: binary(), extension: String.t(), type: String.t()}}
+
+  @optional_callbacks export_data: 2
 
   use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
@@ -89,6 +100,7 @@ defmodule Kino.Table do
     payload = %{
       name: ctx.assigns.info.name,
       features: ctx.assigns.info.features,
+      export: ctx.assigns.info[:export],
       content: ctx.assigns.content
     }
 
@@ -102,6 +114,14 @@ defmodule Kino.Table do
 
   def handle_event("refetch", _payload, ctx) do
     {:noreply, broadcast_update(ctx)}
+  end
+
+  def handle_event("download", %{"format" => format}, ctx) do
+    exported = ctx.assigns.module.export_data(ctx.assigns.state, String.to_atom(format))
+    info = %{filename: ctx.assigns.info.name, type: exported.type, format: exported.extension}
+    reply_payload = {:binary, info, exported.data}
+    send_event(ctx, ctx.origin, "download_content", reply_payload)
+    {:noreply, ctx}
   end
 
   def handle_event("limit", %{"limit" => limit}, ctx) do
