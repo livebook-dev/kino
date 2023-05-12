@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.4](https://github.com/livebook-dev/kino/tree/v0.9.4) (2023-05-12)
+
+### Added
+
+* Support for lazy tabular data ([#283](https://github.com/livebook-dev/kino/pull/283))
+* Download option to tabular outputs ([#284](https://github.com/livebook-dev/kino/pull/284))
+
 ## [v0.9.3](https://github.com/livebook-dev/kino/tree/v0.9.3) (2023-04-27)
 
 ### Fixed
