@@ -424,14 +424,11 @@ function App({ ctx, data }) {
     ctx.handleEvent("update_content", (content) => {
       setContent(content);
     });
-  }, []);
-
-  useEffect(() => {
     ctx.handleEvent("download_content", ([info, arrayBuffer]) => {
       const blob = new Blob([arrayBuffer], { type: info.type });
       const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
-      link.download = `${info.filename}-${+new Date()}.${info.format}`;
+      link.download = `${info.filename}-${+new Date()}${info.format}`;
       link.click();
     });
   }, []);
@@ -556,7 +553,6 @@ function DownloadExported({ supportedFormats, onDownload }) {
   const formatsList = supportedFormats.map((format) => (
     <option>{format}</option>
   ));
-
   return (
     <div>
       <form>
