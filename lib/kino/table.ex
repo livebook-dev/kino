@@ -9,7 +9,7 @@ defmodule Kino.Table do
   @type info :: %{
           :name => String.t(),
           :features => list(:export | :refetch | :pagination | :sorting),
-          optional(:export) => %{formats: list(atom())}
+          optional(:export) => %{formats: list(String.t())}
         }
 
   @type rows_spec :: %{
@@ -48,7 +48,7 @@ defmodule Kino.Table do
 
   The returned map must contain the binary, the file extension and the mime type.
   """
-  @callback export_data(state(), atom()) ::
+  @callback export_data(state(), String.t()) ::
               {:ok, %{data: binary(), extension: String.t(), type: String.t()}}
 
   @optional_callbacks export_data: 2
@@ -117,7 +117,7 @@ defmodule Kino.Table do
   end
 
   def handle_event("download", %{"format" => format}, ctx) do
-    exported = ctx.assigns.module.export_data(ctx.assigns.state, String.to_atom(format))
+    exported = ctx.assigns.module.export_data(ctx.assigns.state, format)
     info = %{filename: ctx.assigns.info.name, type: exported.type, format: exported.extension}
     reply_payload = {:binary, info, exported.data}
     send_event(ctx, ctx.origin, "download_content", reply_payload)
