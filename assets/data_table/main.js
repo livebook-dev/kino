@@ -105,7 +105,7 @@ function App({ ctx, data }) {
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
-  const supportedFormats = data.info.export || ["csv"];
+  const supportedFormats = data.info.export.formats || ["csv"];
 
   const emptySelection = {
     rows: CompactSelection.empty(),
@@ -426,11 +426,11 @@ function App({ ctx, data }) {
   }, []);
 
   useEffect(() => {
-    ctx.handleEvent("download_content", ({ data, filename, type, format }) => {
-      const blob = new Blob([data], { type: type });
+    ctx.handleEvent("download_content", ([info, arrayBuffer]) => {
+      const blob = new Blob([arrayBuffer], { type: info.type });
       const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
-      link.download = `${filename}-${+new Date()}.${format}`;
+      link.download = `${info.filename}-${+new Date()}.${info.format}`;
       link.click();
     });
   }, []);
