@@ -530,4 +530,17 @@ defmodule Kino do
   def terminate_child(pid) when is_pid(pid) do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
   end
+
+  @doc """
+  Interrupts evaluation with the given message.
+
+  This function raises a specific error to let Livebook known that
+  evaluation should be stopped. The error message is shown to the
+  user and they can retry evaluation with a button click, supposedly
+  after they resolve the interrupt reason.
+  """
+  @spec interrupt!(:normal | :error, String.t()) :: no_return()
+  def interrupt!(variant, message) when variant in [:normal, :error] and is_binary(message) do
+    raise Kino.InterruptError, variant: variant, message: message
+  end
 end
