@@ -385,9 +385,10 @@ defmodule Kino.JS do
 
       Mix.SCM.Git ->
         with {revision, 0} <- System.cmd("git", ["rev-parse", "HEAD"]),
-             revision <- String.trim(revision),
+             revision <- String.trim_trailing(revision),
              {remote_url, 0} <- System.cmd("git", ["config", "--get", "remote.origin.url"]),
-             [_, user_and_repo] <- Regex.run(~r/^.*github\.com[\/:](.*)\.git\n$/, remote_url) do
+             remote_url <- String.trim_trailing(remote_url),
+             [_, user_and_repo] <- Regex.run(~r/^.*github\.com[\/:](.*)\.git$/, remote_url) do
           "https://cdn.jsdelivr.net/gh/#{user_and_repo}@#{revision}/#{assets_path}"
         else
           _ -> nil
