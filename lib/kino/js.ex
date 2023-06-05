@@ -387,7 +387,7 @@ defmodule Kino.JS do
         with {revision, 0} <- System.cmd("git", ["rev-parse", "HEAD"]),
              revision <- String.trim(revision),
              {remote_url, 0} <- System.cmd("git", ["config", "--get", "remote.origin.url"]),
-             [_, user_and_repo] <- Regex.run(~r/\w+:\/\/github\.com\/(.*)\.git/, remote_url) do
+             [_, user_and_repo] <- Regex.run(~r/^.*github\.com[\/:](.*)\.git\n$/, remote_url) do
           "https://cdn.jsdelivr.net/gh/#{user_and_repo}@#{revision}/#{assets_path}"
         else
           _ -> nil
