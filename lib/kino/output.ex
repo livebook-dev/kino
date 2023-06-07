@@ -126,6 +126,10 @@ defmodule Kino.Output do
     * `:js_path` - a relative asset path pointing to the JavaScript
       entrypoint module
 
+    * `:cdn_url` - an absolute URL to a CDN directory where the asset
+      files can be accessed from. Note that this URL is not guaranteed
+      to be accessible, since it may be pointing to a private package
+
   ## Communication protocol
 
   A client process should connect to the server process by sending:
@@ -158,7 +162,8 @@ defmodule Kino.Output do
           assets: %{
             archive_path: String.t(),
             hash: String.t(),
-            js_path: String.t()
+            js_path: String.t(),
+            cdn_url: String.t() | nil
           }
         }
 

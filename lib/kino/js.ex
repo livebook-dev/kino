@@ -343,12 +343,18 @@ defmodule Kino.JS do
     archive_path = __assets_archive_path__(env.module, hash)
     package_assets!(assets, archive_path)
 
+    cdn_url =
+      unless any_inline_assets? do
+        __cdn_url__(assets_path)
+      end
+
     quote do
       def __assets_info__() do
         %{
           archive_path: Kino.JS.__assets_archive_path__(__MODULE__, unquote(hash)),
           js_path: "main.js",
-          hash: unquote(hash)
+          hash: unquote(hash),
+          cdn_url: unquote(cdn_url)
         }
       end
 
@@ -368,6 +374,29 @@ defmodule Kino.JS do
     |> Enum.reject(&File.dir?/1)
     |> Enum.map(&String.replace_leading(&1, path <> "/", ""))
     |> Enum.sort()
+  end
+
+  def __cdn_url__(assets_path) do
+    config = Mix.Project.config()
+
+    case config[:build_scm] do
+      Hex.SCM ->
+        "https://repo.hex.pm/preview/#{config[:app]}/#{config[:version]}/#{assets_path}"
+
+      Mix.SCM.Git ->
+        with {revision, 0} <- System.cmd("git", ["rev-parse", "HEAD"]),
+             revision <- String.trim_trailing(revision),
+             {remote_url, 0} <- System.cmd("git", ["config", "--get", "remote.origin.url"]),
+             remote_url <- String.trim_trailing(remote_url),
+             [_, user_and_repo] <- Regex.run(~r/^.*github\.com[\/:](.*)\.git$/, remote_url) do
+          "https://cdn.jsdelivr.net/gh/#{user_and_repo}@#{revision}/#{assets_path}"
+        else
+          _ -> nil
+        end
+
+      _scm ->
+        nil
+    end
   end
 
   defp package_assets!(assets, archive_path) do
