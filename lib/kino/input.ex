@@ -258,6 +258,218 @@ defmodule Kino.Input do
   end
 
   @doc """
+  Creates a new datetime input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to the
+      current time
+
+    * `:min` - the minimum datetime value
+
+    * `:max` - the maximum datetime value
+
+    * `:step` - the select datetime interval
+  """
+  @spec datetime(String.t(), keyword()) :: t()
+  def datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil)
+    max = Keyword.get(opts, :max, nil)
+    step = Keyword.get(opts, :step, 1)
+    default = Keyword.get(opts, :default, NaiveDateTime.utc_now())
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    if step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
+    # TODO: check if default value is valid
+
+    # TODO: check if default is between min and max
+
+    new(%{
+      type: :datetime,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step
+    })
+  end
+
+  @doc """
+  Creates a new time input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to now
+
+    * `:min` - the minimum time value
+
+    * `:max` - the maximum time value
+
+    * `:step` - the select time interval
+  """
+  @spec time(String.t(), keyword()) :: t()
+  def time(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil)
+    max = Keyword.get(opts, :max, nil)
+    step = Keyword.get(opts, :step, 1)
+    default = Keyword.get(opts, :default, Time.utc_now())
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    if step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
+    # TODO: check if default value is valid
+
+    # TODO: check if default is between min and max
+
+    new(%{
+      type: :time,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step
+    })
+  end
+
+  @doc """
+  Creates a new date input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to today
+
+    * `:min` - the minimum date value
+
+    * `:max` - the maximum date value
+
+    * `:step` - the select date interval
+  """
+  @spec date(String.t(), keyword()) :: t()
+  def date(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil)
+    max = Keyword.get(opts, :max, nil)
+    step = Keyword.get(opts, :step, 1)
+    default = Keyword.get(opts, :default, Date.utc_today())
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    if step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
+    # TODO: check if default value is valid
+
+    # TODO: check if default is between min and max
+
+    new(%{
+      type: :date,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step
+    })
+  end
+
+  @doc """
+  Creates a new week input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to the
+      minimum value
+
+    * `:min` - the minimum date value
+
+    * `:max` - the maximum date value
+
+    * `:step` - the select date interval
+  """
+  @spec week(String.t(), keyword()) :: t()
+  def week(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, "")
+    max = Keyword.get(opts, :max, "")
+    step = Keyword.get(opts, :step, 1)
+    default = Keyword.get(opts, :default, min)
+
+    # TODO: check if min < max
+
+    if step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
+    # TODO: check if default value is valid
+
+    # TODO: check if default is between min and max
+
+    new(%{
+      type: :week,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step
+    })
+  end
+
+  @doc """
+  Creates a new month input.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to the
+      minimum value
+
+    * `:min` - the minimum date value
+
+    * `:max` - the maximum date value
+
+    * `:step` - the select date interval
+  """
+  @spec month(String.t(), keyword()) :: t()
+  def month(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, "")
+    max = Keyword.get(opts, :max, "")
+    step = Keyword.get(opts, :step, 1)
+    default = Keyword.get(opts, :default, min)
+
+    # TODO: check if min < max
+
+    if step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
+    # TODO: check if default value is valid
+
+    # TODO: check if default is between min and max
+
+    new(%{
+      type: :month,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step
+    })
+  end
+
+  @doc """
   Creates a new color input.
 
   The input value can be a hex color string.

@@ -298,6 +298,61 @@ defmodule Kino.Output do
               step: number()
             }
           | %{
+              type: :datetime,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: NaiveDateTime.t(),
+              destination: Process.dest(),
+              min: NaiveDateTime.t(),
+              max: NaiveDateTime.t(),
+              step: number() | :any
+            }
+          | %{
+              type: :time,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: Time.t(),
+              destination: Process.dest(),
+              min: Time.t(),
+              max: Time.t(),
+              step: number() | :any
+            }
+          | %{
+              type: :date,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: Date.t(),
+              destination: Process.dest(),
+              min: Date.t(),
+              max: Date.t(),
+              step: number() | :any
+            }
+          | %{
+              type: :week,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: String.t(),
+              destination: Process.dest(),
+              min: String.t(),
+              max: String.t(),
+              step: number() | :any
+            }
+          | %{
+              type: :month,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: String.t(),
+              destination: Process.dest(),
+              min: String.t(),
+              max: String.t(),
+              step: number() | :any
+            }
+          | %{
               type: :color,
               ref: ref(),
               id: input_id(),
