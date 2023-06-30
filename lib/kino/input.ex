@@ -273,23 +273,30 @@ defmodule Kino.Input do
   """
   @spec datetime(String.t(), keyword()) :: t()
   def datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    min = Keyword.get(opts, :min, nil)
-    max = Keyword.get(opts, :max, nil)
-    step = Keyword.get(opts, :step, 1)
-    default = Keyword.get(opts, :default, NaiveDateTime.utc_now())
+    min = Keyword.get(opts, :min, nil) |> truncate_datetime()
+    max = Keyword.get(opts, :max, nil) |> truncate_datetime()
+    default = Keyword.get(opts, :default, NaiveDateTime.utc_now()) |> truncate_datetime()
 
     if min && max && min > max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
-    if step <= 0 do
-      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    assert_default_value!(
+      default,
+      "be a naivedatetime or nil",
+      &(is_struct(&1, NaiveDateTime) or &1 == nil)
+    )
+
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
     end
 
-    # TODO: check if default value is valid
-
-    # TODO: check if default is between min and max
+    if max && default && default > max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
 
     new(%{
       type: :datetime,
@@ -297,8 +304,16 @@ defmodule Kino.Input do
       default: default,
       min: min,
       max: max,
-      step: step
+      step: 60
     })
+  end
+
+  defp truncate_datetime(nil), do: nil
+
+  defp truncate_datetime(datetime) do
+    datetime
+    |> NaiveDateTime.truncate(:second)
+    |> Map.update!(:second, fn _ -> 0 end)
   end
 
   @doc """
@@ -316,23 +331,26 @@ defmodule Kino.Input do
   """
   @spec time(String.t(), keyword()) :: t()
   def time(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    min = Keyword.get(opts, :min, nil)
-    max = Keyword.get(opts, :max, nil)
-    step = Keyword.get(opts, :step, 1)
-    default = Keyword.get(opts, :default, Time.utc_now())
+    min = Keyword.get(opts, :min, nil) |> truncate_time()
+    max = Keyword.get(opts, :max, nil) |> truncate_time()
+    default = Keyword.get(opts, :default, Time.utc_now()) |> truncate_time()
 
     if min && max && min > max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
-    if step <= 0 do
-      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    assert_default_value!(default, "be a time or nil", &(is_struct(&1, Time) or &1 == nil))
+
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
     end
 
-    # TODO: check if default value is valid
-
-    # TODO: check if default is between min and max
+    if max && default && default > max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
 
     new(%{
       type: :time,
@@ -340,8 +358,16 @@ defmodule Kino.Input do
       default: default,
       min: min,
       max: max,
-      step: step
+      step: 60
     })
+  end
+
+  defp truncate_time(nil), do: nil
+
+  defp truncate_time(time) do
+    time
+    |> Time.truncate(:second)
+    |> Map.update!(:second, fn _ -> 0 end)
   end
 
   @doc """
@@ -373,9 +399,17 @@ defmodule Kino.Input do
       raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
     end
 
-    # TODO: check if default value is valid
+    assert_default_value!(default, "be a date or nil", &(is_struct(&1, Date) or &1 == nil))
 
-    # TODO: check if default is between min and max
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)}"
+    end
+
+    if max && default && default >= max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
 
     new(%{
       type: :date,
@@ -407,7 +441,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, nil)
     default = Keyword.get(opts, :default, min)
 
-    if min && max && min > max do
+    if min && max && min >= max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
@@ -418,12 +452,12 @@ defmodule Kino.Input do
 
     assert_default_value!(default, "be a tuple or nil", &(is_tuple(&1) or &1 == nil))
 
-    if min && default && default < min do
+    if min && default && default <= min do
       raise ArgumentError,
             "expected :default to be bigger than :min, got: #{inspect(default)}"
     end
 
-    if max && default && default > max do
+    if max && default && default >= max do
       raise ArgumentError,
             "expected :default to be smaller than :max, got: #{inspect(default)}"
     end
@@ -459,7 +493,7 @@ defmodule Kino.Input do
     min = Keyword.get(opts, :min, nil)
     default = Keyword.get(opts, :default, min)
 
-    if min && max && min > max do
+    if min && max && min >= max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
@@ -470,12 +504,12 @@ defmodule Kino.Input do
 
     assert_default_value!(default, "be a tuple or nil", &(is_tuple(&1) or &1 == nil))
 
-    if min && default && default < min do
+    if min && default && default <= min do
       raise ArgumentError,
             "expected :default to be bigger than :min, got: #{inspect(default)}"
     end
 
-    if max && default && default > max do
+    if max && default && default >= max do
       raise ArgumentError,
             "expected :default to be smaller than :max, got: #{inspect(default)}"
     end

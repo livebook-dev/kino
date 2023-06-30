@@ -302,10 +302,10 @@ defmodule Kino.Output do
               ref: ref(),
               id: input_id(),
               label: String.t(),
-              default: NaiveDateTime.t(),
+              default: NaiveDateTime.t() | nil,
               destination: Process.dest(),
-              min: NaiveDateTime.t(),
-              max: NaiveDateTime.t(),
+              min: NaiveDateTime.t() | nil,
+              max: NaiveDateTime.t() | nil,
               step: number()
             }
           | %{
@@ -313,10 +313,10 @@ defmodule Kino.Output do
               ref: ref(),
               id: input_id(),
               label: String.t(),
-              default: Time.t(),
+              default: Time.t() | nil,
               destination: Process.dest(),
-              min: Time.t(),
-              max: Time.t(),
+              min: Time.t() | nil,
+              max: Time.t() | nil,
               step: number()
             }
           | %{
@@ -335,10 +335,10 @@ defmodule Kino.Output do
               ref: ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t(),
+              default: tuple() | nil,
               destination: Process.dest(),
-              min: String.t(),
-              max: String.t(),
+              min: tuple() | nil,
+              max: tuple() | nil,
               step: number()
             }
           | %{
@@ -346,10 +346,10 @@ defmodule Kino.Output do
               ref: ref(),
               id: input_id(),
               label: String.t(),
-              default: String.t(),
+              default: tuple() | nil,
               destination: Process.dest(),
-              min: String.t(),
-              max: String.t(),
+              min: tuple() | nil,
+              max: tuple() | nil,
               step: number()
             }
           | %{
