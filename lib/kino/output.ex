@@ -306,7 +306,7 @@ defmodule Kino.Output do
               destination: Process.dest(),
               min: NaiveDateTime.t(),
               max: NaiveDateTime.t(),
-              step: number() | :any
+              step: number()
             }
           | %{
               type: :time,
@@ -317,7 +317,7 @@ defmodule Kino.Output do
               destination: Process.dest(),
               min: Time.t(),
               max: Time.t(),
-              step: number() | :any
+              step: number()
             }
           | %{
               type: :date,
@@ -328,7 +328,7 @@ defmodule Kino.Output do
               destination: Process.dest(),
               min: Date.t(),
               max: Date.t(),
-              step: number() | :any
+              step: number()
             }
           | %{
               type: :week,
@@ -339,7 +339,7 @@ defmodule Kino.Output do
               destination: Process.dest(),
               min: String.t(),
               max: String.t(),
-              step: number() | :any
+              step: number()
             }
           | %{
               type: :month,
@@ -350,7 +350,7 @@ defmodule Kino.Output do
               destination: Process.dest(),
               min: String.t(),
               max: String.t(),
-              step: number() | :any
+              step: number()
             }
           | %{
               type: :color,
