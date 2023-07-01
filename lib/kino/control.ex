@@ -36,7 +36,7 @@ defmodule Kino.Control do
 
   @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
-  @type event_source :: t() | Kino.Input.t() | interval()
+  @type event_source :: t() | Kino.Input.t() | interval() | Kino.JS.Live.t()
 
   defp new(attrs) do
     ref = Kino.Output.random_ref()
@@ -283,6 +283,10 @@ defmodule Kino.Control do
 
     * `Kino.Input` - emitting value on value change
 
+    * `Kino.JS.Live` - emitting value programmatically
+
+    * `interval` - emitting value periodically, see `interval/1`
+
   You can then consume the stream to access its events.
   The stream is typically consumed via `Kino.listen/2`.
 
@@ -307,7 +311,10 @@ defmodule Kino.Control do
   def stream(sources) when is_list(sources) do
     for source <- sources, do: assert_stream_source!(source)
 
-    tagged_topics = for %{attrs: %{ref: ref}} <- sources, do: {nil, ref}
+    tagged_topics =
+      for(%{attrs: %{ref: ref}} <- sources, do: {nil, ref}) ++
+        for(%Kino.JS.Live{ref: ref} <- sources, do: {nil, ref})
+
     tagged_intervals = for {:interval, ms} <- sources, do: {nil, ms}
 
     build_stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
@@ -345,7 +352,10 @@ defmodule Kino.Control do
       end
     end
 
-    tagged_topics = for {tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}
+    tagged_topics =
+      for({tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}) ++
+        for({tag, %Kino.JS.Live{ref: ref}} <- entries, do: {tag, ref})
+
     tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
 
     build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
@@ -353,6 +363,7 @@ defmodule Kino.Control do
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok
   defp assert_stream_source!(%Kino.Input{}), do: :ok
+  defp assert_stream_source!(%Kino.JS.Live{}), do: :ok
   defp assert_stream_source!({:interval, ms}) when is_number(ms) and ms > 0, do: :ok
 
   defp assert_stream_source!(item) do

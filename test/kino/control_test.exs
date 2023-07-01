@@ -109,6 +109,19 @@ defmodule Kino.ControlTest do
       events = button |> Kino.Control.stream() |> Enum.to_list()
       assert events == [%{origin: "client1"}]
     end
+
+    test "supports Kino.JS.Live" do
+      kino = Kino.TestModules.LiveCounter.new(0)
+
+      spawn(fn ->
+        Process.sleep(1)
+        Kino.TestModules.LiveCounter.bump(kino, 1)
+        Kino.TestModules.LiveCounter.bump(kino, 2)
+      end)
+
+      events = kino |> Kino.Control.stream() |> Enum.take(2)
+      assert events == [%{event: :bump, by: 1}, %{event: :bump, by: 2}]
+    end
   end
 
   describe "stream/1 with a list of sources" do

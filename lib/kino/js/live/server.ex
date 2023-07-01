@@ -35,6 +35,11 @@ defmodule Kino.JS.Live.Server do
     :ok
   end
 
+  def emit_event(ctx, event) do
+    send(Kino.SubscriptionManager, {:event, ctx.__private__.ref, event})
+    :ok
+  end
+
   @impl true
   def init({module, init_arg, ref}) do
     {:ok, ctx, _opts} = call_init(module, init_arg, ref)
