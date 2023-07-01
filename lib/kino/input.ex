@@ -301,7 +301,7 @@ defmodule Kino.Input do
       label: label,
       default: default,
       min: min,
-      max: max,
+      max: max
     })
   end
 
@@ -310,7 +310,7 @@ defmodule Kino.Input do
   defp truncate_datetime(datetime) do
     datetime
     |> NaiveDateTime.truncate(:second)
-    |> Map.update!(:second, fn _ -> 0 end)
+    |> Map.replace(:second, 0)
   end
 
   @doc """
@@ -323,8 +323,6 @@ defmodule Kino.Input do
     * `:min` - the minimum time value
 
     * `:max` - the maximum time value
-
-    * `:step` - the select time interval
   """
   @spec time(String.t(), keyword()) :: t()
   def time(label, opts \\ []) when is_binary(label) and is_list(opts) do
@@ -354,8 +352,7 @@ defmodule Kino.Input do
       label: label,
       default: default,
       min: min,
-      max: max,
-      step: 60
+      max: max
     })
   end
 
@@ -415,109 +412,6 @@ defmodule Kino.Input do
       min: min,
       max: max,
       step: step
-    })
-  end
-
-  @doc """
-  Creates a new week input.
-
-  ## Options
-
-    * `:default` - the initial input value. Defaults to the
-      minimum value
-
-    * `:min` - the minimum date value
-
-    * `:max` - the maximum date value
-    * `:step` - the select date interval
-  """
-  @spec week(String.t(), keyword()) :: t()
-  def week(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    step = Keyword.get(opts, :step, 1)
-    min = Keyword.get(opts, :min, nil)
-    max = Keyword.get(opts, :max, nil)
-    default = Keyword.get(opts, :default, min)
-
-    if min && max && min >= max do
-      raise ArgumentError,
-            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
-    end
-
-    if step <= 0 do
-      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
-    end
-
-    assert_default_value!(default, "be a tuple or nil", &(is_tuple(&1) or &1 == nil))
-
-    if min && default && default <= min do
-      raise ArgumentError,
-            "expected :default to be bigger than :min, got: #{inspect(default)}"
-    end
-
-    if max && default && default >= max do
-      raise ArgumentError,
-            "expected :default to be smaller than :max, got: #{inspect(default)}"
-    end
-
-    new(%{
-      type: :week,
-      label: label,
-      default: default,
-      min: min,
-      step: step,
-      max: max
-    })
-  end
-
-  @doc """
-  Creates a new month input.
-
-  ## Options
-
-    * `:default` - the initial input value. Defaults to the
-      minimum value
-
-    * `:min` - the minimum date value
-
-    * `:max` - the maximum date value
-
-    * `:step` - the select date interval
-  """
-  @spec month(String.t(), keyword()) :: t()
-  def month(label, opts \\ []) when is_binary(label) and is_list(opts) do
-    step = Keyword.get(opts, :step, 1)
-    max = Keyword.get(opts, :max, nil)
-    min = Keyword.get(opts, :min, nil)
-    default = Keyword.get(opts, :default, min)
-
-    if min && max && min >= max do
-      raise ArgumentError,
-            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
-    end
-
-    if step <= 0 do
-      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
-    end
-
-    assert_default_value!(default, "be a tuple or nil", &(is_tuple(&1) or &1 == nil))
-
-    if min && default && default <= min do
-      raise ArgumentError,
-            "expected :default to be bigger than :min, got: #{inspect(default)}"
-    end
-
-    if max && default && default >= max do
-      raise ArgumentError,
-            "expected :default to be smaller than :max, got: #{inspect(default)}"
-    end
-
-    new(%{
-      type: :month,
-      label: label,
-      default: default,
-      min: min,
-      step: step,
-      max: max
     })
   end
 

@@ -331,28 +331,6 @@ defmodule Kino.Output do
               step: number()
             }
           | %{
-              type: :week,
-              ref: ref(),
-              id: input_id(),
-              label: String.t(),
-              default: tuple() | nil,
-              destination: Process.dest(),
-              min: tuple() | nil,
-              max: tuple() | nil,
-              step: number()
-            }
-          | %{
-              type: :month,
-              ref: ref(),
-              id: input_id(),
-              label: String.t(),
-              default: tuple() | nil,
-              destination: Process.dest(),
-              min: tuple() | nil,
-              max: tuple() | nil,
-              step: number()
-            }
-          | %{
               type: :color,
               ref: ref(),
               id: input_id(),
