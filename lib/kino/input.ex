@@ -268,8 +268,6 @@ defmodule Kino.Input do
     * `:min` - the minimum datetime value
 
     * `:max` - the maximum datetime value
-
-    * `:step` - the select datetime interval
   """
   @spec datetime(String.t(), keyword()) :: t()
   def datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
@@ -304,7 +302,6 @@ defmodule Kino.Input do
       default: default,
       min: min,
       max: max,
-      step: 60
     })
   end
 
@@ -367,7 +364,7 @@ defmodule Kino.Input do
   defp truncate_time(time) do
     time
     |> Time.truncate(:second)
-    |> Map.update!(:second, fn _ -> 0 end)
+    |> Map.replace!(:second, 0)
   end
 
   @doc """
