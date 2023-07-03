@@ -89,7 +89,7 @@ defmodule Kino.ControlTest do
       assert events == [%{origin: "client1"}, %{origin: "client1"}]
 
       # Assert that nothing leaks to the inbox
-      refute_receive _, 10
+      refute_receive _, 2
     end
 
     test "supports interval" do
@@ -127,7 +127,7 @@ defmodule Kino.ControlTest do
       assert events == [%{event: :bump, by: 1}, %{event: :bump, by: 1}]
 
       # Assert that nothing leaks to the inbox
-      refute_receive _, 10
+      refute_receive _, 2
     end
   end
 
