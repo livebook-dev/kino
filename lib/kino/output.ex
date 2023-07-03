@@ -298,6 +298,36 @@ defmodule Kino.Output do
               step: number()
             }
           | %{
+              type: :utc_datetime,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: NaiveDateTime.t() | nil,
+              destination: Process.dest(),
+              min: NaiveDateTime.t() | nil,
+              max: NaiveDateTime.t() | nil
+            }
+          | %{
+              type: :utc_time,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: Time.t() | nil,
+              destination: Process.dest(),
+              min: Time.t() | nil,
+              max: Time.t() | nil
+            }
+          | %{
+              type: :date,
+              ref: ref(),
+              id: input_id(),
+              label: String.t(),
+              default: Date.t(),
+              destination: Process.dest(),
+              min: Date.t(),
+              max: Date.t()
+            }
+          | %{
               type: :color,
               ref: ref(),
               id: input_id(),

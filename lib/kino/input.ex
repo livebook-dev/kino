@@ -258,6 +258,163 @@ defmodule Kino.Input do
   end
 
   @doc """
+  Creates a new datetime input.
+
+  The input is editable in user-local time zone, however the value
+  is always read in UTC as a `%NaiveDateTime{}` struct.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to `nil`
+
+    * `:min` - the minimum datetime value (in UTC)
+
+    * `:max` - the maximum datetime value (in UTC)
+  """
+  @spec utc_datetime(String.t(), keyword()) :: t()
+  def utc_datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil) |> truncate_datetime()
+    max = Keyword.get(opts, :max, nil) |> truncate_datetime()
+    default = Keyword.get(opts, :default, nil) |> truncate_datetime()
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    assert_default_value!(
+      default,
+      "be %NaiveDateTime{} or nil",
+      &(is_struct(&1, NaiveDateTime) or &1 == nil)
+    )
+
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
+    end
+
+    if max && default && default > max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
+
+    new(%{
+      type: :utc_datetime,
+      label: label,
+      default: default,
+      min: min,
+      max: max
+    })
+  end
+
+  defp truncate_datetime(nil), do: nil
+
+  defp truncate_datetime(datetime) do
+    datetime
+    |> NaiveDateTime.truncate(:second)
+    |> Map.replace!(:second, 0)
+  end
+
+  @doc """
+  Creates a new time input.
+
+  The input is editable in user-local time zone, however the value
+  is always read in UTC as a `%Time{}` struct.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to `nil`
+
+    * `:min` - the minimum time value (in UTC)
+
+    * `:max` - the maximum time value (in UTC)
+  """
+  @spec utc_time(String.t(), keyword()) :: t()
+  def utc_time(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil) |> truncate_time()
+    max = Keyword.get(opts, :max, nil) |> truncate_time()
+    default = Keyword.get(opts, :default, nil) |> truncate_time()
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    assert_default_value!(default, "be %Time{} or nil", &(is_struct(&1, Time) or &1 == nil))
+
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
+    end
+
+    if max && default && default > max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
+
+    new(%{
+      type: :utc_time,
+      label: label,
+      default: default,
+      min: min,
+      max: max
+    })
+  end
+
+  defp truncate_time(nil), do: nil
+
+  defp truncate_time(time) do
+    time
+    |> Time.truncate(:second)
+    |> Map.replace!(:second, 0)
+  end
+
+  @doc """
+  Creates a new date input.
+
+  The input is read as a `%Date{}` struct.
+
+  ## Options
+
+    * `:default` - the initial input value. Defaults to `nil`
+
+    * `:min` - the minimum date value
+
+    * `:max` - the maximum date value
+  """
+  @spec date(String.t(), keyword()) :: t()
+  def date(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil)
+    max = Keyword.get(opts, :max, nil)
+    default = Keyword.get(opts, :default, nil)
+
+    if min && max && min > max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
+
+    assert_default_value!(default, "be %Date{} or nil", &(is_struct(&1, Date) or &1 == nil))
+
+    if min && default && default <= min do
+      raise ArgumentError,
+            "expected :default to be bigger than :min, got: #{inspect(default)}"
+    end
+
+    if max && default && default >= max do
+      raise ArgumentError,
+            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    end
+
+    new(%{
+      type: :date,
+      label: label,
+      default: default,
+      min: min,
+      max: max
+    })
+  end
+
+  @doc """
   Creates a new color input.
 
   The input value can be a hex color string.
