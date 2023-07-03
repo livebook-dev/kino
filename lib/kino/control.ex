@@ -309,15 +309,25 @@ defmodule Kino.Control do
   def stream(source)
 
   def stream(sources) when is_list(sources) do
-    for source <- sources, do: assert_stream_source!(source)
+    {tagged_topics, tagged_intervals} =
+      for source <- sources, reduce: {[], []} do
+        {tagged_topics, tagged_intervals} ->
+          assert_stream_source!(source)
 
-    tagged_topics =
-      for(%{attrs: %{ref: ref}} <- sources, do: {nil, ref}) ++
-        for(%Kino.JS.Live{ref: ref} <- sources, do: {nil, ref})
+          case source do
+            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+              {[{nil, ref} | tagged_topics], tagged_intervals}
 
-    tagged_intervals = for {:interval, ms} <- sources, do: {nil, ms}
+            %Kino.JS.Live{ref: ref} ->
+              {[{nil, ref} | tagged_topics], tagged_intervals}
 
-    build_stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
+            {:interval, ms} ->
+              {tagged_topics, [{nil, ms} | tagged_intervals]}
+          end
+      end
+
+    # Preserve original intervals order as it impacts the events order
+    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn nil, event -> event end)
   end
 
   def stream(source) do
@@ -342,23 +352,32 @@ defmodule Kino.Control do
   """
   @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do
-    for entry <- entries do
-      case entry do
-        {tag, source} when is_atom(tag) ->
-          assert_stream_source!(source)
+    {tagged_topics, tagged_intervals} =
+      for entry <- entries, reduce: {[], []} do
+        {tagged_topics, tagged_intervals} ->
+          case entry do
+            {tag, source} when is_atom(tag) ->
+              assert_stream_source!(source)
 
-        _other ->
-          raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+            _other ->
+              raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+          end
+
+          {tag, source} = entry
+
+          case source do
+            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+              {[{tag, ref} | tagged_topics], tagged_intervals}
+
+            %Kino.JS.Live{ref: ref} ->
+              {[{tag, ref} | tagged_topics], tagged_intervals}
+
+            {:interval, ms} ->
+              {tagged_topics, [{tag, ms} | tagged_intervals]}
+          end
       end
-    end
 
-    tagged_topics =
-      for({tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}) ++
-        for({tag, %Kino.JS.Live{ref: ref}} <- entries, do: {tag, ref})
-
-    tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
-
-    build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
+    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn tag, event -> {tag, event} end)
   end
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok
