@@ -260,20 +260,22 @@ defmodule Kino.Input do
   @doc """
   Creates a new datetime input.
 
+  The input is editable in user-local time zone, however the value
+  is always read in UTC as a `%NaiveDateTime{}` struct.
+
   ## Options
 
-    * `:default` - the initial input value. Defaults to the
-      current time
+    * `:default` - the initial input value. Defaults to `nil`
 
-    * `:min` - the minimum datetime value
+    * `:min` - the minimum datetime value (in UTC)
 
-    * `:max` - the maximum datetime value
+    * `:max` - the maximum datetime value (in UTC)
   """
-  @spec datetime(String.t(), keyword()) :: t()
-  def datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
+  @spec utc_datetime(String.t(), keyword()) :: t()
+  def utc_datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
     min = Keyword.get(opts, :min, nil) |> truncate_datetime()
     max = Keyword.get(opts, :max, nil) |> truncate_datetime()
-    default = Keyword.get(opts, :default, NaiveDateTime.utc_now()) |> truncate_datetime()
+    default = Keyword.get(opts, :default, nil) |> truncate_datetime()
 
     if min && max && min > max do
       raise ArgumentError,
@@ -282,7 +284,7 @@ defmodule Kino.Input do
 
     assert_default_value!(
       default,
-      "be a naivedatetime or nil",
+      "be %NaiveDateTime{} or nil",
       &(is_struct(&1, NaiveDateTime) or &1 == nil)
     )
 
@@ -297,7 +299,7 @@ defmodule Kino.Input do
     end
 
     new(%{
-      type: :datetime,
+      type: :utc_datetime,
       label: label,
       default: default,
       min: min,
@@ -310,32 +312,35 @@ defmodule Kino.Input do
   defp truncate_datetime(datetime) do
     datetime
     |> NaiveDateTime.truncate(:second)
-    |> Map.replace(:second, 0)
+    |> Map.replace!(:second, 0)
   end
 
   @doc """
   Creates a new time input.
 
+  The input is editable in user-local time zone, however the value
+  is always read in UTC as a `%Time{}` struct.
+
   ## Options
 
-    * `:default` - the initial input value. Defaults to now
+    * `:default` - the initial input value. Defaults to `nil`
 
-    * `:min` - the minimum time value
+    * `:min` - the minimum time value (in UTC)
 
-    * `:max` - the maximum time value
+    * `:max` - the maximum time value (in UTC)
   """
-  @spec time(String.t(), keyword()) :: t()
-  def time(label, opts \\ []) when is_binary(label) and is_list(opts) do
+  @spec utc_time(String.t(), keyword()) :: t()
+  def utc_time(label, opts \\ []) when is_binary(label) and is_list(opts) do
     min = Keyword.get(opts, :min, nil) |> truncate_time()
     max = Keyword.get(opts, :max, nil) |> truncate_time()
-    default = Keyword.get(opts, :default, Time.utc_now()) |> truncate_time()
+    default = Keyword.get(opts, :default, nil) |> truncate_time()
 
     if min && max && min > max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
-    assert_default_value!(default, "be a time or nil", &(is_struct(&1, Time) or &1 == nil))
+    assert_default_value!(default, "be %Time{} or nil", &(is_struct(&1, Time) or &1 == nil))
 
     if min && default && default <= min do
       raise ArgumentError,
@@ -348,7 +353,7 @@ defmodule Kino.Input do
     end
 
     new(%{
-      type: :time,
+      type: :utc_time,
       label: label,
       default: default,
       min: min,
@@ -367,33 +372,28 @@ defmodule Kino.Input do
   @doc """
   Creates a new date input.
 
+  The input is read as a `%Date{}` struct.
+
   ## Options
 
-    * `:default` - the initial input value. Defaults to today
+    * `:default` - the initial input value. Defaults to `nil`
 
     * `:min` - the minimum date value
 
     * `:max` - the maximum date value
-
-    * `:step` - the select date interval
   """
   @spec date(String.t(), keyword()) :: t()
   def date(label, opts \\ []) when is_binary(label) and is_list(opts) do
     min = Keyword.get(opts, :min, nil)
     max = Keyword.get(opts, :max, nil)
-    step = Keyword.get(opts, :step, 1)
-    default = Keyword.get(opts, :default, Date.utc_today())
+    default = Keyword.get(opts, :default, nil)
 
     if min && max && min > max do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
-    if step <= 0 do
-      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
-    end
-
-    assert_default_value!(default, "be a date or nil", &(is_struct(&1, Date) or &1 == nil))
+    assert_default_value!(default, "be %Date{} or nil", &(is_struct(&1, Date) or &1 == nil))
 
     if min && default && default <= min do
       raise ArgumentError,
@@ -410,8 +410,7 @@ defmodule Kino.Input do
       label: label,
       default: default,
       min: min,
-      max: max,
-      step: step
+      max: max
     })
   end
 
