@@ -210,7 +210,7 @@ defmodule Kino.DataTableTest do
   test "supports sliceable data" do
     entries = %{x: 1..3, y: 1..3}
 
-    kino = Kino.DataTable.new(entries)
+    kino = Kino.DataTable.new(entries, keys: [:x, :y])
     data = connect(kino)
 
     assert %{
@@ -225,7 +225,7 @@ defmodule Kino.DataTableTest do
   test "correctly paginates sliceable data" do
     entries = %{x: 1..30, y: 1..30}
 
-    kino = Kino.DataTable.new(entries)
+    kino = Kino.DataTable.new(entries, keys: [:x, :y])
     data = connect(kino)
 
     assert %{

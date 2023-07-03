@@ -169,7 +169,7 @@ defmodule Kino.Process do
   block in order to render the visual. In addition, this function returns the result
   from the provided trace function.
   """
-  @spec render_seq_trace(trace_target(), (() -> any())) :: any()
+  @spec render_seq_trace(trace_target(), (-> any())) :: any()
   def render_seq_trace(trace_target \\ :all, trace_function) do
     {func_result, sequence_diagram} = seq_trace(trace_target, trace_function)
     Kino.render(sequence_diagram)
@@ -245,7 +245,7 @@ defmodule Kino.Process do
         Agent.stop(agent_pid)
       end)
   """
-  @spec seq_trace(trace_target(), (() -> any())) :: {any(), Mermaid.t()}
+  @spec seq_trace(trace_target(), (-> any())) :: {any(), Mermaid.t()}
   def seq_trace(trace_target \\ :all, trace_function)
 
   def seq_trace(pid, trace_function) when is_pid(pid) do
