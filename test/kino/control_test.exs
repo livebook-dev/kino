@@ -70,7 +70,7 @@ defmodule Kino.ControlTest do
   describe "stream/1" do
     test "raises on invalid argument" do
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{}, %Kino.JS.Live{} or {:interval, ms}, got: 10",
                    fn ->
                      Kino.Control.stream(10)
                    end
@@ -79,16 +79,17 @@ defmodule Kino.ControlTest do
     test "returns control event feed" do
       button = Kino.Control.button("Name")
 
-      spawn(fn ->
-        Process.sleep(1)
+      background_tick(fn ->
         info = %{origin: "client1"}
-        send(button.attrs.destination, {:event, button.attrs.ref, info})
         send(button.attrs.destination, {:event, button.attrs.ref, info})
       end)
 
       events = button |> Kino.Control.stream() |> Enum.take(2)
 
       assert events == [%{origin: "client1"}, %{origin: "client1"}]
+
+      # Assert that nothing leaks to the inbox
+      refute_receive _, 10
     end
 
     test "supports interval" do
@@ -99,35 +100,41 @@ defmodule Kino.ControlTest do
     test "halts when the topic is cleared" do
       button = Kino.Control.button("Name")
 
-      spawn(fn ->
-        Process.sleep(1)
+      background_tick(fn ->
         info = %{origin: "client1"}
         send(button.attrs.destination, {:event, button.attrs.ref, info})
-        send(button.attrs.destination, {:clear_topic, button.attrs.ref})
       end)
 
-      events = button |> Kino.Control.stream() |> Enum.to_list()
-      assert events == [%{origin: "client1"}]
+      events =
+        button
+        |> Kino.Control.stream()
+        |> Enum.map(fn event ->
+          send(button.attrs.destination, {:clear_topic, button.attrs.ref})
+          event
+        end)
+
+      assert [%{origin: "client1"} | _] = events
     end
 
     test "supports Kino.JS.Live" do
       kino = Kino.TestModules.LiveCounter.new(0)
 
-      spawn(fn ->
-        Process.sleep(1)
+      background_tick(fn ->
         Kino.TestModules.LiveCounter.bump(kino, 1)
-        Kino.TestModules.LiveCounter.bump(kino, 2)
       end)
 
       events = kino |> Kino.Control.stream() |> Enum.take(2)
-      assert events == [%{event: :bump, by: 1}, %{event: :bump, by: 2}]
+      assert events == [%{event: :bump, by: 1}, %{event: :bump, by: 1}]
+
+      # Assert that nothing leaks to the inbox
+      refute_receive _, 10
     end
   end
 
   describe "stream/1 with a list of sources" do
     test "raises on invalid source" do
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{}, %Kino.JS.Live{} or {:interval, ms}, got: 10",
                    fn ->
                      Kino.Control.stream([10])
                    end
@@ -137,16 +144,14 @@ defmodule Kino.ControlTest do
       button = Kino.Control.button("Click")
       input = Kino.Input.text("Name")
 
-      spawn(fn ->
-        Process.sleep(1)
-        info = %{origin: "client1"}
-        send(button.attrs.destination, {:event, button.attrs.ref, info})
-        send(button.attrs.destination, {:event, input.attrs.ref, info})
+      background_tick(fn ->
+        send(button.attrs.destination, {:event, button.attrs.ref, %{origin: "client1"}})
+        send(button.attrs.destination, {:event, input.attrs.ref, %{origin: "client2"}})
       end)
 
       events = [button, input] |> Kino.Control.stream() |> Enum.take(2)
 
-      assert events == [%{origin: "client1"}, %{origin: "client1"}]
+      assert Enum.sort(events) == [%{origin: "client1"}, %{origin: "client2"}]
     end
   end
 
@@ -157,7 +162,7 @@ defmodule Kino.ControlTest do
       end
 
       assert_raise ArgumentError,
-                   "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: 10",
+                   "expected source to be either %Kino.Control{}, %Kino.Input{}, %Kino.JS.Live{} or {:interval, ms}, got: 10",
                    fn ->
                      Kino.Control.tagged_stream(name: 10)
                    end
@@ -167,11 +172,9 @@ defmodule Kino.ControlTest do
       button = Kino.Control.button("Click")
       input = Kino.Input.text("Name")
 
-      spawn(fn ->
-        Process.sleep(1)
-        info = %{origin: "client1"}
-        send(button.attrs.destination, {:event, button.attrs.ref, info})
-        send(input.attrs.destination, {:event, input.attrs.ref, info})
+      background_tick(fn ->
+        send(button.attrs.destination, {:event, button.attrs.ref, %{origin: "client1"}})
+        send(input.attrs.destination, {:event, input.attrs.ref, %{origin: "client2"}})
       end)
 
       events =
@@ -179,7 +182,21 @@ defmodule Kino.ControlTest do
         |> Kino.Control.tagged_stream()
         |> Enum.take(2)
 
-      assert events == [{:click, %{origin: "client1"}}, {:name, %{origin: "client1"}}]
+      assert Enum.sort(events) == [{:click, %{origin: "client1"}}, {:name, %{origin: "client2"}}]
     end
+  end
+
+  defp background_tick(fun) do
+    pid =
+      spawn(fn ->
+        for _ <- Stream.cycle([:infinity]) do
+          Process.sleep(1)
+          fun.()
+        end
+      end)
+
+    on_exit(fn -> Process.exit(pid, :kill) end)
+
+    pid
   end
 end

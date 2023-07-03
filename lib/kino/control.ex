@@ -279,13 +279,13 @@ defmodule Kino.Control do
   It accepts a single source or a list of sources, where each
   source is either of:
 
-    * `Kino.Control` - emitting value on relevant interaction
+    * `%Kino.Control{}` - emitting value on relevant interaction
 
-    * `Kino.Input` - emitting value on value change
+    * `%Kino.Input{}` - emitting value on value change
 
-    * `Kino.JS.Live` - emitting value programmatically
+    * `%Kino.JS.Live{}` - emitting value programmatically
 
-    * `interval` - emitting value periodically, see `interval/1`
+    * `t:interval/0` - emitting value periodically, see `interval/1`
 
   You can then consume the stream to access its events.
   The stream is typically consumed via `Kino.listen/2`.
@@ -387,7 +387,7 @@ defmodule Kino.Control do
 
   defp assert_stream_source!(item) do
     raise ArgumentError,
-          "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: #{inspect(item)}"
+          "expected source to be either %Kino.Control{}, %Kino.Input{}, %Kino.JS.Live{} or {:interval, ms}, got: #{inspect(item)}"
   end
 
   defp build_stream(tagged_topics, tagged_intervals, mapper) do
