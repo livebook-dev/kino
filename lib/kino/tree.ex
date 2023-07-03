@@ -126,7 +126,7 @@ defmodule Kino.Tree do
 
   defp to_node(map, suffix) when is_map(map) do
     size = map_size(map)
-    children = to_key_value_children(map, size)
+    children = map |> Enum.sort() |> to_key_value_children(size)
 
     %{
       content: [black("%{...}") | suffix],

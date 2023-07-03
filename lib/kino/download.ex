@@ -41,7 +41,7 @@ defmodule Kino.Download do
       if present and `"Download"` otherwise
 
   """
-  @spec new((() -> binary()), keyword()) :: t()
+  @spec new((-> binary()), keyword()) :: t()
   def new(content_fun, opts \\ []) do
     opts = Keyword.validate!(opts, [:filename, :label])
     filename = opts[:filename] || "download"
