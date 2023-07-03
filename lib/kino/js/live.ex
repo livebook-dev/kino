@@ -294,7 +294,8 @@ defmodule Kino.JS.Live do
     quote location: :keep do
       @behaviour Kino.JS.Live
 
-      import Kino.JS.Live.Context, only: [assign: 2, update: 3, broadcast_event: 3, send_event: 4]
+      import Kino.JS.Live.Context,
+        only: [assign: 2, update: 3, broadcast_event: 3, send_event: 4, emit_event: 2]
 
       @before_compile Kino.JS.Live
     end
@@ -328,6 +329,8 @@ defmodule Kino.JS.Live do
 
     case Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref}}) do
       {:ok, pid} ->
+        subscription_manager = Kino.SubscriptionManager.cross_node_name()
+        Kino.Bridge.monitor_object(pid, subscription_manager, {:clear_topic, ref})
         %__MODULE__{module: module, pid: pid, ref: ref}
 
       {:error, reason} ->
@@ -393,4 +396,11 @@ defmodule Kino.JS.Live do
   def monitor(kino) do
     Process.monitor(kino.pid)
   end
+end
+
+defimpl Enumerable, for: Kino.JS.Live do
+  def reduce(kino, acc, fun), do: Enumerable.reduce(Kino.Control.stream([kino]), acc, fun)
+  def member?(_kino, _value), do: {:error, __MODULE__}
+  def count(_kino), do: {:error, __MODULE__}
+  def slice(_kino), do: {:error, __MODULE__}
 end

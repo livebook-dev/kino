@@ -68,6 +68,7 @@ defmodule Kino.TestModules.LiveCounter do
 
   defp bump_count(ctx, by) do
     broadcast_event(ctx, "bump", %{by: by})
+    emit_event(ctx, %{event: :bump, by: by})
     update(ctx, :count, &(&1 + by))
   end
 

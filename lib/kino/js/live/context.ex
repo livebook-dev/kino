@@ -81,4 +81,21 @@ defmodule Kino.JS.Live.Context do
   def send_event(%__MODULE__{} = ctx, client_id, event, payload \\ nil) when is_binary(event) do
     Kino.JS.Live.Server.send_event(ctx, client_id, event, payload)
   end
+
+  @doc """
+  Emits an event to processes subscribed to this kino.
+
+  Consumers may subscribe to events emitted by the given instance of
+  `Kino.JS.Live` using functions in the `Kino.Control` module, such
+  as `Kino.Control.stream/1`.
+
+  ## Examples
+
+      emit_event(ctx, %{event: :click, counter: 1})
+
+  """
+  @spec emit_event(t(), term()) :: :ok
+  def emit_event(%__MODULE__{} = ctx, event) do
+    Kino.JS.Live.Server.emit_event(ctx, event)
+  end
 end

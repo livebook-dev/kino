@@ -36,7 +36,7 @@ defmodule Kino.Control do
 
   @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
-  @type event_source :: t() | Kino.Input.t() | interval()
+  @type event_source :: t() | Kino.Input.t() | interval() | Kino.JS.Live.t()
 
   defp new(attrs) do
     ref = Kino.Output.random_ref()
@@ -279,9 +279,13 @@ defmodule Kino.Control do
   It accepts a single source or a list of sources, where each
   source is either of:
 
-    * `Kino.Control` - emitting value on relevant interaction
+    * `%Kino.Control{}` - emitting value on relevant interaction
 
-    * `Kino.Input` - emitting value on value change
+    * `%Kino.Input{}` - emitting value on value change
+
+    * `%Kino.JS.Live{}` - emitting value programmatically
+
+    * `t:interval/0` - emitting value periodically, see `interval/1`
 
   You can then consume the stream to access its events.
   The stream is typically consumed via `Kino.listen/2`.
@@ -305,12 +309,25 @@ defmodule Kino.Control do
   def stream(source)
 
   def stream(sources) when is_list(sources) do
-    for source <- sources, do: assert_stream_source!(source)
+    {tagged_topics, tagged_intervals} =
+      for source <- sources, reduce: {[], []} do
+        {tagged_topics, tagged_intervals} ->
+          assert_stream_source!(source)
 
-    tagged_topics = for %{attrs: %{ref: ref}} <- sources, do: {nil, ref}
-    tagged_intervals = for {:interval, ms} <- sources, do: {nil, ms}
+          case source do
+            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+              {[{nil, ref} | tagged_topics], tagged_intervals}
 
-    build_stream(tagged_topics, tagged_intervals, fn nil, event -> event end)
+            %Kino.JS.Live{ref: ref} ->
+              {[{nil, ref} | tagged_topics], tagged_intervals}
+
+            {:interval, ms} ->
+              {tagged_topics, [{nil, ms} | tagged_intervals]}
+          end
+      end
+
+    # Preserve original intervals order as it impacts the events order
+    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn nil, event -> event end)
   end
 
   def stream(source) do
@@ -335,29 +352,42 @@ defmodule Kino.Control do
   """
   @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do
-    for entry <- entries do
-      case entry do
-        {tag, source} when is_atom(tag) ->
-          assert_stream_source!(source)
+    {tagged_topics, tagged_intervals} =
+      for entry <- entries, reduce: {[], []} do
+        {tagged_topics, tagged_intervals} ->
+          case entry do
+            {tag, source} when is_atom(tag) ->
+              assert_stream_source!(source)
 
-        _other ->
-          raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+            _other ->
+              raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+          end
+
+          {tag, source} = entry
+
+          case source do
+            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+              {[{tag, ref} | tagged_topics], tagged_intervals}
+
+            %Kino.JS.Live{ref: ref} ->
+              {[{tag, ref} | tagged_topics], tagged_intervals}
+
+            {:interval, ms} ->
+              {tagged_topics, [{tag, ms} | tagged_intervals]}
+          end
       end
-    end
 
-    tagged_topics = for {tag, %{attrs: %{ref: ref}}} <- entries, do: {tag, ref}
-    tagged_intervals = for {tag, {:interval, ms}} <- entries, do: {tag, ms}
-
-    build_stream(tagged_topics, tagged_intervals, fn tag, event -> {tag, event} end)
+    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn tag, event -> {tag, event} end)
   end
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok
   defp assert_stream_source!(%Kino.Input{}), do: :ok
+  defp assert_stream_source!(%Kino.JS.Live{}), do: :ok
   defp assert_stream_source!({:interval, ms}) when is_number(ms) and ms > 0, do: :ok
 
   defp assert_stream_source!(item) do
     raise ArgumentError,
-          "expected source to be either %Kino.Control{}, %Kino.Input{} or {:interval, ms}, got: #{inspect(item)}"
+          "expected source to be either %Kino.Control{}, %Kino.Input{}, %Kino.JS.Live{} or {:interval, ms}, got: #{inspect(item)}"
   end
 
   defp build_stream(tagged_topics, tagged_intervals, mapper) do
