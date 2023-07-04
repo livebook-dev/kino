@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Added `Kino.interrupt/2` ([#288](https://github.com/livebook-dev/kino/pull/288))
 * CDN information to `Kino.JS` assets ([#289](https://github.com/livebook-dev/kino/pull/289))
-* Support for Kino.JS.Live as event source ([#294](https://github.com/livebook-dev/kino/pull/294))
+* Support for `Kino.JS.Live` as event source ([#294](https://github.com/livebook-dev/kino/pull/294))
 * Added datetime, time and date inputs ([#291](https://github.com/livebook-dev/kino/pull/291))
 * Added an option to disable frame placeholder ([#297](https://github.com/livebook-dev/kino/pull/297))
 
