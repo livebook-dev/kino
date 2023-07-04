@@ -30,21 +30,32 @@ defmodule Kino.Frame do
   @doc false
   use GenServer, restart: :temporary
 
-  defstruct [:ref, :pid]
+  defstruct [:ref, :pid, :placeholder]
 
-  @opaque t :: %__MODULE__{ref: String.t(), pid: pid()}
+  @opaque t :: %__MODULE__{
+            ref: String.t(),
+            pid: pid(),
+            placeholder: boolean()
+          }
 
   @typedoc false
   @type state :: %{outputs: list(Kino.Output.t())}
 
   @doc """
   Creates a new frame.
+
+  ## Options
+
+    * `:placeholder` - whether to render a placeholder when the frame
+      is empty. Defaults to `true`
+
   """
-  @spec new() :: t()
-  def new() do
+  @spec new(keyword()) :: t()
+  def new(opts \\ []) do
+    opts = Keyword.validate!(opts, placeholder: true)
     ref = System.unique_integer() |> Integer.to_string()
     {:ok, pid} = Kino.start_child({__MODULE__, ref})
-    %__MODULE__{ref: ref, pid: pid}
+    %__MODULE__{ref: ref, pid: pid, placeholder: opts[:placeholder]}
   end
 
   @doc false
