@@ -62,7 +62,7 @@ defimpl Kino.Render, for: Kino.Frame do
   def to_livebook(kino) do
     Kino.Bridge.reference_object(kino.pid, self())
     outputs = Kino.Frame.get_outputs(kino)
-    Kino.Output.frame(outputs, %{ref: kino.ref, type: :default})
+    Kino.Output.frame(outputs, %{ref: kino.ref, type: :default, placeholder: kino.placeholder})
   end
 end
 

@@ -178,10 +178,16 @@ defmodule Kino.Output do
   """
   @type frame :: {:frame, outputs :: list(t()), frame_info()}
 
-  @type frame_info :: %{
-          ref: frame_ref(),
-          type: :default | :replace | :append
-        }
+  @type frame_info ::
+          %{
+            ref: frame_ref(),
+            type: :default,
+            placeholder: boolean()
+          }
+          | %{
+              ref: frame_ref(),
+              type: :replace | :append
+            }
 
   @type frame_ref :: String.t()
 
