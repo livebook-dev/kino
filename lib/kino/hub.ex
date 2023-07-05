@@ -5,7 +5,7 @@ defmodule Kino.Hub do
 
   @type app_info ::
           %{type: :single}
-          | %{:type => :multi, optional(:creator) => user_info()}
+          | %{:type => :multi, optional(:started_by) => user_info()}
           | %{type: :none}
 
   @type user_info :: %{
@@ -18,7 +18,7 @@ defmodule Kino.Hub do
   @doc """
   Returns information about the running app.
 
-  Note that `:creator` information is only available for multi-session
+  Note that `:started_by` information is only available for multi-session
   apps when the app uses a Livebook Teams hub.
 
   Unless called from withing an app deployment, returns `%{type: :none}`.
