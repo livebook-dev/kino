@@ -177,6 +177,14 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Returns information about the running app.
+  """
+  @spec get_app_info() :: {:ok, map()} | {:error, request_error()}
+  def get_app_info() do
+    with {:ok, reply} <- io_request(:livebook_get_app_info), do: reply
+  end
+
+  @doc """
   Checks if the caller is running within Livebook context (group leader).
   """
   @spec within_livebook?() :: boolean()
