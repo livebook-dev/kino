@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Support for `Kino.JS.Live` as event source ([#294](https://github.com/livebook-dev/kino/pull/294))
 * Added datetime, time and date inputs ([#291](https://github.com/livebook-dev/kino/pull/291))
 * Added an option to disable frame placeholder ([#297](https://github.com/livebook-dev/kino/pull/297))
+* `Kino.Hub.app_info/0` for accessing app information ([#299](https://github.com/livebook-dev/kino/pull/299))
 
 ## [v0.9.4](https://github.com/livebook-dev/kino/tree/v0.9.4) (2023-05-12)
 
