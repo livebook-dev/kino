@@ -1,4 +1,4 @@
-defmodule Kino.Files do
+defmodule Kino.FS do
   @moduledoc """
   Provides access to notebook files.
   """
