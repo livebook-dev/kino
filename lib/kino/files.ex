@@ -31,4 +31,37 @@ defmodule Kino.Files do
         raise "failed to access file path, reason: #{inspect(reason)}"
     end
   end
+
+  @typep file_spec ::
+           %{
+             type: :local,
+             path: String.t()
+           }
+           | %{
+               type: :url,
+               url: String.t()
+             }
+           | %{
+               type: :s3,
+               bucket_url: String.t(),
+               region: String.t(),
+               access_key_id: String.t(),
+               secret_access_key: String.t(),
+               key: String.t()
+             }
+
+  @doc false
+  @spec file_spec(String.t()) :: file_spec()
+  def file_spec(name) do
+    case Kino.Bridge.get_file_entry_spec(name) do
+      {:ok, spec} ->
+        spec
+
+      {:error, message} when is_binary(message) ->
+        raise message
+
+      {:error, reason} when is_atom(reason) ->
+        raise "failed to access file spec, reason: #{inspect(reason)}"
+    end
+  end
 end
