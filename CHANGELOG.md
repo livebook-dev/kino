@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.10.0](https://github.com/livebook-dev/kino/tree/v0.10.0) (2023-07-10)
+
+### Added
+
+* Added `Kino.interrupt/2` ([#288](https://github.com/livebook-dev/kino/pull/288))
+* CDN information to `Kino.JS` assets ([#289](https://github.com/livebook-dev/kino/pull/289))
+* Support for `Kino.JS.Live` as event source ([#294](https://github.com/livebook-dev/kino/pull/294))
+* Added datetime, time and date inputs ([#291](https://github.com/livebook-dev/kino/pull/291))
+* Added an option to disable frame placeholder ([#297](https://github.com/livebook-dev/kino/pull/297))
+* `Kino.Hub.app_info/0` for accessing app information ([#299](https://github.com/livebook-dev/kino/pull/299))
+
 ## [v0.9.4](https://github.com/livebook-dev/kino/tree/v0.9.4) (2023-05-12)
 
 ### Added
