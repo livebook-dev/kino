@@ -5,6 +5,15 @@ defmodule Kino do
   Kino is the library used by Livebook to render rich and interactive
   outputs directly from your Elixir code.
 
+  ## Getting started
+
+  Livebook is distributed with a set of interactive tutorials and
+  examples, including some that specifically focus on Kino. If you're
+  just getting started, going through these is highly recommended.
+
+  You can access these notebooks by starting Livebook and clicking
+  on "Learn" in the sidebar.
+
   ## Built-in kinos
 
   Kino renders any data structure that implements the `Kino.Render`
@@ -477,6 +486,19 @@ defmodule Kino do
 
   @doc """
   Returns a special value that results in no visible output.
+
+  ## Examples
+
+  This is especially handy when you wish to suppress the default output
+  of a cell. For instance, a cell containing this would normally result
+  in verbose response output:
+
+      resp = Req.get!("https://example.org")
+
+  That output can be suppressed by appending a call to `nothing/0`:
+
+      resp = Req.get!("https://example.org")
+      Kino.nothing()
   """
   @spec nothing() :: nothing()
   def nothing() do
@@ -531,13 +553,27 @@ defmodule Kino do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
   end
 
-  @doc """
+  @doc ~S"""
   Interrupts evaluation with the given message.
 
   This function raises a specific error to let Livebook known that
   evaluation should be stopped. The error message is shown to the
   user and they can retry evaluation with a button click, supposedly
   after they resolve the interrupt reason.
+
+  ## Examples
+
+      text =
+        Kino.Input.text("Input")
+        |> Kino.render()
+        |> Kino.Input.read()
+
+      if text == "" do
+        Kino.interrupt!(:error, "Input required")
+      end
+
+      # This will not be run if the `interrupt!` is called above
+      Kino.Markdown.new("**You entered:** #{text}")
   """
   @spec interrupt!(:normal | :error, String.t()) :: no_return()
   def interrupt!(variant, message) when variant in [:normal, :error] and is_binary(message) do
