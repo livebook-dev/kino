@@ -548,6 +548,20 @@ defmodule Kino do
   evaluation should be stopped. The error message is shown to the
   user and they can retry evaluation with a button click, supposedly
   after they resolve the interrupt reason.
+
+  ## Examples
+
+      text =
+        Kino.Input.text("Input")
+        |> Kino.render()
+        |> Kino.Input.read()
+
+      if text == "" do
+        Kino.interrupt!(:error, "Input required")
+      end
+
+      # This will not be run if the `interrupt!` is called above
+      Kino.Markdown.new("**You entered:** \#{text}")
   """
   @spec interrupt!(:normal | :error, String.t()) :: no_return()
   def interrupt!(variant, message) when variant in [:normal, :error] and is_binary(message) do
