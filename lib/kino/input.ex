@@ -10,7 +10,7 @@ defmodule Kino.Input do
 
       input = Kino.Input.text("Name")
 
-  Then read the value at any later point:
+  Then read the value after the input has been rendered:
 
       name = Kino.Input.read(input)
 
@@ -657,7 +657,10 @@ defmodule Kino.Input do
 
   ## Examples
 
-      input = Kino.Input.text("Name")
+      input =
+        "Name"
+        |> Kino.Input.text()
+        |> Kino.render()
 
       Kino.Input.read(input)
   """
