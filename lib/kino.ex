@@ -487,6 +487,19 @@ defmodule Kino do
 
   @doc """
   Returns a special value that results in no visible output.
+
+  ## Examples
+
+  This is especially handy when you wish to suppress the default output
+  of a cell. For instance, a cell containing this would normally result
+  in verbose response output:
+
+      resp = Req.get!("https://example.org")
+
+  That output can be suppressed by appending a call to `nothing/0`:
+
+      resp = Req.get!("https://example.org")
+      Kino.nothing()
   """
   @spec nothing() :: nothing()
   def nothing() do
