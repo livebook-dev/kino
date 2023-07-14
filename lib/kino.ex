@@ -5,6 +5,16 @@ defmodule Kino do
   Kino is the library used by Livebook to render rich and interactive
   outputs directly from your Elixir code.
 
+  ## Getting started
+
+  Livebook is distributed with a set of interactive tutorials and
+  examples, including some that specifically focus on Kino. If you're
+  just getting started, going through these is highly recommended.
+
+  You can access these notebooks by starting Livebook and clicking
+  on "Learn" in the sidebar. (Or, if you're running Livebook locally,
+  by visiting [localhost:8080/learn](http://localhost:8080/learn).)
+
   ## Built-in kinos
 
   Kino renders any data structure that implements the `Kino.Render`
