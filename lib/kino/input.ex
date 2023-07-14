@@ -658,8 +658,7 @@ defmodule Kino.Input do
   ## Examples
 
       input =
-        "Name"
-        |> Kino.Input.text()
+        Kino.Input.text("Name")
         |> Kino.render()
 
       Kino.Input.read(input)

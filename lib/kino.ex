@@ -12,8 +12,7 @@ defmodule Kino do
   just getting started, going through these is highly recommended.
 
   You can access these notebooks by starting Livebook and clicking
-  on "Learn" in the sidebar. (Or, if you're running Livebook locally,
-  by visiting [localhost:8080/learn](http://localhost:8080/learn).)
+  on "Learn" in the sidebar.
 
   ## Built-in kinos
 
@@ -554,7 +553,7 @@ defmodule Kino do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
   end
 
-  @doc """
+  @doc ~S"""
   Interrupts evaluation with the given message.
 
   This function raises a specific error to let Livebook known that
@@ -574,7 +573,7 @@ defmodule Kino do
       end
 
       # This will not be run if the `interrupt!` is called above
-      Kino.Markdown.new("**You entered:** \#{text}")
+      Kino.Markdown.new("**You entered:** #{text}")
   """
   @spec interrupt!(:normal | :error, String.t()) :: no_return()
   def interrupt!(variant, message) when variant in [:normal, :error] and is_binary(message) do

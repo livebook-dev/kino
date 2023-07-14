@@ -24,7 +24,7 @@ defmodule Kino.SmartCell do
 
   Here is an outline of a custom module
 
-      defmodule KinoDocs.SmartCell.Custom do
+      defmodule KinoDocs.CustomCell do
         use Kino.JS
         use Kino.JS.Live
         use Kino.SmartCell, name: "Our custom wizard"
@@ -51,7 +51,7 @@ defmodule Kino.SmartCell do
   Additionally, in order for Livebook to pick up the custom cell, we
   need to register our module. This usually happens in `application.ex`
 
-      Kino.SmartCell.register(KinoDocs.SmartCell.Custom)
+      Kino.SmartCell.register(KinoDocs.CustomCell)
 
   ## Example
 
@@ -301,7 +301,7 @@ defmodule Kino.SmartCell do
 
   ## Examples
 
-      Kino.SmartCell.register(KinoDocs.SmartCell.Custom)
+      Kino.SmartCell.register(KinoDocs.CustomCell)
   """
   @spec register(module()) :: :ok
   def register(module) do
