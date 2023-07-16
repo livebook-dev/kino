@@ -4,7 +4,9 @@
 [![Actions Status](https://github.com/livebook-dev/kino/workflows/Test/badge.svg)](https://github.com/livebook-dev/kino/actions)
 
 `Kino` is the library used by [Livebook](https://github.com/elixir-nx/livebook)
-to render rich and interactive output directly from your Elixir code.
+to render rich and interactive output directly from your Elixir code. You can learn
+more about Kino by [installing Livebook](https://livebook.dev/) and heading into
+the "Learn" section of your sidebar.
 
 ## Installation
 
