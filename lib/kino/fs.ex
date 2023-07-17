@@ -3,6 +3,19 @@ defmodule Kino.FS do
   Provides access to notebook files.
   """
 
+  defmodule ForbiddenError do
+    @moduledoc """
+    Exception raised when access to a notebook file is forbidden.
+    """
+
+    defexception [:name]
+
+    @impl true
+    def message(exception) do
+      "forbidden access to file #{inspect(exception.name)}"
+    end
+  end
+
   @doc """
   Accesses notebook file with the given name and returns a local path
   to ead its contents from.
@@ -23,6 +36,9 @@ defmodule Kino.FS do
     case Kino.Bridge.get_file_entry_path(name) do
       {:ok, path} ->
         path
+
+      {:error, :forbidden} ->
+        raise ForbiddenError, name: name
 
       {:error, message} when is_binary(message) ->
         raise message
@@ -56,6 +72,9 @@ defmodule Kino.FS do
     case Kino.Bridge.get_file_entry_spec(name) do
       {:ok, spec} ->
         spec
+
+      {:error, :forbidden} ->
+        raise ForbiddenError, name: name
 
       {:error, message} when is_binary(message) ->
         raise message
