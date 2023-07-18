@@ -561,6 +561,13 @@ defmodule Kino do
   user and they can retry evaluation with a button click, supposedly
   after they resolve the interrupt reason.
 
+  > #### Do not use interrupt inside listeners {: .warning}
+  >
+  > Since `interrupt!/2` aborts the execution, it cannot be used
+  > inside `Kino.listen/2` or other event listeners. In such cases,
+  > you can use `Kino.Frame` and render any messages directly within
+  > the frame, using `Kino.Text` or `Kino.Markdown`.
+
   ## Examples
 
       text =
