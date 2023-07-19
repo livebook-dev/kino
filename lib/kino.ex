@@ -320,7 +320,10 @@ defmodule Kino do
   end
 
   @doc ~S"""
-  Consumes a stream with `fun` without blocking execution.
+  Starts a process that consumes a stream with `fun` without blocking execution.
+
+  It returns the PID of the started process. The process can be terminated
+  with `Kino.terminate_child/1`.
 
   Note that events are processed by `fun` sequentially. If you want
   to process them concurrently, use `async_listen/2`.
@@ -356,7 +359,7 @@ defmodule Kino do
       Kino.listen(100, fn i -> IO.puts("Ping #{i}") end)
 
   """
-  @spec listen(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
+  @spec listen(Enumerable.t() | pos_integer(), (term() -> any())) :: pid()
   def listen(stream_or_interval_ms, fun)
 
   def listen(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
@@ -391,7 +394,7 @@ defmodule Kino do
           Enumerable.t() | pos_integer(),
           state,
           (term(), state -> {:cont, state} | :halt)
-        ) :: :ok
+        ) :: pid()
         when state: term()
   def listen(stream_or_interval_ms, state, fun)
 
@@ -426,20 +429,20 @@ defmodule Kino do
   end
 
   defp async(fun) do
-    {:ok, _pid} =
+    {:ok, pid} =
       Kino.start_child(%{
         id: Task,
         start: {Kino.Terminator, :start_task, [self(), fun]},
         restart: :temporary
       })
 
-    :ok
+    pid
   end
 
   @doc """
   Same as `listen/2`, except each event is processed concurrently.
   """
-  @spec async_listen(Enumerable.t() | pos_integer(), (term() -> any())) :: :ok
+  @spec async_listen(Enumerable.t() | pos_integer(), (term() -> any())) :: pid()
   def async_listen(stream_or_interval_ms, fun)
 
   def async_listen(interval_ms, fun) when is_integer(interval_ms) and is_function(fun, 1) do
