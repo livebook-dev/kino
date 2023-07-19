@@ -321,6 +321,7 @@ defmodule Kino do
 
   @doc ~S"""
   Starts a process that consumes a stream with `fun` without blocking execution.
+
   It returns the PID of the started process. The process can be terminated
   with `Kino.terminate_child/1`.
 
