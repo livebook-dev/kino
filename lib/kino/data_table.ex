@@ -2,8 +2,6 @@ defmodule Kino.DataTable do
   @moduledoc """
   A kino for interactively viewing tabular data.
 
-  The data must be a tabular data supported by `Table`.
-
   ## Examples
 
       data = [

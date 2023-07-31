@@ -47,6 +47,43 @@ defmodule Kino.Shorts do
   @spec image(binary(), Kino.Image.common_image_type() | Kino.Image.mime_type()) :: Kino.Image.t()
   def image(content, type), do: Kino.Image.new(content, type)
 
+  @doc """
+  Renders a file download button.
+
+  The given function is invoked to generate the file content whenever
+  a download is requested.
+
+  It is a wrapper around `Kino.Download.new/2`.
+
+  ## Options
+
+    * `:filename` - the default filename suggested for download.
+      Defaults to `"download"`
+
+    * `:label` - the button text. Defaults to the value of `:filename`
+      if present and `"Download"` otherwise
+
+  ## Examples
+
+      download(fn ->
+        "Example text"
+      end)
+
+      download(
+        fn -> Jason.encode!(%{"foo" => "bar"}) end,
+        filename: "data.json"
+      )
+
+      download(
+        fn -> <<0, 1>> end,
+        filename: "data.bin",
+        label: "Binary data"
+      )
+
+  """
+  @spec download((-> binary()), keyword()) :: Kino.Download.t()
+  def download(content_fun, opts \\ []), do: Kino.Download.new(content_fun, opts)
+
   @doc ~S'''
   Renders Markdown content, in case you need richer text.
 

@@ -44,31 +44,20 @@ defmodule Kino.MixProject do
       source_ref: "v#{@version}",
       logo: "images/kino_without_text.png",
       groups_for_modules: [
-        Kinos: [
-          Kino.DataTable,
-          Kino.Download,
-          Kino.ETS,
-          Kino.Frame,
-          Kino.HTML,
-          Kino.Image,
-          Kino.Layout,
-          Kino.Markdown,
-          Kino.Mermaid,
-          Kino.Process,
-          Kino.Text,
-          Kino.Tree
-        ],
-        Inputs: [
-          Kino.Input,
-          Kino.Control
-        ],
-        Custom: [
+        # Kino
+        # Kino.Hub
+        # Kino.Control
+        # Kino.Frame
+        # Kino.Input
+        # Kino.Process
+        # Kino.Shorts
+        "Custom Kinos": [
           Kino.JS,
           Kino.JS.Live,
           Kino.JS.Live.Context,
           Kino.SmartCell
         ],
-        Internal: [
+        "Protocols and Behaviours": [
           Kino.Render,
           Kino.Output,
           Kino.Inspect,
@@ -76,6 +65,18 @@ defmodule Kino.MixProject do
         ],
         Testing: [
           Kino.Test
+        ],
+        "Kino implementations": [
+          Kino.DataTable,
+          Kino.Download,
+          Kino.ETS,
+          Kino.HTML,
+          Kino.Image,
+          Kino.Layout,
+          Kino.Markdown,
+          Kino.Mermaid,
+          Kino.Text,
+          Kino.Tree
         ]
       ]
     ]
