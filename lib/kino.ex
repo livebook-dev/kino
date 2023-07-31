@@ -16,128 +16,29 @@ defmodule Kino do
 
   ## Built-in kinos
 
-  Kino renders any data structure that implements the `Kino.Render`
-  protocol, falling back to the `Kernel.inspect/2` representation
-  whenever an implementation is not available. The data structures
-  supported by Kino out of the box are:
+  Kino provides several built-in kinos. The `Kino.Shorts` module
+  provides a facade to access and use most of the Kinos in this
+  project, although you can also use their modules directly as
+  listed in the sidebar.
 
-  ### Kino.DataTable
+  For user interactions, `Kino.Input` and `Kino.Control` provide
+  a set of widgets for entering data and capturing user events.
+  See the respective module documentation for examples.
 
-  `Kino.DataTable` implements a data table output for user-provided
-  tabular data:
-
-      data = [
-        %{id: 1, name: "Elixir", website: "https://elixir-lang.org"},
-        %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
-      ]
-
-      Kino.DataTable.new(data)
-
-  ### Kino.ETS
-
-  `Kino.ETS` implements a data table output for ETS tables in the
-  system:
-
-      tid = :ets.new(:users, [:set, :public])
-      Kino.ETS.new(tid)
-
-  ### Kino.Image
-
-  `Kino.Image` wraps binary image content and can be used to render
-  raw images of any given format:
-
-      content = File.read!("/path/to/image.jpeg")
-      Kino.Image.new(content, "image/jpeg")
-
-  ### Kino.Markdown
-
-  `Kino.Markdown` renders Markdown content, in case you need richer text:
-
-      Kino.Markdown.new("""
-      # Example
-
-      A regular Markdown file.
-
-      ## Code
-
-      ```elixir
-      "Elixir" |> String.graphemes() |> Enum.frequencies()
-      ```
-
-      ## Table
-
-      | ID | Name   | Website                 |
-      | -- | ------ | ----------------------- |
-      | 1  | Elixir | https://elixir-lang.org |
-      | 2  | Erlang | https://www.erlang.org  |
-      """)
-
-  ### Kino.Text
-
-  `Kino.Text` renders plain text content. It is similar to `Kino.Markdown`,
-  however doesn't interpret any markup.
-
-      Kino.Text.new("Hello!")
-
-  ### Kino.Mermaid
-
-  `Kino.Mermaid` renders Mermaid graphs:
-
-      Kino.Mermaid.new("""
-      graph TD;
-        A-->B;
-        A-->C;
-        B-->D;
-        C-->D;
-      """)
-
-  ### Kino.Frame
-
-  `Kino.Frame` is a placeholder for static outputs that can
-  be dynamically updated.
-
-      frame = Kino.Frame.new() |> Kino.render()
-
-      for i <- 1..100 do
-        Kino.Frame.render(frame, i)
-        Process.sleep(50)
-      end
-
-  Also see `Kino.animate/3`.
-
-  ### Kino.Tree
-
-  `Kino.Tree` displays arbitrarily nested data structure as a
-  tree view.
-
-      data = Process.info(self())
-      Kino.Tree.new(data)
-
-  ### Kino.HTML
-
-  `Kino.HTML` displays arbitrary static HTML.
-
-      Kino.HTML.new("""
-      <h3>Look!</h3>
-
-      <p>I wrote this HTML from <strong>Kino</strong>!</p>
-      """)
-
-  ### User interactions
-
-  `Kino.Input` and `Kino.Control` provide a set of widgets for
-  entering data and capturing user events. See the respective
-  module documentation for examples.
-
-  ### All others
-
-  All other data structures are rendered as text using Elixir's
-  `Kernel.inspect/2`.
+  Kino also provides facilities to aid debugging, such as
+  `Kino.Process` and a custom `dbg()` implementation that integrates
+  with Livebook.
 
   ## Custom kinos
 
-  Kino makes it possible to define custom JavaScript powered
-  kinos, see `Kino.JS` and `Kino.JS.Live` for more details.
+  Kino renders any data structure that implements the `Kino.Render`
+  protocol, falling back to the `Kernel.inspect/2` representation
+  whenever an implementation is not available. You can customize
+  how your own data structures are rendered by implementing the
+  `Kino.Render` protocol.
+
+  You can also implement your own kinos by writing custom JavaScript,
+  see `Kino.JS` and `Kino.JS.Live` for more details.
 
   > #### Packaging {: .info}
   >
