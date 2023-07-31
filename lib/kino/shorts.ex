@@ -132,7 +132,7 @@ defmodule Kino.Shorts do
   def text(text), do: Kino.Text.new(text)
 
   @doc ~S'''
-  `Kino.Mermaid` renders Mermaid graphs:
+  Renders Mermaid graphs.
 
   It is a wrapper around `Kino.Mermaid.new/1`.
 
