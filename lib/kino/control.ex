@@ -52,6 +52,23 @@ defmodule Kino.Control do
 
   @doc """
   Creates a new button.
+
+  ## Examples
+
+  Create the widget:
+
+      button = Kino.Control.button("Hello")
+
+  Listen to events:
+
+      Kino.listen(button, fn event ->
+        ...
+      end)
+
+  Or subscribe to them in a separate process:
+
+      Kino.Control.subscribe(button, :keyboard)
+
   """
   @spec button(String.t()) :: t()
   def button(label) when is_binary(label) do
@@ -87,7 +104,13 @@ defmodule Kino.Control do
 
       keyboard = Kino.Control.keyboard([:keyup, :keydown, :status])
 
-  Subscribe to events:
+  Listen to events:
+
+      Kino.listen(keyboard, fn event ->
+        ...
+      end)
+
+  Or subscribe to them in a separate process:
 
       Kino.Control.subscribe(keyboard, :keyboard)
 
@@ -160,7 +183,13 @@ defmodule Kino.Control do
           submit: "Send"
         )
 
-  Subscribe to events:
+  Listen to events:
+
+      Kino.listen(keyboard, fn event ->
+        ...
+      end)
+
+  Or subscribe to them in a separate process:
 
       Kino.Control.subscribe(form, :chat_form)
 

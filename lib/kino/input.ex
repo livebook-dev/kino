@@ -652,9 +652,6 @@ defmodule Kino.Input do
   @doc """
   Synchronously reads the current input value.
 
-  Note that to retrieve the value, the input must be rendered first,
-  otherwise an error is raised.
-
   ## Examples
 
       input =

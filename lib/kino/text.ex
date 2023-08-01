@@ -21,7 +21,7 @@ defmodule Kino.Text do
   @doc """
   Creates a new kino displaying the given text content.
   """
-  @spec new(binary()) :: t()
+  @spec new(String.t()) :: t()
   def new(content) do
     %__MODULE__{content: content}
   end
