@@ -235,7 +235,8 @@ defmodule Kino.Shorts do
   Note that the grid does not support scrolling, it always squeezes
   the content, such that it does not exceed the page width.
 
-  It is a wrapper around `Kino.Layout.grid/2`.
+  It is a wrapper around `Kino.Layout.grid/2`. See the linked function
+  for all supported options.
 
   ## Options
 
@@ -446,43 +447,14 @@ defmodule Kino.Shorts do
   @doc """
   Renders and reads a new image input.
 
+  See `Kino.Input.image/2` for all supported formats and options.
+
   > #### Warning {: .warning}
   >
   > The image input is shared by default: once you upload a image,
   > the image will be replicated to all users reading the notebook.
   > Use `Kino.Control.form/2` if you want each user to have a distinct
   > image upload with an explicit submission button.
-
-  ## Options
-
-    * `:format` - the format to read the image as, either of:
-
-      * `:rgb` (default) - the binary includes raw pixel values, each
-        encoded as a single byte in the HWC order. Such binary can be
-        directly converted to an `Nx` tensor, with no additional decoding
-
-      * `:png`
-
-      * `:jpeg` (or `:jpg`)
-
-    * `:size` - the size to fit the image into, given as `{height, width}`
-
-    * `:fit` - the strategy of fitting the image into `:size`, either of:
-
-      * `:contain` (default) - resizes the image, such that it fits in
-        a box of `:size`, but preserving the aspect ratio. The resulting
-        image can be smaller or equal to `:size`
-
-      * `:match` - resizes the image to `:size`, with no respect for
-        aspect ratio
-
-      * `:pad` - same as `:contain`, but pads the image to match `:size`
-        exactly
-
-      * `:crop` - resizes the image, such that one edge fits in `:size`
-        and the other overflows, then center-crops the image to match
-        `:size` exactly
-
   """
   @spec read_image(String.t(), keyword()) ::
           %{
@@ -499,26 +471,14 @@ defmodule Kino.Shorts do
   @doc """
   Renders and reads a new audio input.
 
+  See `Kino.Input.audio/2` for all supported formats and options.
+
   > #### Warning {: .warning}
   >
   > The audio input is shared by default: once you upload an audio,
   > the audio will be replicated to all users reading the notebook.
   > Use `Kino.Control.form/2` if you want each user to have a distinct
   > audio upload with an explicit submission button.
-
-  ## Options
-
-    * `:format` - the format to read the audio as, either of:
-
-      * `:pcm_f32` (default) - the PCM (32-bit float) format. Note that
-        the binary uses native system endianness. Such binary can be
-        directly converted to an `Nx` tensor, with no additional decoding
-
-      * `:wav`
-
-    * `:sampling_rate` - the sampling rate (samples per second) of
-      the audio data. Defaults to `48_000`
-
   """
   @spec read_audio(String.t(), keyword()) ::
           %{
@@ -535,6 +495,7 @@ defmodule Kino.Shorts do
   Renders and reads a new file input.
 
   The file path can then be accessed using `Kino.Input.file_path/1`.
+  See `Kino.Input.file/2` for additional considerations.
 
   > #### Warning {: .warning}
   >
@@ -542,18 +503,6 @@ defmodule Kino.Shorts do
   > the file will be replicated to all users reading the notebook.
   > Use `Kino.Control.form/2` if you want each user to have a distinct
   > file upload with an explicit submission button.
-
-  ## Considerations
-
-  Note that a file may be deleted in certain cases, specifically:
-
-    * when the file is reuploaded
-    * when used with a form and the uploading user leaves
-    * when the input is removed
-
-  The deletion is not immediate and you are unlikely to run into this
-  in practice, however theoretically `file_path/1` may point to a
-  non-existing file.
 
   ## Options
 
