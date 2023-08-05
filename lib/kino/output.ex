@@ -21,6 +21,7 @@ defmodule Kino.Output do
           | grid()
           | input()
           | control()
+          | audio()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -421,6 +422,11 @@ defmodule Kino.Output do
 
   @type ref :: String.t()
 
+  @typedoc """
+  A raw audio in the given format.
+  """
+  @type audio :: {:audio, content :: binary(), mime_type :: binary()}
+
   @doc """
   See `t:text/0`.
   """
@@ -499,6 +505,15 @@ defmodule Kino.Output do
   @spec control(control_attrs()) :: t()
   def control(attrs) when is_map(attrs) do
     {:control, attrs}
+  end
+
+  @doc """
+  See `t:audio/0`.
+  """
+  @spec audio(binary(), binary()) :: t()
+
+  def audio(content, type) when is_binary(content) and is_binary(type) do
+    {:audio, content, type}
   end
 
   @doc """

@@ -18,6 +18,12 @@ defimpl Kino.Render, for: Any do
   end
 end
 
+defimpl Kino.Render, for: Audio do
+  def to_livebook(audio) do
+    Kino.Output.audio(audio.content, audio.mime_type)
+  end
+end
+
 defimpl Kino.Render, for: Kino.Inspect do
   def to_livebook(raw) do
     Kino.Output.inspect(raw.term)
