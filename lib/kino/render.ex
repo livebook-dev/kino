@@ -18,12 +18,6 @@ defimpl Kino.Render, for: Any do
   end
 end
 
-defimpl Kino.Render, for: Audio do
-  def to_livebook(audio) do
-    Kino.Output.audio(audio.content, audio.mime_type)
-  end
-end
-
 defimpl Kino.Render, for: Kino.Inspect do
   def to_livebook(raw) do
     Kino.Output.inspect(raw.term)
@@ -93,6 +87,18 @@ defimpl Kino.Render, for: Kino.Control do
   def to_livebook(control) do
     Kino.Bridge.reference_object(control.attrs.ref, self())
     Kino.Output.control(control.attrs)
+  end
+end
+
+defimpl Kino.Render, for: Audio do
+  def to_livebook(audio) do
+    Kino.Output.audio(audio.content, audio.mime_type)
+  end
+end
+
+defimpl Kino.Render, for: Video do
+  def to_livebook(video) do
+    Kino.Output.video(video.content, video.mime_type)
   end
 end
 

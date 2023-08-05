@@ -67,7 +67,6 @@ defmodule Kino.MixProject do
           Kino.Test
         ],
         "Kino implementations": [
-          Kino.Audio,
           Kino.DataTable,
           Kino.Download,
           Kino.ETS,
@@ -77,7 +76,9 @@ defmodule Kino.MixProject do
           Kino.Markdown,
           Kino.Mermaid,
           Kino.Text,
-          Kino.Tree
+          Kino.Tree,
+          Kino.Audio,
+          Kino.Video
         ]
       ]
     ]

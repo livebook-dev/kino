@@ -22,6 +22,7 @@ defmodule Kino.Output do
           | input()
           | control()
           | audio()
+          | video()
 
   @typedoc """
   An empty output that should be ignored whenever encountered.
@@ -427,6 +428,11 @@ defmodule Kino.Output do
   """
   @type audio :: {:audio, content :: binary(), mime_type :: binary()}
 
+  @typedoc """
+  A raw video in the given format.
+  """
+  @type video :: {:video, content :: binary(), mime_type :: binary()}
+
   @doc """
   See `t:text/0`.
   """
@@ -514,6 +520,15 @@ defmodule Kino.Output do
 
   def audio(content, type) when is_binary(content) and is_binary(type) do
     {:audio, content, type}
+  end
+
+  @doc """
+  See `t:video/0`.
+  """
+  @spec video(binary(), binary()) :: t()
+
+  def video(content, type) when is_binary(content) and is_binary(type) do
+    {:video, content, type}
   end
 
   @doc """
