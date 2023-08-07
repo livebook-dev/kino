@@ -91,7 +91,7 @@ defmodule Kino.Control do
   > #### Keyboard shortcut {:.info}
   >
   > As of Livebook v0.11, keyboard controls can be toggled by
-  > focusing the cell and pressing `Ctrl + k` (or `Cmd + k` on
+  > focusing the cell and pressing `ctrl + k` (or `⌘ + k` on
   > MacOS).
 
   ## Options
