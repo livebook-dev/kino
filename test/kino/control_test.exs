@@ -15,6 +15,14 @@ defmodule Kino.ControlTest do
                      Kino.Control.keyboard([:keyword])
                    end
     end
+
+    test "raises an error when invalid options are passed" do
+      assert_raise ArgumentError,
+                   "when passed, :default_handlers must be one of :off, :on or :disable_only, got: :foo",
+                   fn ->
+                     Kino.Control.keyboard([:keydown], default_handlers: :foo)
+                   end
+    end
   end
 
   describe "form/1" do

@@ -16,14 +16,18 @@ defmodule Kino.Control do
 
       button = Kino.Control.button("Hello")
 
-  Next, to receive events from the control, a process needs to
-  subscribe to it and specify pick a name to distinguish the
-  events.
+  Next, events need to be received from the control. This can
+  be done either by subscribing a process to the control with
+  `subscribe/2` or by creating an event stream using `stream/1`
+  or `tagged_stream/1` and then registering a callback using
+  `Kino.listen/1`.
+
+  Here, we'll subscribe the current process to events:
 
       Kino.Control.subscribe(button, :hello)
 
-  As the user interacts with the button, the subscribed process
-  receives corresponding events.
+  As the user clicks the button, the subscribed process
+  receives events:
 
       IEx.Helpers.flush()
       #=> {:hello, %{origin: "client1"}}
@@ -37,6 +41,9 @@ defmodule Kino.Control do
   @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
   @type event_source :: t() | Kino.Input.t() | interval() | Kino.JS.Live.t()
+
+  @type keyboard_opt :: {:default_handlers, :off | :on | :disable_only}
+  @type keyboard_opts :: [keyboard_opt()]
 
   defp new(attrs) do
     ref = Kino.Output.random_ref()
@@ -81,6 +88,27 @@ defmodule Kino.Control do
   This widget is represented as button that toggles interception
   mode, in which the given keyboard events are captured.
 
+  > #### Keyboard shortcut {:.info}
+  >
+  > As of Livebook v0.10.1, keyboard controls can be toggled by
+  > focusing the cell and pressing `Ctrl + k` (or `Cmd + k` on
+  > MacOS).
+
+  ## Options
+
+  Note that these options require Livebook v0.10.1 or later.
+
+    * `:default_handlers` - controls Livebook's default keyboard
+      shortcut handlers while the keyboard control is enabled.
+      Must be one of:
+
+      * `:off` (default) - all Livebook keyboard shortcuts are disabled
+
+      * `:on` - all Livebook keyboard shortcuts are enabled
+
+      * `:disable_only` - Livebook keyboard shortcuts are disabled
+        except for the shortcut to toggle the control.
+
   ## Event info
 
   In addition to standard properties, all events include additional
@@ -123,8 +151,10 @@ defmodule Kino.Control do
       #=> {:keyboard, %{key: "o", origin: "client1", type: :keyup}}
       #=> {:keyboard, %{key: "k", origin: "client1", type: :keyup}}
   """
-  @spec keyboard(list(:keyup | :keydown | :status)) :: t()
-  def keyboard(events) when is_list(events) do
+  @spec keyboard(list(:keyup | :keydown | :status), keyboard_opts()) :: t()
+  def keyboard(events, opts \\ []) when is_list(events) do
+    opts = Keyword.validate!(opts, default_handlers: :off)
+
     if events == [] do
       raise ArgumentError, "expected at least one event, got: []"
     end
@@ -136,7 +166,14 @@ defmodule Kino.Control do
       end
     end
 
-    new(%{type: :keyboard, events: events})
+    unless opts[:default_handlers] in [:off, :on, :disable_only] do
+      raise ArgumentError,
+            "when passed, :default_handlers must be one of :off, :on or :disable_only, got: #{inspect(opts[:default_handlers])}"
+    end
+
+    opts
+    |> Enum.into(%{type: :keyboard, events: events})
+    |> new()
   end
 
   @doc """
