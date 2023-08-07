@@ -90,13 +90,13 @@ defmodule Kino.Control do
 
   > #### Keyboard shortcut {:.info}
   >
-  > As of Livebook v0.10.1, keyboard controls can be toggled by
+  > As of Livebook v0.11, keyboard controls can be toggled by
   > focusing the cell and pressing `Ctrl + k` (or `Cmd + k` on
   > MacOS).
 
   ## Options
 
-  Note that these options require Livebook v0.10.1 or later.
+  Note that these options require Livebook v0.11 or later.
 
     * `:default_handlers` - controls Livebook's default keyboard
       shortcut handlers while the keyboard control is enabled.
@@ -106,8 +106,8 @@ defmodule Kino.Control do
 
       * `:on` - all Livebook keyboard shortcuts are enabled
 
-      * `:disable_only` - Livebook keyboard shortcuts are disabled
-        except for the shortcut to toggle the control.
+      * `:disable_only` - Livebook keyboard shortcuts are off except
+        for the shortcut to toggle (disable) the control.
 
   ## Event info
 
