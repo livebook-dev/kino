@@ -1,5 +1,5 @@
 defmodule Kino.AudioTest do
-  use ExUnit.Case, async: true
+  use Kino.LivebookCase, async: true
 
   describe "new/2" do
     test "raises an error for a non-image MIME type" do
@@ -18,8 +18,14 @@ defmodule Kino.AudioTest do
                    end
     end
 
-    # test "converts a valid type shorthand into MIME type" do
-    #   assert %{mime_type: "image/wav"} = Kino.Audio.new(<<>>, :wav)
-    # end
+    test "mime type shorthand and default opts" do
+      kino = Kino.Audio.new(<<>>, :wav)
+      assert {:binary, %{type: "audio/wav", opts: "controls"}, <<>>} == connect(kino)
+    end
+
+    test "custom mime type and custom opts" do
+      kino = Kino.Audio.new(<<>>, "audio/mp2", loop: true)
+      assert {:binary, %{type: "audio/mp2", opts: "controls loop"}, <<>>} == connect(kino)
+    end
   end
 end

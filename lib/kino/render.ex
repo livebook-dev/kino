@@ -90,18 +90,6 @@ defimpl Kino.Render, for: Kino.Control do
   end
 end
 
-defimpl Kino.Render, for: Audio do
-  def to_livebook(audio) do
-    Kino.Output.audio(audio.content, audio.mime_type)
-  end
-end
-
-defimpl Kino.Render, for: Video do
-  def to_livebook(video) do
-    Kino.Output.video(video.content, video.mime_type)
-  end
-end
-
 # Elixir built-ins
 
 defimpl Kino.Render, for: Reference do

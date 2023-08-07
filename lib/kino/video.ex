@@ -6,11 +6,16 @@ defmodule Kino.Video do
 
       content = File.read!("/path/to/video.mp4")
       Kino.Video.new(content, :mp4)
+
+      content = File.read!("/path/to/video.mp4")
+      Kino.Video.new(content, :mp4, [:controls, :autoplay, :loop])
+
   """
 
-  use Kino.JS
+  use Kino.JS, assets_path: "lib/assets/video"
+  use Kino.JS.Live
 
-  @type t :: Kino.JS.t()
+  @type t :: Kino.JS.Live.t()
 
   @type mime_type :: binary()
   @type common_video_type :: :mp4 | :ogg | :avi | :mwv | :mov
@@ -20,15 +25,45 @@ defmodule Kino.Video do
   The given type be either `:mp4`, `:ogg`, `:avi`, `:wmv`, `:mov`
   or a string with video MIME type.
 
+  ## Options
+    * `:autoplay` - whether the video should start playing as soon as
+      it is rendered. Defaults to `false`
+    * `loop` - whether the video should loop. Defaults to `false`
+    * `muted` - wheater the video shouls be muted. Defaultsa to `false`
+
   """
-  @spec new(binary(), common_video_type() | mime_type()) :: t()
-  def new(content, type) when is_binary(content) do
-    Kino.JS.new(__MODULE__, data_url(content, type))
+  @spec new(binary(), common_video_type() | mime_type(), list()) :: t()
+  def new(content, type, opts \\ []) when is_binary(content) do
+    opts =
+      Keyword.validate!(opts,
+        autoplay: false,
+        loop: false,
+        muted: false
+      )
+
+    Kino.JS.Live.new(__MODULE__, %{
+      content: content,
+      type: mime_type!(type),
+      opts:
+        Enum.reduce(opts, "controls", fn {opt, val}, acc ->
+          if val do
+            "#{acc} #{opt}"
+          else
+            acc
+          end
+        end)
+    })
   end
 
-  defp data_url(content, type) do
-    base64 = Base.encode64(content)
-    "data:#{mime_type!(type)};base64,#{base64}"
+  @impl true
+  def init(assigns, ctx) do
+    {:ok, assign(ctx, assigns)}
+  end
+
+  @impl true
+  def handle_connect(%{assigns: %{content: content, type: type, opts: opts}} = ctx) do
+    payload = {:binary, %{type: type, opts: opts}, content}
+    {:ok, payload, ctx}
   end
 
   defp mime_type!(:mp4), do: "video/mp4"
@@ -41,18 +76,5 @@ defmodule Kino.Video do
   defp mime_type!(other) do
     raise ArgumentError,
           "expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or an video MIME type string, got: #{inspect(other)}"
-  end
-
-  asset "main.js" do
-    """
-    export function init(ctx, data) {
-      ctx.root.innerHTML = `
-        <div class="root">
-            <video controls src="${data}" />
-        </div>
-      `;
-
-    }
-    """
   end
 end
