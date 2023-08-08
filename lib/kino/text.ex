@@ -11,17 +11,17 @@ defmodule Kino.Text do
       [:green, "Hello!"]
       |> IO.ANSI.format()
       |> IO.iodata_to_binary()
-      |> Kino.Text.new(console: true)
+      |> Kino.Text.new(terminal: true)
 
   '''
 
   @enforce_keys [:content]
 
-  defstruct [:content, console: false]
+  defstruct [:content, terminal: false]
 
   @opaque t :: %__MODULE__{
             content: binary(),
-            console: boolean()
+            terminal: boolean()
           }
 
   @doc """
@@ -29,11 +29,12 @@ defmodule Kino.Text do
 
   ## Options
 
-    * `:console` - whether to render the text as if it were printed to
+    * `:terminal` - whether to render the text as if it were printed to
       standard output, supporting ANSI escape codes. Defaults to `false`
   """
-  @spec new(String.t(), opts) :: t() when opts: [console: boolean()]
+  @spec new(String.t(), opts) :: t() when opts: [terminal: boolean()]
   def new(content, opts \\ []) when is_binary(content) do
-    %__MODULE__{content: content, console: Keyword.get(opts, :console, false)}
+    opts = Keyword.validate!(opts, terminal: false)
+    %__MODULE__{content: content, terminal: opts[:terminal]}
   end
 end
