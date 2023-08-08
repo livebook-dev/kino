@@ -24,7 +24,7 @@ defmodule Kino.VideoTest do
     end
 
     test "custom mime type and custom opts" do
-      kino = Kino.Video.new(<<>>, "video/h123", [loop: true])
+      kino = Kino.Video.new(<<>>, "video/h123", loop: true)
       assert {:binary, %{type: "video/h123", opts: "controls loop"}, <<>>} == connect(kino)
     end
   end
