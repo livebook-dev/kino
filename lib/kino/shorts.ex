@@ -33,7 +33,7 @@ defmodule Kino.Shorts do
   def data_table(tabular, opts \\ []), do: Kino.DataTable.new(tabular, opts)
 
   @doc """
-  Renders images of any given format.
+  Renders an image of any given format.
 
   It is a wrapper around `Kino.Image.new/2`.
 
@@ -46,6 +46,36 @@ defmodule Kino.Shorts do
   """
   @spec image(binary(), Kino.Image.common_image_type() | Kino.Image.mime_type()) :: Kino.Image.t()
   def image(content, type), do: Kino.Image.new(content, type)
+
+  @doc """
+  Renders an audio of any given format.
+
+  It is a wrapper around `Kino.Audio.new/2`.
+
+  ## Examples
+
+      import Kino.Shorts
+      content = File.read!("/path/to/audio.wav")
+      audio(content, :wav)
+
+  """
+  @spec audio(binary(), Kino.Audio.common_audio_type() | Kino.Audio.mime_type()) :: Kino.Audio.t()
+  def audio(content, type), do: Kino.Audio.new(content, type)
+
+  @doc """
+  Renders a video of any given format.
+
+  It is a wrapper around `Kino.Audio.new/2`.
+
+  ## Examples
+
+      import Kino.Shorts
+      content = File.read!("/path/to/video.mp4")
+      video(content, :mp4)
+
+  """
+  @spec video(binary(), Kino.Video.common_video_type() | Kino.Video.mime_type()) :: Kino.Video.t()
+  def video(content, type), do: Kino.Video.new(content, type)
 
   @doc """
   Renders a file download button.
