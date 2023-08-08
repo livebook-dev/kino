@@ -42,4 +42,12 @@ defmodule Kino.ShortsTest do
   test "image" do
     assert image("foo", "image/jpg") == Kino.Image.new("foo", "image/jpg")
   end
+
+  test "audio" do
+    assert %Kino.JS.Live{} = audio("foo", "audio/wav")
+  end
+
+  test "video" do
+    assert %Kino.JS.Live{} = video("foo", "video/mp4")
+  end
 end
