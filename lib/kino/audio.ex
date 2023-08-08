@@ -30,9 +30,9 @@ defmodule Kino.Audio do
     * `:autoplay` - whether the audio should start playing as soon as
       it is rendered. Defaults to `false`
 
-    * `loop` - whether the audio should loop. Defaults to `false`
+    * `:loop` - whether the audio should loop. Defaults to `false`
 
-    * `muted` - whether the audio should be muted. Defaults to `false`
+    * `:muted` - whether the audio should be muted. Defaults to `false`
 
   """
   @spec new(binary(), common_audio_type() | mime_type(), keyword()) :: t()

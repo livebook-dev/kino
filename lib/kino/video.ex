@@ -31,9 +31,9 @@ defmodule Kino.Video do
     * `:autoplay` - whether the video should start playing as soon as
       it is rendered. Defaults to `false`
 
-    * `loop` - whether the video should loop. Defaults to `false`
+    * `:loop` - whether the video should loop. Defaults to `false`
 
-    * `muted` - whether the video should be muted. Defaults to `false`
+    * `:muted` - whether the video should be muted. Defaults to `false`
 
   """
   @spec new(binary(), common_video_type() | mime_type(), list()) :: t()
