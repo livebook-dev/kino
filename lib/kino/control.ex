@@ -16,14 +16,18 @@ defmodule Kino.Control do
 
       button = Kino.Control.button("Hello")
 
-  Next, to receive events from the control, a process needs to
-  subscribe to it and specify pick a name to distinguish the
-  events.
+  Next, events need to be received from the control. This can
+  be done either by subscribing a process to the control with
+  `subscribe/2` or by creating an event stream using `stream/1`
+  or `tagged_stream/1` and then registering a callback using
+  `Kino.listen/1`.
+
+  Here, we'll subscribe the current process to events:
 
       Kino.Control.subscribe(button, :hello)
 
-  As the user interacts with the button, the subscribed process
-  receives corresponding events.
+  As the user clicks the button, the subscribed process
+  receives events:
 
       IEx.Helpers.flush()
       #=> {:hello, %{origin: "client1"}}
@@ -81,6 +85,27 @@ defmodule Kino.Control do
   This widget is represented as button that toggles interception
   mode, in which the given keyboard events are captured.
 
+  > #### Keyboard shortcut {:.info}
+  >
+  > As of Livebook v0.11, keyboard controls can be toggled by
+  > focusing the cell and pressing `ctrl + k` (or `⌘ + k` on
+  > MacOS).
+
+  ## Options
+
+  Note that these options require Livebook v0.11 or later.
+
+    * `:default_handlers` - controls Livebook's default keyboard
+      shortcut handlers while the keyboard control is enabled.
+      Must be one of:
+
+      * `:off` (default) - all Livebook keyboard shortcuts are disabled
+
+      * `:on` - all Livebook keyboard shortcuts are enabled
+
+      * `:disable_only` - Livebook keyboard shortcuts are off except
+        for the shortcut to toggle (disable) the control
+
   ## Event info
 
   In addition to standard properties, all events include additional
@@ -123,8 +148,11 @@ defmodule Kino.Control do
       #=> {:keyboard, %{key: "o", origin: "client1", type: :keyup}}
       #=> {:keyboard, %{key: "k", origin: "client1", type: :keyup}}
   """
-  @spec keyboard(list(:keyup | :keydown | :status)) :: t()
-  def keyboard(events) when is_list(events) do
+  @spec keyboard(list(:keyup | :keydown | :status), opts) :: t()
+        when opts: [default_handlers: :off | :on | :disable_only]
+  def keyboard(events, opts \\ []) when is_list(events) do
+    opts = Keyword.validate!(opts, default_handlers: :off)
+
     if events == [] do
       raise ArgumentError, "expected at least one event, got: []"
     end
@@ -136,7 +164,12 @@ defmodule Kino.Control do
       end
     end
 
-    new(%{type: :keyboard, events: events})
+    unless opts[:default_handlers] in [:off, :on, :disable_only] do
+      raise ArgumentError,
+            "when passed, :default_handlers must be one of :off, :on or :disable_only, got: #{inspect(opts[:default_handlers])}"
+    end
+
+    new(%{type: :keyboard, events: events, default_handlers: opts[:default_handlers]})
   end
 
   @doc """

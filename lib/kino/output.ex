@@ -399,7 +399,8 @@ defmodule Kino.Output do
             type: :keyboard,
             ref: ref(),
             destination: Process.dest(),
-            events: list(:keyup | :keydown | :status)
+            events: list(:keyup | :keydown | :status),
+            default_handlers: :off | :on | :disable_only
           }
           | %{
               type: :button,
