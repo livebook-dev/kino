@@ -8,7 +8,7 @@ defmodule Kino.Audio do
       Kino.Audio.new(content, :wav)
 
       content = File.read!("/path/to/audio.wav")
-      Kino.Audio.new(content, :wav, %{autoplay: true, loop: true})
+      Kino.Audio.new(content, :wav, autoplay: true, loop: true)
   """
 
   use Kino.JS, assets_path: "lib/assets/audio"
@@ -18,6 +18,7 @@ defmodule Kino.Audio do
 
   @type mime_type :: binary()
   @type common_audio_type :: :wav | :mp3 | :mpeg | :ogg
+
   @doc """
   Creates a new kino displaying the given binary audio.
 
@@ -25,10 +26,13 @@ defmodule Kino.Audio do
   or a string with audio MIME type.
 
   ## Options
+
     * `:autoplay` - whether the audio should start playing as soon as
       it is rendered. Defaults to `false`
+
     * `loop` - whether the audio should loop. Defaults to `false`
-    * `muted` - wheater the audio shouls be muted. Defaultsa to `false`
+
+    * `muted` - whether the audio should be muted. Defaults to `false`
 
   """
   @spec new(binary(), common_audio_type() | mime_type(), keyword()) :: t()

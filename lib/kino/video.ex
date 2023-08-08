@@ -8,7 +8,7 @@ defmodule Kino.Video do
       Kino.Video.new(content, :mp4)
 
       content = File.read!("/path/to/video.mp4")
-      Kino.Video.new(content, :mp4, [:controls, :autoplay, :loop])
+      Kino.Video.new(content, :mp4, autoplay: true, loop: true)
 
   """
 
@@ -19,6 +19,7 @@ defmodule Kino.Video do
 
   @type mime_type :: binary()
   @type common_video_type :: :mp4 | :ogg | :avi | :mwv | :mov
+
   @doc """
   Creates a new kino displaying the given binary video.
 
@@ -26,10 +27,13 @@ defmodule Kino.Video do
   or a string with video MIME type.
 
   ## Options
+
     * `:autoplay` - whether the video should start playing as soon as
       it is rendered. Defaults to `false`
+
     * `loop` - whether the video should loop. Defaults to `false`
-    * `muted` - wheater the video shouls be muted. Defaultsa to `false`
+
+    * `muted` - whether the video should be muted. Defaults to `false`
 
   """
   @spec new(binary(), common_video_type() | mime_type(), list()) :: t()
