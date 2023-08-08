@@ -42,9 +42,6 @@ defmodule Kino.Control do
 
   @type event_source :: t() | Kino.Input.t() | interval() | Kino.JS.Live.t()
 
-  @type keyboard_opt :: {:default_handlers, :off | :on | :disable_only}
-  @type keyboard_opts :: [keyboard_opt()]
-
   defp new(attrs) do
     ref = Kino.Output.random_ref()
     subscription_manager = Kino.SubscriptionManager.cross_node_name()
@@ -107,7 +104,7 @@ defmodule Kino.Control do
       * `:on` - all Livebook keyboard shortcuts are enabled
 
       * `:disable_only` - Livebook keyboard shortcuts are off except
-        for the shortcut to toggle (disable) the control.
+        for the shortcut to toggle (disable) the control
 
   ## Event info
 
@@ -151,7 +148,8 @@ defmodule Kino.Control do
       #=> {:keyboard, %{key: "o", origin: "client1", type: :keyup}}
       #=> {:keyboard, %{key: "k", origin: "client1", type: :keyup}}
   """
-  @spec keyboard(list(:keyup | :keydown | :status), keyboard_opts()) :: t()
+  @spec keyboard(list(:keyup | :keydown | :status), opts) :: t()
+        when opts: [default_handlers: :off | :on | :disable_only]
   def keyboard(events, opts \\ []) when is_list(events) do
     opts = Keyword.validate!(opts, default_handlers: :off)
 
@@ -171,9 +169,7 @@ defmodule Kino.Control do
             "when passed, :default_handlers must be one of :off, :on or :disable_only, got: #{inspect(opts[:default_handlers])}"
     end
 
-    opts
-    |> Enum.into(%{type: :keyboard, events: events})
-    |> new()
+    new(%{type: :keyboard, events: events, default_handlers: opts[:default_handlers]})
   end
 
   @doc """
