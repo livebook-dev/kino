@@ -76,7 +76,9 @@ defmodule Kino.MixProject do
           Kino.Markdown,
           Kino.Mermaid,
           Kino.Text,
-          Kino.Tree
+          Kino.Tree,
+          Kino.Audio,
+          Kino.Video
         ]
       ]
     ]
