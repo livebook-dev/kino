@@ -47,6 +47,10 @@ defimpl Kino.Render, for: Kino.Image do
 end
 
 defimpl Kino.Render, for: Kino.Text do
+  def to_livebook(%{terminal: true} = text) do
+    Kino.Output.text(text.content)
+  end
+
   def to_livebook(text) do
     Kino.Output.plain_text(text.content)
   end
