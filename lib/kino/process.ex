@@ -46,10 +46,16 @@ defmodule Kino.Process do
 
       Kino.Process.app_tree(:logger, direction: :left_right)
   """
-  @spec app_tree(atom(), keyword()) :: Mermaid.t()
-  def app_tree(application, opts \\ []) when is_atom(application) do
+  @spec app_tree(atom() | {atom(), node()}, keyword()) :: Mermaid.t()
+  def app_tree(application, opts \\ []) do
+    {application, node} =
+      case application do
+        application when is_atom(application) -> {application, node()}
+        {application, node} when is_atom(application) and is_atom(node) -> {application, node}
+      end
+
     {master, root_supervisor} =
-      case :application_controller.get_master(application) do
+      case :erpc.call(node, :application_controller, :get_master, [application]) do
         :undefined ->
           if Application.spec(application, :vsn) do
             raise ArgumentError,
@@ -72,7 +78,7 @@ defmodule Kino.Process do
     direction = direction_from_opts(opts)
     edges = traverse_supervisor(root_supervisor)
 
-    {:dictionary, dictionary} = Process.info(root_supervisor, :dictionary)
+    {:dictionary, dictionary} = process_info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
 
     Mermaid.new("""
@@ -130,10 +136,26 @@ defmodule Kino.Process do
 
       Kino.Process.sup_tree(MyApp.Supervisor, direction: :left_right)
   """
-  @spec sup_tree(supervisor(), keyword()) :: Mermaid.t()
+  @spec sup_tree(supervisor() | {supervisor(), node()}, keyword()) :: Mermaid.t()
   def sup_tree(supervisor, opts \\ []) do
     direction = direction_from_opts(opts)
-    edges = traverse_supervisor(supervisor)
+
+    supervisor_pid =
+      supervisor
+      |> case do
+        {name, node} -> :erpc.call(node, GenServer, :whereis, [name])
+        supervisor -> GenServer.whereis(supervisor)
+      end
+      |> case do
+        supervisor_pid when is_pid(supervisor_pid) ->
+          supervisor_pid
+
+        _ ->
+          raise ArgumentError,
+                "the provided identifier #{inspect(supervisor)} does not reference a running process"
+      end
+
+    edges = traverse_supervisor(supervisor_pid)
 
     Mermaid.new("""
     graph #{direction};
@@ -361,7 +383,7 @@ defmodule Kino.Process do
 
   defp generate_participant_entry(pid, idx) do
     try do
-      {:registered_name, name} = Process.info(pid, :registered_name)
+      {:registered_name, name} = process_info(pid, :registered_name)
       "participant #{idx} AS #{module_or_atom_to_string(name)};"
     rescue
       _ -> "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
@@ -428,17 +450,7 @@ defmodule Kino.Process do
     |> convert_direction()
   end
 
-  defp traverse_supervisor(supervisor) do
-    supervisor =
-      case GenServer.whereis(supervisor) do
-        supervisor_pid when is_pid(supervisor_pid) ->
-          supervisor_pid
-
-        _ ->
-          raise ArgumentError,
-                "the provided identifier #{inspect(supervisor)} does not reference a running process"
-      end
-
+  defp traverse_supervisor(supervisor) when is_pid(supervisor) do
     supervisor_children =
       try do
         Supervisor.which_children(supervisor)
@@ -525,7 +537,7 @@ defmodule Kino.Process do
   defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
       Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
-        {:links, links} = Process.info(pid, :links)
+        {:links, links} = process_info(pid, :links)
 
         Enum.reduce(links, rels_with_links, fn link_pid, acc ->
           add_new_links_to_acc(pid_keys, pid, link_pid, acc)
@@ -585,7 +597,7 @@ defmodule Kino.Process do
       end
 
     display =
-      case Process.info(pid, :registered_name) do
+      case process_info(pid, :registered_name) do
         {:registered_name, []} -> inspect(pid)
         {:registered_name, name} -> module_or_atom_to_string(name)
       end
@@ -598,5 +610,9 @@ defmodule Kino.Process do
       "Elixir." <> rest -> rest
       rest -> rest
     end
+  end
+
+  defp process_info(pid, spec) do
+    :erpc.call(node(pid), Process, :info, [pid, spec])
   end
 end
