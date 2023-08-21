@@ -29,23 +29,32 @@ defmodule Kino.Markdown do
   This format may come in handy when exploring Markdown
   from external sources:
 
-      content = File.read!("/path/to/README.md")
-      Kino.Markdown.new(content)
+      text = File.read!("/path/to/README.md")
+      Kino.Markdown.new(text)
   '''
 
-  @enforce_keys [:content]
+  @enforce_keys [:text, :chunk]
 
-  defstruct [:content]
+  defstruct [:text, :chunk]
 
   @opaque t :: %__MODULE__{
-            content: binary()
+            text: String.t(),
+            chunk: boolean()
           }
 
   @doc """
   Creates a new kino displaying the given Markdown content.
+
+  ## Options
+
+    * `:chunk` - whether this is a part of a larger text. Adjacent chunks
+        are merged into a single text. This is useful for streaming content.
+        Defaults to `false`
+
   """
-  @spec new(binary()) :: t()
-  def new(content) do
-    %__MODULE__{content: content}
+  @spec new(binary(), keyword()) :: t()
+  def new(text, opts \\ []) do
+    opts = Keyword.validate!(opts, chunk: false)
+    %__MODULE__{text: text, chunk: opts[:chunk]}
   end
 end

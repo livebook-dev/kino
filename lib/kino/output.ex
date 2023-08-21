@@ -10,8 +10,7 @@ defmodule Kino.Output do
   """
   @type t ::
           ignored()
-          | stdout()
-          | text()
+          | terminal_text()
           | plain_text()
           | markdown()
           | image()
@@ -27,31 +26,30 @@ defmodule Kino.Output do
   """
   @type ignored :: :ignored
 
-  @typedoc """
-  IO text output, adjacent such outputs are treated as a whole.
+  @typedoc ~S"""
+  Terminal text content.
 
-  Supports ANSI escape codes.
+  Supports ANSI escape codes and overwriting lines with `\r`.
   """
-  @type stdout :: {:stdout, binary()}
-
-  @typedoc """
-  Standalone text block visually matching `t:stdout/0`.
-
-  Supports ANSI escape codes.
-  """
-  @type text :: {:text, binary()}
+  @type terminal_text :: {:terminal_text, String.t(), info :: %{chunk: boolean()}}
 
   @typedoc """
   Plain text content.
 
+  Adjacent outputs with `:chunk` set to `true` are merged and rendered
+  as a whole.
+
   Similar to `t:markdown/0`, but with no special markup.
   """
-  @type plain_text :: {:plain_text, binary()}
+  @type plain_text :: {:plain_text, String.t(), info :: %{chunk: boolean()}}
 
   @typedoc """
   Markdown content.
+
+  Adjacent outputs with `:chunk` set to `true` are merged and rendered
+  as a whole.
   """
-  @type markdown :: {:markdown, binary()}
+  @type markdown :: {:markdown, String.t(), info :: %{chunk: boolean()}}
 
   @typedoc """
   A raw image in the given format.
@@ -423,27 +421,27 @@ defmodule Kino.Output do
   @type ref :: String.t()
 
   @doc """
-  See `t:text/0`.
+  See `t:terminal_text/0`.
   """
-  @spec text(binary()) :: t()
-  def text(text) when is_binary(text) do
-    {:text, text}
+  @spec terminal_text(binary(), boolean()) :: t()
+  def terminal_text(text, chunk \\ false) when is_binary(text) do
+    {:terminal_text, text, %{chunk: chunk}}
   end
 
   @doc """
   See `t:plain_text/0`.
   """
-  @spec plain_text(binary()) :: t()
-  def plain_text(text) do
-    {:plain_text, text}
+  @spec plain_text(binary(), boolean()) :: t()
+  def plain_text(text, chunk \\ false) do
+    {:plain_text, text, %{chunk: chunk}}
   end
 
   @doc """
   See `t:markdown/0`.
   """
-  @spec markdown(binary()) :: t()
-  def markdown(content) when is_binary(content) do
-    {:markdown, content}
+  @spec markdown(binary(), boolean()) :: t()
+  def markdown(content, chunk \\ false) when is_binary(content) do
+    {:markdown, content, %{chunk: chunk}}
   end
 
   @doc """
@@ -508,7 +506,7 @@ defmodule Kino.Output do
   @spec inspect(term(), keyword()) :: t()
   def inspect(term, opts \\ []) do
     inspected = Kernel.inspect(term, inspect_opts(opts))
-    text(inspected)
+    terminal_text(inspected)
   end
 
   defp inspect_opts(opts) do
