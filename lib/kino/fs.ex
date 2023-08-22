@@ -67,7 +67,7 @@ defmodule Kino.FS do
   end
 
   defp file_spec_to_fss(%{type: :local} = file_spec) do
-    %FSS.Local.Entry{path: file_spec.path}
+    FSS.Local.from_path(file_spec.path)
   end
 
   defp file_spec_to_fss(%{type: :url} = file_spec) do
