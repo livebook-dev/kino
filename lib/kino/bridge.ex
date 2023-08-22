@@ -77,6 +77,24 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Requests the file path for notebook file with the given name.
+  """
+  @spec get_file_entry_path(String.t()) ::
+          {:ok, term()} | {:error, request_error() | :forbidden | String.t()}
+  def get_file_entry_path(name) do
+    with {:ok, reply} <- io_request({:livebook_get_file_entry_path, name}), do: reply
+  end
+
+  @doc """
+  Requests the file spec for notebook file with the given name.
+  """
+  @spec get_file_entry_spec(String.t()) ::
+          {:ok, term()} | {:error, request_error() | :forbidden | String.t()}
+  def get_file_entry_spec(name) do
+    with {:ok, reply} <- io_request({:livebook_get_file_entry_spec, name}), do: reply
+  end
+
+  @doc """
   Associates `object` with `pid`.
 
   Any monitoring added to `object` will be dispatched once
