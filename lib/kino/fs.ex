@@ -51,7 +51,7 @@ defmodule Kino.FS do
   @doc """
   Accesses notebook file with the given name and returns a specification
   of the file location.
-  
+
   This does not copy any files and moves the responsibility of reading
   the file to the caller. If you need to read a file directly, use
   `file_path/1`.
