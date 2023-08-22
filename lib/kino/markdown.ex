@@ -48,8 +48,8 @@ defmodule Kino.Markdown do
   ## Options
 
     * `:chunk` - whether this is a part of a larger text. Adjacent chunks
-        are merged into a single text. This is useful for streaming content.
-        Defaults to `false`
+      are merged into a single text. This is useful for streaming content.
+      Defaults to `false`
 
   """
   @spec new(binary(), keyword()) :: t()
