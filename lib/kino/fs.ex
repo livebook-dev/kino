@@ -48,28 +48,8 @@ defmodule Kino.FS do
     end
   end
 
-  @typep file_spec ::
-           %{
-             type: :local,
-             path: String.t()
-           }
-           | %{
-               type: :url,
-               url: String.t()
-             }
-           | %{
-               type: :s3,
-               bucket_url: String.t(),
-               region: String.t(),
-               access_key_id: String.t(),
-               secret_access_key: String.t(),
-               key: String.t()
-             }
-
-  @typep fss_entry :: FSS.Local.Entry.t() | FSS.S3.Entry.t() | FSS.HTTP.Entry.t()
-
   @doc false
-  @spec file_spec(String.t()) :: fss_entry()
+  @spec file_spec(String.t()) :: FSS.entry()
   def file_spec(name) do
     case Kino.Bridge.get_file_entry_spec(name) do
       {:ok, spec} ->
@@ -86,21 +66,18 @@ defmodule Kino.FS do
     end
   end
 
-  @doc false
-  @spec file_spec_to_fss(file_spec()) ::
-          fss_entry()
-  def file_spec_to_fss(%{type: :local} = file_spec) do
+  defp file_spec_to_fss(%{type: :local} = file_spec) do
     %FSS.Local.Entry{path: file_spec.path}
   end
 
-  def file_spec_to_fss(%{type: :url} = file_spec) do
+  defp file_spec_to_fss(%{type: :url} = file_spec) do
     case FSS.HTTP.parse(file_spec.url) do
       {:ok, entry} -> entry
       {:error, error} -> raise error
     end
   end
 
-  def file_spec_to_fss(%{type: :s3} = file_spec) do
+  defp file_spec_to_fss(%{type: :s3} = file_spec) do
     case FSS.S3.parse("s3:///" <> file_spec.key,
            config: [
              region: file_spec.region,
