@@ -5,17 +5,24 @@ defmodule Kino.FrameTest do
     frame = Kino.Frame.new()
 
     Kino.Frame.render(frame, 1)
-    assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+
+    assert_output(
+      {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}], %{type: :replace}}
+    )
 
     Kino.Frame.render(frame, Kino.Markdown.new("_hey_"))
-    assert_output({:frame, [{:markdown, "_hey_"}], %{type: :replace}})
+    assert_output({:frame, [{:markdown, "_hey_", %{chunk: false}}], %{type: :replace}})
   end
 
   test "render/2 sends output to a specific client when the :to is given" do
     frame = Kino.Frame.new()
 
     Kino.Frame.render(frame, 1, to: "client1")
-    assert_output_to("client1", {:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+
+    assert_output_to(
+      "client1",
+      {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}], %{type: :replace}}
+    )
 
     assert Kino.Frame.get_outputs(frame) == []
   end
@@ -24,7 +31,10 @@ defmodule Kino.FrameTest do
     frame = Kino.Frame.new()
 
     Kino.Frame.render(frame, 1, temporary: true)
-    assert_output_to_clients({:frame, [{:text, "\e[34m1\e[0m"}], %{type: :replace}})
+
+    assert_output_to_clients(
+      {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}], %{type: :replace}}
+    )
 
     assert Kino.Frame.get_outputs(frame) == []
   end
@@ -65,6 +75,6 @@ defmodule Kino.FrameTest do
     frame = Kino.Frame.new()
 
     Kino.Frame.append(frame, 1)
-    assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{type: :append}})
+    assert_output({:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}], %{type: :append}})
   end
 end

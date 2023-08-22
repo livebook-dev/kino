@@ -33,7 +33,7 @@ defmodule Kino.Debug.Test do
 
       {kino, output, _frame_ref} = assert_dbg_pipeline_render()
 
-      assert output == {:text, "\e[34m13\e[0m"}
+      assert output == {:terminal_text, "\e[34m13\e[0m", %{chunk: false}}
 
       %{
         dbg_line: dbg_line,
@@ -76,7 +76,10 @@ defmodule Kino.Debug.Test do
         "changed" => true
       })
 
-      assert_output({:frame, [{:text, "\e[34m31\e[0m"}], %{ref: ^frame_ref, type: :replace}})
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m31\e[0m", %{chunk: false}}],
+         %{ref: ^frame_ref, type: :replace}}
+      )
     end
 
     test "updates result when a pipeline step is moved" do
@@ -100,7 +103,10 @@ defmodule Kino.Debug.Test do
         "changed" => true
       })
 
-      assert_output({:frame, [{:text, "\e[34m31\e[0m"}], %{ref: ^frame_ref, type: :replace}})
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m31\e[0m", %{chunk: false}}],
+         %{ref: ^frame_ref, type: :replace}}
+      )
     end
 
     test "handles evaluation error" do
@@ -124,7 +130,8 @@ defmodule Kino.Debug.Test do
       })
 
       assert_output(
-        {:frame, [{:text, "\e[34m1\e[0m..\e[34m5\e[0m"}], %{ref: ^frame_ref, type: :replace}}
+        {:frame, [{:terminal_text, "\e[34m1\e[0m..\e[34m5\e[0m", %{chunk: false}}],
+         %{ref: ^frame_ref, type: :replace}}
       )
     end
 
@@ -163,7 +170,7 @@ defmodule Kino.Debug.Test do
 
       {kino, output} = assert_dbg_default_render()
 
-      assert output == {:text, "\e[34m15\e[0m"}
+      assert output == {:terminal_text, "\e[34m15\e[0m", %{chunk: false}}
 
       %{
         dbg_line: dbg_line,

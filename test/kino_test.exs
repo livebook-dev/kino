@@ -9,13 +9,14 @@ defmodule KinoTest do
         spawn(fn ->
           assert_receive {:io_request, from, ref, {:livebook_put_output, output}}
           send(from, {:io_reply, ref, :ok})
-
-          assert {:text, "\e[34m:hey\e[0m"} = output
+          send(from, {:output, output})
         end)
 
       Process.group_leader(self(), gl)
 
       Kino.inspect(:hey)
+
+      assert_receive {:output, {:terminal_text, "\e[34m:hey\e[0m", %{chunk: false}}}
 
       await_process(gl)
     end
@@ -28,8 +29,16 @@ defmodule KinoTest do
       |> Kino.animate(fn i -> i end)
 
       assert_output({:frame, [], %{ref: ref, type: :default}})
-      assert_output({:frame, [{:text, "\e[34m0\e[0m"}], %{ref: ^ref, type: :replace}})
-      assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m0\e[0m", %{chunk: false}}],
+         %{ref: ^ref, type: :replace}}
+      )
+
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
+         %{ref: ^ref, type: :replace}}
+      )
     end
 
     test "ignores failures" do
@@ -43,7 +52,11 @@ defmodule KinoTest do
           end)
 
           assert_output({:frame, [], %{ref: ref, type: :default}})
-          assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+
+          assert_output(
+            {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
+             %{ref: ^ref, type: :replace}}
+          )
         end)
 
       assert log =~ "Kino.animate"
@@ -60,8 +73,16 @@ defmodule KinoTest do
       end)
 
       assert_output({:frame, [], %{ref: ref, type: :default}})
-      assert_output({:frame, [{:text, "\e[34m0\e[0m"}], %{ref: ^ref, type: :replace}})
-      assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
+
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m0\e[0m", %{chunk: false}}],
+         %{ref: ^ref, type: :replace}}
+      )
+
+      assert_output(
+        {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
+         %{ref: ^ref, type: :replace}}
+      )
     end
 
     test "ignores failures" do
@@ -75,8 +96,16 @@ defmodule KinoTest do
           end)
 
           assert_output({:frame, [], %{ref: ref, type: :default}})
-          assert_output({:frame, [{:text, "\e[34m1\e[0m"}], %{ref: ^ref, type: :replace}})
-          assert_output({:frame, [{:text, "\e[34m4\e[0m"}], %{ref: ^ref, type: :replace}})
+
+          assert_output(
+            {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
+             %{ref: ^ref, type: :replace}}
+          )
+
+          assert_output(
+            {:frame, [{:terminal_text, "\e[34m4\e[0m", %{chunk: false}}],
+             %{ref: ^ref, type: :replace}}
+          )
         end)
 
       assert log =~ "Kino.animate"

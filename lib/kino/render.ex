@@ -48,17 +48,17 @@ end
 
 defimpl Kino.Render, for: Kino.Text do
   def to_livebook(%{terminal: true} = text) do
-    Kino.Output.text(text.content)
+    Kino.Output.terminal_text(text.text, text.chunk)
   end
 
   def to_livebook(text) do
-    Kino.Output.plain_text(text.content)
+    Kino.Output.plain_text(text.text, text.chunk)
   end
 end
 
 defimpl Kino.Render, for: Kino.Markdown do
   def to_livebook(markdown) do
-    Kino.Output.markdown(markdown.content)
+    Kino.Output.markdown(markdown.text, markdown.chunk)
   end
 end
 
