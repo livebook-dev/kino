@@ -18,7 +18,7 @@ defmodule Kino.FS do
 
   @doc """
   Accesses notebook file with the given name and returns a local path
-  to ead its contents from.
+  to read its contents from.
 
   This invocation may take a while, in case the file is downloaded
   from a URL and is not in the cache.
@@ -48,7 +48,14 @@ defmodule Kino.FS do
     end
   end
 
-  @doc false
+  @doc """
+  Accesses notebook file with the given name and returns a specification
+  of the file location.
+  
+  This does not copy any files and moves the responsibility of reading
+  the file to the caller. If you need to read a file directly, use
+  `file_path/1`.
+  """
   @spec file_spec(String.t()) :: FSS.entry()
   def file_spec(name) do
     case Kino.Bridge.get_file_entry_spec(name) do
