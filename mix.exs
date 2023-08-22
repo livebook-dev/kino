@@ -32,6 +32,7 @@ defmodule Kino.MixProject do
   defp deps do
     [
       {:table, "~> 0.1.2"},
+      {:fss, github: "elixir-explorer/fss", branch: "main"},
       {:nx, "~> 0.1", optional: true},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]

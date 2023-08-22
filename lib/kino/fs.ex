@@ -66,12 +66,14 @@ defmodule Kino.FS do
                key: String.t()
              }
 
+  @typep fss_entry :: FSS.Local.Entry.t() | FSS.S3.Entry.t() | FSS.HTTP.Entry.t()
+
   @doc false
-  @spec file_spec(String.t()) :: file_spec()
+  @spec file_spec(String.t()) :: fss_entry()
   def file_spec(name) do
     case Kino.Bridge.get_file_entry_spec(name) do
       {:ok, spec} ->
-        spec
+        file_spec_to_fss(spec)
 
       {:error, :forbidden} ->
         raise ForbiddenError, name: name
@@ -81,6 +83,34 @@ defmodule Kino.FS do
 
       {:error, reason} when is_atom(reason) ->
         raise "failed to access file spec, reason: #{inspect(reason)}"
+    end
+  end
+
+  @doc false
+  @spec file_spec_to_fss(file_spec()) ::
+          fss_entry()
+  def file_spec_to_fss(%{type: :local} = file_spec) do
+    %FSS.Local.Entry{path: file_spec.path}
+  end
+
+  def file_spec_to_fss(%{type: :url} = file_spec) do
+    case FSS.HTTP.parse(file_spec.url) do
+      {:ok, entry} -> entry
+      {:error, error} -> raise error
+    end
+  end
+
+  def file_spec_to_fss(%{type: :s3} = file_spec) do
+    case FSS.S3.parse("s3:///" <> file_spec.key,
+           config: [
+             region: file_spec.region,
+             endpoint: file_spec.bucket_url,
+             access_key_id: file_spec.access_key_id,
+             secret_access_key: file_spec.secret_access_key
+           ]
+         ) do
+      {:ok, entry} -> entry
+      {:error, error} -> raise error
     end
   end
 end
