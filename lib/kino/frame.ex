@@ -150,12 +150,6 @@ defmodule Kino.Frame do
     GenServer.cast(frame.pid, {:clear, destination})
   end
 
-  # TODO: remove on v0.11.0
-  @deprecated "Use Kino.listen/3 instead"
-  def periodically(_frame, interval_ms, acc, fun) do
-    Kino.listen(interval_ms, acc, fn _i, acc -> fun.(acc) end)
-  end
-
   @doc false
   @spec get_outputs(t()) :: list(Kino.Output.t())
   def get_outputs(frame) do
