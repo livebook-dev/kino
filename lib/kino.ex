@@ -90,8 +90,8 @@ defmodule Kino do
   def inspect(term, opts \\ []) do
     label = if label = opts[:label], do: "#{label}: ", else: ""
 
-    {:terminal_text, text, info} = Kino.Output.inspect(term, opts)
-    output = {:terminal_text, label <> text, info}
+    output = Kino.Output.inspect(term, opts)
+    output = update_in(output.text, &(label <> &1))
     Kino.Bridge.put_output(output)
 
     term

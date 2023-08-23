@@ -29,8 +29,19 @@ defmodule Kino.Image do
   The given type be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`, `:pixel`
   or a string with image MIME type.
 
-  Note that a special `:pixel` format is supported, see `t:Kino.Output.image/0`
-  for the specification.
+  ## Pixel data
+
+  Note that a special `image/x-pixel` MIME type is supported. The
+  binary consists of the following consecutive parts:
+
+    * height - 32 bits (unsigned big-endian integer)
+    * width - 32 bits (unsigned big-endian integer)
+    * channels - 8 bits (unsigned integer)
+    * data - pixel data in HWC order
+
+  Pixel data consists of 8-bit unsigned integers. The number of channels
+  can be either: 1 (grayscale), 2 (grayscale + alpha), 3 (RGB), or 4
+  (RGB + alpha).
   """
   @spec new(binary(), common_image_type() | mime_type()) :: t()
   def new(content, type) do

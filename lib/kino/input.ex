@@ -26,9 +26,14 @@ defmodule Kino.Input do
   more details.
   """
 
-  defstruct [:attrs]
+  defstruct [:ref, :id, :destination, :attrs]
 
-  @opaque t :: %__MODULE__{attrs: Kino.Output.input_attrs()}
+  @opaque t :: %__MODULE__{
+            ref: Kino.Output.ref(),
+            id: String.t(),
+            destination: Process.dest(),
+            attrs: map()
+          }
 
   defp new(attrs) do
     token = Kino.Bridge.generate_token()
@@ -37,17 +42,10 @@ defmodule Kino.Input do
     ref = Kino.Output.random_ref()
     subscription_manager = Kino.SubscriptionManager.cross_node_name()
 
-    attrs =
-      Map.merge(attrs, %{
-        ref: ref,
-        id: persistent_id,
-        destination: subscription_manager
-      })
-
     Kino.Bridge.reference_object(ref, self())
     Kino.Bridge.monitor_object(ref, subscription_manager, {:clear_topic, ref})
 
-    %__MODULE__{attrs: attrs}
+    %__MODULE__{ref: ref, id: persistent_id, destination: subscription_manager, attrs: attrs}
   end
 
   @doc false
@@ -662,7 +660,7 @@ defmodule Kino.Input do
   """
   @spec read(t()) :: term()
   def read(%Kino.Input{} = input) do
-    case Kino.Bridge.get_input_value(input.attrs.id) do
+    case Kino.Bridge.get_input_value(input.id) do
       {:ok, value} ->
         value
 

@@ -7,8 +7,40 @@ defprotocol Kino.Render do
 
   @doc """
   Transforms the given value into a Livebook-compatible output.
+
+  For detailed description of the output format see `t:Livebook.Runtime.output/0`.
+
+  When implementing the protocol for custom struct, you generally do
+  not need to worry about the output format. Instead, you can compose
+  built-in kinos and call `Kino.Render.to_livebook/1` to get the
+  expected representation.
+
+  For example, if we wanted to render a custom struct as a mermaid
+  graph, we could do this:
+
+      defimpl Kino.Render, for: Graph do
+        def to_livebook(graph) do
+          source = Graph.to_mermaid(graph)
+          mermaid_kino = Kino.Mermaid.new(source)
+          Kino.Render.to_livebook(mermaid_kino)
+        end
+      end
+
+  In many cases it is useful to show the default inspect representation
+  alongside our custom visual representation. For this, we can use tabs:
+
+      defimpl Kino.Render, for: Graph do
+        def to_livebook(graph) do
+          source = Graph.to_mermaid(graph)
+          mermaid_kino = Kino.Mermaid.new(source)
+          inspect_kino = Kino.Inspect.new(image)
+          kino = Kino.Layout.tabs(Graph: mermaid_kino, Raw: inspect_kino)
+          Kino.Render.to_livebook(kino)
+        end
+      end
+
   """
-  @spec to_livebook(t()) :: Kino.Output.t()
+  @spec to_livebook(t()) :: map()
   def to_livebook(value)
 end
 
@@ -25,72 +57,97 @@ defimpl Kino.Render, for: Kino.Inspect do
 end
 
 defimpl Kino.Render, for: Kino.JS do
+  @dialyzer {:nowarn_function, {:to_livebook, 1}}
+
   def to_livebook(kino) do
-    info = Kino.JS.js_info(kino)
     Kino.Bridge.reference_object(kino.ref, self())
-    Kino.Output.js(info)
+    %{js_view: js_view, export: export} = Kino.JS.output_attrs(kino)
+    %{type: :js, js_view: js_view, export: export}
   end
 end
 
 defimpl Kino.Render, for: Kino.JS.Live do
+  @dialyzer {:nowarn_function, {:to_livebook, 1}}
+
   def to_livebook(kino) do
     Kino.Bridge.reference_object(kino.pid, self())
-    info = Kino.JS.Live.js_info(kino)
-    Kino.Output.js(info)
+    %{js_view: js_view, export: export} = Kino.JS.Live.output_info(kino)
+    %{type: :js, js_view: js_view, export: export}
   end
 end
 
 defimpl Kino.Render, for: Kino.Image do
   def to_livebook(image) do
-    Kino.Output.image(image.content, image.mime_type)
+    %{type: :image, content: image.content, mime_type: image.mime_type}
   end
 end
 
 defimpl Kino.Render, for: Kino.Text do
-  def to_livebook(%{terminal: true} = text) do
-    Kino.Output.terminal_text(text.text, text.chunk)
+  def to_livebook(%{terminal: true} = kino) do
+    %{type: :terminal_text, text: kino.text, chunk: kino.chunk}
   end
 
-  def to_livebook(text) do
-    Kino.Output.plain_text(text.text, text.chunk)
+  def to_livebook(kino) do
+    %{type: :plain_text, text: kino.text, chunk: kino.chunk}
   end
 end
 
 defimpl Kino.Render, for: Kino.Markdown do
   def to_livebook(markdown) do
-    Kino.Output.markdown(markdown.text, markdown.chunk)
+    %{type: :markdown, text: markdown.text, chunk: markdown.chunk}
   end
 end
 
 defimpl Kino.Render, for: Kino.Frame do
+  @dialyzer {:nowarn_function, {:to_livebook, 1}}
+
   def to_livebook(kino) do
     Kino.Bridge.reference_object(kino.pid, self())
     outputs = Kino.Frame.get_outputs(kino)
-    Kino.Output.frame(outputs, %{ref: kino.ref, type: :default, placeholder: kino.placeholder})
+    %{type: :frame, ref: kino.ref, outputs: outputs, placeholder: kino.placeholder}
   end
 end
 
 defimpl Kino.Render, for: Kino.Layout do
   def to_livebook(%{type: :tabs} = kino) do
-    Kino.Output.tabs(kino.outputs, kino.info)
+    %{type: :tabs, outputs: kino.outputs, labels: kino.info.labels}
   end
 
   def to_livebook(%{type: :grid} = kino) do
-    Kino.Output.grid(kino.outputs, kino.info)
+    %{
+      type: :grid,
+      outputs: kino.outputs,
+      columns: kino.info.columns,
+      gap: kino.info.gap,
+      boxed: kino.info.boxed
+    }
   end
 end
 
 defimpl Kino.Render, for: Kino.Input do
   def to_livebook(input) do
-    Kino.Bridge.reference_object(input.attrs.ref, self())
-    Kino.Output.input(input.attrs)
+    Kino.Bridge.reference_object(input.ref, self())
+
+    %{
+      type: :input,
+      ref: input.ref,
+      id: input.id,
+      destination: input.destination,
+      attrs: input.attrs
+    }
   end
 end
 
 defimpl Kino.Render, for: Kino.Control do
   def to_livebook(control) do
-    Kino.Bridge.reference_object(control.attrs.ref, self())
-    Kino.Output.control(control.attrs)
+    Kino.Bridge.reference_object(control.ref, self())
+
+    %{
+      type: :control,
+      ref: control.ref,
+      destination: control.destination,
+      attrs: control.attrs
+    }
   end
 end
 

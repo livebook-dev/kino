@@ -9,13 +9,13 @@ defmodule Kino.Debug.Test do
 
   describe "dbg with a pipeline expression" do
     defp assert_dbg_pipeline_render() do
-      assert_output(
-        {:grid,
-         [
-           {:js, %{js_view: js_view}},
-           {:frame, [output], %{ref: frame_ref}}
-         ], %{}}
-      )
+      assert_output(%{
+        type: :grid,
+        outputs: [
+          %{type: :js, js_view: js_view},
+          %{type: :frame, ref: frame_ref, outputs: [output]}
+        ]
+      })
 
       kino = %Kino.JS.Live{ref: js_view.ref, pid: js_view.pid}
 
@@ -33,7 +33,7 @@ defmodule Kino.Debug.Test do
 
       {kino, output, _frame_ref} = assert_dbg_pipeline_render()
 
-      assert output == {:terminal_text, "\e[34m13\e[0m", %{chunk: false}}
+      assert output == %{type: :terminal_text, text: "\e[34m13\e[0m", chunk: false}
 
       %{
         dbg_line: dbg_line,
@@ -76,10 +76,11 @@ defmodule Kino.Debug.Test do
         "changed" => true
       })
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m31\e[0m", %{chunk: false}}],
-         %{ref: ^frame_ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^frame_ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m31\e[0m", chunk: false}]}
+      })
     end
 
     test "updates result when a pipeline step is moved" do
@@ -103,10 +104,11 @@ defmodule Kino.Debug.Test do
         "changed" => true
       })
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m31\e[0m", %{chunk: false}}],
-         %{ref: ^frame_ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^frame_ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m31\e[0m", chunk: false}]}
+      })
     end
 
     test "handles evaluation error" do
@@ -129,10 +131,12 @@ defmodule Kino.Debug.Test do
         "selected_id" => 0
       })
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m1\e[0m..\e[34m5\e[0m", %{chunk: false}}],
-         %{ref: ^frame_ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^frame_ref,
+        update:
+          {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m..\e[34m5\e[0m", chunk: false}]}
+      })
     end
 
     test "groups multiple calls to the same dbg" do
@@ -160,7 +164,7 @@ defmodule Kino.Debug.Test do
 
   describe "dbg with a non-pipeline expression" do
     defp assert_dbg_default_render() do
-      assert_output({:grid, [{:js, %{js_view: js_view}}, output], %{}})
+      assert_output(%{type: :grid, outputs: [%{type: :js, js_view: js_view}, output]})
       kino = %Kino.JS.Live{ref: js_view.ref, pid: js_view.pid}
       {kino, output}
     end
@@ -170,7 +174,7 @@ defmodule Kino.Debug.Test do
 
       {kino, output} = assert_dbg_default_render()
 
-      assert output == {:terminal_text, "\e[34m15\e[0m", %{chunk: false}}
+      assert output == %{type: :terminal_text, text: "\e[34m15\e[0m", chunk: false}
 
       %{
         dbg_line: dbg_line,

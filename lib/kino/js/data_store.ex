@@ -24,7 +24,7 @@ defmodule Kino.JS.DataStore do
   @doc """
   Stores output data under the given ref.
   """
-  @spec store(Kino.Output.js_output_ref(), term()) :: :ok
+  @spec store(Kino.Output.ref(), term()) :: :ok
   def store(ref, data) do
     GenServer.cast(@name, {:store, ref, data})
   end

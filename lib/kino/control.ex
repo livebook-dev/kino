@@ -20,7 +20,7 @@ defmodule Kino.Control do
   be done either by subscribing a process to the control with
   `subscribe/2` or by creating an event stream using `stream/1`
   or `tagged_stream/1` and then registering a callback using
-  `Kino.listen/1`.
+  `Kino.listen/2`.
 
   Here, we'll subscribe the current process to events:
 
@@ -34,9 +34,13 @@ defmodule Kino.Control do
       #=> {:hello, %{origin: "client1"}}
   """
 
-  defstruct [:attrs]
+  defstruct [:ref, :destination, :attrs]
 
-  @opaque t :: %__MODULE__{attrs: Kino.Output.control_attrs()}
+  @opaque t :: %__MODULE__{
+            ref: Kino.Output.ref(),
+            destination: Process.dest(),
+            attrs: map()
+          }
 
   @opaque interval :: {:interval, milliseconds :: non_neg_integer()}
 
@@ -46,12 +50,10 @@ defmodule Kino.Control do
     ref = Kino.Output.random_ref()
     subscription_manager = Kino.SubscriptionManager.cross_node_name()
 
-    attrs = Map.merge(attrs, %{ref: ref, destination: subscription_manager})
-
     Kino.Bridge.reference_object(ref, self())
     Kino.Bridge.monitor_object(ref, subscription_manager, {:clear_topic, ref})
 
-    %__MODULE__{attrs: attrs}
+    %__MODULE__{ref: ref, destination: subscription_manager, attrs: attrs}
   end
 
   @doc """
@@ -268,7 +270,7 @@ defmodule Kino.Control do
       Enum.map(fields, fn {field, input} ->
         # Make sure we use this input only in the form and nowhere else
         input = Kino.Input.duplicate(input)
-        {field, input.attrs}
+        {field, Kino.Render.to_livebook(input)}
       end)
 
     submit = Keyword.get(opts, :submit, nil)
@@ -309,7 +311,7 @@ defmodule Kino.Control do
   @spec subscribe(t() | Kino.Input.t(), term()) :: :ok
   def subscribe(source, tag)
       when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
-    Kino.SubscriptionManager.subscribe(source.attrs.ref, self(), tag)
+    Kino.SubscriptionManager.subscribe(source.ref, self(), tag)
   end
 
   @doc """
@@ -318,7 +320,7 @@ defmodule Kino.Control do
   @spec unsubscribe(t() | Kino.Input.t()) :: :ok
   def unsubscribe(source)
       when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
-    Kino.SubscriptionManager.unsubscribe(source.attrs.ref, self())
+    Kino.SubscriptionManager.unsubscribe(source.ref, self())
   end
 
   @doc """
@@ -377,7 +379,7 @@ defmodule Kino.Control do
           assert_stream_source!(source)
 
           case source do
-            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+            %struct{ref: ref} when struct in [Kino.Control, Kino.Input] ->
               {[{nil, ref} | tagged_topics], tagged_intervals}
 
             %Kino.JS.Live{ref: ref} ->
@@ -428,7 +430,7 @@ defmodule Kino.Control do
           {tag, source} = entry
 
           case source do
-            %struct{attrs: %{ref: ref}} when struct in [Kino.Control, Kino.Input] ->
+            %struct{ref: ref} when struct in [Kino.Control, Kino.Input] ->
               {[{tag, ref} | tagged_topics], tagged_intervals}
 
             %Kino.JS.Live{ref: ref} ->

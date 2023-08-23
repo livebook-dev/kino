@@ -6,7 +6,7 @@ defmodule Kino.OutputTest do
       Kino.Config.configure(inspect: [limit: 1, syntax_colors: []])
 
       list = Enum.to_list(1..100)
-      assert Kino.Output.inspect(list) == {:terminal_text, "[1, ...]", %{chunk: false}}
+      assert Kino.Output.inspect(list) == %{type: :terminal_text, text: "[1, ...]", chunk: false}
 
       Application.delete_env(:kino, :inspect)
     end
