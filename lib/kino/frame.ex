@@ -200,7 +200,7 @@ defmodule Kino.Frame do
   defp update_outputs(state, _destination, _update_fun), do: state
 
   defp put_update(destination, ref, outputs, type) do
-    output = Kino.Output.frame(outputs, %{ref: ref, type: type})
+    output = %{type: :frame_update, ref: ref, update: {type, outputs}}
 
     case destination do
       :default -> Kino.Bridge.put_output(output)

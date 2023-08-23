@@ -491,8 +491,8 @@ defmodule Kino.JS do
   end
 
   @doc false
-  @spec js_info(t()) :: Kino.Output.js_info()
-  def js_info(%__MODULE__{} = kino) do
+  @spec output_attrs(t()) :: map()
+  def output_attrs(%__MODULE__{} = kino) do
     %{
       js_view: %{
         ref: kino.ref,

@@ -16,7 +16,7 @@ defmodule KinoTest do
 
       Kino.inspect(:hey)
 
-      assert_receive {:output, {:terminal_text, "\e[34m:hey\e[0m", %{chunk: false}}}
+      assert_receive {:output, %{type: :terminal_text, text: "\e[34m:hey\e[0m", chunk: false}}
 
       await_process(gl)
     end
@@ -28,17 +28,19 @@ defmodule KinoTest do
       |> Stream.take(2)
       |> Kino.animate(fn i -> i end)
 
-      assert_output({:frame, [], %{ref: ref, type: :default}})
+      assert_output(%{type: :frame, ref: ref, outputs: []})
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m0\e[0m", %{chunk: false}}],
-         %{ref: ^ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m0\e[0m"}]}
+      })
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
-         %{ref: ^ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
+      })
     end
 
     test "ignores failures" do
@@ -51,12 +53,13 @@ defmodule KinoTest do
             i
           end)
 
-          assert_output({:frame, [], %{ref: ref, type: :default}})
+          assert_output(%{type: :frame, ref: ref, outputs: []})
 
-          assert_output(
-            {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
-             %{ref: ^ref, type: :replace}}
-          )
+          assert_output(%{
+            type: :frame_update,
+            ref: ^ref,
+            update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
+          })
         end)
 
       assert log =~ "Kino.animate"
@@ -72,17 +75,19 @@ defmodule KinoTest do
         {:cont, i + state, i + state}
       end)
 
-      assert_output({:frame, [], %{ref: ref, type: :default}})
+      assert_output(%{type: :frame, ref: ref, outputs: []})
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m0\e[0m", %{chunk: false}}],
-         %{ref: ^ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m0\e[0m"}]}
+      })
 
-      assert_output(
-        {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
-         %{ref: ^ref, type: :replace}}
-      )
+      assert_output(%{
+        type: :frame_update,
+        ref: ^ref,
+        update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
+      })
     end
 
     test "ignores failures" do
@@ -95,17 +100,19 @@ defmodule KinoTest do
             {:cont, i + state, i + state}
           end)
 
-          assert_output({:frame, [], %{ref: ref, type: :default}})
+          assert_output(%{type: :frame, ref: ref, outputs: []})
 
-          assert_output(
-            {:frame, [{:terminal_text, "\e[34m1\e[0m", %{chunk: false}}],
-             %{ref: ^ref, type: :replace}}
-          )
+          assert_output(%{
+            type: :frame_update,
+            ref: ^ref,
+            update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
+          })
 
-          assert_output(
-            {:frame, [{:terminal_text, "\e[34m4\e[0m", %{chunk: false}}],
-             %{ref: ^ref, type: :replace}}
-          )
+          assert_output(%{
+            type: :frame_update,
+            ref: ^ref,
+            update: {:replace, [%{type: :terminal_text, text: "\e[34m4\e[0m"}]}
+          })
         end)
 
       assert log =~ "Kino.animate"
@@ -137,11 +144,11 @@ defmodule KinoTest do
       end)
 
       assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
-                     when button.attrs.ref == ref
+                     when button.ref == ref
 
       info = %{origin: "client1"}
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.destination, {:event, button.ref, info})
+      send(button.destination, {:event, button.ref, info})
 
       assert_receive ^info
       assert_receive ^info
@@ -206,11 +213,11 @@ defmodule KinoTest do
       end)
 
       assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
-                     when button.attrs.ref == ref
+                     when button.ref == ref
 
       info = %{origin: "client1"}
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.destination, {:event, button.ref, info})
+      send(button.destination, {:event, button.ref, info})
 
       assert_receive {:counter, 1}
       assert_receive {:counter, 2}
@@ -264,11 +271,11 @@ defmodule KinoTest do
       end)
 
       assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
-                     when button.attrs.ref == ref
+                     when button.ref == ref
 
       info = %{origin: "client1"}
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.destination, {:event, button.ref, info})
+      send(button.destination, {:event, button.ref, info})
 
       assert_receive ^info
       assert_receive ^info

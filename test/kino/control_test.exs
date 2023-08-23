@@ -69,7 +69,7 @@ defmodule Kino.ControlTest do
       Kino.Control.subscribe(button, :name)
 
       info = %{origin: "client1"}
-      send(button.attrs.destination, {:event, button.attrs.ref, info})
+      send(button.destination, {:event, button.ref, info})
 
       assert_receive {:name, ^info}
     end
@@ -89,7 +89,7 @@ defmodule Kino.ControlTest do
 
       background_tick(fn ->
         info = %{origin: "client1"}
-        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(button.destination, {:event, button.ref, info})
       end)
 
       events = button |> Kino.Control.stream() |> Enum.take(2)
@@ -110,14 +110,14 @@ defmodule Kino.ControlTest do
 
       background_tick(fn ->
         info = %{origin: "client1"}
-        send(button.attrs.destination, {:event, button.attrs.ref, info})
+        send(button.destination, {:event, button.ref, info})
       end)
 
       events =
         button
         |> Kino.Control.stream()
         |> Enum.map(fn event ->
-          send(button.attrs.destination, {:clear_topic, button.attrs.ref})
+          send(button.destination, {:clear_topic, button.ref})
           event
         end)
 
@@ -153,8 +153,8 @@ defmodule Kino.ControlTest do
       input = Kino.Input.text("Name")
 
       background_tick(fn ->
-        send(button.attrs.destination, {:event, button.attrs.ref, %{origin: "client1"}})
-        send(button.attrs.destination, {:event, input.attrs.ref, %{origin: "client2"}})
+        send(button.destination, {:event, button.ref, %{origin: "client1"}})
+        send(button.destination, {:event, input.ref, %{origin: "client2"}})
       end)
 
       events = [button, input] |> Kino.Control.stream() |> Enum.take(2)
@@ -181,8 +181,8 @@ defmodule Kino.ControlTest do
       input = Kino.Input.text("Name")
 
       background_tick(fn ->
-        send(button.attrs.destination, {:event, button.attrs.ref, %{origin: "client1"}})
-        send(input.attrs.destination, {:event, input.attrs.ref, %{origin: "client2"}})
+        send(button.destination, {:event, button.ref, %{origin: "client1"}})
+        send(input.destination, {:event, input.ref, %{origin: "client2"}})
       end)
 
       events =

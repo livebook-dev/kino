@@ -184,7 +184,11 @@ defmodule Kino.TreeTest do
   end
 
   defp tree(input) do
-    %Kino.Layout{type: :grid, outputs: [js: %{js_view: %{ref: ref}}]} = Kino.Tree.new(input)
+    %Kino.Layout{
+      type: :grid,
+      outputs: [%{type: :js, js_view: %{ref: ref}}]
+    } = Kino.Tree.new(input)
+
     send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
     assert_receive {:connect_reply, data, %{ref: ^ref}}
     data

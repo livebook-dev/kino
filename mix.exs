@@ -59,7 +59,6 @@ defmodule Kino.MixProject do
         ],
         "Protocols and Behaviours": [
           Kino.Render,
-          Kino.Output,
           Kino.Inspect,
           Kino.Table
         ],
