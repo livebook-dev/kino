@@ -20,7 +20,7 @@ defmodule Kino.Control do
   be done either by subscribing a process to the control with
   `subscribe/2` or by creating an event stream using `stream/1`
   or `tagged_stream/1` and then registering a callback using
-  `Kino.listen/1`.
+  `Kino.listen/2`.
 
   Here, we'll subscribe the current process to events:
 
