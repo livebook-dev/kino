@@ -3,7 +3,7 @@ defmodule Kino.TestModules.LiveCounter do
   use Kino.JS.Live
 
   def new(count) do
-    Kino.JS.Live.new(__MODULE__, count)
+    Kino.JS.Live.new(__MODULE__, count, export: fn ctx -> {"text", ctx.assigns.count} end)
   end
 
   def bump(kino, by \\ 1) do

@@ -41,9 +41,9 @@ defmodule Kino.JS.Live.Server do
   end
 
   @impl true
-  def init({module, init_arg, ref}) do
+  def init({module, init_arg, ref, export}) do
     {:ok, ctx, _opts} = call_init(module, init_arg, ref)
-    {:ok, %{module: module, ctx: ctx}}
+    {:ok, %{module: module, ctx: ctx, export: export}}
   end
 
   @impl true
@@ -61,6 +61,12 @@ defmodule Kino.JS.Live.Server do
   end
 
   @impl true
+  def handle_info({:export, pid, %{}}, state) do
+    export_result = state.export.(state.ctx)
+    Kino.Bridge.send(pid, {:export_reply, export_result, %{ref: state.ctx.__private__.ref}})
+    {:noreply, state}
+  end
+
   def handle_info(msg, state) do
     case call_handle_info(msg, state.module, state.ctx) do
       {:ok, ctx} -> {:noreply, %{state | ctx: ctx}}

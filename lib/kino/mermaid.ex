@@ -29,6 +29,6 @@ defmodule Kino.Mermaid do
   """
   @spec new(binary()) :: t()
   def new(content) do
-    Kino.JS.new(__MODULE__, content, export_info_string: "mermaid")
+    Kino.JS.new(__MODULE__, content, export: fn content -> {"mermaid", content} end)
   end
 end

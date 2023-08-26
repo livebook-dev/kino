@@ -16,43 +16,20 @@ defmodule Kino.JSTest do
   end
 
   describe "new/3" do
-    test "raises an error when :export_key is specified but data is not a map" do
-      assert_raise ArgumentError,
-                   "expected data to be a map, because :export_key is specified, got: []",
-                   fn ->
-                     Kino.JS.new(Kino.TestModules.JSExternalAssets, [],
-                       export_info_string: "lang",
-                       export_key: :spec
-                     )
-                   end
-    end
-
-    test "raises an error when :export_key not in data" do
-      assert_raise ArgumentError,
-                   "got :export_key of :spec, but no such key found in data: %{width: 10}",
-                   fn ->
-                     Kino.JS.new(Kino.TestModules.JSExternalAssets, %{width: 10},
-                       export_info_string: "lang",
-                       export_key: :spec
-                     )
-                   end
-    end
-
-    test "builds export info when :export_info_string is specified" do
+    test "sets export to true when :export is specified" do
       kino =
         Kino.JS.new(Kino.TestModules.JSExternalAssets, %{spec: %{"width" => 10, "height" => 10}},
-          export_info_string: "vega-lite",
-          export_key: :spec
+          export: fn vl -> {"vega-lite", vl.spec} end
         )
 
-      assert %{export: %{info_string: "vega-lite", key: :spec}} = kino
+      assert %{export: true} = kino
     end
 
-    test "sets export info to nil when :export_info_string is not specified" do
+    test "sets export to false when :export is not specified" do
       kino =
         Kino.JS.new(Kino.TestModules.JSExternalAssets, %{spec: %{"width" => 10, "height" => 10}})
 
-      assert %{export: nil} = kino
+      assert %{export: false} = kino
     end
   end
 end

@@ -202,7 +202,7 @@ defmodule Kino.JS do
 
   defstruct [:module, :ref, :export]
 
-  @opaque t :: %__MODULE__{module: module(), ref: Kino.Output.ref(), export: map()}
+  @opaque t :: %__MODULE__{module: module(), ref: Kino.Output.ref(), export: boolean()}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -435,19 +435,23 @@ defmodule Kino.JS do
 
   ## Options
 
-    * `:export_info_string` - used as the info string for the Markdown
-      code block where output data is persisted
-
-    * `:export_key` - in case the data is a map and only a specific part
-      should be exported
+    * `:export` - a function called to export the given kino to Markdown.
+      See the "Export" section below
 
   ## Export
 
   The output can optionally be exported in notebook source by specifying
-  `:export_info_string`. For example:
+  an `:export` function. The function receives `data` as an argument
+  and should return a tuple `{info_string, payload}`. `info_string`
+  is used to annotate the Markdown code block where the output is
+  persisted. `payload` is the value persisted in the code block. The
+  value is automatically serialized to JSON, unless it is already a
+  string.
+
+  For example:
 
       data = "graph TD;A-->B;"
-      Kino.JS.new(__MODULE__, data, export_info_string: "mermaid")
+      Kino.JS.new(__MODULE__, data, export: fn data -> {"mermaid", data} end)
 
   Would be rendered as the following Live Markdown:
 
@@ -457,12 +461,22 @@ defmodule Kino.JS do
   ```
   ````
 
-  Non-binary data is automatically serialized to JSON.
+  > #### Export function {: .info}
+  >
+  > You should prefer to use the `data` argument for computing the
+  > export payload. However, if it cannot be inferred from `data`,
+  > you should just reference the original value. Do not put additional
+  > fields in `data`, just to use it for export.
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, data, opts \\ []) do
+    # TODO: remove the old export options in Kino v0.14.0
     export =
       if info_string = opts[:export_info_string] do
+        IO.warn(
+          "passing :export_info_string to Kino.JS.new/3 is deprecated. Specify an :export function instead"
+        )
+
         export_key = opts[:export_key]
 
         if export_key do
@@ -477,17 +491,19 @@ defmodule Kino.JS do
           end
         end
 
-        %{info_string: info_string, key: export_key}
+        fn data -> {info_string, data[export_key]} end
       end
+
+    export = export || opts[:export]
 
     ref = Kino.Output.random_ref()
 
-    Kino.JS.DataStore.store(ref, data)
+    Kino.JS.DataStore.store(ref, data, export)
 
     Kino.Bridge.reference_object(ref, self())
     Kino.Bridge.monitor_object(ref, Kino.JS.DataStore, {:remove, ref})
 
-    %__MODULE__{module: module, ref: ref, export: export}
+    %__MODULE__{module: module, ref: ref, export: export != nil}
   end
 
   @doc false

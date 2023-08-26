@@ -68,4 +68,10 @@ defmodule Kino.JS.LiveTest do
     Process.exit(pid, :kill)
     assert_receive {:DOWN, ^ref, :process, ^pid, :killed}
   end
+
+  test "export" do
+    %{ref: ref} = kino = LiveCounter.new(0)
+    send(kino.pid, {:export, self(), %{ref: ref}})
+    assert_receive {:export_reply, {"text", 0}, %{ref: ^ref}}
+  end
 end
