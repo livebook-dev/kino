@@ -182,11 +182,16 @@ defmodule Kino.JS.Live do
       end
   '''
 
-  defstruct [:module, :pid, :ref]
+  defstruct [:module, :pid, :ref, :export]
 
   alias Kino.JS.Live.Context
 
-  @opaque t :: %__MODULE__{module: module(), pid: pid(), ref: Kino.Output.ref()}
+  @opaque t :: %__MODULE__{
+            module: module(),
+            pid: pid(),
+            ref: Kino.Output.ref(),
+            export: boolean()
+          }
 
   @type payload :: term() | {:binary, info :: term(), binary()}
 
@@ -322,16 +327,25 @@ defmodule Kino.JS.Live do
 
   The given `init_arg` is passed to the `init/2` callback when
   the underlying kino process is started.
+
+  ## Options
+
+    * `:export` - a function called to export the given kino to Markdown.
+      This works the same as `Kino.JS.new/3`, except the function
+      receives `t:Kino.JS.Live.Context.t/0` as an argument
+
   """
-  @spec new(module(), term()) :: t()
-  def new(module, init_arg) do
+  @spec new(module(), term(), keyword()) :: t()
+  def new(module, init_arg, opts \\ []) do
+    export = opts[:export]
+
     ref = Kino.Output.random_ref()
 
-    case Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref}}) do
+    case Kino.start_child({Kino.JS.Live.Server, {module, init_arg, ref, export}}) do
       {:ok, pid} ->
         subscription_manager = Kino.SubscriptionManager.cross_node_name()
         Kino.Bridge.monitor_object(pid, subscription_manager, {:clear_topic, ref})
-        %__MODULE__{module: module, pid: pid, ref: ref}
+        %__MODULE__{module: module, pid: pid, ref: ref, export: export != nil}
 
       {:error, reason} ->
         raise ArgumentError,
@@ -348,7 +362,7 @@ defmodule Kino.JS.Live do
         pid: kino.pid,
         assets: kino.module.__assets_info__()
       },
-      export: nil
+      export: kino.export
     }
   end
 

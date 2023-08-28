@@ -63,10 +63,22 @@ defmodule Kino.Table do
   @doc """
   Creates a new tabular kino using the given module as data
   specification.
+
+  ## Options
+
+    * `:export` - a function called to export the given kino to Markdown.
+      This works the same as `Kino.JS.new/3`, except the function
+      receives the state as an argument
+
   """
-  @spec new(module(), term()) :: t()
-  def new(module, init_arg) do
-    Kino.JS.Live.new(__MODULE__, {module, init_arg})
+  @spec new(module(), term(), keyword()) :: t()
+  def new(module, init_arg, opts \\ []) do
+    export =
+      if export = opts[:export] do
+        fn ctx -> export.(ctx.assigns.state) end
+      end
+
+    Kino.JS.Live.new(__MODULE__, {module, init_arg}, export: export)
   end
 
   @impl true
