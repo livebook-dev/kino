@@ -446,6 +446,32 @@ defmodule Kino do
   end
 
   @doc """
+  Similar to `start_child/2` but returns the new pid or raises an error.
+  """
+  @spec start_child!(Supervisor.child_spec() | {module(), term()} | module()) :: pid()
+  def start_child!(child_spec) do
+    case start_child(child_spec) do
+      {:ok, pid} ->
+        pid
+
+      {:ok, pid, _info} ->
+        pid
+
+      {:error, reason} ->
+        raise "failed to start child with the spec #{Kernel.inspect(child_spec)}.\n" <>
+                "Reason: #{start_supervised_error(reason)}"
+    end
+  end
+
+  defp start_supervised_error({{:EXIT, reason}, info}) when is_tuple(info),
+    do: Exception.format_exit(reason)
+
+  defp start_supervised_error({reason, info}) when is_tuple(info),
+    do: Exception.format_exit(reason)
+
+  defp start_supervised_error(reason), do: Exception.format_exit(reason)
+
+  @doc """
   Terminates a child started with `start_child/1`.
 
   Returns `:ok` if the child was found and terminated, or
