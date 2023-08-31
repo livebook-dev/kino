@@ -393,27 +393,6 @@ function App({ ctx, data }) {
     [hoverRows]
   );
 
-  const getCellsForSelection = useCallback(
-    ({ x, y, width, height }) => {
-      const selected = [];
-      const max = content.columns.length;
-      const offSet = width >= max ? 0 : x + width >= max ? 0 : rowMarkerOffset;
-      const rows = [...Array.from({ length: height }, (_, index) => index + y)];
-      const cols = [
-        ...Array.from({ length: width + offSet }, (_, index) => index + x),
-      ];
-      rows.forEach((i) => {
-        const row = [];
-        cols.forEach((j) => {
-          row.push(getCellContent([j, i]));
-        });
-        selected.push(row);
-      });
-      return selected;
-    },
-    [rowMarkerOffset, getCellContent]
-  );
-
   useEffect(() => {
     selection.rows?.items.length > 0
       ? setRowMarkerOffset(1)
@@ -514,7 +493,7 @@ function App({ ctx, data }) {
           onHeaderMenuClick={onHeaderMenuClick}
           onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
-          getCellsForSelection={getCellsForSelection}
+          getCellsForSelection={true}
           onSearchClose={toggleSearch}
           headerIcons={customHeaderIcons}
           overscrollX={100}
