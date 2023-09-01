@@ -51,6 +51,17 @@ defmodule Kino.InputTest do
     end
   end
 
+  describe "date/2" do
+    test "allows default value at the edge of allowed range" do
+      assert %{attrs: %{default: ~D/2023-02-01/}} =
+               Kino.Input.date("Length",
+                 min: ~D/2023-02-01/,
+                 max: ~D/2023-03-01/,
+                 default: ~D/2023-02-01/
+               )
+    end
+  end
+
   describe "file/2" do
     test "raises an error when :accept is an empty list" do
       assert_raise ArgumentError, "expected :accept to be a non-empty list, got: []", fn ->

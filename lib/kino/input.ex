@@ -275,7 +275,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, nil) |> truncate_datetime()
     default = Keyword.get(opts, :default, nil) |> truncate_datetime()
 
-    if min && max && min > max do
+    if min && max && DateTime.compare(min, max) == :gt do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
@@ -286,14 +286,12 @@ defmodule Kino.Input do
       &(is_struct(&1, NaiveDateTime) or &1 == nil)
     )
 
-    if min && default && default <= min do
-      raise ArgumentError,
-            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
+    if min && default && DateTime.compare(default, min) == :lt do
+      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)} "
     end
 
-    if max && default && default > max do
-      raise ArgumentError,
-            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    if max && default && DateTime.compare(default, max) == :gt do
+      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
     end
 
     new(%{
@@ -333,21 +331,19 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, nil) |> truncate_time()
     default = Keyword.get(opts, :default, nil) |> truncate_time()
 
-    if min && max && min > max do
+    if min && max && Time.compare(min, max) == :gt do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
     assert_default_value!(default, "be %Time{} or nil", &(is_struct(&1, Time) or &1 == nil))
 
-    if min && default && default <= min do
-      raise ArgumentError,
-            "expected :default to be bigger than :min, got: #{inspect(default)} #{inspect(min)}"
+    if min && default && Time.compare(default, min) == :lt do
+      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)}"
     end
 
-    if max && default && default > max do
-      raise ArgumentError,
-            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    if max && default && Time.compare(default, max) == :gt do
+      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
     end
 
     new(%{
@@ -386,21 +382,19 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, nil)
     default = Keyword.get(opts, :default, nil)
 
-    if min && max && min > max do
+    if min && max && Date.compare(min, max) == :gt do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
 
     assert_default_value!(default, "be %Date{} or nil", &(is_struct(&1, Date) or &1 == nil))
 
-    if min && default && default <= min do
-      raise ArgumentError,
-            "expected :default to be bigger than :min, got: #{inspect(default)}"
+    if min && default && Date.compare(default, min) == :lt do
+      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)}"
     end
 
-    if max && default && default >= max do
-      raise ArgumentError,
-            "expected :default to be smaller than :max, got: #{inspect(default)}"
+    if max && default && Date.compare(default, max) == :gt do
+      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
     end
 
     new(%{
