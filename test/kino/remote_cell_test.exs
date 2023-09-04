@@ -92,7 +92,7 @@ defmodule Kino.RemoteCellTest do
       assert RemoteCell.to_source(code3) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             
+
              :erpc.call(node, fn ->
                a = 1
                a + a
