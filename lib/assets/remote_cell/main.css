@@ -12,11 +12,13 @@
   --gray-600: #445668;
   --gray-800: #1c2a3a;
 
+  --blue-100: #ecf0ff;
+  --blue-600: #3e64ff;
+
   --yellow-100: #fff7ec;
   --yellow-600: #ffa83f;
 
-  --blue-100: #ecf0ff;
-  --blue-600: #3e64ff;
+  --red--300: #f1a3a6;
 }
 
 input,
@@ -107,6 +109,10 @@ button {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+.required {
+  border: 1px solid var(--red--300);
 }
 
 .grow {

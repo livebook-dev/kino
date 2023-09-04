@@ -70,7 +70,6 @@ defmodule Kino.RemoteCell do
       cookie = unquote(String.to_atom(cookie))
       Node.set_cookie(node, cookie)
       Node.connect(node)
-
       :erpc.call(node, fn -> unquote(code) end)
     end
   end
