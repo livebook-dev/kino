@@ -44,39 +44,50 @@ defmodule Kino.RemoteCell do
     attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
   end
 
-  defp to_quoted(%{"node" => ""}) do
-    quote do
-    end
-  end
-
-  defp to_quoted(%{"cookie" => ""}) do
-    quote do
-    end
-  end
-
-  defp to_quoted(%{"code" => ""}) do
-    quote do
-    end
-  end
+  defp to_quoted(%{"node" => ""}), do: build_empty()
+  defp to_quoted(%{"cookie" => ""}), do: build_empty()
+  defp to_quoted(%{"code" => ""}), do: build_empty()
 
   defp to_quoted(%{"code" => code} = attrs) do
     code = Code.string_to_quoted(code)
     to_quoted(attrs, code)
   end
 
-  defp to_quoted(%{"node" => node, "cookie" => cookie}, {:ok, code}) do
+  defp to_quoted(%{"node" => node, "cookie" => cookie, "assign_to" => var}, {:ok, code}) do
+    valid = Kino.SmartCell.valid_variable_name?(var)
+    call = build_call(code) |> build_var(var, valid)
+
     quote do
       node = unquote(String.to_atom(node))
       cookie = unquote(String.to_atom(cookie))
       Node.set_cookie(node, cookie)
       Node.connect(node)
-      :erpc.call(node, fn -> unquote(code) end)
+      unquote(call)
     end
   end
 
   defp to_quoted(%{"code" => code}, {:error, _reason}) do
     quote do
       Code.string_to_quoted!(unquote(code))
+    end
+  end
+
+  defp build_call(code) do
+    quote do
+      :erpc.call(node, fn -> unquote(code) end)
+    end
+  end
+
+  defp build_var(call, _var, false), do: call
+
+  defp build_var(call, var, true) do
+    quote do
+      unquote({String.to_atom(var), [], nil}) = unquote(call)
+    end
+  end
+
+  defp build_empty() do
+    quote do
     end
   end
 end

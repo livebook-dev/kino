@@ -24,12 +24,25 @@ defmodule Kino.RemoteCellTest do
     {_kino, source} = start_smart_cell!(RemoteCell, @fields)
 
     assert source == """
-    node = :name@node
-    cookie = :"node-cookie"
-    Node.set_cookie(node, cookie)
-    Node.connect(node)
-    :erpc.call(node, fn -> :ok end)\
-    """
+           node = :name@node
+           cookie = :"node-cookie"
+           Node.set_cookie(node, cookie)
+           Node.connect(node)
+           :erpc.call(node, fn -> :ok end)\
+           """
+  end
+
+  test "from saved attrs with result" do
+    attrs = %{@fields | "assign_to" => "result"}
+    {_kino, source} = start_smart_cell!(RemoteCell, attrs)
+
+    assert source == """
+           node = :name@node
+           cookie = :"node-cookie"
+           Node.set_cookie(node, cookie)
+           Node.connect(node)
+           result = :erpc.call(node, fn -> :ok end)\
+           """
   end
 
   describe "code generation" do
@@ -50,52 +63,76 @@ defmodule Kino.RemoteCellTest do
 
     test "emites Code.string_to_quoted! when the code is invalid" do
       attrs = %{@fields | "code" => "1 + "}
+
       assert RemoteCell.to_source(attrs) == """
-      Code.string_to_quoted!("1 + ")\
-      """
+             Code.string_to_quoted!("1 + ")\
+             """
     end
 
     test "generates an erpc call when there's valid code" do
-
       code1 = %{@fields | "code" => "1 + 1"}
       code2 = %{@fields | "code" => "1 == 1"}
       code3 = %{@fields | "code" => "a = 1\na + a"}
 
       assert RemoteCell.to_source(@fields) == """
-      node = :name@node
-      cookie = :"node-cookie"
-      Node.set_cookie(node, cookie)
-      Node.connect(node)
-      :erpc.call(node, fn -> :ok end)\
-      """
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
+             :erpc.call(node, fn -> :ok end)\
+             """
 
       assert RemoteCell.to_source(code1) == """
-      node = :name@node
-      cookie = :"node-cookie"
-      Node.set_cookie(node, cookie)
-      Node.connect(node)
-      :erpc.call(node, fn -> 1 + 1 end)\
-      """
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
+             :erpc.call(node, fn -> 1 + 1 end)\
+             """
 
       assert RemoteCell.to_source(code2) == """
-      node = :name@node
-      cookie = :"node-cookie"
-      Node.set_cookie(node, cookie)
-      Node.connect(node)
-      :erpc.call(node, fn -> 1 == 1 end)\
-      """
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
+             :erpc.call(node, fn -> 1 == 1 end)\
+             """
 
       assert RemoteCell.to_source(code3) == """
-      node = :name@node
-      cookie = :"node-cookie"
-      Node.set_cookie(node, cookie)
-      Node.connect(node)
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
 
-      :erpc.call(node, fn ->
-        a = 1
-        a + a
-      end)\
-      """
+             :erpc.call(node, fn ->
+               a = 1
+               a + a
+             end)\
+             """
+    end
+
+    test "assign to a variable" do
+      attrs = %{@fields | "assign_to" => "result"}
+
+      assert RemoteCell.to_source(attrs) == """
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
+             result = :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "do not assign to an invalid variable" do
+      attrs = %{@fields | "assign_to" => "invalid result"}
+
+      assert RemoteCell.to_source(attrs) == """
+             node = :name@node
+             cookie = :"node-cookie"
+             Node.set_cookie(node, cookie)
+             Node.connect(node)
+             :erpc.call(node, fn -> :ok end)\
+             """
     end
   end
 end
