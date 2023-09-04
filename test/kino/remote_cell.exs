@@ -65,6 +65,7 @@ defmodule Kino.RemoteCellTest do
       attrs = %{@fields | "code" => "1 + "}
 
       assert RemoteCell.to_source(attrs) == """
+             # Invalid code for RPC, reproducing the error below
              Code.string_to_quoted!("1 + ")\
              """
     end
