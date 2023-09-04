@@ -50,8 +50,8 @@ defmodule Kino.RemoteCell do
   end
 
   defp to_quoted(%{"node" => node, "cookie" => cookie, "assign_to" => var}, {:ok, code}) do
-    valid = Kino.SmartCell.valid_variable_name?(var)
-    call = build_call(code) |> build_var(var, valid)
+    var = if Kino.SmartCell.valid_variable_name?(var), do: var
+    call = build_call(code) |> build_var(var)
 
     quote do
       node = unquote(String.to_atom(node))
@@ -78,9 +78,9 @@ defmodule Kino.RemoteCell do
     end
   end
 
-  defp build_var(call, _var, false), do: call
+  defp build_var(call, nil), do: call
 
-  defp build_var(call, var, true) do
+  defp build_var(call, var) do
     quote do
       unquote({String.to_atom(var), [], nil}) = unquote(call)
     end
