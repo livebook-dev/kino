@@ -25,8 +25,7 @@ defmodule Kino.RemoteCellTest do
 
     assert source == """
            node = :name@node
-           cookie = :"node-cookie"
-           Node.set_cookie(node, cookie)
+           Node.set_cookie(node, :"node-cookie")
            :erpc.call(node, fn -> :ok end)\
            """
   end
@@ -37,8 +36,7 @@ defmodule Kino.RemoteCellTest do
 
     assert source == """
            node = :name@node
-           cookie = :"node-cookie"
-           Node.set_cookie(node, cookie)
+           Node.set_cookie(node, :"node-cookie")
            result = :erpc.call(node, fn -> :ok end)\
            """
   end
@@ -75,30 +73,26 @@ defmodule Kino.RemoteCellTest do
 
       assert RemoteCell.to_source(@fields) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
+             Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> :ok end)\
              """
 
       assert RemoteCell.to_source(code1) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
+             Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> 1 + 1 end)\
              """
 
       assert RemoteCell.to_source(code2) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
+             Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> 1 == 1 end)\
              """
 
       assert RemoteCell.to_source(code3) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
-
+             Node.set_cookie(node, :"node-cookie")
+             
              :erpc.call(node, fn ->
                a = 1
                a + a
@@ -111,8 +105,7 @@ defmodule Kino.RemoteCellTest do
 
       assert RemoteCell.to_source(attrs) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
+             Node.set_cookie(node, :"node-cookie")
              result = :erpc.call(node, fn -> :ok end)\
              """
     end
@@ -122,8 +115,7 @@ defmodule Kino.RemoteCellTest do
 
       assert RemoteCell.to_source(attrs) == """
              node = :name@node
-             cookie = :"node-cookie"
-             Node.set_cookie(node, cookie)
+             Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> :ok end)\
              """
     end

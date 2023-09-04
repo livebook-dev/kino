@@ -46,23 +46,22 @@ defmodule Kino.RemoteCell do
 
   def to_source(%{"code" => code} = attrs) do
     code = Code.string_to_quoted(code)
-    to_quoted(attrs, code)
+    to_source(attrs, code)
   end
 
-  defp to_quoted(%{"node" => node, "cookie" => cookie, "assign_to" => var}, {:ok, code}) do
+  defp to_source(%{"node" => node, "cookie" => cookie, "assign_to" => var}, {:ok, code}) do
     var = if Kino.SmartCell.valid_variable_name?(var), do: var
     call = build_call(code) |> build_var(var)
 
     quote do
       node = unquote(String.to_atom(node))
-      cookie = unquote(String.to_atom(cookie))
-      Node.set_cookie(node, cookie)
+      Node.set_cookie(node, unquote(String.to_atom(cookie)))
       unquote(call)
     end
     |> Kino.SmartCell.quoted_to_string()
   end
 
-  defp to_quoted(%{"code" => code}, {:error, _reason}) do
+  defp to_source(%{"code" => code}, {:error, _reason}) do
     "# Invalid code for RPC, reproducing the error below\n" <>
       Kino.SmartCell.quoted_to_string(
         quote do
