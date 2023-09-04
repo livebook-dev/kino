@@ -57,7 +57,6 @@ defmodule Kino.RemoteCell do
       node = unquote(String.to_atom(node))
       cookie = unquote(String.to_atom(cookie))
       Node.set_cookie(node, cookie)
-      Node.connect(node)
       unquote(call)
     end
     |> Kino.SmartCell.quoted_to_string()

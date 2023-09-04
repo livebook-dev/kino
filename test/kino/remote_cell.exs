@@ -27,7 +27,6 @@ defmodule Kino.RemoteCellTest do
            node = :name@node
            cookie = :"node-cookie"
            Node.set_cookie(node, cookie)
-           Node.connect(node)
            :erpc.call(node, fn -> :ok end)\
            """
   end
@@ -40,7 +39,6 @@ defmodule Kino.RemoteCellTest do
            node = :name@node
            cookie = :"node-cookie"
            Node.set_cookie(node, cookie)
-           Node.connect(node)
            result = :erpc.call(node, fn -> :ok end)\
            """
   end
@@ -79,7 +77,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
              :erpc.call(node, fn -> :ok end)\
              """
 
@@ -87,7 +84,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
              :erpc.call(node, fn -> 1 + 1 end)\
              """
 
@@ -95,7 +91,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
              :erpc.call(node, fn -> 1 == 1 end)\
              """
 
@@ -103,7 +98,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
 
              :erpc.call(node, fn ->
                a = 1
@@ -119,7 +113,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
              result = :erpc.call(node, fn -> :ok end)\
              """
     end
@@ -131,7 +124,6 @@ defmodule Kino.RemoteCellTest do
              node = :name@node
              cookie = :"node-cookie"
              Node.set_cookie(node, cookie)
-             Node.connect(node)
              :erpc.call(node, fn -> :ok end)\
              """
     end
