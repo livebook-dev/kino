@@ -8,10 +8,12 @@ defmodule Kino.RemoteExecutionCellTest do
   setup :configure_livebook_bridge
 
   @fields %{
+    "assign_to" => "",
+    "code" => ":ok",
     "node" => "name@node",
     "cookie" => "node-cookie",
-    "assign_to" => "",
-    "code" => ":ok"
+    "use_cookie_secret" => false,
+    "cookie_secret" => ""
   }
 
   test "returns the defaults when starting fresh with no data" do
@@ -118,6 +120,21 @@ defmodule Kino.RemoteExecutionCellTest do
              Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> :ok end)\
              """
+    end
+
+    test "cookie value from secret" do
+      attrs = %{@fields | "use_cookie_secret" => true, "cookie_secret" => "COOKIE_SECRET"}
+
+      assert RemoteExecutionCell.to_source(attrs) == """
+             node = :name@node
+             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "do not generate code for an invalid secret" do
+      attrs = %{@fields | "use_cookie_secret" => true, "cookie_secret" => ""}
+      assert RemoteExecutionCell.to_source(attrs) == ""
     end
   end
 end
