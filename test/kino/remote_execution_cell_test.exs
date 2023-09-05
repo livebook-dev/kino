@@ -43,6 +43,28 @@ defmodule Kino.RemoteExecutionCellTest do
            """
   end
 
+  test "from saved attrs with cookie as secret" do
+    attrs = %{@fields | "use_cookie_secret" => true, "cookie_secret" => "COOKIE_SECRET"}
+    {_kino, source} = start_smart_cell!(RemoteExecutionCell, attrs)
+
+    assert source == """
+           node = :name@node
+           Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
+           :erpc.call(node, fn -> :ok end)\
+           """
+  end
+
+  test "from saved attrs with cookie as input" do
+    attrs = %{@fields | "use_cookie_secret" => false, "cookie" => "cookie-value"}
+    {_kino, source} = start_smart_cell!(RemoteExecutionCell, attrs)
+
+    assert source == """
+           node = :name@node
+           Node.set_cookie(node, :"cookie-value")
+           :erpc.call(node, fn -> :ok end)\
+           """
+  end
+
   describe "code generation" do
     test "do not generate code when there's no node" do
       attrs = %{@fields | "node" => ""}

@@ -9,14 +9,11 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def init(attrs, ctx) do
-    use_cookie_secret =
-      if Map.has_key?(attrs, "use_cookie_secret"), do: attrs["use_cookie_secret"], else: true
-
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
       "node" => attrs["node"] || "",
       "cookie" => attrs["cookie"],
-      "use_cookie_secret" => use_cookie_secret,
+      "use_cookie_secret" => Map.get(attrs, "use_cookie_secret", true),
       "cookie_secret" => attrs["cookie_secret"]
     }
 
