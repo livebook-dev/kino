@@ -9,10 +9,15 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def init(attrs, ctx) do
+    use_cookie_secret =
+      if Map.has_key?(attrs, "use_cookie_secret"), do: attrs["use_cookie_secret"], else: true
+
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "cookie" => attrs["cookie"] || "",
-      "node" => attrs["node"] || ""
+      "node" => attrs["node"] || "",
+      "cookie" => attrs["cookie"],
+      "use_cookie_secret" => use_cookie_secret,
+      "cookie_secret" => attrs["cookie_secret"]
     }
 
     ctx = assign(ctx, fields: fields)
@@ -40,22 +45,24 @@ defmodule Kino.RemoteExecutionCell do
   end
 
   @impl true
-  def to_source(%{"node" => ""}), do: ""
-  def to_source(%{"cookie" => ""}), do: ""
   def to_source(%{"code" => ""}), do: ""
+  def to_source(%{"node" => ""}), do: ""
+  def to_source(%{"use_cookie_secret" => false, "cookie" => ""}), do: ""
+  def to_source(%{"use_cookie_secret" => true, "cookie_secret" => ""}), do: ""
 
   def to_source(%{"code" => code} = attrs) do
     code = Code.string_to_quoted(code)
     to_source(attrs, code)
   end
 
-  defp to_source(%{"node" => node, "cookie" => cookie, "assign_to" => var}, {:ok, code}) do
+  defp to_source(%{"node" => node, "assign_to" => var} = attrs, {:ok, code}) do
     var = if Kino.SmartCell.valid_variable_name?(var), do: var
     call = build_call(code) |> build_var(var)
+    cookie = build_set_cookie(attrs)
 
     quote do
       node = unquote(String.to_atom(node))
-      Node.set_cookie(node, unquote(String.to_atom(cookie)))
+      Node.set_cookie(node, unquote(cookie))
       unquote(call)
     end
     |> Kino.SmartCell.quoted_to_string()
@@ -83,4 +90,12 @@ defmodule Kino.RemoteExecutionCell do
       unquote({String.to_atom(var), [], nil}) = unquote(call)
     end
   end
+
+  defp build_set_cookie(%{"use_cookie_secret" => true, "cookie_secret" => secret}) do
+    quote do
+      String.to_atom(System.fetch_env!(unquote("LB_#{secret}")))
+    end
+  end
+
+  defp build_set_cookie(%{"cookie" => cookie}), do: String.to_atom(cookie)
 end
