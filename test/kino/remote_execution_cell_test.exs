@@ -1,9 +1,9 @@
-defmodule Kino.RemoteCellTest do
+defmodule Kino.RemoteExecutionCellTest do
   use ExUnit.Case, async: true
 
   import Kino.Test
 
-  alias Kino.RemoteCell
+  alias Kino.RemoteExecutionCell
 
   setup :configure_livebook_bridge
 
@@ -15,13 +15,13 @@ defmodule Kino.RemoteCellTest do
   }
 
   test "returns the defaults when starting fresh with no data" do
-    {_kino, source} = start_smart_cell!(RemoteCell, %{})
+    {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
 
     assert source == ""
   end
 
   test "from saved attrs" do
-    {_kino, source} = start_smart_cell!(RemoteCell, @fields)
+    {_kino, source} = start_smart_cell!(RemoteExecutionCell, @fields)
 
     assert source == """
            node = :name@node
@@ -32,7 +32,7 @@ defmodule Kino.RemoteCellTest do
 
   test "from saved attrs with result" do
     attrs = %{@fields | "assign_to" => "result"}
-    {_kino, source} = start_smart_cell!(RemoteCell, attrs)
+    {_kino, source} = start_smart_cell!(RemoteExecutionCell, attrs)
 
     assert source == """
            node = :name@node
@@ -44,23 +44,23 @@ defmodule Kino.RemoteCellTest do
   describe "code generation" do
     test "do not generate code when there's no node" do
       attrs = %{@fields | "node" => ""}
-      assert RemoteCell.to_source(attrs) == ""
+      assert RemoteExecutionCell.to_source(attrs) == ""
     end
 
     test "do not generate code when there's no cookie" do
       attrs = %{@fields | "cookie" => ""}
-      assert RemoteCell.to_source(attrs) == ""
+      assert RemoteExecutionCell.to_source(attrs) == ""
     end
 
     test "do not generate code when there's no code" do
       attrs = %{@fields | "code" => ""}
-      assert RemoteCell.to_source(attrs) == ""
+      assert RemoteExecutionCell.to_source(attrs) == ""
     end
 
     test "emites Code.string_to_quoted! when the code is invalid" do
       attrs = %{@fields | "code" => "1 + "}
 
-      assert RemoteCell.to_source(attrs) == """
+      assert RemoteExecutionCell.to_source(attrs) == """
              # Invalid code for RPC, reproducing the error below
              Code.string_to_quoted!("1 + ")\
              """
@@ -71,25 +71,25 @@ defmodule Kino.RemoteCellTest do
       code2 = %{@fields | "code" => "1 == 1"}
       code3 = %{@fields | "code" => "a = 1\na + a"}
 
-      assert RemoteCell.to_source(@fields) == """
+      assert RemoteExecutionCell.to_source(@fields) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> :ok end)\
              """
 
-      assert RemoteCell.to_source(code1) == """
+      assert RemoteExecutionCell.to_source(code1) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> 1 + 1 end)\
              """
 
-      assert RemoteCell.to_source(code2) == """
+      assert RemoteExecutionCell.to_source(code2) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> 1 == 1 end)\
              """
 
-      assert RemoteCell.to_source(code3) == """
+      assert RemoteExecutionCell.to_source(code3) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
 
@@ -103,7 +103,7 @@ defmodule Kino.RemoteCellTest do
     test "assign to a variable" do
       attrs = %{@fields | "assign_to" => "result"}
 
-      assert RemoteCell.to_source(attrs) == """
+      assert RemoteExecutionCell.to_source(attrs) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
              result = :erpc.call(node, fn -> :ok end)\
@@ -113,7 +113,7 @@ defmodule Kino.RemoteCellTest do
     test "do not assign to an invalid variable" do
       attrs = %{@fields | "assign_to" => "invalid result"}
 
-      assert RemoteCell.to_source(attrs) == """
+      assert RemoteExecutionCell.to_source(attrs) == """
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
              :erpc.call(node, fn -> :ok end)\

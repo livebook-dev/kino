@@ -8,7 +8,7 @@ defmodule Kino.Application do
 
     Kino.Counter.initialize()
 
-    Kino.SmartCell.register(Kino.RemoteCell)
+    Kino.SmartCell.register(Kino.RemoteExecutionCell)
 
     children = [
       {DynamicSupervisor, strategy: :one_for_one, name: Kino.DynamicSupervisor},

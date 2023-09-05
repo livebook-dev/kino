@@ -1,9 +1,9 @@
-defmodule Kino.RemoteCell do
+defmodule Kino.RemoteExecutionCell do
   @moduledoc false
 
-  use Kino.JS, assets_path: "lib/assets/remote_cell"
+  use Kino.JS, assets_path: "lib/assets/remote_execution_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "Remote cell"
+  use Kino.SmartCell, name: "Remote execution"
 
   @default_code ":ok"
 
