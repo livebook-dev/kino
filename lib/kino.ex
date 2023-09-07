@@ -491,9 +491,6 @@ defmodule Kino do
   button are shown to the user, who can then attempt to resolve the
   source of the interrupt before resuming execution.
 
-  user who, after resolving resolving the source of the issue, can 
-  retry evaluation with a button click
-
   > #### Do not use interrupt inside listeners {: .warning}
   >
   > Since `interrupt!/2` aborts the execution, it cannot be used
