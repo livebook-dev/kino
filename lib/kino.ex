@@ -487,9 +487,9 @@ defmodule Kino do
   Interrupts evaluation with the given message.
 
   This function raises a specific error to let Livebook known that
-  evaluation should be stopped. The error message is shown to the
-  user and they can retry evaluation with a button click, supposedly
-  after they resolve the interrupt reason.
+  evaluation should be stopped. The error message and a `Continue`
+  button are shown to the user, who can then attempt to resolve the
+  source of the interrupt before resuming execution.
 
   > #### Do not use interrupt inside listeners {: .warning}
   >
