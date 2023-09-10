@@ -62,6 +62,35 @@ defmodule Kino.InputTest do
     end
   end
 
+  describe "utc_datetime/2" do
+    test "raises when :min is after :max" do
+      assert_raise ArgumentError, fn ->
+        Kino.Input.utc_datetime("Input",
+          min: ~U[2023-02-01 17:32:12Z],
+          max: ~U[2023-01-01 17:32:12Z]
+        )
+      end
+    end
+
+    test "raises when :default is before :min" do
+      assert_raise ArgumentError, fn ->
+        Kino.Input.utc_datetime("Input",
+          default: ~U[2023-01-01 17:32:12Z],
+          min: ~U[2023-02-01 17:32:12Z]
+        )
+      end
+    end
+
+    test "raises when :default is after :max" do
+      assert_raise ArgumentError, fn ->
+        Kino.Input.utc_datetime("Input",
+          default: ~U[2023-02-01 17:32:12Z],
+          max: ~U[2023-01-01 17:32:12Z]
+        )
+      end
+    end
+  end
+
   describe "file/2" do
     test "raises an error when :accept is an empty list" do
       assert_raise ArgumentError, "expected :accept to be a non-empty list, got: []", fn ->
