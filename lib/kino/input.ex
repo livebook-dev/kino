@@ -275,7 +275,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, nil) |> truncate_datetime()
     default = Keyword.get(opts, :default, nil) |> truncate_datetime()
 
-    if min && max && DateTime.compare(min, max) == :gt do
+    if min && max && NaiveDateTime.compare(min, max) == :gt do
       raise ArgumentError,
             "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
     end
@@ -286,11 +286,11 @@ defmodule Kino.Input do
       &(is_struct(&1, NaiveDateTime) or &1 == nil)
     )
 
-    if min && default && DateTime.compare(default, min) == :lt do
+    if min && default && NaiveDateTime.compare(default, min) == :lt do
       raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)} "
     end
 
-    if max && default && DateTime.compare(default, max) == :gt do
+    if max && default && NaiveDateTime.compare(default, max) == :gt do
       raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
     end
 
