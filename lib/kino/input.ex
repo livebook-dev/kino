@@ -277,7 +277,7 @@ defmodule Kino.Input do
 
     if min && max && NaiveDateTime.compare(min, max) == :gt do
       raise ArgumentError,
-            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+            "expected a non-empty range, but :min (#{inspect(min)}) is after :max (#{inspect(max)})"
     end
 
     assert_default_value!(
@@ -287,11 +287,13 @@ defmodule Kino.Input do
     )
 
     if min && default && NaiveDateTime.compare(default, min) == :lt do
-      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)} "
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is before :min (#{inspect(min)})"
     end
 
     if max && default && NaiveDateTime.compare(default, max) == :gt do
-      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is after :max (#{inspect(max)})"
     end
 
     new(%{
@@ -333,17 +335,19 @@ defmodule Kino.Input do
 
     if min && max && Time.compare(min, max) == :gt do
       raise ArgumentError,
-            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+            "expected a non-empty range, but :min (#{inspect(min)}) is after :max (#{inspect(max)})"
     end
 
     assert_default_value!(default, "be %Time{} or nil", &(is_struct(&1, Time) or &1 == nil))
 
     if min && default && Time.compare(default, min) == :lt do
-      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)}"
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is before :min (#{inspect(min)})"
     end
 
     if max && default && Time.compare(default, max) == :gt do
-      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is after :max (#{inspect(max)})"
     end
 
     new(%{
@@ -384,17 +388,19 @@ defmodule Kino.Input do
 
     if min && max && Date.compare(min, max) == :gt do
       raise ArgumentError,
-            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+            "expected a non-empty range, but :min (#{inspect(min)}) is after :max (#{inspect(max)})"
     end
 
     assert_default_value!(default, "be %Date{} or nil", &(is_struct(&1, Date) or &1 == nil))
 
     if min && default && Date.compare(default, min) == :lt do
-      raise ArgumentError, "expected :default to be bigger than :min, got: #{inspect(default)}"
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is before :min (#{inspect(min)})"
     end
 
     if max && default && Date.compare(default, max) == :gt do
-      raise ArgumentError, "expected :default to be smaller than :max, got: #{inspect(default)}"
+      raise ArgumentError,
+            "invalid :default, #{inspect(default)} is after :max (#{inspect(max)})"
     end
 
     new(%{
