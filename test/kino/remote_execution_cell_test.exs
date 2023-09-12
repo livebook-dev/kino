@@ -159,4 +159,66 @@ defmodule Kino.RemoteExecutionCellTest do
       assert RemoteExecutionCell.to_source(attrs) == ""
     end
   end
+
+  defmodule Global do
+    use ExUnit.Case, async: false
+
+    setup do
+      Kino.SmartCell.global_attr(Kino.RemoteExecutionCell, "node", "name@node@global")
+      Kino.SmartCell.global_attr(Kino.RemoteExecutionCell, "cookie", "node-cookie-global")
+      :ok
+    end
+
+    test "from prefilled attrs" do
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :name@node@global
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "attrs precedes globals" do
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{"node" => "name@node@attrs"})
+
+      assert source == """
+             node = :name@node@attrs
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "globals always come from the most recent edited cell" do
+      {kino, _source} = start_smart_cell!(RemoteExecutionCell, %{})
+      push_event(kino, "update_field", %{"field" => "node", "value" => "edited@node@name"})
+      assert_receive {:runtime_smart_cell_update, _, _, _, _}
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :edited@node@name
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "from prefilled attrs with cookie as a secret" do
+      Kino.SmartCell.global_attr(
+        Kino.RemoteExecutionCell,
+        "cookie_secret",
+        "COOKIE_SECRET_GLOBAL"
+      )
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :name@node@global
+             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
+             :erpc.call(node, fn -> :ok end)\
+             """
+
+      :ets.delete(Kino.Global, "#{Kino.RemoteExecutionCell}-cookie_secret")
+    end
+  end
 end
