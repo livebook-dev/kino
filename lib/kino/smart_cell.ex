@@ -391,4 +391,15 @@ defmodule Kino.SmartCell do
     |> Inspect.Algebra.format(90)
     |> IO.iodata_to_binary()
   end
+
+  def global_attr(cell, key) do
+    case Kino.Global.lookup("#{cell}-#{key}") do
+      [] -> nil
+      [{_key, value} | _] -> value
+    end
+  end
+
+  def global_attr(cell, key, value) do
+    Kino.Global.insert("#{cell}-#{key}", value)
+  end
 end

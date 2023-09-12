@@ -5,16 +5,27 @@ defmodule Kino.RemoteExecutionCell do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Remote execution"
 
+  alias Kino.SmartCell
+
   @default_code ":ok"
+  @global_key __MODULE__
+  @global_attrs ["node", "cookie", "cookie_secret"]
 
   @impl true
   def init(attrs, ctx) do
+    global_cookie = SmartCell.global_attr(@global_key, "cookie")
+    global_cookie_secret = SmartCell.global_attr(@global_key, "cookie_secret")
+
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => attrs["node"] || "",
-      "cookie" => attrs["cookie"] || "",
-      "cookie_secret" => attrs["cookie_secret"] || "",
-      "use_cookie_secret" => Map.get(attrs, "use_cookie_secret", true)
+      "node" => attrs["node"] || SmartCell.global_attr(@global_key, "node") || "",
+      "cookie" => attrs["cookie"] || global_cookie || "",
+      "cookie_secret" => attrs["cookie_secret"] || global_cookie_secret || "",
+      "use_cookie_secret" =>
+        if(!global_cookie_secret && global_cookie,
+          do: false,
+          else: Map.get(attrs, "use_cookie_secret", true)
+        )
     }
 
     ctx = assign(ctx, fields: fields)
@@ -31,6 +42,7 @@ defmodule Kino.RemoteExecutionCell do
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx = update(ctx, :fields, &Map.put(&1, field, value))
+    if field in @global_attrs, do: SmartCell.global_attr(@global_key, field, value)
     broadcast_event(ctx, "update_field", %{"fields" => %{field => value}})
 
     {:noreply, ctx}
