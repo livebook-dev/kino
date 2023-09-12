@@ -12,9 +12,9 @@ defmodule Kino.RemoteExecutionCell do
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
       "node" => attrs["node"] || "",
-      "cookie" => attrs["cookie"],
-      "use_cookie_secret" => Map.get(attrs, "use_cookie_secret", true),
-      "cookie_secret" => attrs["cookie_secret"]
+      "cookie" => attrs["cookie"] || "",
+      "cookie_secret" => attrs["cookie_secret"] || "",
+      "use_cookie_secret" => Map.get(attrs, "use_cookie_secret", true)
     }
 
     ctx = assign(ctx, fields: fields)
