@@ -17,6 +17,7 @@ defmodule Kino.Global do
   """
   @spec insert(term(), term()) :: boolean()
   def insert(key, value) do
+    maybe_clear_secret(key)
     :ets.insert(@table_name, {key, value})
   end
 
@@ -26,5 +27,12 @@ defmodule Kino.Global do
   @spec lookup(term()) :: term()
   def lookup(key) do
     :ets.lookup(@table_name, key)
+  end
+
+  defp maybe_clear_secret(key) do
+    case String.split_at(key, -7) do
+      {key, "_secret"} -> :ets.delete(@table_name, key)
+      _ -> :ets.delete(@table_name, "#{key}_secret")
+    end
   end
 end

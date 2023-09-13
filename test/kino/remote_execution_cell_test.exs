@@ -179,6 +179,22 @@ defmodule Kino.RemoteExecutionCellTest do
              """
     end
 
+    test "from prefilled attrs with cookie as a secret" do
+      Kino.SmartCell.global_attr(
+        Kino.RemoteExecutionCell,
+        "cookie_secret",
+        "COOKIE_SECRET_GLOBAL"
+      )
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :name@node@global
+             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
     test "attrs precedes globals" do
       {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{"node" => "name@node@attrs"})
 
@@ -201,24 +217,6 @@ defmodule Kino.RemoteExecutionCellTest do
              Node.set_cookie(node, :"node-cookie-global")
              :erpc.call(node, fn -> :ok end)\
              """
-    end
-
-    test "from prefilled attrs with cookie as a secret" do
-      Kino.SmartCell.global_attr(
-        Kino.RemoteExecutionCell,
-        "cookie_secret",
-        "COOKIE_SECRET_GLOBAL"
-      )
-
-      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
-
-      assert source == """
-             node = :name@node@global
-             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
-             :erpc.call(node, fn -> :ok end)\
-             """
-
-      :ets.delete(Kino.Global, "#{Kino.RemoteExecutionCell}-cookie_secret")
     end
   end
 end

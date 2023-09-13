@@ -22,10 +22,7 @@ defmodule Kino.RemoteExecutionCell do
       "cookie" => attrs["cookie"] || global_cookie || "",
       "cookie_secret" => attrs["cookie_secret"] || global_cookie_secret || "",
       "use_cookie_secret" =>
-        if(!global_cookie_secret && global_cookie,
-          do: false,
-          else: Map.get(attrs, "use_cookie_secret", true)
-        )
+        if(global_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
     }
 
     ctx = assign(ctx, fields: fields)
