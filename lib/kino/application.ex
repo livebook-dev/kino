@@ -6,8 +6,7 @@ defmodule Kino.Application do
   def start(_type, _args) do
     Application.put_env(:elixir, :dbg_callback, {Kino.Debug, :dbg, []})
 
-    Kino.Counter.initialize()
-    Kino.Global.initialize()
+    Kino.SharedAttribute.initialize()
 
     Kino.SmartCell.register(Kino.RemoteExecutionCell)
 
