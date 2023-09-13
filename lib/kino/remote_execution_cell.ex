@@ -13,16 +13,16 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def init(attrs, ctx) do
-    global_cookie = SmartCell.global_attr(@global_key, "cookie")
-    global_cookie_secret = SmartCell.global_attr(@global_key, "cookie_secret")
+    shared_cookie = SmartCell.get_shared_attr({@global_key, :cookie})
+    {shared_cookie, shared_cookie_secret} = if shared_cookie, do: shared_cookie, else: {nil, nil}
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => attrs["node"] || SmartCell.global_attr(@global_key, "node") || "",
-      "cookie" => attrs["cookie"] || global_cookie || "",
-      "cookie_secret" => attrs["cookie_secret"] || global_cookie_secret || "",
+      "node" => attrs["node"] || SmartCell.get_shared_attr({@global_key, :node}) || "",
+      "cookie" => attrs["cookie"] || shared_cookie || "",
+      "cookie_secret" => attrs["cookie_secret"] || shared_cookie_secret || "",
       "use_cookie_secret" =>
-        if(global_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
+        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
     }
 
     ctx = assign(ctx, fields: fields)
@@ -39,7 +39,7 @@ defmodule Kino.RemoteExecutionCell do
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx = update(ctx, :fields, &Map.put(&1, field, value))
-    if field in @global_attrs, do: SmartCell.global_attr(@global_key, field, value)
+    if field in @global_attrs, do: put_shared_attr(field, value)
     broadcast_event(ctx, "update_field", %{"fields" => %{field => value}})
 
     {:noreply, ctx}
@@ -104,4 +104,16 @@ defmodule Kino.RemoteExecutionCell do
   end
 
   defp build_set_cookie(%{"cookie" => cookie}), do: String.to_atom(cookie)
+
+  defp put_shared_attr("cookie", value) do
+    SmartCell.put_shared_attr({@global_key, :cookie}, {value, nil})
+  end
+
+  defp put_shared_attr("cookie_secret", value) do
+    SmartCell.put_shared_attr({@global_key, :cookie}, {nil, value})
+  end
+
+  defp put_shared_attr(field, value) do
+    SmartCell.put_shared_attr({@global_key, String.to_atom(field)}, value)
+  end
 end

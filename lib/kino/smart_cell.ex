@@ -392,14 +392,14 @@ defmodule Kino.SmartCell do
     |> IO.iodata_to_binary()
   end
 
-  def global_attr(cell, key) do
-    case Kino.Global.lookup("#{cell}-#{key}") do
+  def get_shared_attr(key) do
+    case Kino.Global.lookup(key) do
       [] -> nil
       [{_key, value} | _] -> value
     end
   end
 
-  def global_attr(cell, key, value) do
-    Kino.Global.insert("#{cell}-#{key}", value)
+  def put_shared_attr(key, value) do
+    Kino.Global.insert(key, value)
   end
 end
