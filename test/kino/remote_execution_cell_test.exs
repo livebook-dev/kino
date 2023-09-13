@@ -4,7 +4,7 @@ defmodule Kino.RemoteExecutionCellTest do
   import Kino.Test
 
   alias Kino.RemoteExecutionCell
-  alias Kino.SmartCell
+  alias Kino.AttributeStore
 
   setup :configure_livebook_bridge
 
@@ -165,8 +165,13 @@ defmodule Kino.RemoteExecutionCellTest do
     use ExUnit.Case, async: false
 
     setup do
-      SmartCell.put_shared_attr({Kino.RemoteExecutionCell, :node}, "name@node@global")
-      SmartCell.put_shared_attr({Kino.RemoteExecutionCell, :cookie}, {"node-cookie-global", nil})
+      AttributeStore.put_attribute({Kino.RemoteExecutionCell, :node}, "name@node@global")
+
+      AttributeStore.put_attribute(
+        {Kino.RemoteExecutionCell, :cookie},
+        {"node-cookie-global", nil}
+      )
+
       :ok
     end
 
@@ -181,7 +186,7 @@ defmodule Kino.RemoteExecutionCellTest do
     end
 
     test "from prefilled attrs with cookie as a secret" do
-      SmartCell.put_shared_attr(
+      AttributeStore.put_attribute(
         {Kino.RemoteExecutionCell, :cookie},
         {nil, "COOKIE_SECRET_GLOBAL"}
       )

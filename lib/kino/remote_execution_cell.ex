@@ -5,7 +5,7 @@ defmodule Kino.RemoteExecutionCell do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Remote execution"
 
-  alias Kino.SmartCell
+  alias Kino.AttributeStore
 
   @default_code ":ok"
   @global_key __MODULE__
@@ -13,12 +13,12 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def init(attrs, ctx) do
-    shared_cookie = SmartCell.get_shared_attr({@global_key, :cookie})
-    {shared_cookie, shared_cookie_secret} = if shared_cookie, do: shared_cookie, else: {nil, nil}
+    {shared_cookie, shared_cookie_secret} =
+      AttributeStore.get_attribute({@global_key, :cookie}, {nil, nil})
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => attrs["node"] || SmartCell.get_shared_attr({@global_key, :node}) || "",
+      "node" => attrs["node"] || AttributeStore.get_attribute({@global_key, :node}) || "",
       "cookie" => attrs["cookie"] || shared_cookie || "",
       "cookie_secret" => attrs["cookie_secret"] || shared_cookie_secret || "",
       "use_cookie_secret" =>
@@ -106,14 +106,14 @@ defmodule Kino.RemoteExecutionCell do
   defp build_set_cookie(%{"cookie" => cookie}), do: String.to_atom(cookie)
 
   defp put_shared_attr("cookie", value) do
-    SmartCell.put_shared_attr({@global_key, :cookie}, {value, nil})
+    AttributeStore.put_attribute({@global_key, :cookie}, {value, nil})
   end
 
   defp put_shared_attr("cookie_secret", value) do
-    SmartCell.put_shared_attr({@global_key, :cookie}, {nil, value})
+    AttributeStore.put_attribute({@global_key, :cookie}, {nil, value})
   end
 
   defp put_shared_attr(field, value) do
-    SmartCell.put_shared_attr({@global_key, String.to_atom(field)}, value)
+    AttributeStore.put_attribute({@global_key, String.to_atom(field)}, value)
   end
 end

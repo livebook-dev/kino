@@ -1,4 +1,4 @@
-defmodule Kino.SharedAttribute do
+defmodule Kino.AttributeStore do
   @moduledoc false
 
   @table_name __MODULE__
@@ -36,18 +36,18 @@ defmodule Kino.SharedAttribute do
   @doc """
   Puts the shared attribute value.
   """
-  @spec put_attr(term(), term()) :: boolean()
-  def put_attr(key, value) do
+  @spec put_attribute(term(), term()) :: boolean()
+  def put_attribute(key, value) do
     :ets.insert(@table_name, {key, value})
   end
 
   @doc """
   Returns the attribute value for a given key.
   """
-  @spec get_attr(term()) :: term()
-  def get_attr(key) do
+  @spec get_attribute(term()) :: term()
+  def get_attribute(key, default \\ nil) do
     case :ets.lookup(@table_name, key) do
-      [] -> nil
+      [] -> default
       [{_key, value} | _] -> value
     end
   end

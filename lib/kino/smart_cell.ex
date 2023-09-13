@@ -338,7 +338,7 @@ defmodule Kino.SmartCell do
   def prefixed_var_name(prefix, var_name)
 
   def prefixed_var_name(prefix, nil) do
-    case Kino.SharedAttribute.counter_next(var_counter_key(prefix)) do
+    case Kino.AttributeStore.counter_next(var_counter_key(prefix)) do
       1 -> prefix
       n -> "#{prefix}#{n}"
     end
@@ -347,7 +347,7 @@ defmodule Kino.SmartCell do
   def prefixed_var_name(prefix, var_name) do
     with {:ok, suffix} <- parse_var_prefix(var_name, prefix),
          {:ok, n} <- parse_var_suffix(suffix) do
-      Kino.SharedAttribute.counter_put_max(var_counter_key(prefix), n)
+      Kino.AttributeStore.counter_put_max(var_counter_key(prefix), n)
     end
 
     var_name
@@ -390,13 +390,5 @@ defmodule Kino.SmartCell do
     |> Code.quoted_to_algebra()
     |> Inspect.Algebra.format(90)
     |> IO.iodata_to_binary()
-  end
-
-  def get_shared_attr(key) do
-    Kino.SharedAttribute.get_attr(key)
-  end
-
-  def put_shared_attr(key, value) do
-    Kino.SharedAttribute.put_attr(key, value)
   end
 end
