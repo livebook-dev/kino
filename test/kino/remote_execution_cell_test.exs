@@ -4,6 +4,7 @@ defmodule Kino.RemoteExecutionCellTest do
   import Kino.Test
 
   alias Kino.RemoteExecutionCell
+  alias Kino.AttributeStore
 
   setup :configure_livebook_bridge
 
@@ -157,6 +158,70 @@ defmodule Kino.RemoteExecutionCellTest do
     test "do not generate code for an invalid secret" do
       attrs = %{@fields | "use_cookie_secret" => true, "cookie_secret" => ""}
       assert RemoteExecutionCell.to_source(attrs) == ""
+    end
+  end
+
+  defmodule Global do
+    use ExUnit.Case, async: false
+
+    setup do
+      AttributeStore.put_attribute({Kino.RemoteExecutionCell, :node}, "name@node@global")
+
+      AttributeStore.put_attribute(
+        {Kino.RemoteExecutionCell, :cookie},
+        {"node-cookie-global", nil}
+      )
+
+      :ok
+    end
+
+    test "from prefilled attrs" do
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :name@node@global
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "from prefilled attrs with cookie as a secret" do
+      AttributeStore.put_attribute(
+        {Kino.RemoteExecutionCell, :cookie},
+        {nil, "COOKIE_SECRET_GLOBAL"}
+      )
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :name@node@global
+             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "attrs precedes globals" do
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{"node" => "name@node@attrs"})
+
+      assert source == """
+             node = :name@node@attrs
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "globals always come from the most recent edited cell" do
+      {kino, _source} = start_smart_cell!(RemoteExecutionCell, %{})
+      push_event(kino, "update_field", %{"field" => "node", "value" => "edited@node@name"})
+      assert_receive {:runtime_smart_cell_update, _, _, _, _}
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = :edited@node@name
+             Node.set_cookie(node, :"node-cookie-global")
+             :erpc.call(node, fn -> :ok end)\
+             """
     end
   end
 end
