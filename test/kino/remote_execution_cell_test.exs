@@ -175,7 +175,7 @@ defmodule Kino.RemoteExecutionCellTest do
       :ok
     end
 
-    test "from prefilled attrs" do
+    test "from stored attrs" do
       {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
 
       assert source == """
@@ -185,7 +185,7 @@ defmodule Kino.RemoteExecutionCellTest do
              """
     end
 
-    test "from prefilled attrs with cookie as a secret" do
+    test "from stored attrs with cookie as a secret" do
       AttributeStore.put_attribute(
         {Kino.RemoteExecutionCell, :cookie},
         {nil, "COOKIE_SECRET_GLOBAL"}
@@ -200,7 +200,7 @@ defmodule Kino.RemoteExecutionCellTest do
              """
     end
 
-    test "attrs precedes globals" do
+    test "init attrs precedes stored attrs" do
       {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{"node" => "name@node@attrs"})
 
       assert source == """
@@ -210,7 +210,7 @@ defmodule Kino.RemoteExecutionCellTest do
              """
     end
 
-    test "globals always come from the most recent edited cell" do
+    test "stored attrs always come from the most recent edited cell" do
       {kino, _source} = start_smart_cell!(RemoteExecutionCell, %{})
       push_event(kino, "update_field", %{"field" => "node", "value" => "edited@node@name"})
       assert_receive {:runtime_smart_cell_update, _, _, _, _}
