@@ -203,6 +203,14 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Returns a temporary directory tied to the current runtime.
+  """
+  @spec get_tmp_dir() :: {:ok, String.t()} | {:error, request_error() | :not_available}
+  def get_tmp_dir() do
+    with {:ok, reply} <- io_request(:livebook_get_tmp_dir), do: reply
+  end
+
+  @doc """
   Checks if the caller is running within Livebook context (group leader).
   """
   @spec within_livebook?() :: boolean()

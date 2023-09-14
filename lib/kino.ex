@@ -516,4 +516,16 @@ defmodule Kino do
   def interrupt!(variant, message) when variant in [:normal, :error] and is_binary(message) do
     raise Kino.InterruptError, variant: variant, message: message
   end
+
+  @doc """
+  Returns a temporary directory that gets removed when the runtime
+  terminates.
+  """
+  @spec tmp_dir() :: String.t() | nil
+  def tmp_dir() do
+    case Kino.Bridge.get_tmp_dir() do
+      {:ok, path} -> path
+      {:error, _} -> nil
+    end
+  end
 end
