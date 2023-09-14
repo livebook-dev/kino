@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/livebook-dev/kino)
+
+### Added
+
+* Added `Kino.Shorts`, a convenience module for building outputs and inputs ([#310](https://github.com/livebook-dev/kino/pull/310))
+* Added `Kino.Audio` and `Kino.Video` for displaying multimedia data ([#311](https://github.com/livebook-dev/kino/pull/311))
+* Option for `Kino.Control.keyboard/2` to not suppress default shortcuts ([#312](https://github.com/livebook-dev/kino/pull/312))
+* Added `:terminal` option to `Kino.Text` to support ANSI codes and to mirror stdio style ([#314](https://github.com/livebook-dev/kino/pull/314))
+* Support for remote processes in `Kino.Process` ([#317](https://github.com/livebook-dev/kino/pull/317))
+* Support for chunked text and markdown outputs ([#318](https://github.com/livebook-dev/kino/pull/318))
+* Added `Kino.FS` for accessing notebook files ([#319](https://github.com/livebook-dev/kino/pull/319))
+* Support for `Kino.JS.Live` outputs to be exported ([#321](https://github.com/livebook-dev/kino/pull/321))
+* Added `Kino.start_child!/1` ([#322](https://github.com/livebook-dev/kino/pull/322))
+* Remote execution cell ([#328](https://github.com/livebook-dev/kino/pull/328))
+
+### Changed
+
+* `Kino.listen/{2,3}` to return PID of the started process ([#306](https://github.com/livebook-dev/kino/pull/306))
+
+### Fixed
+
+* Fixed date validation when allowed range is given ([#326](https://github.com/livebook-dev/kino/pull/326))
+
 ## [v0.10.0](https://github.com/livebook-dev/kino/tree/v0.10.0) (2023-07-10)
 
 ### Added
