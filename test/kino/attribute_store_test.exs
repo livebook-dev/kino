@@ -42,6 +42,10 @@ defmodule Kino.AttributeStoreTets do
       assert AttributeStore.get_attribute({test, :no_attr}) == nil
     end
 
+    test "returns a custom default value if the shared attr doesn't exist", %{test: test} do
+      assert AttributeStore.get_attribute({test, :no_attr}, {nil, nil}) == {nil, nil}
+    end
+
     test "returns the value if the shared attr exist", %{test: test} do
       AttributeStore.put_attribute({test, :shared_attr}, "plain value")
       assert AttributeStore.get_attribute({test, :shared_attr}) == "plain value"
