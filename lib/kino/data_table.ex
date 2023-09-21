@@ -66,7 +66,11 @@ defmodule Kino.DataTable do
         {data, meta.columns}
       end
 
-    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled})
+    inspected = inspect(tabular)
+
+    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled},
+      export: fn _ -> {"text", inspected} end
+    )
   end
 
   defp normalize_tabular([%struct{} | _] = tabular) do
