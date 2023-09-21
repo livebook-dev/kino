@@ -492,7 +492,7 @@ defmodule Kino.JS do
             end
           end
 
-          fn data -> {info_string, data[export_key]} end
+          fn data -> {info_string, if(export_key, do: data[export_key], else: data)} end
         end
 
     ref = Kino.Output.random_ref()
