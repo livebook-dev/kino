@@ -61,11 +61,21 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `""`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec text(String.t(), keyword()) :: t()
   def text(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = opts |> Keyword.get(:default, "") |> to_string()
-    new(%{type: :text, label: label, default: default})
+    debounce = Keyword.get(opts, :debounce, "blur")
+
+    assert_debounce_value!(debounce)
+
+    new(%{type: :text, label: label, default: default, debounce: debounce})
   end
 
   @doc """
@@ -77,17 +87,27 @@ defmodule Kino.Input do
 
     * `:monospace` - whether to use a monospace font inside the textarea.
       Defaults to `false`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec textarea(String.t(), keyword()) :: t()
   def textarea(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = opts |> Keyword.get(:default, "") |> to_string()
     monospace = Keyword.get(opts, :monospace, false)
+    debounce = Keyword.get(opts, :debounce, "blur")
+
+    assert_debounce_value!(debounce)
 
     new(%{
       type: :textarea,
       label: label,
       default: default,
-      monospace: monospace
+      monospace: monospace,
+      debounce: debounce
     })
   end
 
@@ -100,11 +120,21 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `""`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec password(String.t(), keyword()) :: t()
   def password(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = opts |> Keyword.get(:default, "") |> to_string()
-    new(%{type: :password, label: label, default: default})
+    debounce = Keyword.get(opts, :debounce, "blur")
+
+    assert_debounce_value!(debounce)
+
+    new(%{type: :password, label: label, default: default, debounce: debounce})
   end
 
   @doc """
@@ -115,21 +145,37 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `nil`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec number(String.t(), keyword()) :: t()
   def number(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = Keyword.get(opts, :default, nil)
+    debounce = Keyword.get(opts, :debounce, "blur")
 
     assert_default_value!(default, "be either number or nil", fn value ->
       is_nil(value) or is_number(value)
     end)
 
-    new(%{type: :number, label: label, default: default})
+    assert_debounce_value!(debounce)
+
+    new(%{type: :number, label: label, default: default, debounce: debounce})
   end
 
   defp assert_default_value!(value, message, check) do
     unless check.(value) do
       raise ArgumentError, "expected :default to #{message}, got: #{inspect(value)}"
+    end
+  end
+
+  defp assert_debounce_value!(value) do
+    unless is_nil(value) or value == "blur" or (is_number(value) and value >= 0) do
+      raise ArgumentError,
+            ~s/expected :debounce to be "blur" or a number greater or equal to zero, got: #{inspect(value)}/
     end
   end
 
@@ -141,16 +187,25 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `nil`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec url(String.t(), keyword()) :: t()
   def url(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = Keyword.get(opts, :default, nil)
+    debounce = Keyword.get(opts, :debounce, "blur")
 
     assert_default_value!(default, "be either string or nil", fn value ->
       is_nil(value) or is_binary(value)
     end)
 
-    new(%{type: :url, label: label, default: default})
+    assert_debounce_value!(debounce)
+
+    new(%{type: :url, label: label, default: default, debounce: debounce})
   end
 
   @doc """
@@ -221,6 +276,12 @@ defmodule Kino.Input do
     * `:max` - the maximum value
 
     * `:step` - the slider increment
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec range(String.t(), keyword()) :: t()
   def range(label, opts \\ []) when is_binary(label) and is_list(opts) do
@@ -228,6 +289,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, 100)
     step = Keyword.get(opts, :step, 1)
     default = Keyword.get(opts, :default, min)
+    debounce = Keyword.get(opts, :debounce, "blur")
 
     if min >= max do
       raise ArgumentError,
@@ -245,13 +307,16 @@ defmodule Kino.Input do
             "expected :default to be between :min and :max, got: #{inspect(default)}"
     end
 
+    assert_debounce_value!(debounce)
+
     new(%{
       type: :range,
       label: label,
       default: default,
       min: min,
       max: max,
-      step: step
+      step: step,
+      debounce: debounce
     })
   end
 
@@ -268,12 +333,19 @@ defmodule Kino.Input do
     * `:min` - the minimum datetime value (in UTC)
 
     * `:max` - the maximum datetime value (in UTC)
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec utc_datetime(String.t(), keyword()) :: t()
   def utc_datetime(label, opts \\ []) when is_binary(label) and is_list(opts) do
     min = Keyword.get(opts, :min, nil) |> truncate_datetime()
     max = Keyword.get(opts, :max, nil) |> truncate_datetime()
     default = Keyword.get(opts, :default, nil) |> truncate_datetime()
+    debounce = Keyword.get(opts, :debounce, "blur")
 
     if min && max && NaiveDateTime.compare(min, max) == :gt do
       raise ArgumentError,
@@ -296,12 +368,15 @@ defmodule Kino.Input do
             "invalid :default, #{inspect(default)} is after :max (#{inspect(max)})"
     end
 
+    assert_debounce_value!(debounce)
+
     new(%{
       type: :utc_datetime,
       label: label,
       default: default,
       min: min,
-      max: max
+      max: max,
+      debounce: debounce
     })
   end
 
@@ -420,12 +495,23 @@ defmodule Kino.Input do
   ## Options
 
     * `:default` - the initial input value. Defaults to `#6583FF`
+
+    * `:debounce` - the option to modify the change event behavior.
+      Accepts an integer timeout (in milliseconds) or `"blur"`.
+      If an integer, the event emits after the specified delay.
+      If `"blur"`, it emits when the field is deselected by the user.
+      Defaults to `"blur"`
   """
   @spec color(String.t(), keyword()) :: t()
   def color(label, opts \\ []) when is_binary(label) and is_list(opts) do
     default = Keyword.get(opts, :default, "#6583FF")
+    debounce = Keyword.get(opts, :debounce, "blur")
+
     assert_default_value!(default, "be a string", &is_binary/1)
-    new(%{type: :color, label: label, default: default})
+
+    assert_debounce_value!(debounce)
+
+    new(%{type: :color, label: label, default: default, debounce: debounce})
   end
 
   @doc """
