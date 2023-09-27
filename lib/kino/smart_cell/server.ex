@@ -77,7 +77,7 @@ defmodule Kino.SmartCell.Server do
 
   defp validate_init_opts!(opts) do
     opts
-    |> Keyword.validate!([:editor, :reevaluate_on_change, :editor_intellisense_node])
+    |> Keyword.validate!([:editor, :reevaluate_on_change])
     |> Keyword.update(:editor, nil, fn editor_opts ->
       editor_opts =
         Keyword.validate!(editor_opts, [
