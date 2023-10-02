@@ -589,7 +589,8 @@ defmodule Kino.Input do
       %{
         data: binary(),
         num_channels: pos_integer(),
-        sampling_rate: pos_integer()
+        sampling_rate: pos_integer(),
+        format: :pcm_f32 | :wav
       }
 
   Note that the value can also be `nil`, if no audio is selected.
