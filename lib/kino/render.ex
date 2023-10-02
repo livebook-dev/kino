@@ -235,3 +235,12 @@ defimpl Kino.Render, for: BitString do
     end
   end
 end
+
+defimpl Kino.Render, for: Nx.Heatmap do
+  def to_livebook(heatmap) do
+    tensor = Kino.Inspect.new(heatmap.tensor)
+    heatmap = Kino.Inspect.new(heatmap)
+    tabs = Kino.Layout.tabs(Heatmap: heatmap, Tensor: tensor)
+    Kino.Render.to_livebook(tabs)
+  end
+end
