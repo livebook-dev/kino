@@ -24,7 +24,7 @@ defmodule Kino.RemoteExecutionCell do
       "assign_to" => attrs["assign_to"] || "",
       "node" => node,
       "cookie" => attrs["cookie"] || shared_cookie || "",
-      "cookie_secret" => cookie_secret,
+      "cookie_secret" => cookie_secret || "",
       "use_cookie_secret" =>
         if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true)),
       "cookie_secret_value" => cookie_secret_value
