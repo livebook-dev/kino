@@ -16,15 +16,18 @@ defmodule Kino.RemoteExecutionCell do
     {shared_cookie, shared_cookie_secret} =
       AttributeStore.get_attribute({@global_key, :cookie}, {nil, nil})
 
-    node = attrs["node"] || AttributeStore.get_attribute({@global_key, :node})
+    node = attrs["node"] || AttributeStore.get_attribute({@global_key, :node}) || ""
+    cookie_secret = attrs["cookie_secret"] || shared_cookie_secret || ""
+    cookie_secret_value = System.get_env("LB_#{cookie_secret}")
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => node || "",
+      "node" => node,
       "cookie" => attrs["cookie"] || shared_cookie || "",
-      "cookie_secret" => attrs["cookie_secret"] || shared_cookie_secret || "",
+      "cookie_secret" => cookie_secret,
       "use_cookie_secret" =>
-        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
+        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true)),
+      "cookie_secret_value" => cookie_secret_value
     }
 
     ctx = assign(ctx, fields: fields)
@@ -42,14 +45,19 @@ defmodule Kino.RemoteExecutionCell do
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx = update(ctx, :fields, &Map.put(&1, field, value))
     if field in @global_attrs, do: put_shared_attr(field, value)
-    broadcast_event(ctx, "update_field", %{"fields" => %{field => value}})
+    fields = update_fields(field, value)
+
+    if field == "cookie_secret",
+      do: send_event(ctx, ctx.origin, "update_node_info", fields["cookie_secret_value"])
+
+    broadcast_event(ctx, "update_field", %{"fields" => fields})
 
     {:noreply, ctx}
   end
 
   @impl true
   def to_attrs(ctx) do
-    ctx.assigns.fields
+    Map.delete(ctx.assigns.fields, "cookie_secret_value")
   end
 
   @impl true
@@ -118,4 +126,13 @@ defmodule Kino.RemoteExecutionCell do
   defp put_shared_attr(field, value) do
     AttributeStore.put_attribute({@global_key, String.to_atom(field)}, value)
   end
+
+  defp update_fields("cookie_secret", cookie_secret) do
+    %{
+      "cookie_secret" => cookie_secret,
+      "cookie_secret_value" => System.get_env("LB_#{cookie_secret}")
+    }
+  end
+
+  defp update_fields(field, value), do: %{field => value}
 end
