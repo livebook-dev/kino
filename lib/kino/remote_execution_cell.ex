@@ -17,8 +17,8 @@ defmodule Kino.RemoteExecutionCell do
       AttributeStore.get_attribute({@global_key, :cookie}, {nil, nil})
 
     node = attrs["node"] || AttributeStore.get_attribute({@global_key, :node}) || ""
-    cookie_secret = attrs["cookie_secret"] || shared_cookie_secret || ""
-    cookie_secret_value = System.get_env("LB_#{cookie_secret}")
+    cookie_secret = attrs["cookie_secret"] || shared_cookie_secret
+    cookie_secret_value = cookie_secret && System.get_env("LB_#{cookie_secret}")
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
