@@ -283,7 +283,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, 100)
     step = Keyword.get(opts, :step, 1)
     default = Keyword.get(opts, :default, min)
-    debounce = Keyword.get(opts, :debounce, :blur)
+    debounce = Keyword.get(opts, :debounce, 300)
 
     if min >= max do
       raise ArgumentError,
