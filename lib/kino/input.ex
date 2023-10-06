@@ -273,9 +273,8 @@ defmodule Kino.Input do
     * `:step` - the slider increment
 
     * `:debounce` - determines when input changes are emitted. When
-      set to `:blur`, the change propagates when the user leaves the
-      input. When set to a non-negative number of milliseconds, the
-      change propagates after the specified delay. Defaults to `:blur`
+      set to a non-negative number of milliseconds, the change propagates
+      after the specified delay. Defaults to `250`
   """
   @spec range(String.t(), keyword()) :: t()
   def range(label, opts \\ []) when is_binary(label) and is_list(opts) do
@@ -283,7 +282,9 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, 100)
     step = Keyword.get(opts, :step, 1)
     default = Keyword.get(opts, :default, min)
-    debounce = Keyword.get(opts, :debounce, :blur)
+    # In Safari range input is blurred as soon as it's clicked,
+    # so we don't support blur as debounce for this input
+    debounce = Keyword.get(opts, :debounce, 250)
 
     if min >= max do
       raise ArgumentError,
@@ -301,7 +302,10 @@ defmodule Kino.Input do
             "expected :default to be between :min and :max, got: #{inspect(default)}"
     end
 
-    assert_debounce_value!(debounce)
+    unless is_number(debounce) and debounce >= 0 do
+      raise ArgumentError,
+            ~s/expected :debounce to be a non-negative number, got: #{inspect(debounce)}/
+    end
 
     new(%{
       type: :range,

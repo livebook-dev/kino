@@ -49,6 +49,14 @@ defmodule Kino.InputTest do
         Kino.Input.range("Length", min: 0, max: 10, default: 20)
       end
     end
+
+    test "raises an error when debounce is not a positive integer" do
+      assert_raise ArgumentError,
+                   "expected :debounce to be a non-negative number, got: :blur",
+                   fn ->
+                     Kino.Input.range("Length", debounce: :blur)
+                   end
+    end
   end
 
   describe "date/2" do
