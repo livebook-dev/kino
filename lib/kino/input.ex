@@ -283,7 +283,7 @@ defmodule Kino.Input do
     max = Keyword.get(opts, :max, 100)
     step = Keyword.get(opts, :step, 1)
     default = Keyword.get(opts, :default, min)
-    # In Safari range input is blured as soon as it's clicked,
+    # In Safari range input is blurred as soon as it's clicked,
     # so we don't support blur as debounce for this input
     debounce = Keyword.get(opts, :debounce, 250)
 
@@ -303,7 +303,10 @@ defmodule Kino.Input do
             "expected :default to be between :min and :max, got: #{inspect(default)}"
     end
 
-    assert_debounce_value!(debounce)
+    unless is_number(debounce) and debounce >= 0 do
+      raise ArgumentError,
+            ~s/expected :debounce to be a non-negative number, got: #{inspect(debounce)}/
+    end
 
     new(%{
       type: :range,
