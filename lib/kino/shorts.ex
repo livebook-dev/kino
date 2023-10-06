@@ -488,7 +488,7 @@ defmodule Kino.Shorts do
   """
   @spec read_image(String.t(), keyword()) ::
           %{
-            data: String.t(),
+            file_ref: term(),
             height: pos_integer(),
             width: pos_integer(),
             format: :rgb | :png | :jpeg
@@ -512,9 +512,10 @@ defmodule Kino.Shorts do
   """
   @spec read_audio(String.t(), keyword()) ::
           %{
-            data: String.t(),
+            file_ref: term(),
             num_channels: pos_integer(),
-            sampling_rate: pos_integer()
+            sampling_rate: pos_integer(),
+            format: :pcm_f32 | :wav
           }
           | nil
   def read_audio(label, opts \\ []) do

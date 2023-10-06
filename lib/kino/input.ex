@@ -500,16 +500,18 @@ defmodule Kino.Input do
   @doc """
   Creates a new image input.
 
-  The input value is a map, with the image binary and metadata:
+  The input value is a map, with an image file and metadata:
 
       %{
-        data: binary(),
+        file_ref: term(),
         height: pos_integer(),
         width: pos_integer(),
         format: :rgb | :png | :jpeg
       }
 
   Note that the value can also be `nil`, if no image is selected.
+
+  The file path can then be accessed using `file_path/1`.
 
   > #### Warning {: .warning}
   >
@@ -584,16 +586,18 @@ defmodule Kino.Input do
   @doc """
   Creates a new audio input.
 
-  The input value is a map, with the audio binary and metadata:
+  The input value is a map, with an audio file and metadata:
 
       %{
-        data: binary(),
+        file_ref: term(),
         num_channels: pos_integer(),
         sampling_rate: pos_integer(),
         format: :pcm_f32 | :wav
       }
 
   Note that the value can also be `nil`, if no audio is selected.
+
+  The file path can then be accessed using `file_path/1`.
 
   > #### Warning {: .warning}
   >
@@ -632,10 +636,10 @@ defmodule Kino.Input do
   @doc """
   Creates a new file input.
 
-  The input value is a map, with the file path and metadata:
+  The input value is a map, with a file and metadata:
 
       %{
-        file_ref: String.t(),
+        file_ref: term(),
         client_name: String.t()
       }
 
