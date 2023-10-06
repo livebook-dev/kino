@@ -273,9 +273,8 @@ defmodule Kino.Input do
     * `:step` - the slider increment
 
     * `:debounce` - determines when input changes are emitted. When
-      set to `:blur`, the change propagates when the user leaves the
-      input. When set to a non-negative number of milliseconds, the
-      change propagates after the specified delay. Defaults to `:blur`
+      set to a non-negative number of milliseconds, the change propagates
+      after the specified delay. Defaults to `250`
   """
   @spec range(String.t(), keyword()) :: t()
   def range(label, opts \\ []) when is_binary(label) and is_list(opts) do
