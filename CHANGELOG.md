@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/livebook-dev/kino)
 
+With this release of Livebook and Kino we changed the values for audio and image input. The `:data` key with inline binary has been removed in favour of `:file_ref`, which points to a file similarly to the file input. Note that this is not a Kino change per se, the value you get depends specifically on your Livebook version. Here's how you can access the whole binary with the new API:
+
+```diff
+image_input = Kino.Input.image("Image")
+# ...
+image = Kino.Input.read(image_input)
+
+-image.data
++image.file_ref
++|> Kino.Input.file_path()
++|> File.read!()
+```
+
 ### Added
 
 * Added `Kino.Shorts`, a convenience module for building outputs and inputs ([#310](https://github.com/livebook-dev/kino/pull/310))
@@ -18,11 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `Kino.FS` for accessing notebook files ([#319](https://github.com/livebook-dev/kino/pull/319))
 * Support for `Kino.JS.Live` outputs to be exported ([#321](https://github.com/livebook-dev/kino/pull/321))
 * Added `Kino.start_child!/1` ([#322](https://github.com/livebook-dev/kino/pull/322))
-* Remote execution cell ([#328](https://github.com/livebook-dev/kino/pull/328))
+* Remote execution cell ([#328](https://github.com/livebook-dev/kino/pull/328), [#348](https://github.com/livebook-dev/kino/pull/348))
+* `Kino.tmp_dir/0` to get a directory that is cleaned when the runtime terminates ([#344](https://github.com/livebook-dev/kino/pull/344))
+* Enabled Kino.DataTable data to be exported in .livemd ([#346](https://github.com/livebook-dev/kino/pull/346))
+* Added `:debounce` option to inputs ([#347](https://github.com/livebook-dev/kino/pull/347))
+* Defined default rendering for `Nx.Heatmap` ([#349](https://github.com/livebook-dev/kino/pull/349))
 
 ### Changed
 
 * `Kino.listen/{2,3}` to return PID of the started process ([#306](https://github.com/livebook-dev/kino/pull/306))
+* **(Breaking)** Changed audio and image input values to include file rather than inline binary data
 
 ### Fixed
 

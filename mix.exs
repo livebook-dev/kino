@@ -1,7 +1,7 @@
 defmodule Kino.MixProject do
   use Mix.Project
 
-  @version "0.11.0-dev"
+  @version "0.11.0"
   @description "Interactive widgets for Livebook"
 
   def project do
