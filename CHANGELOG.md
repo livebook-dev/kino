@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.11.0](https://github.com/livebook-dev/kino/tree/v0.11.0) (2023-10-06)
 
+Note that Kino v0.11.0 requires Livebook v0.11.0, so make sure to upgrade Livebook.
+
 With this release of Livebook and Kino we changed the values for audio and image input. The `:data` key with inline binary has been removed in favour of `:file_ref`, which points to a file similarly to the file input. Note that this is not a Kino change per se, the value you get depends specifically on your Livebook version. Here's how you can access the whole binary with the new API:
 
 ```diff
