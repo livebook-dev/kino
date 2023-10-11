@@ -144,13 +144,13 @@ defmodule Kino.Table do
   end
 
   def handle_event("order_by", %{"key" => nil}, ctx) do
-    {:noreply, ctx |> assign(order: nil) |> broadcast_update()}
+    {:noreply, ctx |> assign(order: nil, page: 1) |> broadcast_update()}
   end
 
   def handle_event("order_by", %{"key" => key_string, "direction" => direction}, ctx) do
     direction = String.to_existing_atom(direction)
     key = lookup_key(ctx, key_string)
-    ctx = if key, do: assign(ctx, order: %{key: key, direction: direction}), else: ctx
+    ctx = if key, do: assign(ctx, order: %{key: key, direction: direction}, page: 1), else: ctx
     {:noreply, broadcast_update(ctx)}
   end
 
