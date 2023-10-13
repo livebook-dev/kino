@@ -14,6 +14,8 @@ defmodule Kino.RemoteExecutionCellTest do
     "node" => "name@node",
     "cookie" => "node-cookie",
     "use_cookie_secret" => false,
+    "use_node_secret" => false,
+    "node_secret" => "",
     "cookie_secret" => ""
   }
 
@@ -155,9 +157,40 @@ defmodule Kino.RemoteExecutionCellTest do
              """
     end
 
-    test "do not generate code for an invalid secret" do
+    test "do not generate code for an invalid cookie secret" do
       attrs = %{@fields | "use_cookie_secret" => true, "cookie_secret" => ""}
       assert RemoteExecutionCell.to_source(attrs) == ""
+    end
+
+    test "node name from secret" do
+      attrs = %{@fields | "use_node_secret" => true, "node_secret" => "NODE_SECRET"}
+
+      assert RemoteExecutionCell.to_source(attrs) == """
+             node = String.to_atom(System.fetch_env!("LB_NODE_SECRET"))
+             Node.set_cookie(node, :"node-cookie")
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "do not generate code for an invalid node secret" do
+      attrs = %{@fields | "use_node_secret" => true, "node_secret" => ""}
+      assert RemoteExecutionCell.to_source(attrs) == ""
+    end
+
+    test "node and cookie from secrets" do
+      attrs = %{
+        @fields
+        | "use_node_secret" => true,
+          "node_secret" => "NODE_SECRET",
+          "use_cookie_secret" => true,
+          "cookie_secret" => "COOKIE_SECRET"
+      }
+
+      assert RemoteExecutionCell.to_source(attrs) == """
+             node = String.to_atom(System.fetch_env!("LB_NODE_SECRET"))
+             Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
+             :erpc.call(node, fn -> :ok end)\
+             """
     end
   end
 
@@ -165,7 +198,7 @@ defmodule Kino.RemoteExecutionCellTest do
     use ExUnit.Case, async: false
 
     setup do
-      AttributeStore.put_attribute({Kino.RemoteExecutionCell, :node}, "name@node@global")
+      AttributeStore.put_attribute({Kino.RemoteExecutionCell, :node}, {"name@node@global", nil})
 
       AttributeStore.put_attribute(
         {Kino.RemoteExecutionCell, :cookie},
@@ -196,6 +229,21 @@ defmodule Kino.RemoteExecutionCellTest do
       assert source == """
              node = :name@node@global
              Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
+             :erpc.call(node, fn -> :ok end)\
+             """
+    end
+
+    test "from stored attrs with node as a secret" do
+      AttributeStore.put_attribute(
+        {Kino.RemoteExecutionCell, :node},
+        {nil, "NODE_SECRET_GLOBAL"}
+      )
+
+      {_kino, source} = start_smart_cell!(RemoteExecutionCell, %{})
+
+      assert source == """
+             node = String.to_atom(System.fetch_env!("LB_NODE_SECRET_GLOBAL"))
+             Node.set_cookie(node, :"node-cookie-global")
              :erpc.call(node, fn -> :ok end)\
              """
     end
