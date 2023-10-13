@@ -67,7 +67,7 @@ button {
 
 .input--xs {
   width: auto;
-  max-width: 125px;
+  max-width: 100px;
 }
 
 .input--text {
@@ -136,6 +136,7 @@ select.input {
   border: 1px solid var(--gray-200);
   outline: none;
   padding: 8px 12px 8px 42px;
+  max-width: 175px;
 }
 
 .input-icon:hover {
@@ -168,7 +169,14 @@ select.input {
 .icon-container.inline {
   position: absolute;
   top: 1px;
+}
+
+.icon-container.inline.md {
   left: 59px;
+}
+
+.icon-container.inline.sm {
+  left: 46px;
 }
 
 .icon-container:hover {
@@ -180,6 +188,7 @@ select.input {
   border: 1px solid var(--gray-200);
   outline: none;
   padding: 8px 12px 8px 42px;
+  max-width: 175px;
 }
 
 .input-icon.required {

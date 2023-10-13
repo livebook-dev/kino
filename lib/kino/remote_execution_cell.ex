@@ -9,25 +9,34 @@ defmodule Kino.RemoteExecutionCell do
 
   @default_code ":ok"
   @global_key __MODULE__
-  @global_attrs ["node", "cookie", "cookie_secret"]
+  @global_attrs ["node", "cookie", "cookie_secret", "node_secret"]
+  @secret_attrs ["cookie_secret", "node_secret"]
 
   @impl true
   def init(attrs, ctx) do
     {shared_cookie, shared_cookie_secret} =
       AttributeStore.get_attribute({@global_key, :cookie}, {nil, nil})
 
-    node = attrs["node"] || AttributeStore.get_attribute({@global_key, :node}) || ""
+    {shared_node, shared_node_secret} =
+      AttributeStore.get_attribute({@global_key, :node}, {nil, nil})
+
+    node_secret = attrs["node_secret"] || shared_node_secret
+    node_secret_value = node_secret && System.get_env("LB_#{node_secret}")
     cookie_secret = attrs["cookie_secret"] || shared_cookie_secret
     cookie_secret_value = cookie_secret && System.get_env("LB_#{cookie_secret}")
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => node,
+      "node" => attrs["node"] || shared_node || "",
+      "node_secret" => node_secret || "",
       "cookie" => attrs["cookie"] || shared_cookie || "",
       "cookie_secret" => cookie_secret || "",
+      "use_node_secret" =>
+        if(shared_node_secret, do: true, else: Map.get(attrs, "use_node_secret", false)),
       "use_cookie_secret" =>
         if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true)),
-      "cookie_secret_value" => cookie_secret_value
+      "cookie_secret_value" => cookie_secret_value,
+      "node_secret_value" => node_secret_value
     }
 
     ctx = assign(ctx, fields: fields)
@@ -47,8 +56,8 @@ defmodule Kino.RemoteExecutionCell do
     if field in @global_attrs, do: put_shared_attr(field, value)
     fields = update_fields(field, value)
 
-    if field == "cookie_secret",
-      do: send_event(ctx, ctx.origin, "update_node_info", fields["cookie_secret_value"])
+    if field in @secret_attrs,
+      do: send_event(ctx, ctx.origin, "update_node_info", %{field => fields["#{field}_value"]})
 
     broadcast_event(ctx, "update_field", %{"fields" => fields})
 
@@ -62,7 +71,8 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def to_source(%{"code" => ""}), do: ""
-  def to_source(%{"node" => ""}), do: ""
+  def to_source(%{"use_node_secret" => false, "node" => ""}), do: ""
+  def to_source(%{"use_node_secret" => true, "node_secret" => ""}), do: ""
   def to_source(%{"use_cookie_secret" => false, "cookie" => ""}), do: ""
   def to_source(%{"use_cookie_secret" => true, "cookie_secret" => ""}), do: ""
 
@@ -71,13 +81,14 @@ defmodule Kino.RemoteExecutionCell do
     to_source(attrs, code)
   end
 
-  defp to_source(%{"node" => node, "assign_to" => var} = attrs, {:ok, code}) do
+  defp to_source(%{"assign_to" => var} = attrs, {:ok, code}) do
     var = if Kino.SmartCell.valid_variable_name?(var), do: var
     call = build_call(code) |> build_var(var)
     cookie = build_set_cookie(attrs)
+    node = build_node(attrs)
 
     quote do
-      node = unquote(String.to_atom(node))
+      node = unquote(node)
       Node.set_cookie(node, unquote(cookie))
       unquote(call)
     end
@@ -115,6 +126,14 @@ defmodule Kino.RemoteExecutionCell do
 
   defp build_set_cookie(%{"cookie" => cookie}), do: String.to_atom(cookie)
 
+  defp build_node(%{"use_node_secret" => true, "node_secret" => secret}) do
+    quote do
+      String.to_atom(System.fetch_env!(unquote("LB_#{secret}")))
+    end
+  end
+
+  defp build_node(%{"node" => node}), do: String.to_atom(node)
+
   defp put_shared_attr("cookie", value) do
     AttributeStore.put_attribute({@global_key, :cookie}, {value, nil})
   end
@@ -123,14 +142,25 @@ defmodule Kino.RemoteExecutionCell do
     AttributeStore.put_attribute({@global_key, :cookie}, {nil, value})
   end
 
-  defp put_shared_attr(field, value) do
-    AttributeStore.put_attribute({@global_key, String.to_atom(field)}, value)
+  defp put_shared_attr("node", value) do
+    AttributeStore.put_attribute({@global_key, :node}, {value, nil})
+  end
+
+  defp put_shared_attr("node_secret", value) do
+    AttributeStore.put_attribute({@global_key, :node}, {nil, value})
   end
 
   defp update_fields("cookie_secret", cookie_secret) do
     %{
       "cookie_secret" => cookie_secret,
       "cookie_secret_value" => System.get_env("LB_#{cookie_secret}")
+    }
+  end
+
+  defp update_fields("node_secret", node_secret) do
+    %{
+      "node_secret" => node_secret,
+      "node_secret_value" => System.get_env("LB_#{node_secret}")
     }
   end
 
