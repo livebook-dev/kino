@@ -2,7 +2,7 @@ defmodule Kino.Shorts do
   @moduledoc """
   Shortcuts for building Kinos.
 
-  This module provide an easy to use Kino API and is meant to
+  This module provides an easy to use Kino API and is meant to
   be imported into your notebooks:
 
       import Kino.Shorts
