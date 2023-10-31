@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.11.1](https://github.com/livebook-dev/kino/tree/v0.11.1) (2023-10-31)
+
+### Added
+
+* Support for specifying node name as secret in Remote execution cell ([#358](https://github.com/livebook-dev/kino/pull/358))
+
+### Changed
+
+* Table pagination to go back to the first page on sorting ([#357](https://github.com/livebook-dev/kino/pull/357))
+
+### Fixed
+
+* Showing non-utf8 binaries in `Kino.DataTable` ([#362](https://github.com/livebook-dev/kino/pull/362))
+
 ## [v0.11.0](https://github.com/livebook-dev/kino/tree/v0.11.0) (2023-10-06)
 
 Note that Kino v0.11.0 requires Livebook v0.11.0, so make sure to upgrade Livebook.
