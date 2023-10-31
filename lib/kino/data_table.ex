@@ -253,6 +253,11 @@ defmodule Kino.DataTable do
     end
   end
 
+  defp value_to_string(value) when is_binary(value) do
+    inspect_opts = Inspect.Opts.new([])
+    if String.printable?(value, inspect_opts.limit), do: value, else: inspect(value)
+  end
+
   defp value_to_string(value) do
     if mod = String.Chars.impl_for(value), do: mod.to_string(value), else: inspect(value)
   end
