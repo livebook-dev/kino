@@ -121,6 +121,21 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
+  test "supports non-utf8 binary values" do
+    entries = [
+      binaries: [<<110, 120>>, <<200, 210>>]
+    ]
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               data: [["nx"], ["<<200, 210>>"]]
+             }
+           } = data
+  end
+
   test "sends only relevant fields if user-specified keys are given" do
     kino = Kino.DataTable.new(@people_entries, keys: [:id])
     data = connect(kino)
