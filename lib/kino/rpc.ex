@@ -48,7 +48,7 @@ defmodule Kino.RPC do
         # edge cases, such as calling `binding()`, but these are even
         # more unlikely.
 
-        names = for {name, nil} <- Macro.Env.vars(env), into: %{}, do: {name, nil}
+        names = Map.new(Macro.Env.vars(env))
 
         ast
         |> Macro.prewalk(MapSet.new(), fn
