@@ -17,7 +17,7 @@ defmodule Kino.RPC do
   The code is parsed and expanded on the remote node. Also, errors
   and exists are captured and propagated to the caller.
 
-  See `Code.eval_string/3` for a description of `binding` and `opts`.
+  See `Code.eval_string/3` for available `opts`.
   """
   defmacro eval_string(node, string, opts \\ []) do
     unless is_binary(string) do
