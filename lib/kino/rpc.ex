@@ -39,7 +39,8 @@ defmodule Kino.RPC do
   end
 
   defp used_var_names(string, env) do
-    case silent_string_to_quoted(string) do
+    # TODO: only keep :emit_warnings once we require Elixir v1.16+
+    case Code.string_to_quoted(string, emit_warnings: false, warn_on_unnecessary_quotes: false) do
       {:ok, ast} ->
         # This is a simple heuristic, we traverse the unexpanded AST
         # and look for any variable node. This means we may have false
@@ -63,13 +64,6 @@ defmodule Kino.RPC do
       {:error, _} ->
         []
     end
-  end
-
-  defp silent_string_to_quoted(string) do
-    Code.with_diagnostics([log: false], fn ->
-      Code.string_to_quoted(string)
-    end)
-    |> elem(0)
   end
 
   @doc false
