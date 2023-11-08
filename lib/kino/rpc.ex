@@ -45,7 +45,7 @@ defmodule Kino.RPC do
 
         ast
         |> Macro.prewalk(MapSet.new(), fn
-          {name, _, nil} = node, acc when is_atom(name) and is_map_key(names, name) ->
+          {name, _, nil} = node, acc when is_map_key(names, name) ->
             {node, MapSet.put(acc, name)}
 
           node, acc ->
