@@ -41,6 +41,13 @@ defmodule Kino.RPC do
   defp used_var_names(string, env) do
     case silent_string_to_quoted(string) do
       {:ok, ast} ->
+        # This is a simple heuristic, we traverse the unexpanded AST
+        # and look for any variable node. This means we may have false
+        # positives if there are macros, but in our use case this is
+        # acceptable. We may also have false negatives in very specific
+        # edge cases, such as calling `binding()`, but these are even
+        # more unlikely.
+
         names = for {name, nil} <- Macro.Env.vars(env), into: %{}, do: {name, nil}
 
         ast
