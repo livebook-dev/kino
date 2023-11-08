@@ -76,18 +76,15 @@ defmodule Kino.RemoteExecutionCell do
   def to_source(%{"use_cookie_secret" => false, "cookie" => ""}), do: ""
   def to_source(%{"use_cookie_secret" => true, "cookie_secret" => ""}), do: ""
 
-  def to_source(%{"code" => code} = attrs) do
-    code = Code.string_to_quoted(code)
-    to_source(attrs, code)
-  end
-
-  defp to_source(%{"assign_to" => var} = attrs, {:ok, code}) do
+  def to_source(%{"code" => code, "assign_to" => var} = attrs) do
     var = if Kino.SmartCell.valid_variable_name?(var), do: var
     call = build_call(code) |> build_var(var)
     cookie = build_set_cookie(attrs)
     node = build_node(attrs)
 
     quote do
+      require Kino.RPC
+
       node = unquote(node)
       Node.set_cookie(node, unquote(cookie))
       unquote(call)
@@ -95,18 +92,17 @@ defmodule Kino.RemoteExecutionCell do
     |> Kino.SmartCell.quoted_to_string()
   end
 
-  defp to_source(%{"code" => code}, {:error, _reason}) do
-    "# Invalid code for RPC, reproducing the error below\n" <>
-      Kino.SmartCell.quoted_to_string(
-        quote do
-          Code.string_to_quoted!(unquote(code))
-        end
-      )
-  end
-
   defp build_call(code) do
     quote do
-      :erpc.call(node, fn -> unquote(code) end)
+      Kino.RPC.eval_string(node, unquote(quoted_code(code)), file: __ENV__.file)
+    end
+  end
+
+  defp quoted_code(code) do
+    if String.contains?(code, "\n") do
+      {:<<>>, [delimiter: ~s["""]], [code <> "\n"]}
+    else
+      code
     end
   end
 
