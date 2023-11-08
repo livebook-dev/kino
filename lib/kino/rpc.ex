@@ -21,7 +21,8 @@ defmodule Kino.RPC do
   """
   defmacro eval_string(node, string, opts \\ []) do
     unless is_binary(string) do
-      raise ArgumentError, "Kino.RPC.eval_string/3 expects a string literal as the second argument"
+      raise ArgumentError,
+            "Kino.RPC.eval_string/3 expects a string literal as the second argument"
     end
 
     used_var_names = used_var_names(string, __CALLER__)
