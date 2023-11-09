@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.11.2](https://github.com/livebook-dev/kino/tree/v0.11.2) (2023-11-09)
+
+### Fixed
+
+* Remote execution cell to work with different Elixir and OTP versions on the remote node ([#363](https://github.com/livebook-dev/kino/pull/363))
+
 ## [v0.11.1](https://github.com/livebook-dev/kino/tree/v0.11.1) (2023-10-31)
 
 ### Added
