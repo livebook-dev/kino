@@ -1,16 +1,19 @@
-import "https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js";
+import mermaid from "mermaid";
 
 mermaid.initialize({ startOnLoad: false });
 
 export function init(ctx, content) {
   function render() {
-    mermaid.render("graph1", content, (svgSource, bindListeners) => {
-      ctx.root.innerHTML = svgSource;
-      bindListeners && bindListeners(ctx.root);
+    mermaid.render("graph1", content).then(({ svg, bindFunctions }) => {
+      ctx.root.innerHTML = svg;
+
+      if (bindFunctions) {
+        bindFunctions(ctx.root);
+      }
 
       // A workaround for https://github.com/mermaid-js/mermaid/issues/1758
-      const svg = ctx.root.querySelector("svg");
-      svg.removeAttribute("height");
+      const svgEl = ctx.root.querySelector("svg");
+      svgEl.removeAttribute("height");
     });
   }
 

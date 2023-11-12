@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/mermaid/build/main.js --format=esm --loader:.js=jsx",
+    "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/mermaid/build/main.js --format=esm --loader:.js=jsx --watch"
+  },
+  "dependencies": {
+    "mermaid": "^10.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.15.16"
+  }
+}

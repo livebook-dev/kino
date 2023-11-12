@@ -1,7 +1,7 @@
 defmodule Kino.Debug.Default do
   @moduledoc false
 
-  use Kino.JS, assets_path: "lib/assets/debug_default"
+  use Kino.JS, assets_path: "lib/assets/debug_default/build"
   use Kino.JS.Live
 
   def new(source, result, dbg_id, dbg_same_file, dbg_line) do
