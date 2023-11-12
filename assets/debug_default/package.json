@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/debug_default/build/main.js --format=esm --loader:.js=jsx",
+    "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/debug_default/build/main.js --format=esm --loader:.js=jsx --watch"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.15.16"
+  }
+}

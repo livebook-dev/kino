@@ -1,7 +1,7 @@
 defmodule Kino.Debug.Pipeline do
   @moduledoc false
 
-  use Kino.JS, assets_path: "lib/assets/debug_pipeline"
+  use Kino.JS, assets_path: "lib/assets/debug_pipeline/build"
   use Kino.JS.Live
 
   def new(sources, results, wrapped_funs, dbg_id, dbg_same_file, dbg_line) do

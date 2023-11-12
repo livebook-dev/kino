@@ -20,7 +20,7 @@ defmodule Kino.Mermaid do
 
   '''
 
-  use Kino.JS, assets_path: "lib/assets/mermaid"
+  use Kino.JS, assets_path: "lib/assets/mermaid/build"
 
   @type t :: Kino.JS.t()
 

@@ -30,7 +30,7 @@ defmodule Kino.Tree do
 
   """
 
-  use Kino.JS, assets_path: "lib/assets/tree"
+  use Kino.JS, assets_path: "lib/assets/tree/build"
 
   @doc """
   Creates a new kino displaying the given data structure.
