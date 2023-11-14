@@ -20,18 +20,12 @@ defmodule Kino.RPC do
   See `Code.eval_string/3` for available `opts`.
   """
   defmacro eval_string(node, string, opts \\ []) do
-    string =
-      case string do
-        string when is_binary(string) ->
-          string
+    string = Macro.expand(string, __CALLER__)
 
-        {sigil, _, [{:<<>>, _, [string]}, []]} when sigil in [:sigil_s, :sigil_S] ->
-          string
-
-        _other ->
-          raise ArgumentError,
-                "Kino.RPC.eval_string/3 expects a string literal as the second argument"
-      end
+    unless is_binary(string) do
+      raise ArgumentError,
+            "Kino.RPC.eval_string/3 expects a string literal as the second argument"
+    end
 
     used_var_names = used_var_names(string, __CALLER__)
 
