@@ -32,7 +32,7 @@ defmodule Kino.RemoteExecutionCellTest do
            require Kino.RPC
            node = :name@node
            Node.set_cookie(node, :"node-cookie")
-           Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+           Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
            """
   end
 
@@ -44,7 +44,7 @@ defmodule Kino.RemoteExecutionCellTest do
            require Kino.RPC
            node = :name@node
            Node.set_cookie(node, :"node-cookie")
-           result = Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+           result = Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
            """
   end
 
@@ -56,7 +56,7 @@ defmodule Kino.RemoteExecutionCellTest do
            require Kino.RPC
            node = :name@node
            Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
-           Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+           Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
            """
   end
 
@@ -68,7 +68,7 @@ defmodule Kino.RemoteExecutionCellTest do
            require Kino.RPC
            node = :name@node
            Node.set_cookie(node, :"cookie-value")
-           Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+           Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
            """
   end
 
@@ -89,45 +89,77 @@ defmodule Kino.RemoteExecutionCellTest do
     end
 
     test "generates an erpc call when there's valid code" do
-      code1 = %{@fields | "code" => "1 + 1"}
-      code2 = %{@fields | "code" => "1 == 1"}
-      code3 = %{@fields | "code" => "a = 1\na + a"}
-
       assert RemoteExecutionCell.to_source(@fields) == """
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
 
-      assert RemoteExecutionCell.to_source(code1) == """
+      code = %{@fields | "code" => "1 + 1"}
+
+      assert RemoteExecutionCell.to_source(code) == """
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             Kino.RPC.eval_string(node, "1 + 1", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S"1 + 1", file: __ENV__.file)\
              """
 
-      assert RemoteExecutionCell.to_source(code2) == """
+      code = %{@fields | "code" => "1 == 1"}
+
+      assert RemoteExecutionCell.to_source(code) == """
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             Kino.RPC.eval_string(node, "1 == 1", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S"1 == 1", file: __ENV__.file)\
              """
 
-      assert RemoteExecutionCell.to_source(code3) == ~s'''
+      code = %{@fields | "code" => "a = 1\na + a"}
+
+      assert RemoteExecutionCell.to_source(code) == ~s'''
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
 
              Kino.RPC.eval_string(
                node,
-               """
+               ~S"""
                a = 1
                a + a
                """,
                file: __ENV__.file
              )\
              '''
+
+      code = %{@fields | "code" => ~S/"Number #{1}"/}
+
+      assert RemoteExecutionCell.to_source(code) ==
+               ~S'''
+               require Kino.RPC
+               node = :name@node
+               Node.set_cookie(node, :"node-cookie")
+               Kino.RPC.eval_string(node, ~S"\"Number #{1}\"", file: __ENV__.file)
+               '''
+               |> String.replace_trailing("\n", "")
+
+      code = %{@fields | "code" => ~S/"Number #{1}"/ <> "\n:ok"}
+
+      assert RemoteExecutionCell.to_source(code) ==
+               ~S'''
+               require Kino.RPC
+               node = :name@node
+               Node.set_cookie(node, :"node-cookie")
+
+               Kino.RPC.eval_string(
+                 node,
+                 ~S"""
+                 "Number #{1}"
+                 :ok
+                 """,
+                 file: __ENV__.file
+               )
+               '''
+               |> String.replace_trailing("\n", "")
     end
 
     test "assign to a variable" do
@@ -137,7 +169,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             result = Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             result = Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -148,7 +180,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, :"node-cookie")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -159,7 +191,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node
              Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -175,7 +207,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = String.to_atom(System.fetch_env!("LB_NODE_SECRET"))
              Node.set_cookie(node, :"node-cookie")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -197,7 +229,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = String.to_atom(System.fetch_env!("LB_NODE_SECRET"))
              Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET")))
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
   end
@@ -223,7 +255,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node@global
              Node.set_cookie(node, :"node-cookie-global")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -239,7 +271,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node@global
              Node.set_cookie(node, String.to_atom(System.fetch_env!("LB_COOKIE_SECRET_GLOBAL")))
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -255,7 +287,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = String.to_atom(System.fetch_env!("LB_NODE_SECRET_GLOBAL"))
              Node.set_cookie(node, :"node-cookie-global")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -266,7 +298,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :name@node@attrs
              Node.set_cookie(node, :"node-cookie-global")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
 
@@ -281,7 +313,7 @@ defmodule Kino.RemoteExecutionCellTest do
              require Kino.RPC
              node = :edited@node@name
              Node.set_cookie(node, :"node-cookie-global")
-             Kino.RPC.eval_string(node, ":ok", file: __ENV__.file)\
+             Kino.RPC.eval_string(node, ~S":ok", file: __ENV__.file)\
              """
     end
   end
