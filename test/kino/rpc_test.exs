@@ -12,6 +12,16 @@ defmodule Kino.RPCTest do
     assert Kino.RPC.eval_string(node(), "{x, binding()}") == {1, [x: 1]}
   end
 
+  test "works with string sigils" do
+    x = 1
+
+    assert Kino.RPC.eval_string(node(), ~S"x") == 1
+
+    assert Kino.RPC.eval_string(node(), ~S"""
+           "#{1}"
+           """) == "1"
+  end
+
   test "propagates errors" do
     assert_raise ArgumentError, "error", fn ->
       Kino.RPC.eval_string(node(), """

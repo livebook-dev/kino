@@ -99,11 +99,14 @@ defmodule Kino.RemoteExecutionCell do
   end
 
   defp quoted_code(code) do
-    if String.contains?(code, "\n") do
-      {:<<>>, [delimiter: ~s["""]], [code <> "\n"]}
-    else
-      code
-    end
+    {delimiter, code} =
+      if String.contains?(code, "\n") do
+        {~s["""], code <> "\n"}
+      else
+        {~s["], code}
+      end
+
+    {:sigil_S, [delimiter: delimiter], [{:<<>>, [], [code]}, []]}
   end
 
   defp build_var(call, nil), do: call
