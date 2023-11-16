@@ -220,7 +220,7 @@ defmodule Kino.Control do
 
   Listen to events:
 
-      Kino.listen(keyboard, fn event ->
+      Kino.listen(form, fn event ->
         ...
       end)
 
