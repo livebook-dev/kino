@@ -10,8 +10,9 @@ defmodule Kino.Debug do
   `Kernel.dbg/2` calls in certain cases, such as call pipelines. It
   falls back to the default backend otherwise.
   """
-  @spec dbg(Macro.t(), Macro.t(), Macro.Env.t()) :: Macro.t()
-  def dbg(ast, options, %Macro.Env{} = env) do
+  @spec dbg(Macro.t(), Macro.t(), Macro.Env.t(), tuple()) :: Macro.t()
+  def dbg(ast, options, %Macro.Env{} = env, previous_dbg) do
+    {previous_mod, previous_fun, previous_args} = previous_dbg
     dbg_id = System.unique_integer()
 
     kino_ast =
@@ -23,7 +24,7 @@ defmodule Kino.Debug do
           dbg_default_ast(ast, dbg_id, env)
       end
 
-    fallback_ast = Macro.dbg(ast, options, env)
+    fallback_ast = apply(previous_mod, previous_fun, [ast, options, env | previous_args])
 
     quote do
       if Kino.Bridge.within_livebook?() do
