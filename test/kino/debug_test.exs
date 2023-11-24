@@ -3,7 +3,7 @@ defmodule Kino.Debug.Test do
 
   defmacrop call_dbg(ast) do
     quote do
-      unquote(Kino.Debug.dbg(ast, [], __CALLER__))
+      unquote(Kino.Debug.dbg(ast, [], __CALLER__, {Macro, :dbg, []}))
     end
   end
 
