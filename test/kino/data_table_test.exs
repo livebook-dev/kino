@@ -102,7 +102,8 @@ defmodule Kino.DataTableTest do
     entries = [
       [
         {"a", [1, "b"]},
-        {"b", [~N"2000-01-01 00:00:00", %User{id: 1, name: "User"}]}
+        {"b", [~N"2000-01-01 00:00:00", %User{id: 1, name: "User"}]},
+        {"c", [90, 10_000_000]}
       ]
     ]
 
@@ -114,7 +115,8 @@ defmodule Kino.DataTableTest do
                data: [
                  [
                    <<1, 98>>,
-                   ~s/[~N[2000-01-01 00:00:00], %Kino.DataTableTest.User{__meta__: nil, id: 1, name: "User"}]/
+                   ~s/[~N[2000-01-01 00:00:00], %Kino.DataTableTest.User{__meta__: nil, id: 1, name: "User"}]/,
+                   "[90, 10000000]"
                  ]
                ]
              }
