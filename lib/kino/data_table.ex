@@ -248,7 +248,7 @@ defmodule Kino.DataTable do
     try do
       List.to_string(value)
     rescue
-      ArgumentError ->
+      _error ->
         inspect(value)
     end
   end
