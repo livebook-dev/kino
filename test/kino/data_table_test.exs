@@ -114,7 +114,7 @@ defmodule Kino.DataTableTest do
              content: %{
                data: [
                  [
-                   <<1, 98>>,
+                   ~s/[1, "b"]/,
                    ~s/[~N[2000-01-01 00:00:00], %Kino.DataTableTest.User{__meta__: nil, id: 1, name: "User"}]/,
                    "[90, 10000000]"
                  ]

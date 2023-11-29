@@ -245,20 +245,28 @@ defmodule Kino.DataTable do
   defp value_to_string(value) when is_atom(value), do: inspect(value)
 
   defp value_to_string(value) when is_list(value) do
-    try do
+    if List.ascii_printable?(value) do
       List.to_string(value)
-    rescue
-      _error ->
-        inspect(value)
+    else
+      inspect(value)
     end
   end
 
   defp value_to_string(value) when is_binary(value) do
     inspect_opts = Inspect.Opts.new([])
-    if String.printable?(value, inspect_opts.limit), do: value, else: inspect(value)
+
+    if String.printable?(value, inspect_opts.limit) do
+      value
+    else
+      inspect(value)
+    end
   end
 
   defp value_to_string(value) do
-    if mod = String.Chars.impl_for(value), do: mod.to_string(value), else: inspect(value)
+    if mod = String.Chars.impl_for(value) do
+      mod.to_string(value)
+    else
+      inspect(value)
+    end
   end
 end
