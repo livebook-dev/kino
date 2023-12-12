@@ -91,7 +91,7 @@ defmodule Kino.FS do
              endpoint: file_spec.bucket_url,
              access_key_id: file_spec.access_key_id,
              secret_access_key: file_spec.secret_access_key,
-             # Token field is only available on v0.12 onwards
+             # Token field is only available on Livebook v0.12 onwards
              token: Map.get(file_spec, :token)
            ]
          ) do

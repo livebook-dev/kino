@@ -5,11 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.12.0](https://github.com/livebook-dev/kino/tree/v0.12.0) (2023-12-12)
+
+### Added
+
+* Support for S3 token in `Kino.FS.file_spec/1`, available on Livebook v0.12 onwards
+
+### Changed
+
+* `dbg` backend to fall back to the currently registered callback ([#369](https://github.com/livebook-dev/kino/pull/369))
+* Changed charlists in `Kino.DataTable` to be formatted as strings only if ASCI-printable
+
+### Fixed
+
+* Fixed `Kino.DataTable` to handle integer lists that are not valid charlists ([#371](https://github.com/livebook-dev/kino/pull/371))
+
 ## [v0.11.3](https://github.com/livebook-dev/kino/tree/v0.11.3) (2023-11-15)
 
 ### Fixed
 
-*  Code with interpolation in remote execution smart cell ([#366](https://github.com/livebook-dev/kino/pull/366))
+* Code with interpolation in remote execution smart cell ([#366](https://github.com/livebook-dev/kino/pull/366))
 
 ## [v0.11.2](https://github.com/livebook-dev/kino/tree/v0.11.2) (2023-11-09)
 
