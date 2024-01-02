@@ -41,6 +41,7 @@ const headerIcons = {
   number: GridColumnIcon.HeaderNumber,
   uri: GridColumnIcon.HeaderUri,
   date: GridColumnIcon.HeaderDate,
+  list: GridColumnIcon.HeaderNumber,
 };
 
 const cellKind = {
@@ -48,6 +49,7 @@ const cellKind = {
   number: GridCellKind.Number,
   uri: GridCellKind.Uri,
   date: GridCellKind.Text,
+  list: GridCellKind.Number,
 };
 
 const theme = {
@@ -95,7 +97,7 @@ function App({ ctx, data }) {
       id: id,
       type: column.type,
       icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
-      hasMenu: true,
+      hasMenu: column.type !== "list",
       summary: summary,
     };
   });
@@ -568,7 +570,7 @@ function SearchButton({ toggleSearch }) {
         aria-label="search"
         onClick={toggleSearch}
       >
-        <RiSearch2Line className="search-icon"/>
+        <RiSearch2Line className="search-icon" />
       </button>
     </span>
   );
