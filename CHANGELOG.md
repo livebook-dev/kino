@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* CellKind `:list` for `Kino.DataTable`
+* CellKind `:list` for `Kino.DataTable` ([#373](https://github.com/livebook-dev/kino/pull/373))
 
 
 ## [v0.12.0](https://github.com/livebook-dev/kino/tree/v0.12.0) (2023-12-12)
