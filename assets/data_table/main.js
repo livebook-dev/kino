@@ -41,7 +41,7 @@ const headerIcons = {
   number: GridColumnIcon.HeaderNumber,
   uri: GridColumnIcon.HeaderUri,
   date: GridColumnIcon.HeaderDate,
-  list: GridColumnIcon.HeaderNumber,
+  list: GridColumnIcon.HeaderArray,
 };
 
 const cellKind = {
@@ -49,7 +49,7 @@ const cellKind = {
   number: GridCellKind.Number,
   uri: GridCellKind.Uri,
   date: GridCellKind.Text,
-  list: GridCellKind.Number,
+  list: GridCellKind.Text,
 };
 
 const theme = {
