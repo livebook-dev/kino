@@ -69,9 +69,7 @@ defmodule Kino.Debug do
     assignments = quote do: unquote(head_var) = unquote(head_ast)
 
     {assignments, _} =
-      rest_vars
-      |> Enum.zip(rest_asts)
-      |> Enum.reduce({assignments, head_var}, fn {var, node}, {assignments, prev_var} ->
+      Enum.zip_reduce(rest_vars, rest_asts, {assignments, head_var}, fn var, node, {assignments, prev_var} ->
         assignments =
           quote do
             unquote(assignments)
