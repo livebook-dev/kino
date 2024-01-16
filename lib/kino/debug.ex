@@ -69,17 +69,20 @@ defmodule Kino.Debug do
     assignments = quote do: unquote(head_var) = unquote(head_ast)
 
     {assignments, _} =
-      rest_vars
-      |> Enum.zip(rest_asts)
-      |> Enum.reduce({assignments, head_var}, fn {var, node}, {assignments, prev_var} ->
-        assignments =
-          quote do
-            unquote(assignments)
-            unquote(var) = unquote(Macro.pipe(prev_var, node, 0))
-          end
+      Enum.zip_reduce(
+        rest_vars,
+        rest_asts,
+        {assignments, head_var},
+        fn var, node, {assignments, prev_var} ->
+          assignments =
+            quote do
+              unquote(assignments)
+              unquote(var) = unquote(Macro.pipe(prev_var, node, 0))
+            end
 
-        {assignments, var}
-      end)
+          {assignments, var}
+        end
+      )
 
     funs =
       for ast <- rest_asts do

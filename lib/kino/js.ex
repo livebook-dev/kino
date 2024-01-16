@@ -318,7 +318,7 @@ defmodule Kino.JS do
     duplicates = Enum.uniq(filenames -- Enum.uniq(filenames))
 
     if duplicates != [] do
-      duplicates = duplicates |> Enum.map(&inspect/1) |> Enum.join(", ")
+      duplicates = duplicates |> Enum.map_join(", ", &inspect/1)
 
       IO.warn(
         "found duplicate assets in #{inspect(env.module)}: #{duplicates}",
