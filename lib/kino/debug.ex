@@ -79,7 +79,7 @@ defmodule Kino.Debug do
               unquote(assignments)
               unquote(var) = unquote(Macro.pipe(prev_var, node, 0))
             end
-      
+
           {assignments, var}
         end
       )
