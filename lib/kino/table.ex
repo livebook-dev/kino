@@ -129,7 +129,7 @@ defmodule Kino.Table do
   end
 
   def handle_event("download", %{"format" => format}, ctx) do
-    exported = ctx.assigns.module.export_data(ctx.assigns.state, format)
+    {:ok, exported} = ctx.assigns.module.export_data(ctx.assigns.state, format)
     info = %{filename: ctx.assigns.info.name, type: exported.type, format: exported.extension}
     reply_payload = {:binary, info, exported.data}
     send_event(ctx, ctx.origin, "download_content", reply_payload)
