@@ -1,4 +1,6 @@
-import * as Vue from "https://cdn.jsdelivr.net/npm/vue@3.2.26/dist/vue.esm-browser.prod.js";
+import "./main.css";
+
+import * as Vue from "vue/dist/vue.esm-browser.prod.js";
 
 export function init(ctx, payload) {
   ctx.importCSS(
@@ -129,7 +131,7 @@ export function init(ctx, payload) {
           readonly
           @click="selectSecret"
           @input="$emit('update:secretInputValue', $event.target.value)"
-          :required="!secretInputValue && required"
+          :required="required"
           :inline="inline"
         />
         <BaseInput
@@ -140,7 +142,7 @@ export function init(ctx, payload) {
           :value="textInputValue"
           inputClass="input input-icon-text"
           @input="$emit('update:textInputValue', $event.target.value)"
-          :required="!textInputValue && required"
+          :required="required"
           :inline="inline"
         />
         <div :class="['icon-container', { inline: inline }, iconOffset]">
@@ -189,8 +191,8 @@ export function init(ctx, payload) {
             v-model:toggleInputValue="fields.use_node_secret"
             modalTitle="Set node value"
             iconOffset="sm"
-            :inline
-            :required
+            inline
+            required
           />
           <BaseSecret
             textInputName="cookie"
@@ -201,15 +203,15 @@ export function init(ctx, payload) {
             v-model:secretInputValue="fields.cookie_secret"
             v-model:toggleInputValue="fields.use_cookie_secret"
             modalTitle="Set cookie value"
-            :inline
-            :required
+            inline
+            required
           />
           <BaseInput
             name="assign_to"
             label="Assign to"
             v-model="fields.assign_to"
             inputClass="input input--xs"
-            :inline
+            inline
           />
         </div>
       </form>

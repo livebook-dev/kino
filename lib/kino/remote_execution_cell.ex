@@ -1,7 +1,7 @@
 defmodule Kino.RemoteExecutionCell do
   @moduledoc false
 
-  use Kino.JS, assets_path: "lib/assets/remote_execution_cell"
+  use Kino.JS, assets_path: "lib/assets/remote_execution_cell/build"
   use Kino.JS.Live
   use Kino.SmartCell, name: "Remote execution"
 
@@ -66,7 +66,9 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def to_attrs(ctx) do
-    Map.delete(ctx.assigns.fields, "cookie_secret_value")
+    ctx.assigns.fields
+    |> Map.delete("node_secret_value")
+    |> Map.delete("cookie_secret_value")
   end
 
   @impl true
