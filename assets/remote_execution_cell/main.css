@@ -82,33 +82,23 @@ button {
   font-weight: 500;
 }
 
-.inline-input-label {
-  display: block;
-  margin-bottom: 2px;
-  color: var(--gray-600);
-  font-weight: 500;
-  padding-right: 6px;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  position: relative;
-  top: 2px;
-}
-
-.input-container {
-  flex-grow: 1;
+.field-wrapper {
   display: flex;
   align-items: center;
+  gap: 6px;
+}
+
+.inline-label {
+  display: block;
+  color: var(--gray-600);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-}
-
-.inline-field {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
 }
 
 .required {
@@ -132,29 +122,23 @@ select.input {
   display: none;
 }
 
-.input-icon {
-  border: 1px solid var(--gray-200);
-  outline: none;
-  padding: 8px 12px 8px 42px;
-  max-width: 175px;
-}
-
-.input-icon:hover {
-  cursor: pointer;
-}
-
-.input-icon.unavailable {
-  border-color: var(--red-300);
-}
-
 .input-icon-container {
   position: relative;
+  display: flex;
+}
+
+.input-icon-container .input {
+  padding: 8px 12px 8px 42px;
+}
+
+.input.secret-input:hover {
+  cursor: pointer;
 }
 
 .icon-container {
   position: absolute;
-  top: 20px;
-  left: 4px;
+  bottom: 1px;
+  left: 1px;
   padding: 5px 6px;
   border-right: 1px solid var(--gray-200);
   width: 22px;
@@ -163,42 +147,9 @@ select.input {
   border-radius: 0.5rem;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  margin-left: 1px;
-}
-
-.icon-container.inline {
-  position: absolute;
-  top: 1px;
-}
-
-.icon-container.inline.md {
-  left: 59px;
-}
-
-.icon-container.inline.sm {
-  left: 46px;
 }
 
 .icon-container:hover {
   cursor: pointer;
   background-color: var(--gray-300);
-}
-
-.input-icon-text {
-  border: 1px solid var(--gray-200);
-  outline: none;
-  padding: 8px 12px 8px 42px;
-  max-width: 175px;
-}
-
-.input-icon.required {
-  border: 1px solid var(--red--300);
-}
-
-.input-icon-text.required {
-  border: 1px solid var(--red--300);
-}
-
-.hidden-checkbox:hover {
-  cursor: pointer;
 }
