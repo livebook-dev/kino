@@ -150,39 +150,54 @@ defmodule Kino.JS do
       choice. When the user selects a secret, `callback` is called
       with the secret name
 
-  ## CDN
+  ## Dependencies
 
-  It is possible to use a regular JavaScript bundler for generating
-  the assets, however in many cases a simpler and preferred approach
-  is to import the necessary dependencies directly from a CDN.
+  On the JavaScript side you are free to use any external packages and
+  bundling tooling, as long as you provide the `main.js` file with the
+  `init(ctx, data)` entrypoing. Kino itself defines a couple components
+  using `Kino.JS` and we use [esbuild](https://esbuild.github.io) to
+  bundle their assets, but it's entirely up to you.
 
-  To give a concrete example, here's how we could use the `mermaid`
-  JavaScript package for rendering diagrams:
+  For simple components that don't require additional dependencies,
+  it may be totally fine to write a single JS/CSS file without any
+  bundling. Theoretically, you could even import dependencies from a
+  CDN, however, we do recommend bundling dependencies with your assets
+  because: (a) occasionally content from CDNs may get blocked; (b) most
+  users run Livebook locally, so fetching assets from the local server
+  is actually faster than fetching from a CDN; (c) nowadays many packages
+  actually assume their end users use a bundler.
+
+  To give a concrete example, let's say we want to render a graph using
+  `mermaid`. We would define an NPM project at `assets/mermaid`, with
+  regular `package.json` and the following `main.js` file:
+
+  ```javascript
+  import mermaid from "mermaid";
+
+  mermaid.initialize({ startOnLoad: false });
+
+  export function init(ctx, graph) {
+    mermaid.render("graph1", graph, (svgSource, bindListeners) => {
+      ctx.root.innerHTML = svgSource;
+      bindListeners && bindListeners(ctx.root);
+    });
+  }
+  ```
+
+  Next, we would bundle the file into `lib/assets/mermaid/build/main.js`,
+  and reference in our Elixir module:
 
       defmodule KinoDocs.Mermaid do
         use Kino.JS
 
+        use Kino.JS, assets_path: "lib/assets/mermaid/build"
+
         def new(graph) do
           Kino.JS.new(__MODULE__, graph)
         end
-
-        asset "main.js" do
-          """
-          import "https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js";
-
-          mermaid.initialize({ startOnLoad: false });
-
-          export function init(ctx, graph) {
-            mermaid.render("graph1", graph, (svgSource, bindListeners) => {
-              ctx.root.innerHTML = svgSource;
-              bindListeners && bindListeners(ctx.root);
-            });
-          }
-          """
-        end
       end
 
-  And we would use it like so:
+  With all that, we would use the component like so:
 
       KinoDocs.Mermaid.new("""
       graph TD;
@@ -191,6 +206,16 @@ defmodule Kino.JS do
         B-->D;
         C-->D;
       """)
+
+  > #### Directory structure {: .info}
+  >
+  > Note that we intentionally suggest keeping the NPM project in the
+  > `assets/` directory, but placing the bundle output in `lib/assets/`.
+  > This convention ensures that you do not include the assets source
+  > (including `node_modules/`) in the Hex package, but you do include
+  > the bundled assets. While it is possible to specify which directories
+  > are published to Hex, following the convention makes everything work
+  > as expected by default.
 
   ## Live kinos
 
