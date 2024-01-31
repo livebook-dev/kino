@@ -1,6 +1,8 @@
 defmodule Kino.SmartCell.Server do
   @moduledoc false
 
+  @behaviour GenServer
+
   require Logger
 
   import Kino.Utils, only: [has_function?: 3]
@@ -9,7 +11,7 @@ defmodule Kino.SmartCell.Server do
   @chunk_joiner_size byte_size(@chunk_joiner)
 
   def start_link(module, ref, attrs, target_pid) do
-    case :proc_lib.start_link(__MODULE__, :init, [module, ref, attrs, target_pid]) do
+    case :proc_lib.start_link(__MODULE__, :init, [{module, ref, attrs, target_pid}]) do
       {:error, error} ->
         {:error, error}
 
@@ -21,7 +23,8 @@ defmodule Kino.SmartCell.Server do
             %{
               language: editor_opts[:language],
               placement: editor_opts[:placement],
-              source: source
+              source: source,
+              intellisense_node: editor_opts[:intellisense_node]
             }
           end
 
@@ -42,7 +45,29 @@ defmodule Kino.SmartCell.Server do
     end
   end
 
-  def init(module, ref, initial_attrs, target_pid) do
+  def reconfigure_smart_cell(ctx, opts) do
+    unless ctx.__private__.smart_cell do
+      raise ArgumentError,
+            "configure_smart_cell/2 can only be called in smart cell handlers"
+    end
+
+    opts = Keyword.validate!(opts, [:editor])
+
+    if editor_opts = opts[:editor] do
+      unless ctx.__private__.smart_cell.editor? do
+        raise ArgumentError,
+              "configure_smart_cell/2 called with :editor, but the editor is not enabled." <>
+                " Make sure to enable smart cell editor during init"
+      end
+
+      Keyword.validate!(editor_opts, [:source, :intellisense_node])
+    end
+
+    put_in(ctx.__private__.smart_cell[:reconfigure_options], opts)
+  end
+
+  @impl true
+  def init({module, ref, initial_attrs, target_pid}) do
     {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
     init_opts = validate_init_opts!(init_opts)
 
@@ -60,6 +85,9 @@ defmodule Kino.SmartCell.Server do
       end
 
     {source, chunks} = to_source(module, attrs)
+
+    editor? = editor_source_attr != nil
+    ctx = put_in(ctx.__private__[:smart_cell], %{editor?: editor?})
 
     :proc_lib.init_ack({:ok, self(), source, chunks, init_opts})
 
@@ -83,6 +111,7 @@ defmodule Kino.SmartCell.Server do
         Keyword.validate!(editor_opts, [
           :attribute,
           :language,
+          :intellisense_node,
           placement: :bottom,
           default_source: ""
         ])
@@ -100,6 +129,26 @@ defmodule Kino.SmartCell.Server do
     end)
   end
 
+  defp handle_reconfigure(state) do
+    case pop_in(state.ctx.__private__.smart_cell[:reconfigure_options]) do
+      {nil, state} ->
+        state
+
+      {options, state} ->
+        if editor_options = options[:editor] do
+          options = Map.new(editor_options)
+
+          send(
+            state.target_pid,
+            {:runtime_smart_cell_editor_update, state.ctx.__private__.ref, options}
+          )
+        end
+
+        state
+    end
+  end
+
+  @impl true
   def handle_info({:editor_source, source}, state) do
     attrs = Map.put(state.attrs, state.editor_source_attr, source)
     {:noreply, set_attrs(state, attrs)}
@@ -107,11 +156,12 @@ defmodule Kino.SmartCell.Server do
 
   def handle_info(msg, state) do
     case Kino.JS.Live.Server.call_handle_info(msg, state.module, state.ctx) do
-      {:ok, ctx} -> {:noreply, recompute_attrs(%{state | ctx: ctx})}
+      {:ok, ctx} -> {:noreply, %{state | ctx: ctx} |> handle_reconfigure() |> recompute_attrs()}
       :error -> {:noreply, state}
     end
   end
 
+  @impl true
   def terminate(reason, state) do
     Kino.JS.Live.Server.call_terminate(reason, state.module, state.ctx)
   end
