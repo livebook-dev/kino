@@ -153,13 +153,62 @@ defmodule Kino.SmartCell do
       @impl true
       def init(attrs, ctx) do
         # ...
-        {:ok, ctx, editor: [attribute: "code", language: "elixir"]}
+        {:ok, ctx, editor: [source: "", language: "elixir"]}
+      end
+
+  You also need to define `c:handle_editor_change/2`, which usually
+  simply stores the new source in the context.
+
+  ### Example
+
+  Here is a minimal example, similar to the one before, but using the
+  editor feature.
+
+      defmodule KinoDocs.SmartCell.Editor do
+        use Kino.JS
+        use Kino.JS.Live
+        use Kino.SmartCell, name: "Built-in code editor"
+
+        @impl true
+        def init(attrs, ctx) do
+          source = attrs["source"] || ""
+          {:ok, assign(ctx, source: source), editor: [source: source]}
+        end
+
+        @impl true
+        def handle_connect(ctx) do
+          {:ok, %{}, ctx}
+        end
+
+        @impl true
+        def handle_editor_change(source, ctx) do
+          {:ok, assign(ctx, source: source)}
+        end
+
+        @impl true
+        def to_attrs(ctx) do
+          %{"source" => ctx.assigns.source}
+        end
+
+        @impl true
+        def to_source(attrs) do
+          attrs["source"]
+        end
+
+        asset "main.js" do
+          """
+          export function init(ctx, payload) {
+            ctx.importCSS("main.css");
+
+            ctx.root.innerHTML = `Editor:`;
+          }
+          """
+        end
       end
 
   ### Options
 
-    * `:attribute` - the key to put the source text under in `attrs`.
-      Required
+    * `:source` - the initial editor source. Required
 
     * `:language` - the editor language, used for syntax highlighting.
       Defaults to `nil`
@@ -167,12 +216,13 @@ defmodule Kino.SmartCell do
     * `:placement` - editor placement within the smart cell, either
       `:top` or `:bottom`. Defaults to `:bottom`
 
-    * `:default_source` - the initial editor source. Defaults to `""`
-
     * `:intellisense_node` - a `{node, cookie}` atom tuple specifying
       a remote node that should be introspected for editor intellisense.
       This is only applicable when `:language` is Elixir. Defaults to
       `nil`
+
+  Note that you can programmatically reconfigure some of these options
+  later using `Kino.JS.Live.Context.reconfigure_smart_cell/2`.
 
   ## Other options
 
@@ -183,6 +233,7 @@ defmodule Kino.SmartCell do
       whenever the generated source code changes. This option may be
       helpful in cases where the cell output is a crucial element of
       the UI interactions. Defaults to `false`
+
   '''
 
   require Logger
@@ -255,7 +306,19 @@ defmodule Kino.SmartCell do
           {:ok, result :: any()}
           | {:error, Exception.kind(), error :: any(), Exception.stacktrace()}
 
-  @optional_callbacks scan_binding: 3, scan_eval_result: 2
+  @doc """
+  Invoked when the smart cell editor content changes.
+
+  Usually you just want to put the new source in the corresponding
+  assign.
+
+  This callback is required if the smart cell enables editor in the
+  `c:Kino.JS.Live.init/2` configuration.
+  """
+  @callback handle_editor_change(source :: String.t(), ctx :: Context.t()) ::
+              {:ok, ctx :: Context.t()}
+
+  @optional_callbacks scan_binding: 3, scan_eval_result: 2, handle_editor_change: 2
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do

@@ -41,13 +41,14 @@ defmodule Kino.RemoteExecutionCell do
 
     intellisense_node = intellisense_node(fields)
 
-    ctx = assign(ctx, fields: fields)
+    code = attrs["code"] || @default_code
+
+    ctx = assign(ctx, fields: fields, code: code)
 
     {:ok, ctx,
      editor: [
-       attribute: "code",
+       source: code,
        language: "elixir",
-       default_source: @default_code,
        intellisense_node: intellisense_node
      ]}
   end
@@ -98,8 +99,13 @@ defmodule Kino.RemoteExecutionCell do
   end
 
   @impl true
+  def handle_editor_change(source, ctx) do
+    {:ok, assign(ctx, code: source)}
+  end
+
+  @impl true
   def to_attrs(ctx) do
-    ctx.assigns.fields
+    Map.put(ctx.assigns.fields, "code", ctx.assigns.code)
   end
 
   @impl true

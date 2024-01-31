@@ -18,12 +18,10 @@ defmodule Kino.SmartCell.Server do
       {:ok, pid, source, chunks, init_opts} ->
         editor =
           if editor_opts = init_opts[:editor] do
-            source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
-
             %{
+              source: editor_opts[:source],
               language: editor_opts[:language],
               placement: editor_opts[:placement],
-              source: source,
               intellisense_node: editor_opts[:intellisense_node]
             }
           end
@@ -71,22 +69,18 @@ defmodule Kino.SmartCell.Server do
     {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
     init_opts = validate_init_opts!(init_opts)
 
-    editor_source_attr = get_in(init_opts, [:editor, :attribute])
+    editor? = init_opts[:editor] != nil
     reevaluate_on_change = Keyword.get(init_opts, :reevaluate_on_change, false)
+
+    if editor? and not has_function?(module, :handle_editor_change, 2) do
+      raise ArgumentError,
+            "#{inspect(module)} must define handle_editor_change/2 when the smart cell editor is enabled"
+    end
 
     attrs = module.to_attrs(ctx)
 
-    attrs =
-      if editor_source_attr do
-        source = initial_attrs[editor_source_attr] || init_opts[:editor][:default_source]
-        Map.put(attrs, editor_source_attr, source)
-      else
-        attrs
-      end
-
     {source, chunks} = to_source(module, attrs)
 
-    editor? = editor_source_attr != nil
     ctx = put_in(ctx.__private__[:smart_cell], %{editor?: editor?})
 
     :proc_lib.init_ack({:ok, self(), source, chunks, init_opts})
@@ -96,7 +90,6 @@ defmodule Kino.SmartCell.Server do
       ctx: ctx,
       target_pid: target_pid,
       attrs: attrs,
-      editor_source_attr: editor_source_attr,
       reevaluate_on_change: reevaluate_on_change
     }
 
@@ -107,17 +100,22 @@ defmodule Kino.SmartCell.Server do
     opts
     |> Keyword.validate!([:editor, :reevaluate_on_change])
     |> Keyword.update(:editor, nil, fn editor_opts ->
+      if Keyword.has_key?(editor_opts, :attribute) do
+        raise ArgumentError,
+              "the editor option :attribute is no longer supported, please refer" <>
+                " to the documentation to learn about the new API"
+      end
+
       editor_opts =
         Keyword.validate!(editor_opts, [
-          :attribute,
-          :language,
-          :intellisense_node,
-          placement: :bottom,
-          default_source: ""
+          :source,
+          language: nil,
+          intellisense_node: nil,
+          placement: :bottom
         ])
 
-      unless Keyword.has_key?(editor_opts, :attribute) do
-        raise ArgumentError, "missing editor option :attribute"
+      unless Keyword.has_key?(editor_opts, :source) do
+        raise ArgumentError, "missing required editor option :source"
       end
 
       unless editor_opts[:placement] in [:top, :bottom] do
@@ -150,13 +148,13 @@ defmodule Kino.SmartCell.Server do
 
   @impl true
   def handle_info({:editor_source, source}, state) do
-    attrs = Map.put(state.attrs, state.editor_source_attr, source)
-    {:noreply, set_attrs(state, attrs)}
+    {:ok, ctx} = state.module.handle_editor_change(source, state.ctx)
+    {:noreply, put_context(state, ctx)}
   end
 
   def handle_info(msg, state) do
     case Kino.JS.Live.Server.call_handle_info(msg, state.module, state.ctx) do
-      {:ok, ctx} -> {:noreply, %{state | ctx: ctx} |> handle_reconfigure() |> recompute_attrs()}
+      {:ok, ctx} -> {:noreply, put_context(state, ctx)}
       :error -> {:noreply, state}
     end
   end
@@ -166,16 +164,14 @@ defmodule Kino.SmartCell.Server do
     Kino.JS.Live.Server.call_terminate(reason, state.module, state.ctx)
   end
 
+  defp put_context(state, ctx) do
+    %{state | ctx: ctx}
+    |> handle_reconfigure()
+    |> recompute_attrs()
+  end
+
   defp recompute_attrs(state) do
     attrs = state.module.to_attrs(state.ctx)
-
-    attrs =
-      if state.editor_source_attr do
-        Map.put(attrs, state.editor_source_attr, state.attrs[state.editor_source_attr])
-      else
-        attrs
-      end
-
     set_attrs(state, attrs)
   end
 
