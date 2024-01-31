@@ -98,4 +98,24 @@ defmodule Kino.JS.Live.Context do
   def emit_event(%__MODULE__{} = ctx, event) do
     Kino.JS.Live.Server.emit_event(ctx, event)
   end
+
+  @doc """
+  Updates smart cell configuration.
+
+  This function allows for re-configuring some of the options that can
+  be specified in smart cell's `c:Kino.JS.Live.init/2`.
+
+  Note that this function returns the new context, which you should
+  return from the given handler.
+
+  ## Options
+
+    * `:editor` - note that the smart cell must be initialized with an
+      editor during on init. Supported options: `:source`, `:intellisense_node`.
+
+  """
+  @spec reconfigure_smart_cell(t(), keyword()) :: t()
+  def reconfigure_smart_cell(%__MODULE__{} = ctx, opts) do
+    Kino.SmartCell.Server.reconfigure_smart_cell(ctx, opts)
+  end
 end

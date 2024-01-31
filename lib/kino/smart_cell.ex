@@ -169,6 +169,11 @@ defmodule Kino.SmartCell do
 
     * `:default_source` - the initial editor source. Defaults to `""`
 
+    * `:intellisense_node` - a `{node, cookie}` atom tuple specifying
+      a remote node that should be introspected for editor intellisense.
+      This is only applicable when `:language` is Elixir. Defaults to
+      `nil`
+
   ## Other options
 
   Other than the editor configuration, the following options are
@@ -257,6 +262,16 @@ defmodule Kino.SmartCell do
       @behaviour Kino.SmartCell
 
       @smart_opts opts
+
+      import Kino.JS.Live.Context,
+        only: [
+          assign: 2,
+          update: 3,
+          broadcast_event: 3,
+          send_event: 4,
+          emit_event: 2,
+          reconfigure_smart_cell: 2
+        ]
 
       @before_compile Kino.SmartCell
     end

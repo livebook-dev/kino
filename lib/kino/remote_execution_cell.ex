@@ -10,7 +10,14 @@ defmodule Kino.RemoteExecutionCell do
   @default_code ":ok"
   @global_key __MODULE__
   @global_attrs ["node", "cookie", "cookie_secret", "node_secret"]
-  @secret_attrs ["cookie_secret", "node_secret"]
+  @distribution_attrs [
+    "node",
+    "use_node_secret",
+    "node_secret",
+    "cookie",
+    "use_cookie_secret",
+    "cookie_secret"
+  ]
 
   @impl true
   def init(attrs, ctx) do
@@ -20,28 +27,49 @@ defmodule Kino.RemoteExecutionCell do
     {shared_node, shared_node_secret} =
       AttributeStore.get_attribute({@global_key, :node}, {nil, nil})
 
-    node_secret = attrs["node_secret"] || shared_node_secret
-    node_secret_value = node_secret && System.get_env("LB_#{node_secret}")
-    cookie_secret = attrs["cookie_secret"] || shared_cookie_secret
-    cookie_secret_value = cookie_secret && System.get_env("LB_#{cookie_secret}")
-
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
       "node" => attrs["node"] || shared_node || "",
-      "node_secret" => node_secret || "",
+      "node_secret" => attrs["node_secret"] || shared_node_secret || "",
       "cookie" => attrs["cookie"] || shared_cookie || "",
-      "cookie_secret" => cookie_secret || "",
+      "cookie_secret" => attrs["cookie_secret"] || shared_cookie_secret || "",
       "use_node_secret" =>
         if(shared_node_secret, do: true, else: Map.get(attrs, "use_node_secret", false)),
       "use_cookie_secret" =>
-        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true)),
-      "cookie_secret_value" => cookie_secret_value,
-      "node_secret_value" => node_secret_value
+        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
     }
+
+    intellisense_node = intellisense_node(fields)
 
     ctx = assign(ctx, fields: fields)
 
-    {:ok, ctx, editor: [attribute: "code", language: "elixir", default_source: @default_code]}
+    {:ok, ctx,
+     editor: [
+       attribute: "code",
+       language: "elixir",
+       default_source: @default_code,
+       intellisense_node: intellisense_node
+     ]}
+  end
+
+  defp intellisense_node(fields) do
+    node =
+      if fields["use_node_secret"] do
+        System.get_env("LB_#{fields["node_secret"]}")
+      else
+        fields["node"]
+      end
+
+    cookie =
+      if fields["use_cookie_secret"] do
+        System.get_env("LB_#{fields["cookie_secret"]}")
+      else
+        fields["cookie"]
+      end
+
+    if is_binary(node) and node =~ "@" and is_binary(cookie) and cookie != "" do
+      {String.to_atom(node), String.to_atom(cookie)}
+    end
   end
 
   @impl true
@@ -54,12 +82,17 @@ defmodule Kino.RemoteExecutionCell do
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx = update(ctx, :fields, &Map.put(&1, field, value))
     if field in @global_attrs, do: put_shared_attr(field, value)
-    fields = update_fields(field, value)
 
-    if field in @secret_attrs,
-      do: send_event(ctx, ctx.origin, "update_node_info", %{field => fields["#{field}_value"]})
+    ctx =
+      if field in @distribution_attrs do
+        reconfigure_smart_cell(ctx,
+          editor: [intellisense_node: intellisense_node(ctx.assigns.fields)]
+        )
+      else
+        ctx
+      end
 
-    broadcast_event(ctx, "update_field", %{"fields" => fields})
+    broadcast_event(ctx, "update_field", %{"fields" => update_fields(field, value)})
 
     {:noreply, ctx}
   end
@@ -67,8 +100,6 @@ defmodule Kino.RemoteExecutionCell do
   @impl true
   def to_attrs(ctx) do
     ctx.assigns.fields
-    |> Map.delete("node_secret_value")
-    |> Map.delete("cookie_secret_value")
   end
 
   @impl true
@@ -149,20 +180,6 @@ defmodule Kino.RemoteExecutionCell do
 
   defp put_shared_attr("node_secret", value) do
     AttributeStore.put_attribute({@global_key, :node}, {nil, value})
-  end
-
-  defp update_fields("cookie_secret", cookie_secret) do
-    %{
-      "cookie_secret" => cookie_secret,
-      "cookie_secret_value" => System.get_env("LB_#{cookie_secret}")
-    }
-  end
-
-  defp update_fields("node_secret", node_secret) do
-    %{
-      "node_secret" => node_secret,
-      "node_secret_value" => System.get_env("LB_#{node_secret}")
-    }
   end
 
   defp update_fields(field, value), do: %{field => value}

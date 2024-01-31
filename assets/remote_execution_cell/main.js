@@ -233,21 +233,7 @@ export function init(ctx, payload) {
         const field = event.target.name;
         const value = this.fields[field];
         ctx.pushEvent("update_field", { field, value });
-        field !== "assign_to" && this.updateNodeInfo();
       },
-      updateNodeInfo() {
-        const node = this.fields["use_node_secret"]
-          ? this.fields["node_secret_value"]
-          : this.fields["node"];
-        const cookie = this.fields["use_cookie_secret"]
-          ? this.fields["cookie_secret_value"]
-          : this.fields["cookie"];
-        ctx.setSmartCellEditorIntellisenseNode(node, cookie);
-      },
-    },
-
-    mounted() {
-      this.updateNodeInfo();
     },
   }).mount(ctx.root);
 
@@ -255,33 +241,9 @@ export function init(ctx, payload) {
     setFields(fields);
   });
 
-  ctx.handleEvent("update_node_info", (secret_value) => {
-    const node =
-      "node_secret" in secret_value ? secret_value.node_secret : getNode();
-    const cookie =
-      "cookie_secret" in secret_value
-        ? secret_value.cookie_secret
-        : getCookie();
-    ctx.setSmartCellEditorIntellisenseNode(node, cookie);
-  });
-
   function setFields(fields) {
     for (const field in fields) {
       app.fields[field] = fields[field];
     }
-  }
-
-  function getNode() {
-    const node = app.fields["use_node_secret"]
-      ? app.fields["node_secret_value"]
-      : app.fields["node"];
-    return node;
-  }
-
-  function getCookie() {
-    const cookie = app.fields["use_cookie_secret"]
-      ? app.fields["cookie_secret_value"]
-      : app.fields["cookie"];
-    return cookie;
   }
 }
