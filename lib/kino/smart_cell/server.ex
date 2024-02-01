@@ -18,12 +18,13 @@ defmodule Kino.SmartCell.Server do
       {:ok, pid, source, chunks, init_opts} ->
         editor =
           if editor_opts = init_opts[:editor] do
-            source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
+            # TODO: remove on v1.0
+            legacy_source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
 
             %{
+              source: editor_opts[:source] || legacy_source,
               language: editor_opts[:language],
               placement: editor_opts[:placement],
-              source: source,
               intellisense_node: editor_opts[:intellisense_node]
             }
           end
@@ -69,13 +70,22 @@ defmodule Kino.SmartCell.Server do
   @impl true
   def init({module, ref, initial_attrs, target_pid}) do
     {:ok, ctx, init_opts} = Kino.JS.Live.Server.call_init(module, initial_attrs, ref)
-    init_opts = validate_init_opts!(init_opts)
+    init_opts = validate_init_opts!(init_opts, module)
 
-    editor_source_attr = get_in(init_opts, [:editor, :attribute])
+    editor? = init_opts[:editor] != nil
     reevaluate_on_change = Keyword.get(init_opts, :reevaluate_on_change, false)
+    # TODO: remove on v1.0
+    editor_source_attr = get_in(init_opts, [:editor, :attribute])
+
+    if editor_source_attr == nil and editor? and
+         not has_function?(module, :handle_editor_change, 2) do
+      raise ArgumentError,
+            "#{inspect(module)} must define handle_editor_change/2 when the smart cell editor is enabled"
+    end
 
     attrs = module.to_attrs(ctx)
 
+    # TODO: remove on v1.0
     attrs =
       if editor_source_attr do
         source = initial_attrs[editor_source_attr] || init_opts[:editor][:default_source]
@@ -86,7 +96,6 @@ defmodule Kino.SmartCell.Server do
 
     {source, chunks} = to_source(module, attrs)
 
-    editor? = editor_source_attr != nil
     ctx = put_in(ctx.__private__[:smart_cell], %{editor?: editor?})
 
     :proc_lib.init_ack({:ok, self(), source, chunks, init_opts})
@@ -103,22 +112,34 @@ defmodule Kino.SmartCell.Server do
     :gen_server.enter_loop(__MODULE__, [], state)
   end
 
-  defp validate_init_opts!(opts) do
+  defp validate_init_opts!(opts, module) do
     opts
     |> Keyword.validate!([:editor, :reevaluate_on_change])
     |> Keyword.update(:editor, nil, fn editor_opts ->
+      # TODO: remove :attribute and :default_source on v1.0
+
+      if Keyword.has_key?(editor_opts, :attribute) do
+        require Logger
+
+        Logger.warning(
+          "[#{inspect(module)}] the editor option :attribute is deprecated, please refer" <>
+            " to the documentation to learn about the new API"
+        )
+      else
+        unless Keyword.has_key?(editor_opts, :source) do
+          raise ArgumentError, "missing required editor option :source"
+        end
+      end
+
       editor_opts =
         Keyword.validate!(editor_opts, [
+          :source,
           :attribute,
-          :language,
-          :intellisense_node,
+          language: nil,
+          intellisense_node: nil,
           placement: :bottom,
           default_source: ""
         ])
-
-      unless Keyword.has_key?(editor_opts, :attribute) do
-        raise ArgumentError, "missing editor option :attribute"
-      end
 
       unless editor_opts[:placement] in [:top, :bottom] do
         raise ArgumentError,
@@ -150,13 +171,19 @@ defmodule Kino.SmartCell.Server do
 
   @impl true
   def handle_info({:editor_source, source}, state) do
-    attrs = Map.put(state.attrs, state.editor_source_attr, source)
-    {:noreply, set_attrs(state, attrs)}
+    if state.editor_source_attr do
+      # TODO: remove this branch on v1.0
+      attrs = Map.put(state.attrs, state.editor_source_attr, source)
+      {:noreply, set_attrs(state, attrs)}
+    else
+      {:ok, ctx} = state.module.handle_editor_change(source, state.ctx)
+      {:noreply, put_context(state, ctx)}
+    end
   end
 
   def handle_info(msg, state) do
     case Kino.JS.Live.Server.call_handle_info(msg, state.module, state.ctx) do
-      {:ok, ctx} -> {:noreply, %{state | ctx: ctx} |> handle_reconfigure() |> recompute_attrs()}
+      {:ok, ctx} -> {:noreply, put_context(state, ctx)}
       :error -> {:noreply, state}
     end
   end
@@ -166,9 +193,16 @@ defmodule Kino.SmartCell.Server do
     Kino.JS.Live.Server.call_terminate(reason, state.module, state.ctx)
   end
 
+  defp put_context(state, ctx) do
+    %{state | ctx: ctx}
+    |> handle_reconfigure()
+    |> recompute_attrs()
+  end
+
   defp recompute_attrs(state) do
     attrs = state.module.to_attrs(state.ctx)
 
+    # TODO: remove on v1.0
     attrs =
       if state.editor_source_attr do
         Map.put(attrs, state.editor_source_attr, state.attrs[state.editor_source_attr])
