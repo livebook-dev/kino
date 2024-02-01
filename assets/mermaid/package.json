@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/mermaid/build/main.js --format=esm --loader:.js=jsx",
-    "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/mermaid/build/main.js --format=esm --loader:.js=jsx --watch"
+    "dev": "npm run build -- --watch"
   },
   "dependencies": {
     "mermaid": "^10.4.0"

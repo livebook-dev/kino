@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/remote_execution_cell/build/main.js --format=esm --loader:.js=jsx",
-    "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/remote_execution_cell/build/main.js --format=esm --loader:.js=jsx --watch"
+    "dev": "npm run build -- --watch"
   },
   "dependencies": {
     "vue": "^3.4.15"

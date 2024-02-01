@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/debug_pipeline/build/main.js --format=esm --loader:.js=jsx",
-    "dev": "esbuild main.js --bundle --minify --outfile=../../lib/assets/debug_pipeline/build/main.js --format=esm --loader:.js=jsx --watch"
+    "dev": "npm run build -- --watch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
