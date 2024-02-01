@@ -32,8 +32,8 @@ defmodule Kino.JS do
   asset-aware. In particular, it allows us to use the `asset/2`
   macro to define arbitrary files directly in the module source.
 
-  All kinos require a `main.js` file that  defines a JavaScript
-  module and  becomes the entrypoint on the client side. The
+  All kinos require a `main.js` file that defines a JavaScript
+  module and becomes the entrypoint on the client side. The
   JavaScript module is expected to export the `init(ctx, data)`
   function, where `ctx` is a special object (discussed in
   detail later) and `data` is the kino data passed from the
@@ -57,6 +57,10 @@ defmodule Kino.JS do
   to specify where the corresponding directory is located:
 
       use Kino.JS, assets_path: "lib/assets/html"
+
+  The default entrypoint file is `main.js`, however you can override
+  it by setting the `:entrypoint` option. The entrypoint must be a
+  path relative to the assets path.
 
   ### Stylesheets
 
@@ -275,6 +279,7 @@ defmodule Kino.JS do
   defmacro __before_compile__(env) do
     opts = Module.get_attribute(env.module, :js_opts)
     assets_path = opts[:assets_path]
+    entrypoint = opts[:entrypoint] || "main.js"
     asset_paths = __paths__(assets_path)
 
     loaded_assets =
@@ -351,9 +356,9 @@ defmodule Kino.JS do
       )
     end
 
-    if assets != [] and "main.js" not in filenames do
+    if assets != [] and entrypoint not in filenames do
       IO.warn(
-        ~s'missing required asset "main.js" in #{inspect(env.module)}',
+        ~s'missing required asset "#{entrypoint}" in #{inspect(env.module)}',
         Macro.Env.stacktrace(env)
       )
     end
@@ -377,7 +382,7 @@ defmodule Kino.JS do
       def __assets_info__() do
         %{
           archive_path: Kino.JS.__assets_archive_path__(__MODULE__, unquote(hash)),
-          js_path: "main.js",
+          js_path: unquote(entrypoint),
           hash: unquote(hash),
           cdn_url: unquote(cdn_url)
         }
