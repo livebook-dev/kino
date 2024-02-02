@@ -3,11 +3,11 @@ defmodule Kino.Layout do
   Layout utilities for arranging multiple kinos together.
   """
 
-  defstruct [:type, :outputs, :info]
+  defstruct [:type, :items, :info]
 
   @opaque t :: %__MODULE__{
             type: :tabs | :grid,
-            outputs: list(Kino.Output.t()),
+            items: list(term()),
             info: map()
           }
 
@@ -31,9 +31,8 @@ defmodule Kino.Layout do
   def tabs(tabs) do
     {labels, terms} = Enum.unzip(tabs)
     labels = Enum.map(labels, &to_string/1)
-    outputs = Enum.map(terms, &Kino.Render.to_livebook/1)
     info = %{labels: labels}
-    %Kino.Layout{type: :tabs, outputs: outputs, info: info}
+    %Kino.Layout{type: :tabs, items: terms, info: info}
   end
 
   @doc """
@@ -65,7 +64,6 @@ defmodule Kino.Layout do
   @spec grid(list(term()), keyword()) :: t()
   def grid(terms, opts \\ []) do
     opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8)
-    outputs = Enum.map(terms, &Kino.Render.to_livebook/1)
 
     info = %{
       columns: opts[:columns],
@@ -73,6 +71,6 @@ defmodule Kino.Layout do
       gap: opts[:gap]
     }
 
-    %Kino.Layout{type: :grid, outputs: outputs, info: info}
+    %Kino.Layout{type: :grid, items: terms, info: info}
   end
 end
