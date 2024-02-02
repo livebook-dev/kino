@@ -103,20 +103,23 @@ defimpl Kino.Render, for: Kino.Frame do
 
   def to_livebook(kino) do
     Kino.Bridge.reference_object(kino.pid, self())
-    outputs = Kino.Frame.get_outputs(kino)
+    outputs = kino |> Kino.Frame.get_items() |> Enum.map(&Kino.Render.to_livebook/1)
     %{type: :frame, ref: kino.ref, outputs: outputs, placeholder: kino.placeholder}
   end
 end
 
 defimpl Kino.Render, for: Kino.Layout do
   def to_livebook(%{type: :tabs} = kino) do
-    %{type: :tabs, outputs: kino.outputs, labels: kino.info.labels}
+    outputs = Enum.map(kino.items, &Kino.Render.to_livebook/1)
+    %{type: :tabs, outputs: outputs, labels: kino.info.labels}
   end
 
   def to_livebook(%{type: :grid} = kino) do
+    outputs = Enum.map(kino.items, &Kino.Render.to_livebook/1)
+
     %{
       type: :grid,
-      outputs: kino.outputs,
+      outputs: outputs,
       columns: kino.info.columns,
       gap: kino.info.gap,
       boxed: kino.info.boxed

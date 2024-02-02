@@ -38,9 +38,6 @@ defmodule Kino.Frame do
             placeholder: boolean()
           }
 
-  @typedoc false
-  @type state :: %{outputs: list(Kino.Output.t())}
-
   @doc """
   Creates a new frame.
 
@@ -151,20 +148,20 @@ defmodule Kino.Frame do
   end
 
   @doc false
-  @spec get_outputs(t()) :: list(Kino.Output.t())
-  def get_outputs(frame) do
-    GenServer.call(frame.pid, :get_outputs)
+  @spec get_items(t()) :: list(term())
+  def get_items(frame) do
+    GenServer.call(frame.pid, :get_items)
   end
 
   @impl true
   def init(ref) do
-    {:ok, %{ref: ref, outputs: []}}
+    {:ok, %{ref: ref, items: []}}
   end
 
   @impl true
   def handle_cast({:clear, destination}, state) do
     put_update(destination, state.ref, [], :replace)
-    state = update_outputs(state, destination, fn _ -> [] end)
+    state = update_items(state, destination, fn _ -> [] end)
     {:noreply, state}
   end
 
@@ -172,26 +169,26 @@ defmodule Kino.Frame do
   def handle_call({:render, term, destination}, _from, state) do
     output = Kino.Render.to_livebook(term)
     put_update(destination, state.ref, [output], :replace)
-    state = update_outputs(state, destination, fn _ -> [output] end)
+    state = update_items(state, destination, fn _ -> [term] end)
     {:reply, :ok, state}
   end
 
   def handle_call({:append, term, destination}, _from, state) do
     output = Kino.Render.to_livebook(term)
     put_update(destination, state.ref, [output], :append)
-    state = update_outputs(state, destination, &[output | &1])
+    state = update_items(state, destination, &[term | &1])
     {:reply, :ok, state}
   end
 
-  def handle_call(:get_outputs, _from, state) do
-    {:reply, state.outputs, state}
+  def handle_call(:get_items, _from, state) do
+    {:reply, state.items, state}
   end
 
-  defp update_outputs(state, :default, update_fun) do
-    update_in(state.outputs, update_fun)
+  defp update_items(state, :default, update_fun) do
+    update_in(state.items, update_fun)
   end
 
-  defp update_outputs(state, _destination, _update_fun), do: state
+  defp update_items(state, _destination, _update_fun), do: state
 
   defp put_update(destination, ref, outputs, type) do
     output = %{type: :frame_update, ref: ref, update: {type, outputs}}

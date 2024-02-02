@@ -29,7 +29,7 @@ defmodule Kino.FrameTest do
       %{type: :frame_update, update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}}
     )
 
-    assert Kino.Frame.get_outputs(frame) == []
+    assert Kino.Frame.get_items(frame) == []
   end
 
   test "render/2 sends output directly to clients when :temporary is true" do
@@ -42,7 +42,7 @@ defmodule Kino.FrameTest do
       update: {:replace, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
     })
 
-    assert Kino.Frame.get_outputs(frame) == []
+    assert Kino.Frame.get_items(frame) == []
   end
 
   test "render/2 raises when :to and :temporary is disabled" do
@@ -86,5 +86,25 @@ defmodule Kino.FrameTest do
       type: :frame_update,
       update: {:append, [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}
     })
+  end
+
+  test "Kino.Render.to_livebook/1 returns the current value for a nested frame" do
+    frame = Kino.Frame.new()
+
+    frame_inner = Kino.Frame.new()
+
+    Kino.Frame.render(frame, frame_inner)
+
+    assert %{
+             type: :frame,
+             outputs: [%{type: :frame, outputs: []}]
+           } = Kino.Render.to_livebook(frame)
+
+    Kino.Frame.render(frame_inner, 1)
+
+    assert %{
+             type: :frame,
+             outputs: [%{type: :frame, outputs: [%{type: :terminal_text, text: "\e[34m1\e[0m"}]}]
+           } = Kino.Render.to_livebook(frame)
   end
 end
