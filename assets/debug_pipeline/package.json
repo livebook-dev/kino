@@ -1,18 +1,18 @@
 {
-  "private": true,
   "scripts": {
-    "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/debug_pipeline/build/main.js --format=esm --loader:.js=jsx",
-    "dev": "npm run build -- --watch"
+    "build": "kino-bundler --outdir ../../lib/assets/debug_pipeline/build",
+    "dev": "npm run build -- --watch --dev"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
     "@dnd-kit/utilities": "^3.2.1",
+    "@remixicon/react": "^4.1.1",
     "classnames": "^2.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "esbuild": "^0.15.16"
+    "@livebook/kino-bundler": "^0.1.0"
   }
 }

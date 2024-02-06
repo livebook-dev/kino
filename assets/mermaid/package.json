@@ -1,13 +1,12 @@
 {
-  "private": true,
   "scripts": {
-    "build": "esbuild main.js --bundle --minify --outfile=../../lib/assets/mermaid/build/main.js --format=esm --loader:.js=jsx",
-    "dev": "npm run build -- --watch"
+    "build": "kino-bundler --outdir ../../lib/assets/mermaid/build",
+    "dev": "npm run build -- --watch --dev"
   },
   "dependencies": {
     "mermaid": "^10.4.0"
   },
   "devDependencies": {
-    "esbuild": "^0.15.16"
+    "@livebook/kino-bundler": "^0.1.0"
   }
 }

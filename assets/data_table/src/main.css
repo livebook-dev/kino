@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.tooltip {
+  position: relative;
+  display: flex;
+  --distance: 4px;
+  --arrow-size: 5px;
+  --show-delay: 0.5s;
+}
+
+.tooltip:before {
+  position: absolute;
+  content: attr(data-tooltip);
+  white-space: pre;
+  text-align: center;
+  display: block;
+  z-index: 100;
+  background-color: #1c273c;
+  color: #f0f5f9;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 3px 12px;
+  visibility: hidden;
+  transition-property: visibility;
+  transition-duration: 0s;
+  transition-delay: 0s;
+}
+
+/* Tooltip arrow */
+.tooltip:after {
+  content: "";
+  position: absolute;
+  display: block;
+  z-index: 100;
+  /* For the arrow we use the triangle trick: https://css-tricks.com/snippets/css/css-triangle/ */
+  border-width: var(--arrow-size);
+  border-style: solid;
+  border-color: #1c273c;
+  visibility: hidden;
+  transition-property: visibility;
+  transition-duration: 0s;
+  transition-delay: 0s;
+}
+
+.tooltip:hover:before {
+  visibility: visible;
+  transition-delay: var(--show-delay);
+}
+
+.tooltip:hover:after {
+  visibility: visible;
+  transition-delay: var(--show-delay);
+}
+
+.tooltip.right:before {
+  top: 50%;
+  left: 100%;
+  transform: translate(calc(var(--arrow-size) - 1px + var(--distance)), -50%);
+}
+
+.tooltip.right:after {
+  top: 50%;
+  left: 100%;
+  transform: translate(var(--distance), -50%);
+  border-left: none;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}

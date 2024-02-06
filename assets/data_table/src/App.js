@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import DataEditor, {
   GridCellKind,
   GridColumnIcon,
@@ -15,29 +14,30 @@ import {
   RiSortAsc,
   RiSortDesc,
   RiAlignJustify,
-} from "react-icons/ri";
+  RiFileDownloadLine,
+  RiArrowDownSLine,
+} from "@remixicon/react";
 import { useLayer } from "react-laag";
 
-import "@glideapps/glide-data-grid/dist/index.css";
-import "./main.css";
-
 const customHeaderIcons = {
-  arrowUp: (
-    p
-  ) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
-    <path fill="${p.fgColor}" d="M0 0h24v24H0z"/>
-    <path fill="${p.bgColor}" d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 10h3l-4-4-4 4h3v4h2v-4z"/>
+  arrowUp: ({
+    fgColor,
+    bgColor,
+  }) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+    <path fill="${fgColor}" d="M0 0h24v24H0z"/>
+    <path fill="${bgColor}" d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 10h3l-4-4-4 4h3v4h2v-4z"/>
   </svg>`,
-  arrowDown: (
-    p
-  ) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
-    <path fill="${p.fgColor}" d="M0 0h24v24H0z"/>
-    <path fill="${p.bgColor}" d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 10V8h-2v4H8l4 4 4-4h-3z"/>
+  arrowDown: ({
+    fgColor,
+    bgColor,
+  }) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+    <path fill="${fgColor}" d="M0 0h24v24H0z"/>
+    <path fill="${bgColor}" d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 10V8h-2v4H8l4 4 4-4h-3z"/>
   </svg>`,
-  curlyBraces: (
-    p
-  ) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="white">
-  <rect width="100%" height="100%" fill="${p.bgColor}" /> <path d="M4 18V14.3C4 13.4716 3.32843 12.8 2.5
+  curlyBraces: ({
+    bgColor,
+  }) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="white">
+  <rect width="100%" height="100%" fill="${bgColor}" /> <path d="M4 18V14.3C4 13.4716 3.32843 12.8 2.5
   12.8H2V11.2H2.5C3.32843 11.2 4 10.5284 4 9.7V6C4 4.34315 5.34315 3 7 3H8V5H7C6.44772 5 6 5.44772 6
   6V10.1C6 10.9858 5.42408 11.7372 4.62623 12C5.42408 12.2628 6 13.0142 6 13.9V18C6 18.5523 6.44772 19 7
   19H8V21H7C5.34315 21 4 19.6569 4 18ZM20 14.3V18C20 19.6569 18.6569 21 17 21H16V19H17C17.5523 19 18 18.5523 18
@@ -81,20 +81,7 @@ const theme = {
   headerIconSize: 22,
 };
 
-export function init(ctx, data) {
-  ctx.importCSS("main.css");
-  ctx.importCSS(
-    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
-  );
-  ctx.importCSS(
-    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
-  );
-
-  const root = createRoot(ctx.root);
-  root.render(<App ctx={ctx} data={data} />);
-}
-
-function App({ ctx, data }) {
+export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
 
@@ -207,7 +194,7 @@ function App({ ctx, data }) {
 
       const middleCenter = getMiddleCenterBias(
         ctx,
-        `${theme.headerFontStyle} ${theme.fontFamily}`
+        `${theme.headerFontStyle} ${theme.fontFamily}`,
       );
 
       grad.addColorStop(0, fillStyle);
@@ -221,8 +208,8 @@ function App({ ctx, data }) {
         const variant = isSelected
           ? "selected"
           : column.style === "highlight"
-          ? "special"
-          : "normal";
+            ? "special"
+            : "normal";
 
         const headerSize = theme.headerIconSize;
 
@@ -233,7 +220,7 @@ function App({ ctx, data }) {
           rect.x + basePadding,
           rect.y + basePadding,
           headerSize,
-          theme
+          theme,
         );
 
         if (column.overlayIcon) {
@@ -244,7 +231,7 @@ function App({ ctx, data }) {
             rect.x + basePadding + overlayIconSize / 2,
             rect.y + basePadding + overlayIconSize / 2,
             overlayIconSize,
-            theme
+            theme,
           );
         }
       }
@@ -254,13 +241,13 @@ function App({ ctx, data }) {
         menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
         hasSummary
           ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
-          : menuBounds.y + menuBounds.height / 2 + middleCenter
+          : menuBounds.y + menuBounds.height / 2 + middleCenter,
       );
 
       if (hasSummary) {
         const summary = content.columns[column.sourceIndex - 1].summary;
         const formattedSummary = Object.fromEntries(
-          summary.keys.map((k, i) => [k, summary.values[i]])
+          summary.keys.map((k, i) => [k, summary.values[i]]),
         );
         const fontSize = 13;
         const padding = fontSize + basePadding;
@@ -273,13 +260,13 @@ function App({ ctx, data }) {
           ctx.fillText(
             `${key}:`,
             rect.x + padding / 2,
-            rect.y + padding * (index + 1) + padding
+            rect.y + padding * (index + 1) + padding,
           );
           ctx.font = baseFont;
           ctx.fillText(
             value,
             rect.x + ctx.measureText(key).width + padding,
-            rect.y + padding * (index + 1) + padding
+            rect.y + padding * (index + 1) + padding,
           );
         });
       }
@@ -295,7 +282,7 @@ function App({ ctx, data }) {
 
       return true;
     },
-    [content]
+    [content],
   );
 
   const getCellContent = useCallback(
@@ -315,7 +302,7 @@ function App({ ctx, data }) {
         readonly: true,
       };
     },
-    [content]
+    [content],
   );
 
   const toggleSearch = () => {
@@ -398,13 +385,13 @@ function App({ ctx, data }) {
         setHoverRows(null);
       }
     },
-    [rows]
+    [rows],
   );
 
   const getRowThemeOverride = useCallback(
     (row) =>
       hoverRows?.includes(row) ? { bgCell: theme.bgHeaderHovered } : null,
-    [hoverRows]
+    [hoverRows],
   );
 
   useEffect(() => {
@@ -454,11 +441,13 @@ function App({ ctx, data }) {
   }, [menu]);
 
   return (
-    <div className="app">
-      <div className="navigation">
-        <div className="navigation__info">
-          <h2 className="navigation__name">{data.name}</h2>
-          <span className="navigation__details">
+    <div className="p-3 font-sans">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex items-baseline">
+          <h2 className="text-md font-semibold leading-none text-gray-800">
+            {data.name}
+          </h2>
+          <span className="ml-2.5 text-xs leading-none">
             {totalRows || "?"} {totalRows === 1 ? "entry" : "entries"}
           </span>
           {totalRows < data.content.total_rows}
@@ -469,7 +458,7 @@ function App({ ctx, data }) {
             onDownload={(format) => ctx.pushEvent("download", { format })}
           />
         )}
-        <div className="navigation__space"></div>
+        <div className="grow"></div>
         {hasRefetch && (
           <RefetchButton onRefetch={() => ctx.pushEvent("refetch")} />
         )}
@@ -491,7 +480,7 @@ function App({ ctx, data }) {
       </div>
       {hasData && (
         <DataEditor
-          className="table-container"
+          className="max-w-full rounded-lg shadow-[0_2px_10px_rgb(0,0,0,0.15)]"
           theme={theme}
           getCellContent={getCellContent}
           columns={columns}
@@ -534,57 +523,67 @@ function App({ ctx, data }) {
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
-          />
+          />,
         )}
-      {!hasData && <p className="no-data">No data</p>}
+      {!hasData && <p className="text-sm text-gray-700">No data</p>}
       <div id="portal" />
     </div>
   );
 }
 
 function DownloadExported({ supportedFormats, onDownload }) {
-  const formatsList = supportedFormats.map((format) => (
-    <option>{format}</option>
-  ));
+  const selectRef = useRef();
+
   return (
-    <div className="download">
-      <span className="tooltip right" data-tooltip="Export to">
-        <form>
+    <span className="tooltip right" data-tooltip="Export to">
+      <IconButton onClick={(_event) => selectRef.current.click()}>
+        <div className="relative">
+          <RiFileDownloadLine size={18} />
           <select
-            className="input__icon"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            ref={selectRef}
             value=""
             onChange={(event) => onDownload(event.target.value)}
           >
-            <option selected disabled value="">
+            <option disabled value="">
               Export to
             </option>
-            {formatsList}
+            {supportedFormats.map((format) => (
+              <option key={format}>{format}</option>
+            ))}
           </select>
-        </form>
-      </span>
-    </div>
+        </div>
+      </IconButton>
+    </span>
   );
 }
 
 function RefetchButton({ onRefetch }) {
   return (
-    <button className="icon-button" aria-label="refresh" onClick={onRefetch}>
+    <IconButton aria-label="refresh" onClick={onRefetch}>
       <RiRefreshLine />
-    </button>
+    </IconButton>
   );
 }
 
 function SearchButton({ toggleSearch }) {
   return (
     <span className="tooltip right" data-tooltip="Current page search">
-      <button
-        className="icon-button search"
-        aria-label="search"
-        onClick={toggleSearch}
-      >
-        <RiSearch2Line className="search-icon" />
-      </button>
+      <IconButton aria-label="search" onClick={toggleSearch}>
+        <RiSearch2Line size={16} />
+      </IconButton>
     </span>
+  );
+}
+
+function IconButton({ children, ...props }) {
+  return (
+    <button
+      {...props}
+      className="align-center flex cursor-pointer items-center rounded-full p-1 leading-none text-gray-500 hover:text-gray-900 focus:bg-gray-100 focus:outline-none disabled:cursor-default disabled:text-gray-300"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -592,18 +591,23 @@ function LimitSelect({ limit, totalRows, onChange }) {
   return (
     <div>
       <form>
-        <label className="input-label">Show</label>
-        <select
-          className="input"
-          value={limit}
-          onChange={(event) => onChange(parseInt(event.target.value))}
-        >
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-          {totalRows ? <option value={totalRows}>All</option> : null}
-        </select>
+        <label className="p-1 text-xs font-medium text-gray-500">Show</label>
+        <div class="relative inline-block">
+          <select
+            className="appearance-none rounded-lg border border-gray-400 bg-white px-2 py-1 pr-7 text-xs font-medium text-gray-500 focus:outline-none"
+            value={limit}
+            onChange={(event) => onChange(parseInt(event.target.value))}
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            {totalRows ? <option value={totalRows}>All</option> : null}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+            <RiArrowDownSLine size={16} />
+          </div>
+        </div>
       </form>
     </div>
   );
@@ -611,27 +615,27 @@ function LimitSelect({ limit, totalRows, onChange }) {
 
 function Pagination({ page, maxPage, onPrev, onNext, rows }) {
   return (
-    <div className="pagination">
+    <div className="flex gap-3">
       <button
-        className="pagination__button"
+        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 focus:outline-none disabled:pointer-events-none disabled:text-gray-300"
         onClick={onPrev}
         disabled={page === 1}
       >
-        <RiArrowLeftSLine />
+        <RiArrowLeftSLine size={16} />
         <span>Prev</span>
       </button>
-      <div className="pagination__info">
+      <div className="rounded-lg border border-gray-400 px-2 py-1 text-xs font-semibold text-gray-500">
         <span>
           {page} of {maxPage || "?"}
         </span>
       </div>
       <button
-        className="pagination__button"
+        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 focus:outline-none disabled:pointer-events-none disabled:text-gray-300"
         onClick={onNext}
         disabled={page === maxPage || rows === 0}
       >
         <span>Next</span>
-        <RiArrowRightSLine />
+        <RiArrowRightSLine size={16} />
       </button>
     </div>
   );
@@ -639,26 +643,43 @@ function Pagination({ page, maxPage, onPrev, onNext, rows }) {
 
 function HeaderMenu({ layerProps, selectAllCurrent, hasSorting, orderBy }) {
   return (
-    <div className="header-menu" {...layerProps}>
-      <button className="header-menu-item button" onClick={selectAllCurrent}>
+    <div
+      className="flex w-48 flex-col rounded-b-md border border-gray-200 bg-white p-2 font-sans shadow-lg"
+      {...layerProps}
+    >
+      <button
+        className="mb-1.5 flex w-full justify-center rounded-lg border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium leading-none text-gray-700 hover:bg-gray-200"
+        onClick={selectAllCurrent}
+      >
         Select this column
       </button>
       {hasSorting && (
         <>
-          <div className="header-menu-item" onClick={() => orderBy("asc")}>
-            <RiSortAsc />
+          <HeaderMenuItem onClick={() => orderBy("asc")}>
+            <RiSortAsc size={14} />
             <span>Sort: ascending</span>
-          </div>
-          <div className="header-menu-item" onClick={() => orderBy("desc")}>
-            <RiSortDesc />
+          </HeaderMenuItem>
+          <HeaderMenuItem onClick={() => orderBy("desc")}>
+            <RiSortDesc size={14} />
             <span>Sort: descending</span>
-          </div>
-          <div className="header-menu-item" onClick={() => orderBy("none")}>
-            <RiAlignJustify />
+          </HeaderMenuItem>
+          <HeaderMenuItem onClick={() => orderBy("none")}>
+            <RiAlignJustify size={14} />
             <span>Sort: none</span>
-          </div>
+          </HeaderMenuItem>
         </>
       )}
+    </div>
+  );
+}
+
+function HeaderMenuItem({ children, ...props }) {
+  return (
+    <div
+      {...props}
+      className="flex cursor-pointer items-center justify-start gap-1 p-1 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      {children}
     </div>
   );
 }

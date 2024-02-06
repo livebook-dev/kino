@@ -1,27 +1,11 @@
 import React, { useState } from "react";
-import { createRoot } from "react-dom/client";
+import { RiArrowDownSFill, RiArrowRightSFill } from "@remixicon/react";
+import classNames from "classnames";
 
-import "./main.css";
-
-export function init(ctx, tree) {
-  ctx.importCSS("main.css");
-  ctx.importCSS(
-    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
-  );
-  ctx.importCSS(
-    "https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.min.css"
-  );
-
-  const root = createRoot(ctx.root);
-  root.render(<App tree={tree} />);
-}
-
-function App({ tree }) {
+export default function App({ tree }) {
   return (
-    <div className="app">
-      <div className="tree">
-        <TreeNode node={tree} level={1} />
-      </div>
+    <div className="font-mono text-sm text-gray-500">
+      <TreeNode node={tree} level={1} />
     </div>
   );
 }
@@ -38,17 +22,16 @@ function TreeNode({ node, level }) {
   return (
     <>
       <div
-        className={`item ${node.children ? "clickable" : ""}`}
+        className={classNames(["flex", node.children && "cursor-pointer"])}
         onClick={handleExpandClick}
       >
-        <div className="icon-container">
-          {node.children && (
-            <i
-              className={`ri ${
-                expanded ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
-              }`}
-            />
-          )}
+        <div className="mr-0.5 inline-block w-[2ch] flex-shrink-0">
+          {node.children &&
+            (expanded ? (
+              <RiArrowDownSFill size={20} />
+            ) : (
+              <RiArrowRightSFill size={20} />
+            ))}
         </div>
         <div>
           {node.children && expanded ? (
@@ -60,14 +43,14 @@ function TreeNode({ node, level }) {
       </div>
       {node.children && expanded && (
         <>
-          <ol>
+          <ol className="m-0 ml-[2ch] block list-none p-0">
             {node.children.map((child, index) => (
-              <li>
+              <li className="flex flex-col">
                 <TreeNode node={child} level={level + 1} />
               </li>
             ))}
           </ol>
-          <div className="suffix">
+          <div className="ml-[2ch]">
             <TextItems items={node.expanded.suffix} />
           </div>
         </>
@@ -80,7 +63,7 @@ function TextItems({ items }) {
   return items.map((item, index) => (
     <span
       key={index}
-      className="code"
+      className="whitespace-pre"
       style={item.color ? { color: item.color } : {}}
     >
       {item.text}
