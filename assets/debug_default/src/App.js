@@ -12,12 +12,12 @@ export default function App({ ctx, payload }) {
   }, []);
 
   return (
-    <div class="app">
-      <div class="headline">
-        <span class="dbg">dbg:{dbgLine}</span>
+    <div class="font-mono">
+      <div class="mb-4 flex items-center text-xs">
+        <span class="mr-2 rounded bg-gray-300 px-1 py-0.5">dbg:{dbgLine}</span>
         <span>{formatDbgInfo(dbgSameFile, callCount)}</span>
       </div>
-      <div class="source">{source}</div>
+      <div class="whitespace-pre-wrap text-xs">{source}</div>
     </div>
   );
 }

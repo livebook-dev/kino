@@ -17,7 +17,7 @@ export default function SortableList({ items, onDrop, render }) {
   const [active, setActive] = useState(null);
   const activeItem = useMemo(
     () => items.find((item) => item.id === active?.id),
-    [active, items]
+    [active, items],
   );
 
   const dropAnimationConfig = {
@@ -35,7 +35,7 @@ export default function SortableList({ items, onDrop, render }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
-    })
+    }),
   );
 
   return (

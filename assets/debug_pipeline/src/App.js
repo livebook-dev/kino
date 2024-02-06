@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import classNames from "classnames";
 import { arrayMove } from "@dnd-kit/sortable";
+import { RiClipboardLine } from "@remixicon/react";
 
 import SortableList from "./SortableList";
 import SortableListItem from "./SortableListItem";
 import Switch from "./Switch";
+import IconButton from "./IconButton";
 
 export default function App({ ctx, payload }) {
   const { dbg_same_file: dbgSameFile, dbg_line: dbgLine } = payload;
@@ -29,7 +31,7 @@ export default function App({ ctx, payload }) {
     (item) => {
       return item.enabled && !abortedIds.includes(item.id);
     },
-    [abortedIds]
+    [abortedIds],
   );
 
   const moveSelection = useCallback(
@@ -42,7 +44,7 @@ export default function App({ ctx, payload }) {
         ctx.pushEvent("select_item", { id: item.id });
       }
     },
-    [items, selectedId, isItemSelectable]
+    [items, selectedId, isItemSelectable],
   );
 
   useEffect(() => {
@@ -75,11 +77,11 @@ export default function App({ ctx, payload }) {
       "enabled_updated",
       ({ id, enabled, selected_id, changed }) => {
         setItems((items) =>
-          items.map((item) => (item.id === id ? { ...item, enabled } : item))
+          items.map((item) => (item.id === id ? { ...item, enabled } : item)),
         );
         setSelectedId(selected_id);
         setIsChanged(changed);
-      }
+      },
     );
 
     ctx.handleEvent("item_moved", ({ id, index, changed }) => {
@@ -116,7 +118,7 @@ export default function App({ ctx, payload }) {
 
     const toIndex = Math.max(
       items.findIndex((item) => item.id === toId),
-      1
+      1,
     );
 
     if (fromIndex === toIndex) return;
@@ -136,23 +138,28 @@ export default function App({ ctx, payload }) {
   }
 
   return (
-    <div className="app">
-      <div className="navigation">
-        <div className="headline">
-          <span className="dbg">dbg:{dbgLine}</span>
+    <div className="font-mono text-gray-700">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center text-xs">
+          <span className="mr-2 rounded bg-gray-300 px-1 py-0.5">
+            dbg:{dbgLine}
+          </span>
           <span>{formatDbgInfo(dbgSameFile, callCount)}</span>
         </div>
-        <div className="actions">
-          <div className="copy-source" onClick={copySource}>
+        <div>
+          <div
+            className="flex cursor-pointer items-center hover:text-gray-900"
+            onClick={copySource}
+          >
             {isChanged && (
-              <span className="change-indicator">
-                <span className="dot"></span>
+              <span className="mr-1 flex items-center text-xs">
+                <span className="bg-yellow-bright-200 relative mr-2 inline-flex h-3 w-3 rounded-full"></span>
                 <span>Copy new pipeline</span>
               </span>
             )}
-            <button className="icon-button">
-              <i className="ri ri-clipboard-line" aria-hidden="true"></i>
-            </button>
+            <IconButton>
+              <RiClipboardLine size={20} />
+            </IconButton>
           </div>
         </div>
       </div>
@@ -163,18 +170,18 @@ export default function App({ ctx, payload }) {
           <SortableListItem key={item.id} id={item.id} disabled={index === 0}>
             <div
               className={classNames([
-                "box",
-                {
-                  selectable: isItemSelectable(item),
-                  selected: item.id === selectedId,
-                  errored: item.id === erroredId,
-                  first: index === 0,
-                },
+                "flex flex-col bg-white py-2 text-sm",
+                index > 0 && "border-t border-gray-200",
+                isItemSelectable(item)
+                  ? "cursor-pointer"
+                  : "cursor-default text-gray-400",
+                item.id === selectedId && "text-blue-600",
+                item.id === erroredId && "text-red-600",
               ])}
               onClick={() => handleItemClick(item)}
             >
-              <div className="primary">
-                <span className="source">{item.source}</span>
+              <div className="flex min-h-[28px] items-center justify-between">
+                <span className="whitespace-pre-wrap">{item.source}</span>
                 {index !== 0 && (
                   <Switch
                     checked={item.enabled}
@@ -182,12 +189,14 @@ export default function App({ ctx, payload }) {
                   />
                 )}
               </div>
-              {item.id === erroredId && <div className="error">{error}</div>}
+              {item.id === erroredId && (
+                <div className="mt-4 whitespace-pre-wrap">{error}</div>
+              )}
             </div>
           </SortableListItem>
         )}
       />
-      <div className="output-label">Output:</div>
+      <div className="mt-4 text-xs">Output:</div>
     </div>
   );
 }
@@ -212,7 +221,7 @@ function copyToClipboard(text) {
     navigator.clipboard.writeText(text);
   } else {
     alert(
-      "Sorry, your browser does not support clipboard copy.\nThis generally requires a secure origin - either HTTPS or localhost."
+      "Sorry, your browser does not support clipboard copy.\nThis generally requires a secure origin - either HTTPS or localhost.",
     );
   }
 }
