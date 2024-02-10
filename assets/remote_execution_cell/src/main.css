@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Safari 11+ */
+
+@supports (-webkit-appearance: none) and (stroke-color: transparent) {
+  input[type="text"] {
+    max-width: 220px;
+  }
+}
