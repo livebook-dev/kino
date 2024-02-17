@@ -21,7 +21,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "tuple",
              content: "{...}",
-             expanded: %{prefix: "{", suffix: "}"},
+             expanded_before: "{",
+             expanded_after: "}",
              children: [
                %{kind: "number", content: "1", children: nil}
              ]
@@ -32,12 +33,14 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "tuple",
              content: "{...}",
-             expanded: %{prefix: "{", suffix: "}"},
+             expanded_before: "{",
+             expanded_after: "}",
              children: [
                %{
                  kind: "tuple",
                  content: "{...}",
-                 expanded: %{prefix: "{", suffix: "}"},
+                 expanded_before: "{",
+                 expanded_after: "}",
                  children: [
                    %{kind: "number", content: "1", children: nil}
                  ]
@@ -50,13 +53,15 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "tuple",
              content: "{...}",
-             expanded: %{prefix: "{", suffix: "}"},
+             expanded_before: "{",
+             expanded_after: "}",
              children: [
                %{kind: "number", content: "1,", children: nil},
                %{
                  kind: "tuple",
                  content: "{...},",
-                 expanded: %{prefix: "{", suffix: "},"},
+                 expanded_before: "{",
+                 expanded_after: "},",
                  children: [
                    %{kind: "atom", content: ":x,", children: nil},
                    %{kind: "atom", content: ":y", children: nil}
@@ -71,7 +76,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "list",
              content: "[...]",
-             expanded: %{prefix: "[", suffix: "]"},
+             expanded_before: "[",
+             expanded_after: "]",
              children: [
                %{kind: "number", content: "1", children: nil}
              ]
@@ -82,7 +88,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "list",
              content: "[...]",
-             expanded: %{prefix: "[", suffix: "]"},
+             expanded_before: "[",
+             expanded_after: "]",
              children: [
                %{kind: "atom", content: "foo: :bar", children: nil}
              ]
@@ -93,7 +100,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "map",
              content: "%{...}",
-             expanded: %{prefix: "%{", suffix: "}"},
+             expanded_before: "%{",
+             expanded_after: "}",
              children: [
                %{kind: "atom", content: "foo: :bar", children: nil}
              ]
@@ -104,7 +112,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "map",
              content: "%{...}",
-             expanded: %{prefix: "%{", suffix: "}"},
+             expanded_before: "%{",
+             expanded_after: "}",
              children: [
                %{kind: "binary", content: ~s("foo" => "bar"), children: nil}
              ]
@@ -115,7 +124,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "map",
              content: "%{...}",
-             expanded: %{prefix: "%{", suffix: "}"},
+             expanded_before: "%{",
+             expanded_after: "}",
              children: [
                %{kind: "atom", content: "bar: :baz,", children: nil},
                %{kind: "atom", content: "foo: :oof", children: nil}
@@ -127,7 +137,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "map",
              content: "%{...}",
-             expanded: %{prefix: "%{", suffix: "}"},
+             expanded_before: "%{",
+             expanded_after: "}",
              children: [
                %{kind: "atom", content: "{1, 2} => true", children: nil}
              ]
@@ -142,7 +153,8 @@ defmodule Kino.TreeTest do
     assert %{
              kind: "struct",
              content: "%Kino.TreeTest.User{...}",
-             expanded: %{prefix: "%Kino.TreeTest.User{", suffix: "}"},
+             expanded_before: "%Kino.TreeTest.User{",
+             expanded_after: "}",
              children: [
                %{kind: "binary", content: ~s(email: "user@example.com"), children: nil}
              ]
@@ -183,7 +195,8 @@ defmodule Kino.TreeTest do
   test "uses separate colors for keys and values" do
     assert %{
              content: [%{text: "[...]", color: nil}],
-             expanded: %{prefix: [%{text: "[", color: nil}], suffix: [%{text: "]", color: nil}]},
+             expanded_before: [%{text: "[", color: nil}],
+             expanded_after: [%{text: "]", color: nil}],
              children: [
                %{
                  content: [
@@ -225,14 +238,16 @@ defmodule Kino.TreeTest do
          %{
            content: content,
            children: children,
-           expanded: %{prefix: prefix, suffix: suffix} = expanded
+           expanded_before: expanded_before,
+           expanded_after: expanded_after
          } = node
        ) do
     %{
       node
       | content: text_of(content),
         children: Enum.map(children, &plaintext/1),
-        expanded: %{expanded | prefix: text_of(prefix), suffix: text_of(suffix)}
+        expanded_before: text_of(expanded_before),
+        expanded_after: text_of(expanded_after)
     }
   end
 

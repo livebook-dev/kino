@@ -44,7 +44,7 @@ function TreeNode({ node, level }) {
         </div>
         <div>
           {node.children && isExpanded ? (
-            <TextItems items={node.expanded.prefix} />
+            <TextItems items={node.expanded_before} />
           ) : (
             <TextItems items={node.content} />
           )}
@@ -60,7 +60,7 @@ function TreeNode({ node, level }) {
             ))}
           </ol>
           <div className="ml-[2ch]">
-            <TextItems items={node.expanded.suffix} />
+            <TextItems items={node.expanded_after} />
           </div>
         </>
       )}

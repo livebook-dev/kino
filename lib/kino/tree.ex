@@ -73,7 +73,8 @@ defmodule Kino.Tree do
       kind: "tuple",
       content: [black("{...}") | suffix],
       children: children,
-      expanded: %{prefix: [black("{")], suffix: [black("}") | suffix]}
+      expanded_before: [black("{")],
+      expanded_after: [black("}") | suffix]
     }
   end
 
@@ -95,7 +96,8 @@ defmodule Kino.Tree do
       kind: "list",
       content: [black("[...]") | suffix],
       children: children,
-      expanded: %{prefix: [black("[")], suffix: [black("]") | suffix]}
+      expanded_before: [black("[")],
+      expanded_after: [black("]") | suffix]
     }
   end
 
@@ -115,10 +117,8 @@ defmodule Kino.Tree do
         kind: "struct",
         content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
         children: children,
-        expanded: %{
-          prefix: [black("%"), blue(inspect(module)), black("{")],
-          suffix: [black("}") | suffix]
-        }
+        expanded_before: [black("%"), blue(inspect(module)), black("{")],
+        expanded_after: [black("}") | suffix]
       }
     end
   end
@@ -135,7 +135,8 @@ defmodule Kino.Tree do
       kind: "map",
       content: [black("%{...}") | suffix],
       children: children,
-      expanded: %{prefix: [black("%{")], suffix: [black("}") | suffix]}
+      expanded_before: [black("%{")],
+      expanded_after: [black("}") | suffix]
     }
   end
 
@@ -154,11 +155,11 @@ defmodule Kino.Tree do
       end
 
     case to_node(value, suffix) do
-      %{content: content, expanded: %{prefix: prefix} = expanded} = node ->
+      %{content: content, expanded_before: expanded_before} = node ->
         %{
           node
           | content: [key_span, sep_span | content],
-            expanded: %{expanded | prefix: [key_span, sep_span | prefix]}
+            expanded_before: [key_span, sep_span | expanded_before]
         }
 
       %{content: content} = node ->
