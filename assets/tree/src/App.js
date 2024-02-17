@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { RiArrowDownSFill, RiArrowRightSFill } from "@remixicon/react";
 import classNames from "classnames";
 
+const MAX_AUTO_EXPAND_SIZE = 6;
+
+function shouldAutoExpand(node, level) {
+  return (
+    level === 1 ||
+    (node.kind === "tuple" && node.children?.length <= MAX_AUTO_EXPAND_SIZE)
+  );
+}
+
 export default function App({ tree }) {
   return (
     <div className="font-mono text-sm text-gray-500">
@@ -11,7 +20,7 @@ export default function App({ tree }) {
 }
 
 function TreeNode({ node, level }) {
-  const [expanded, setExpanded] = useState(level === 1);
+  const [expanded, setExpanded] = useState(shouldAutoExpand(node, level));
 
   function handleExpandClick() {
     if (node.children) {

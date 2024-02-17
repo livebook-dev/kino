@@ -2,40 +2,44 @@ defmodule Kino.TreeTest do
   use Kino.LivebookCase, async: true
 
   test "renders strings as string nodes" do
-    assert %{content: ~s("some string"), children: nil} = plaintext_tree("some string")
+    assert %{kind: "binary", content: ~s("some string"), children: nil} =
+             plaintext_tree("some string")
   end
 
   test "renders atoms as nodes with inspected value" do
-    assert %{content: ":foo", children: nil} = plaintext_tree(:foo)
-    assert %{content: ~s(:"I need quotes"), children: nil} = plaintext_tree(:"I need quotes")
-    assert %{content: "SomeModule", children: nil} = plaintext_tree(SomeModule)
+    assert %{kind: "atom", content: ":foo", children: nil} = plaintext_tree(:foo)
+    assert %{kind: "atom", content: ~s(:"quote me"), children: nil} = plaintext_tree(:"quote me")
+    assert %{kind: "atom", content: "SomeModule", children: nil} = plaintext_tree(SomeModule)
   end
 
   test "renders numbers as nodes with inspected value" do
-    assert %{content: "100", children: nil} = plaintext_tree(100)
-    assert %{content: "100.0", children: nil} = plaintext_tree(100.0)
+    assert %{kind: "number", content: "100", children: nil} = plaintext_tree(100)
+    assert %{kind: "number", content: "100.0", children: nil} = plaintext_tree(100.0)
   end
 
   test "renders tuples as nodes with children" do
     assert %{
+             kind: "tuple",
              content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
-               %{content: "1", children: nil}
+               %{kind: "number", content: "1", children: nil}
              ]
            } = plaintext_tree({1})
   end
 
   test "handles deep nesting" do
     assert %{
+             kind: "tuple",
              content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
                %{
+                 kind: "tuple",
                  content: "{...}",
                  expanded: %{prefix: "{", suffix: "}"},
                  children: [
-                   %{content: "1", children: nil}
+                   %{kind: "number", content: "1", children: nil}
                  ]
                }
              ]
@@ -44,80 +48,88 @@ defmodule Kino.TreeTest do
 
   test "adds trailing commas to all but last child" do
     assert %{
+             kind: "tuple",
              content: "{...}",
              expanded: %{prefix: "{", suffix: "}"},
              children: [
-               %{content: "1,", children: nil},
+               %{kind: "number", content: "1,", children: nil},
                %{
+                 kind: "tuple",
                  content: "{...},",
                  expanded: %{prefix: "{", suffix: "},"},
                  children: [
-                   %{content: ":x,", children: nil},
-                   %{content: ":y", children: nil}
+                   %{kind: "atom", content: ":x,", children: nil},
+                   %{kind: "atom", content: ":y", children: nil}
                  ]
                },
-               %{content: ":three", children: nil}
+               %{kind: "atom", content: ":three", children: nil}
              ]
            } = plaintext_tree({1, {:x, :y}, :three})
   end
 
   test "renders lists as nodes with children" do
     assert %{
+             kind: "list",
              content: "[...]",
              expanded: %{prefix: "[", suffix: "]"},
              children: [
-               %{content: "1", children: nil}
+               %{kind: "number", content: "1", children: nil}
              ]
            } = plaintext_tree([1])
   end
 
   test "renders keywords as nodes with key-value children" do
     assert %{
+             kind: "list",
              content: "[...]",
              expanded: %{prefix: "[", suffix: "]"},
              children: [
-               %{content: "foo: :bar", children: nil}
+               %{kind: "atom", content: "foo: :bar", children: nil}
              ]
            } = plaintext_tree(foo: :bar)
   end
 
   test "renders maps as nodes with key-value children" do
     assert %{
+             kind: "map",
              content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{content: "foo: :bar", children: nil}
+               %{kind: "atom", content: "foo: :bar", children: nil}
              ]
            } = plaintext_tree(%{foo: :bar})
   end
 
   test "uses the arrow for non-atom keys" do
     assert %{
+             kind: "map",
              content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{content: ~s("foo" => "bar"), children: nil}
+               %{kind: "binary", content: ~s("foo" => "bar"), children: nil}
              ]
            } = plaintext_tree(%{"foo" => "bar"})
   end
 
   test "sorts maps by key" do
     assert %{
+             kind: "map",
              content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{content: "bar: :baz,", children: nil},
-               %{content: "foo: :oof", children: nil}
+               %{kind: "atom", content: "bar: :baz,", children: nil},
+               %{kind: "atom", content: "foo: :oof", children: nil}
              ]
            } = plaintext_tree(%{foo: :oof, bar: :baz})
   end
 
   test "uses Inspect protocol for compound keys" do
     assert %{
+             kind: "map",
              content: "%{...}",
              expanded: %{prefix: "%{", suffix: "}"},
              children: [
-               %{content: "{1, 2} => true", children: nil}
+               %{kind: "atom", content: "{1, 2} => true", children: nil}
              ]
            } = plaintext_tree(%{{1, 2} => true})
   end
@@ -128,25 +140,27 @@ defmodule Kino.TreeTest do
 
   test "renders structs as nodes with children" do
     assert %{
+             kind: "struct",
              content: "%Kino.TreeTest.User{...}",
              expanded: %{prefix: "%Kino.TreeTest.User{", suffix: "}"},
              children: [
-               %{content: ~s(email: "user@example.com"), children: nil}
+               %{kind: "binary", content: ~s(email: "user@example.com"), children: nil}
              ]
            } = plaintext_tree(%User{email: "user@example.com"})
   end
 
   test "uses special handling for regexes" do
-    assert %{content: "~r/foobar/", children: nil} = plaintext_tree(~r/foobar/)
-    assert %{content: "~r//", children: nil} = plaintext_tree(%Regex{})
+    assert %{kind: "regex", content: "~r/foobar/", children: nil} = plaintext_tree(~r/foobar/)
+    assert %{kind: "regex", content: "~r//", children: nil} = plaintext_tree(%Regex{})
   end
 
   test "uses the Inspect protocol for structs that implement it" do
-    assert %{content: "~D[2022-01-01]", children: nil} = plaintext_tree(Date.new!(2022, 1, 1))
+    assert %{kind: "struct", content: "~D[2022-01-01]", children: nil} =
+             plaintext_tree(Date.new!(2022, 1, 1))
   end
 
   test "renders other terms as string nodes using Inspect protocol" do
-    assert %{content: "#PID<" <> _rest, children: nil} = plaintext_tree(self())
+    assert %{kind: "other", content: "#PID<" <> _rest, children: nil} = plaintext_tree(self())
   end
 
   test "renders empty containers as leaf nodes" do

@@ -43,7 +43,7 @@ defmodule Kino.Tree do
   end
 
   defp to_node(string, suffix) when is_binary(string) do
-    %{content: [green(inspect(string)) | suffix], children: nil}
+    %{kind: "binary", content: [green(inspect(string)) | suffix], children: nil}
   end
 
   defp to_node(atom, suffix) when is_atom(atom) do
@@ -54,15 +54,15 @@ defmodule Kino.Tree do
         blue(inspect(atom))
       end
 
-    %{content: [span | suffix], children: nil}
+    %{kind: "atom", content: [span | suffix], children: nil}
   end
 
   defp to_node(number, suffix) when is_number(number) do
-    %{content: [blue(inspect(number)) | suffix], children: nil}
+    %{kind: "number", content: [blue(inspect(number)) | suffix], children: nil}
   end
 
   defp to_node({}, suffix) do
-    %{content: [black("{}") | suffix], children: nil}
+    %{kind: "tuple", content: [black("{}") | suffix], children: nil}
   end
 
   defp to_node(tuple, suffix) when is_tuple(tuple) do
@@ -70,6 +70,7 @@ defmodule Kino.Tree do
     children = tuple |> Tuple.to_list() |> to_children(size)
 
     %{
+      kind: "tuple",
       content: [black("{...}") | suffix],
       children: children,
       expanded: %{prefix: [black("{")], suffix: [black("}") | suffix]}
@@ -77,7 +78,7 @@ defmodule Kino.Tree do
   end
 
   defp to_node([], suffix) do
-    %{content: [black("[]") | suffix], children: nil}
+    %{kind: "list", content: [black("[]") | suffix], children: nil}
   end
 
   defp to_node(list, suffix) when is_list(list) do
@@ -91,6 +92,7 @@ defmodule Kino.Tree do
       end
 
     %{
+      kind: "list",
       content: [black("[...]") | suffix],
       children: children,
       expanded: %{prefix: [black("[")], suffix: [black("]") | suffix]}
@@ -98,18 +100,19 @@ defmodule Kino.Tree do
   end
 
   defp to_node(%Regex{} = regex, suffix) do
-    %{content: [red(inspect(regex)) | suffix], children: nil}
+    %{kind: "regex", content: [red(inspect(regex)) | suffix], children: nil}
   end
 
   defp to_node(%module{} = struct, suffix) when is_struct(struct) do
     if Inspect.impl_for(struct) != Inspect.Any do
-      %{content: [black(inspect(struct)) | suffix], children: nil}
+      %{kind: "struct", content: [black(inspect(struct)) | suffix], children: nil}
     else
       map = Map.from_struct(struct)
       size = map_size(map)
       children = to_key_value_children(map, size)
 
       %{
+        kind: "struct",
         content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
         children: children,
         expanded: %{
@@ -121,7 +124,7 @@ defmodule Kino.Tree do
   end
 
   defp to_node(%{} = map, suffix) when map_size(map) == 0 do
-    %{content: [black("%{}") | suffix], children: nil}
+    %{kind: "map", content: [black("%{}") | suffix], children: nil}
   end
 
   defp to_node(map, suffix) when is_map(map) do
@@ -129,6 +132,7 @@ defmodule Kino.Tree do
     children = map |> Enum.sort() |> to_key_value_children(size)
 
     %{
+      kind: "map",
       content: [black("%{...}") | suffix],
       children: children,
       expanded: %{prefix: [black("%{")], suffix: [black("}") | suffix]}
@@ -136,7 +140,7 @@ defmodule Kino.Tree do
   end
 
   defp to_node(other, suffix) do
-    %{content: [black(inspect(other)) | suffix], children: nil}
+    %{kind: "other", content: [black(inspect(other)) | suffix], children: nil}
   end
 
   defp to_key_value_node({key, value}, suffix) do
