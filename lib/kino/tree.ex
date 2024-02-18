@@ -43,7 +43,7 @@ defmodule Kino.Tree do
   end
 
   defp to_node(string, suffix) when is_binary(string) do
-    %{kind: "binary", content: [green(inspect(string)) | suffix], children: nil}
+    leaf_node("binary", [green(inspect(string)) | suffix])
   end
 
   defp to_node(atom, suffix) when is_atom(atom) do
@@ -54,32 +54,25 @@ defmodule Kino.Tree do
         blue(inspect(atom))
       end
 
-    %{kind: "atom", content: [span | suffix], children: nil}
+    leaf_node("atom", [span | suffix])
   end
 
   defp to_node(number, suffix) when is_number(number) do
-    %{kind: "number", content: [blue(inspect(number)) | suffix], children: nil}
+    leaf_node("number", [blue(inspect(number)) | suffix])
   end
 
   defp to_node({}, suffix) do
-    %{kind: "tuple", content: [black("{}") | suffix], children: nil}
+    leaf_node("tuple", [black("{}") | suffix])
   end
 
   defp to_node(tuple, suffix) when is_tuple(tuple) do
     size = tuple_size(tuple)
     children = tuple |> Tuple.to_list() |> to_children(size)
-
-    %{
-      kind: "tuple",
-      content: [black("{...}") | suffix],
-      children: children,
-      expanded_before: [black("{")],
-      expanded_after: [black("}") | suffix]
-    }
+    branch_node("tuple", [black("{...}") | suffix], children, [black("{")], [black("}") | suffix])
   end
 
   defp to_node([], suffix) do
-    %{kind: "list", content: [black("[]") | suffix], children: nil}
+    leaf_node("list", [black("[]") | suffix])
   end
 
   defp to_node(list, suffix) when is_list(list) do
@@ -92,56 +85,43 @@ defmodule Kino.Tree do
         to_children(list, size)
       end
 
-    %{
-      kind: "list",
-      content: [black("[...]") | suffix],
-      children: children,
-      expanded_before: [black("[")],
-      expanded_after: [black("]") | suffix]
-    }
+    branch_node("list", [black("[...]") | suffix], children, [black("[")], [black("]") | suffix])
   end
 
   defp to_node(%Regex{} = regex, suffix) do
-    %{kind: "regex", content: [red(inspect(regex)) | suffix], children: nil}
+    leaf_node("regex", [red(inspect(regex)) | suffix])
   end
 
   defp to_node(%module{} = struct, suffix) when is_struct(struct) do
     if Inspect.impl_for(struct) != Inspect.Any do
-      %{kind: "struct", content: [black(inspect(struct)) | suffix], children: nil}
+      leaf_node("struct", [black(inspect(struct)) | suffix])
     else
       map = Map.from_struct(struct)
       size = map_size(map)
       children = to_key_value_children(map, size)
 
-      %{
-        kind: "struct",
-        content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
-        children: children,
-        expanded_before: [black("%"), blue(inspect(module)), black("{")],
-        expanded_after: [black("}") | suffix]
-      }
+      branch_node(
+        "struct",
+        [black("%"), blue(inspect(module)), black("{...}") | suffix],
+        children,
+        [black("%"), blue(inspect(module)), black("{")],
+        [black("}") | suffix]
+      )
     end
   end
 
   defp to_node(%{} = map, suffix) when map_size(map) == 0 do
-    %{kind: "map", content: [black("%{}") | suffix], children: nil}
+    leaf_node("map", [black("%{}") | suffix])
   end
 
   defp to_node(map, suffix) when is_map(map) do
     size = map_size(map)
     children = map |> Enum.sort() |> to_key_value_children(size)
-
-    %{
-      kind: "map",
-      content: [black("%{...}") | suffix],
-      children: children,
-      expanded_before: [black("%{")],
-      expanded_after: [black("}") | suffix]
-    }
+    branch_node("map", [black("%{...}") | suffix], children, [black("%{")], [black("}") | suffix])
   end
 
   defp to_node(other, suffix) do
-    %{kind: "other", content: [black(inspect(other)) | suffix], children: nil}
+    leaf_node("other", [black(inspect(other)) | suffix])
   end
 
   defp to_key_value_node({key, value}, suffix) do
@@ -155,15 +135,15 @@ defmodule Kino.Tree do
       end
 
     case to_node(value, suffix) do
+      %{content: content, children: nil} = node ->
+        %{node | content: [key_span, sep_span | content]}
+
       %{content: content, expanded_before: expanded_before} = node ->
         %{
           node
           | content: [key_span, sep_span | content],
             expanded_before: [key_span, sep_span | expanded_before]
         }
-
-      %{content: content} = node ->
-        %{node | content: [key_span, sep_span | content]}
     end
   end
 
@@ -185,6 +165,26 @@ defmodule Kino.Tree do
     else
       []
     end
+  end
+
+  defp leaf_node(kind, content) do
+    %{
+      kind: kind,
+      content: content,
+      children: nil,
+      expanded_before: nil,
+      expanded_after: nil
+    }
+  end
+
+  defp branch_node(kind, content, children, expanded_before, expanded_after) do
+    %{
+      kind: kind,
+      content: content,
+      children: children,
+      expanded_before: expanded_before,
+      expanded_after: expanded_after
+    }
   end
 
   defp black(text), do: %{text: text, color: nil}

@@ -234,6 +234,10 @@ defmodule Kino.TreeTest do
     Enum.map(list, &plaintext/1)
   end
 
+  defp plaintext(%{content: content, children: nil} = node) do
+    %{node | content: text_of(content)}
+  end
+
   defp plaintext(
          %{
            content: content,
@@ -249,10 +253,6 @@ defmodule Kino.TreeTest do
         expanded_before: text_of(expanded_before),
         expanded_after: text_of(expanded_after)
     }
-  end
-
-  defp plaintext(%{content: content, children: nil} = node) do
-    %{node | content: text_of(content)}
   end
 
   defp text_of(list) when is_list(list) do
