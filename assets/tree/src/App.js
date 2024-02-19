@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { RiArrowDownSFill, RiArrowRightSFill } from "@remixicon/react";
 import classNames from "classnames";
 
+const MAX_AUTO_EXPAND_SIZE = 6;
+
+function shouldAutoExpand(node, level) {
+  return (
+    level === 1 ||
+    (node.kind === "tuple" && node.children?.length <= MAX_AUTO_EXPAND_SIZE)
+  );
+}
+
 export default function App({ tree }) {
   return (
     <div className="font-mono text-sm text-gray-500">
@@ -11,11 +20,11 @@ export default function App({ tree }) {
 }
 
 function TreeNode({ node, level }) {
-  const [expanded, setExpanded] = useState(level === 1);
+  const [isExpanded, setIsExpanded] = useState(shouldAutoExpand(node, level));
 
   function handleExpandClick() {
     if (node.children) {
-      setExpanded(!expanded);
+      setIsExpanded(!isExpanded);
     }
   }
 
@@ -27,21 +36,21 @@ function TreeNode({ node, level }) {
       >
         <div className="mr-0.5 inline-block w-[2ch] flex-shrink-0">
           {node.children &&
-            (expanded ? (
+            (isExpanded ? (
               <RiArrowDownSFill size={20} />
             ) : (
               <RiArrowRightSFill size={20} />
             ))}
         </div>
         <div>
-          {node.children && expanded ? (
-            <TextItems items={node.expanded.prefix} />
+          {node.children && isExpanded ? (
+            <TextItems items={node.expanded_before} />
           ) : (
             <TextItems items={node.content} />
           )}
         </div>
       </div>
-      {node.children && expanded && (
+      {node.children && isExpanded && (
         <>
           <ol className="m-0 ml-[2ch] block list-none p-0">
             {node.children.map((child, index) => (
@@ -51,7 +60,7 @@ function TreeNode({ node, level }) {
             ))}
           </ol>
           <div className="ml-[2ch]">
-            <TextItems items={node.expanded.suffix} />
+            <TextItems items={node.expanded_after} />
           </div>
         </>
       )}
