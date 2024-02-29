@@ -551,7 +551,7 @@ defmodule Kino do
     elixir_version = System.version()
 
     if Version.compare(elixir_version, "1.16.2") == :lt do
-      raise "Kino.recompile/0 requires Elixir 1.16.2 or newer to work, but you are using #{System.version()}"
+      raise "Kino.recompile/0 requires Elixir 1.16.2 or newer to work, but you are using #{elixir_version}"
     end
 
     IEx.Helpers.recompile()
