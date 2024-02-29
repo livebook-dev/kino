@@ -528,4 +528,33 @@ defmodule Kino do
       {:error, _} -> nil
     end
   end
+
+  @doc """
+  Recompiles dependenies.
+
+  Once you have installed dependencies with `Mix.install/1`, this will
+  recompile any outdated path dependencies declared during the install.
+
+  > #### Reproducability {: .warning}
+  >
+  > Keep in mind that recompiling dependency modules is **not** going
+  > to mark any cells as stale. This means that the given notebook
+  > state may no longer be reproducable. This function is meant as a
+  > utility when prototyping alongside a Mix project.
+  """
+  @spec recompile() :: :ok
+  def recompile() do
+    unless Mix.installed?() do
+      raise "trying to call Kino.recompile/0, but Mix.install/2 was never called"
+    end
+
+    elixir_version = System.version()
+
+    if Version.compare(elixir_version, "1.16.2") == :lt do
+      raise "Kino.recompile/0 requires Elixir 1.16.2 or newer to work, but you are using #{elixir_version}"
+    end
+
+    IEx.Helpers.recompile()
+    :ok
+  end
 end
