@@ -540,7 +540,7 @@ defmodule Kino do
   > Keep in mind that recompiling dependency modules is **not** going
   > to mark any cells as stale. This means that the given notebook
   > state may no longer be reproducable. This function is meant as a
-  > utility when prototyping alongside a mix project.
+  > utility when prototyping alongside a Mix project.
   """
   @spec recompile() :: :ok
   def recompile() do
