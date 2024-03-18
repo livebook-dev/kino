@@ -28,7 +28,7 @@ defmodule Kino.Layout do
 
   """
   @spec tabs(list({String.t() | atom(), term()})) :: t()
-  def tabs(tabs) do
+  def tabs(tabs) when is_list(tabs) do
     {labels, terms} = Enum.unzip(tabs)
     labels = Enum.map(labels, &to_string/1)
     info = %{labels: labels}
@@ -62,7 +62,7 @@ defmodule Kino.Layout do
 
   """
   @spec grid(list(term()), keyword()) :: t()
-  def grid(terms, opts \\ []) do
+  def grid(terms, opts \\ []) when is_list(terms) do
     opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8)
 
     info = %{
