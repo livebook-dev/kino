@@ -55,7 +55,7 @@ defmodule Kino.Markdown do
 
   ### Using the `:chunk` option
 
-    Using a `Kino.Frame`.
+  Using a `Kino.Frame`.
 
       frame = Kino.Frame.new() |> Kino.render()
 
@@ -65,7 +65,7 @@ defmodule Kino.Markdown do
         Process.sleep(250)
       end
 
-    Without using a `Kino.Frame`.
+  Without using a `Kino.Frame`.
 
       for word <- ["who", " *let*", " `the`", " **dogs**", " out"] do
         Kino.Markdown.new(word, chunk: true) |> Kino.render()
