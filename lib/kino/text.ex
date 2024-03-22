@@ -37,6 +37,29 @@ defmodule Kino.Text do
       are merged into a single text. This is useful for streaming content.
       Defaults to `false`
 
+  ## Examples
+
+  ### Using the `:chunk` option
+
+  Using a `Kino.Frame`.
+
+      frame = Kino.Frame.new() |> Kino.render()
+
+      for word <- ["who", " let", " the", " dogs", " out"] do
+        text = Kino.Text.new(word, chunk: true)
+        Kino.Frame.append(frame, text)
+        Process.sleep(250)
+      end
+
+  Without using a `Kino.Frame`.
+
+      for word <- ["who", " let", " the", " dogs", " out"] do
+        Kino.Text.new(word, chunk: true) |> Kino.render()
+        Process.sleep(250)
+      end
+
+      Kino.nothing()
+
   """
   @spec new(String.t(), opts) :: t() when opts: [terminal: boolean(), chunk: boolean()]
   def new(text, opts \\ []) when is_binary(text) do
