@@ -211,6 +211,24 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Starts monitoring clients presence from the given process.
+
+  The monitoring process receives the following messages:
+
+      * `{:client_join, client_id}`
+
+      * `{:client_leave, client_id}`
+
+  When the monitor starts and there are already clients that joined,
+  the join message is going to be delivered for each of them right
+  away.
+  """
+  @spec monitor_clients(pid()) :: :ok | {:error, request_error()}
+  def monitor_clients(pid) do
+    with {:ok, reply} <- io_request({:livebook_monitor_clients, pid}), do: reply
+  end
+
+  @doc """
   Checks if the caller is running within Livebook context (group leader).
   """
   @spec within_livebook?() :: boolean()
