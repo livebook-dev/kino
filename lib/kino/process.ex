@@ -486,7 +486,6 @@ defmodule Kino.Process do
   defp label_from_value(tuple) when is_tuple(tuple), do: "tuple"
   defp label_from_value(_), do: "term"
 
-  @spec label_from_options(keyword) :: (any() -> label_response)
   defp label_from_options(opts) do
     opts
     |> Keyword.get(:message_label, fn _message -> :continue end)
