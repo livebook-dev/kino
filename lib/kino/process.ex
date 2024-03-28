@@ -274,6 +274,33 @@ defmodule Kino.Process do
 
         Agent.stop(agent_pid)
       end)
+
+  Further if you are interested in custom labeling between messages
+  sent between processes, you can specify custom labels for the
+  messages you are interested in:
+
+      {:ok, agent_pid} = Agent.start_link(fn -> [] end)
+      Process.monitor(agent_pid)
+
+      Kino.Process.seq_trace(agent_pid, fn ->
+        1..2
+        |> Task.async_stream(
+          fn value ->
+            Agent.get(agent_pid, fn value -> value end)
+            100 * value
+          end,
+          max_concurrency: 3
+        )
+        |> Stream.run()
+
+        Agent.stop(agent_pid)
+      end,
+      message_label: fn(msg) ->
+        case msg do
+          {:"$gen_call", _ref, {:get, _}} -> {:ok, "GET: value"}
+          _ -> :continue
+        end
+    end)
   """
   @spec seq_trace(trace_target(), (-> any()), keyword()) :: {any(), Mermaid.t()}
   def seq_trace(trace_target \\ :all, trace_function, opts \\ [])
