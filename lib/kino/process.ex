@@ -225,6 +225,13 @@ defmodule Kino.Process do
   target argument can either be a single PID, a list of PIDs, or the atom `:all`
   depending on what messages you would like to retain in your trace.
 
+  ## Options
+
+    * `:message_label` - A function to help label message events. If
+      the given function returns `:continue`, then the default label
+      is used. However, if the function returns a `String.t()`, then
+      that will be used for the label.
+
   ## Examples
 
   To generate a trace of all the messages occurring during the execution of the
