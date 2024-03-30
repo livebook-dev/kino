@@ -12,7 +12,8 @@ defmodule Kino.Hub do
           id: String.t(),
           name: String.t() | nil,
           email: String.t() | nil,
-          source: atom()
+          source: atom(),
+          payload: map() | nil
         }
 
   @doc """
