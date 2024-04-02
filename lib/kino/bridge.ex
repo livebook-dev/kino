@@ -219,11 +219,9 @@ defmodule Kino.Bridge do
 
       * `{:client_leave, client_id}`
 
-  When the monitor starts and there are already clients that joined,
-  the join message is going to be delivered for each of them right
-  away.
+  Returns a list of client ids that are already joined.
   """
-  @spec monitor_clients(pid()) :: :ok | {:error, request_error()}
+  @spec monitor_clients(pid()) :: {:ok, list(String.t())} | {:error, request_error()}
   def monitor_clients(pid) do
     with {:ok, reply} <- io_request({:livebook_monitor_clients, pid}), do: reply
   end
