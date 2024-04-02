@@ -227,6 +227,19 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Returns user information for the given connected client id.
+
+  Errors with `:not_available`, unless the notebook uses a Livebook
+  Teams hub.
+  """
+  @spec get_user_info(String.t()) ::
+          {:ok, Kino.Hub.user_info()}
+          | {:error, :not_available | :not_found | request_error()}
+  def get_user_info(client_id) do
+    with {:ok, reply} <- io_request({:livebook_get_user_info, client_id}), do: reply
+  end
+
+  @doc """
   Checks if the caller is running within Livebook context (group leader).
   """
   @spec within_livebook?() :: boolean()
