@@ -219,13 +219,24 @@ defmodule Kino.Bridge do
 
       * `{:client_leave, client_id}`
 
-  When the monitor starts and there are already clients that joined,
-  the join message is going to be delivered for each of them right
-  away.
+  Returns a list of client ids that are already joined.
   """
-  @spec monitor_clients(pid()) :: :ok | {:error, request_error()}
+  @spec monitor_clients(pid()) :: {:ok, list(String.t())} | {:error, request_error()}
   def monitor_clients(pid) do
     with {:ok, reply} <- io_request({:livebook_monitor_clients, pid}), do: reply
+  end
+
+  @doc """
+  Returns user information for the given connected client id.
+
+  Errors with `:not_available`, unless the notebook uses a Livebook
+  Teams hub.
+  """
+  @spec get_user_info(String.t()) ::
+          {:ok, Kino.Hub.user_info()}
+          | {:error, :not_available | :not_found | request_error()}
+  def get_user_info(client_id) do
+    with {:ok, reply} <- io_request({:livebook_get_user_info, client_id}), do: reply
   end
 
   @doc """

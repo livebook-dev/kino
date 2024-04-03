@@ -31,4 +31,26 @@ defmodule Kino.Hub do
       {:error, _} -> %{type: :none}
     end
   end
+
+  @doc """
+  Returns user information for the given connected client id.
+
+  Note that this information is only available when the session uses
+  Livebook Teams hub, otherwise `:not_available` error is returned.
+
+  If there is no such connected client, `:not_found` error is returned.
+  """
+  @spec user_info(String.t()) :: {:ok, user_info()} | {:error, :not_found | :not_available}
+  def user_info(client_id) do
+    case Kino.Bridge.get_user_info(client_id) do
+      {:ok, user_info} ->
+        {:ok, user_info}
+
+      {:error, reason} when reason in [:not_found, :not_available] ->
+        {:error, reason}
+
+      {:error, reason} ->
+        raise "failed to access user info, reason: #{inspect(reason)}"
+    end
+  end
 end
