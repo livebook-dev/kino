@@ -40,10 +40,10 @@ defmodule Kino.FS do
       {:error, :forbidden} ->
         raise ForbiddenError, name: name
 
-      {:error, message} when is_binary(message) ->
+      {:error, message} ->
         raise message
 
-      {:error, reason} when is_atom(reason) ->
+      {:request_error, reason} ->
         raise "failed to access file path, reason: #{inspect(reason)}"
     end
   end
@@ -65,10 +65,10 @@ defmodule Kino.FS do
       {:error, :forbidden} ->
         raise ForbiddenError, name: name
 
-      {:error, message} when is_binary(message) ->
+      {:error, message} ->
         raise message
 
-      {:error, reason} when is_atom(reason) ->
+      {:request_error, reason} ->
         raise "failed to access file spec, reason: #{inspect(reason)}"
     end
   end

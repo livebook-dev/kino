@@ -27,8 +27,11 @@ defmodule Kino.Hub do
   @spec app_info() :: app_info()
   def app_info() do
     case Kino.Bridge.get_app_info() do
-      {:ok, app_info} -> app_info
-      {:error, _} -> %{type: :none}
+      {:ok, app_info} ->
+        app_info
+
+      {:request_error, reason} ->
+        raise "failed to access app info, reason: #{inspect(reason)}"
     end
   end
 
@@ -46,10 +49,10 @@ defmodule Kino.Hub do
       {:ok, user_info} ->
         {:ok, user_info}
 
-      {:error, reason} when reason in [:not_found, :not_available] ->
+      {:error, reason} ->
         {:error, reason}
 
-      {:error, reason} ->
+      {:request_error, reason} ->
         raise "failed to access user info, reason: #{inspect(reason)}"
     end
   end

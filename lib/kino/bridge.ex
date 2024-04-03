@@ -7,7 +7,7 @@ defmodule Kino.Bridge do
   # achieved via the group leader. For the implementation of
   # that group leader see Livebook.Evaluator.IOProxy
 
-  @type request_error :: :unsupported | :terminated
+  @type request_error :: {:request_error, :unsupported | :terminated}
 
   @doc """
   Generates a unique, reevaluation-safe token.
@@ -19,14 +19,14 @@ defmodule Kino.Bridge do
   def generate_token() do
     case io_request(:livebook_generate_token) do
       {:ok, token} -> token
-      {:error, _} -> System.unique_integer()
+      {:request_error, _} -> System.unique_integer()
     end
   end
 
   @doc """
   Sends the given output as intermediate evaluation result.
   """
-  @spec put_output(Kino.Output.t()) :: :ok | {:error, request_error()}
+  @spec put_output(Kino.Output.t()) :: :ok | request_error()
   def put_output(output) do
     with {:ok, reply} <- io_request({:livebook_put_output, output}), do: reply
   end
@@ -35,7 +35,7 @@ defmodule Kino.Bridge do
   Sends the given output as intermediate evaluation result directly
   to a specific client.
   """
-  @spec put_output_to(term(), Kino.Output.t()) :: :ok | {:error, request_error()}
+  @spec put_output_to(term(), Kino.Output.t()) :: :ok | request_error()
   def put_output_to(client_id, output) do
     with {:ok, reply} <- io_request({:livebook_put_output_to, client_id, output}), do: reply
   end
@@ -44,10 +44,10 @@ defmodule Kino.Bridge do
   Sends the given output as intermediate evaluation result directly
   to all connected client.
   """
-  @spec put_output_to_clients(Kino.Output.t()) :: :ok | {:error, request_error()}
+  @spec put_output_to_clients(Kino.Output.t()) :: :ok | request_error()
   def put_output_to_clients(output) do
     io_request_result =
-      with {:error, :unsupported} <-
+      with {:request_error, :unsupported} <-
              io_request({:livebook_put_output_to_clients, output}),
            # Livebook v0.8.0 doesn't support direct clients output,
            # so we fallback to a regular one
@@ -62,7 +62,7 @@ defmodule Kino.Bridge do
   Note that the input must be known to Livebook, otherwise
   an error is returned.
   """
-  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, request_error() | :not_found}
+  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, :not_found} | request_error()
   def get_input_value(input_id) do
     with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}), do: reply
   end
@@ -71,7 +71,7 @@ defmodule Kino.Bridge do
   Requests the file path for the given file id.
   """
   @spec get_file_path({:file, String.t()}) ::
-          {:ok, term()} | {:error, request_error() | :not_found}
+          {:ok, term()} | {:error, :not_found} | request_error()
   def get_file_path(file_ref) do
     with {:ok, reply} <- io_request({:livebook_get_file_path, file_ref}), do: reply
   end
@@ -80,7 +80,7 @@ defmodule Kino.Bridge do
   Requests the file path for notebook file with the given name.
   """
   @spec get_file_entry_path(String.t()) ::
-          {:ok, term()} | {:error, request_error() | :forbidden | String.t()}
+          {:ok, term()} | {:error, :forbidden} | {:error, String.t()} | request_error()
   def get_file_entry_path(name) do
     with {:ok, reply} <- io_request({:livebook_get_file_entry_path, name}), do: reply
   end
@@ -89,7 +89,7 @@ defmodule Kino.Bridge do
   Requests the file spec for notebook file with the given name.
   """
   @spec get_file_entry_spec(String.t()) ::
-          {:ok, term()} | {:error, request_error() | :forbidden | String.t()}
+          {:ok, term()} | {:error, :forbidden} | {:error, String.t()} | request_error()
   def get_file_entry_spec(name) do
     with {:ok, reply} <- io_request({:livebook_get_file_entry_spec, name}), do: reply
   end
@@ -103,7 +103,7 @@ defmodule Kino.Bridge do
 
   See `monitor_object/3` to add a monitoring.
   """
-  @spec reference_object(term(), pid()) :: :ok | {:error, request_error()}
+  @spec reference_object(term(), pid()) :: :ok | request_error()
   def reference_object(object, pid) do
     with {:ok, reply} <- io_request({:livebook_reference_object, object, pid}), do: reply
   end
@@ -129,12 +129,12 @@ defmodule Kino.Bridge do
 
   """
   @spec monitor_object(term(), Process.dest(), payload :: term(), keyword()) ::
-          :ok | {:error, request_error()}
+          :ok | request_error()
   def monitor_object(object, destination, payload, opts \\ []) do
     ack? = Keyword.get(opts, :ack?, false)
 
     io_request_result =
-      with {:error, :unsupported} <-
+      with {:request_error, :unsupported} <-
              io_request({:livebook_monitor_object, object, destination, payload, ack?}),
            # Used until Livebook v0.7
            do: io_request({:livebook_monitor_object, object, destination, payload})
@@ -154,7 +154,7 @@ defmodule Kino.Bridge do
   @doc """
   Broadcasts the given message in Livebook to interested parties.
   """
-  @spec broadcast(String.t(), String.t(), term()) :: :ok | {:error, request_error()}
+  @spec broadcast(String.t(), String.t(), term()) :: :ok | request_error()
   def broadcast(topic, subtopic, message) do
     with {:ok, reply} <- io_request(:livebook_get_broadcast_target),
          {:ok, pid} <- reply do
@@ -190,14 +190,14 @@ defmodule Kino.Bridge do
   def get_evaluation_file() do
     case io_request(:livebook_get_evaluation_file) do
       {:ok, file} -> file
-      {:error, _} -> "nofile"
+      {:request_error, _} -> "nofile"
     end
   end
 
   @doc """
   Returns information about the running app.
   """
-  @spec get_app_info() :: {:ok, map()} | {:error, request_error()}
+  @spec get_app_info() :: {:ok, map()} | request_error()
   def get_app_info() do
     with {:ok, reply} <- io_request(:livebook_get_app_info), do: reply
   end
@@ -205,7 +205,7 @@ defmodule Kino.Bridge do
   @doc """
   Returns a temporary directory tied to the current runtime.
   """
-  @spec get_tmp_dir() :: {:ok, String.t()} | {:error, request_error() | :not_available}
+  @spec get_tmp_dir() :: {:ok, String.t()} | {:error, :not_available} | request_error()
   def get_tmp_dir() do
     with {:ok, reply} <- io_request(:livebook_get_tmp_dir), do: reply
   end
@@ -221,7 +221,7 @@ defmodule Kino.Bridge do
 
   Returns a list of client ids that are already joined.
   """
-  @spec monitor_clients(pid()) :: {:ok, list(String.t())} | {:error, request_error()}
+  @spec monitor_clients(pid()) :: {:ok, list(String.t())} | request_error()
   def monitor_clients(pid) do
     with {:ok, reply} <- io_request({:livebook_monitor_clients, pid}), do: reply
   end
@@ -234,7 +234,8 @@ defmodule Kino.Bridge do
   """
   @spec get_user_info(String.t()) ::
           {:ok, Kino.Hub.user_info()}
-          | {:error, :not_available | :not_found | request_error()}
+          | {:error, :not_available | :not_found}
+          | request_error()
   def get_user_info(client_id) do
     with {:ok, reply} <- io_request({:livebook_get_user_info, client_id}), do: reply
   end
@@ -257,10 +258,11 @@ defmodule Kino.Bridge do
 
     result =
       receive do
-        {:io_reply, ^ref, {:error, {:request, _}}} -> {:error, :unsupported}
-        {:io_reply, ^ref, {:error, :request}} -> {:error, :unsupported}
+        {:io_reply, ^ref, {:error, {:request, _}}} -> {:request_error, :unsupported}
+        {:io_reply, ^ref, {:error, :request}} -> {:request_error, :unsupported}
+        {:io_reply, ^ref, {:error, :terminated}} -> {:request_error, :terminated}
         {:io_reply, ^ref, reply} -> {:ok, reply}
-        {:DOWN, ^ref, :process, _object, _reason} -> {:error, :terminated}
+        {:DOWN, ^ref, :process, _object, _reason} -> {:request_error, :terminated}
       end
 
     Process.demonitor(ref, [:flush])
