@@ -742,7 +742,11 @@ defmodule Kino.Input do
       {:ok, value} ->
         value
 
-      {:error, reason} ->
+      {:error, :not_found} ->
+        raise "failed to read input value, input not found." <>
+                " Make sure to render the input before reading its value"
+
+      {:request_error, reason} ->
         raise "failed to read input value, reason: #{inspect(reason)}"
     end
   end
@@ -756,7 +760,7 @@ defmodule Kino.Input do
       {:ok, path} ->
         path
 
-      {:error, _reason} ->
+      _ ->
         # Return a non-existing path for consistency
         Path.join([System.tmp_dir!(), "nonexistent", file_id])
     end

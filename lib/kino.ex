@@ -525,7 +525,7 @@ defmodule Kino do
   def tmp_dir() do
     case Kino.Bridge.get_tmp_dir() do
       {:ok, path} -> path
-      {:error, _} -> nil
+      _ -> nil
     end
   end
 
