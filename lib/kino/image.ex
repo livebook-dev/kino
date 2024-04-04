@@ -44,7 +44,7 @@ defmodule Kino.Image do
   (RGB + alpha).
   """
   @spec new(binary(), common_image_type() | mime_type()) :: t()
-  def new(content, type) do
+  def new(content, type) when is_binary(content) do
     %__MODULE__{content: content, mime_type: mime_type!(type)}
   end
 
