@@ -68,6 +68,20 @@ defmodule Kino.MixProject do
         # Kino.Input
         # Kino.Process
         # Kino.Shorts
+        "Kino implementations": [
+          Kino.Audio,
+          Kino.DataTable,
+          Kino.Download,
+          Kino.ETS,
+          Kino.HTML,
+          Kino.Image,
+          Kino.Layout,
+          Kino.Markdown,
+          Kino.Mermaid,
+          Kino.Text,
+          Kino.Tree,
+          Kino.Video
+        ],
         "Custom Kinos": [
           Kino.JS,
           Kino.JS.Live,
@@ -81,20 +95,6 @@ defmodule Kino.MixProject do
         ],
         Testing: [
           Kino.Test
-        ],
-        "Kino implementations": [
-          Kino.DataTable,
-          Kino.Download,
-          Kino.ETS,
-          Kino.HTML,
-          Kino.Image,
-          Kino.Layout,
-          Kino.Markdown,
-          Kino.Mermaid,
-          Kino.Text,
-          Kino.Tree,
-          Kino.Audio,
-          Kino.Video
         ]
       ]
     ]
