@@ -68,7 +68,7 @@ defmodule Kino.MixProject do
         # Kino.Input
         # Kino.Process
         # Kino.Shorts
-        "Kino implementations": [
+        "Built-in Kinos": [
           Kino.Audio,
           Kino.DataTable,
           Kino.Download,
