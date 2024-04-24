@@ -48,10 +48,10 @@ defmodule Kino.Table do
 
   The returned map must contain the binary, the file extension and the mime type.
   """
-  @callback export_data(state(), String.t()) ::
+  @callback export_data(rows_spec(), state(), String.t()) ::
               {:ok, %{data: binary(), extension: String.t(), type: String.t()}}
 
-  @optional_callbacks export_data: 2
+  @optional_callbacks export_data: 3
 
   use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
@@ -129,7 +129,7 @@ defmodule Kino.Table do
   end
 
   def handle_event("download", %{"format" => format}, ctx) do
-    {:ok, exported} = ctx.assigns.module.export_data(ctx.assigns.state, format)
+    {:ok, exported} = ctx.assigns.module.export_data(rows_spec(ctx), ctx.assigns.state, format)
     info = %{filename: ctx.assigns.info.name, type: exported.type, format: exported.extension}
     reply_payload = {:binary, info, exported.data}
     send_event(ctx, ctx.origin, "download_content", reply_payload)
@@ -161,14 +161,8 @@ defmodule Kino.Table do
   end
 
   defp get_content(ctx) do
-    rows_spec = %{
-      offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
-      limit: ctx.assigns.limit,
-      order: ctx.assigns.order
-    }
-
     {:ok, %{columns: columns, data: {orientation, data}, total_rows: total_rows}, state} =
-      ctx.assigns.module.get_data(rows_spec, ctx.assigns.state)
+      ctx.assigns.module.get_data(rows_spec(ctx), ctx.assigns.state)
 
     {columns, key_to_string} = stringify_keys(columns, ctx.assigns.key_to_string)
 
@@ -254,5 +248,13 @@ defmodule Kino.Table do
       {key, _key_string} -> key
       _ -> nil
     end
+  end
+
+  defp rows_spec(ctx) do
+    %{
+      offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
+      limit: ctx.assigns.limit,
+      order: ctx.assigns.order
+    }
   end
 end
