@@ -16,7 +16,7 @@ defmodule Kino.Table do
           offset: non_neg_integer(),
           limit: pos_integer(),
           order: nil | %{direction: :asc | :desc, key: term()},
-          relocate: list(%{start_index: non_neg_integer(), end_index: non_neg_integer()})
+          relocates: list(%{from_index: non_neg_integer(), to_index: non_neg_integer()})
         }
 
   @type column :: %{
@@ -97,7 +97,7 @@ defmodule Kino.Table do
        page: 1,
        limit: @limit,
        order: nil,
-       relocate: []
+       relocates: []
      )}
   end
 
@@ -156,9 +156,9 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
-  def handle_event("relocate", %{"start_index" => start_index, "end_index" => end_index}, ctx) do
-    relocate = ctx.assigns.relocate ++ [%{start_index: start_index, end_index: end_index}]
-    {:noreply, ctx |> assign(relocate: relocate) |> broadcast_update()}
+  def handle_event("relocate", %{"from_index" => from_index, "to_index" => to_index}, ctx) do
+    relocates = ctx.assigns.relocates ++ [%{from_index: from_index, to_index: to_index}]
+    {:noreply, ctx |> assign(relocates: relocates) |> broadcast_update()}
   end
 
   defp broadcast_update(ctx) do
@@ -208,7 +208,7 @@ defmodule Kino.Table do
       total_rows: total_rows,
       order: order,
       limit: ctx.assigns.limit,
-      relocate: ctx.assigns.relocate
+      relocates: ctx.assigns.relocates
     }
 
     {content, ctx}
@@ -263,7 +263,7 @@ defmodule Kino.Table do
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
       order: ctx.assigns.order,
-      relocate: ctx.assigns.relocate
+      relocates: ctx.assigns.relocates
     }
   end
 end

@@ -368,7 +368,7 @@ export function App({ ctx, data }) {
   }, []);
 
   const onColumnMoved = useCallback((startIndex, endIndex) => {
-    ctx.pushEvent("relocate", { start_index: startIndex, end_index: endIndex });
+    ctx.pushEvent("relocate", { from_index: startIndex, to_index: endIndex });
     setMenu(null);
     setSelection(emptySelection);
   }, []);
