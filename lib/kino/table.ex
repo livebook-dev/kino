@@ -8,14 +8,15 @@ defmodule Kino.Table do
 
   @type info :: %{
           :name => String.t(),
-          :features => list(:export | :refetch | :pagination | :sorting),
+          :features => list(:export | :refetch | :pagination | :sorting | :relocate),
           optional(:export) => %{formats: list(String.t())}
         }
 
   @type rows_spec :: %{
           offset: non_neg_integer(),
           limit: pos_integer(),
-          order: nil | %{direction: :asc | :desc, key: term()}
+          order: nil | %{direction: :asc | :desc, key: term()},
+          relocates: list(%{from_index: non_neg_integer(), to_index: non_neg_integer()})
         }
 
   @type column :: %{
@@ -95,7 +96,8 @@ defmodule Kino.Table do
        # Data specification
        page: 1,
        limit: @limit,
-       order: nil
+       order: nil,
+       relocates: []
      )}
   end
 
@@ -154,6 +156,11 @@ defmodule Kino.Table do
     {:noreply, broadcast_update(ctx)}
   end
 
+  def handle_event("relocate", %{"from_index" => from_index, "to_index" => to_index}, ctx) do
+    relocates = ctx.assigns.relocates ++ [%{from_index: from_index, to_index: to_index}]
+    {:noreply, ctx |> assign(relocates: relocates) |> broadcast_update()}
+  end
+
   defp broadcast_update(ctx) do
     {content, ctx} = get_content(ctx)
     broadcast_event(ctx, "update_content", content)
@@ -200,7 +207,8 @@ defmodule Kino.Table do
       max_page: total_rows && ceil(total_rows / ctx.assigns.limit),
       total_rows: total_rows,
       order: order,
-      limit: ctx.assigns.limit
+      limit: ctx.assigns.limit,
+      relocates: ctx.assigns.relocates
     }
 
     {content, ctx}
@@ -254,7 +262,8 @@ defmodule Kino.Table do
     %{
       offset: (ctx.assigns.page - 1) * ctx.assigns.limit,
       limit: ctx.assigns.limit,
-      order: ctx.assigns.order
+      order: ctx.assigns.order,
+      relocates: ctx.assigns.relocates
     }
   end
 end

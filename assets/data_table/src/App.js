@@ -85,27 +85,32 @@ export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
 
-  const columnsInitData = data.content.columns.map((column) => {
-    const summary = column.summary;
-    const title = column.label;
-    const id = column.key;
-    columnsInitSize.push({ [title]: 250 });
-    summary && summariesItems.push(summary.keys.length);
-    return {
-      title: title,
-      id: id,
-      type: column.type,
-      icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
-      hasMenu: column.type !== "list",
-      summary: summary,
-    };
-  });
+  const getColumnsData = (columns) => {
+    const columnsData = columns.map((column) => {
+      const summary = column.summary;
+      const title = column.label;
+      const id = column.key;
+      columnsInitSize.push({ [title]: 250 });
+      summary && summariesItems.push(summary.keys.length);
+      return {
+        title: title,
+        id: id,
+        type: column.type,
+        icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
+        hasMenu: column.type !== "list",
+        summary: summary,
+      };
+    });
+    return columnsData;
+  };
 
+  const columnsInitData = getColumnsData(data.content.columns);
   const hasRefetch = data.features.includes("refetch");
   const hasExport = data.features.includes("export");
   const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
+  const hasRelocate = data.features.includes("relocate");
   const supportedFormats = hasExport ? data.export?.formats : null;
   const showDownload = hasExport && supportedFormats;
 
@@ -194,7 +199,7 @@ export function App({ ctx, data }) {
 
       const middleCenter = getMiddleCenterBias(
         ctx,
-        `${theme.headerFontStyle} ${theme.fontFamily}`,
+        `${theme.headerFontStyle} ${theme.fontFamily}`
       );
 
       grad.addColorStop(0, fillStyle);
@@ -208,8 +213,8 @@ export function App({ ctx, data }) {
         const variant = isSelected
           ? "selected"
           : column.style === "highlight"
-            ? "special"
-            : "normal";
+          ? "special"
+          : "normal";
 
         const headerSize = theme.headerIconSize;
 
@@ -220,7 +225,7 @@ export function App({ ctx, data }) {
           rect.x + basePadding,
           rect.y + basePadding,
           headerSize,
-          theme,
+          theme
         );
 
         if (column.overlayIcon) {
@@ -231,7 +236,7 @@ export function App({ ctx, data }) {
             rect.x + basePadding + overlayIconSize / 2,
             rect.y + basePadding + overlayIconSize / 2,
             overlayIconSize,
-            theme,
+            theme
           );
         }
       }
@@ -241,13 +246,13 @@ export function App({ ctx, data }) {
         menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
         hasSummary
           ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
-          : menuBounds.y + menuBounds.height / 2 + middleCenter,
+          : menuBounds.y + menuBounds.height / 2 + middleCenter
       );
 
       if (hasSummary) {
         const summary = content.columns[column.sourceIndex - 1].summary;
         const formattedSummary = Object.fromEntries(
-          summary.keys.map((k, i) => [k, summary.values[i]]),
+          summary.keys.map((k, i) => [k, summary.values[i]])
         );
         const fontSize = 13;
         const padding = fontSize + basePadding;
@@ -260,13 +265,13 @@ export function App({ ctx, data }) {
           ctx.fillText(
             `${key}:`,
             rect.x + padding / 2,
-            rect.y + padding * (index + 1) + padding,
+            rect.y + padding * (index + 1) + padding
           );
           ctx.font = baseFont;
           ctx.fillText(
             value,
             rect.x + ctx.measureText(key).width + padding,
-            rect.y + padding * (index + 1) + padding,
+            rect.y + padding * (index + 1) + padding
           );
         });
       }
@@ -282,7 +287,7 @@ export function App({ ctx, data }) {
 
       return true;
     },
-    [content],
+    [content]
   );
 
   const getCellContent = useCallback(
@@ -302,7 +307,7 @@ export function App({ ctx, data }) {
         readonly: true,
       };
     },
-    [content],
+    [content]
   );
 
   const toggleSearch = () => {
@@ -362,17 +367,29 @@ export function App({ ctx, data }) {
     });
   }, []);
 
-  const onHeaderMenuClick = useCallback((column, bounds) => {
-    const { summary, id, type } = columns[column];
-    if (!summary) {
-      setMenu({ column, bounds, columnKey: id, columnType: type });
-    }
+  const onColumnMoved = useCallback((startIndex, endIndex) => {
+    ctx.pushEvent("relocate", { from_index: startIndex, to_index: endIndex });
+    setMenu(null);
+    setSelection(emptySelection);
   }, []);
 
-  const onHeaderClicked = useCallback((column, { bounds }) => {
-    const { id, type } = columns[column];
-    setMenu({ column, bounds, columnKey: id, columnType: type });
-  }, []);
+  const onHeaderMenuClick = useCallback(
+    (column, bounds) => {
+      const { summary, id, type } = columns[column];
+      if (!summary) {
+        setMenu({ column, bounds, columnKey: id, columnType: type });
+      }
+    },
+    [columns]
+  );
+
+  const onHeaderClicked = useCallback(
+    (column, { bounds }) => {
+      const { id, type } = columns[column];
+      setMenu({ column, bounds, columnKey: id, columnType: type });
+    },
+    [columns]
+  );
 
   const onItemHovered = useCallback(
     (args) => {
@@ -385,13 +402,13 @@ export function App({ ctx, data }) {
         setHoverRows(null);
       }
     },
-    [rows],
+    [rows]
   );
 
   const getRowThemeOverride = useCallback(
     (row) =>
       hoverRows?.includes(row) ? { bgCell: theme.bgHeaderHovered } : null,
-    [hoverRows],
+    [hoverRows]
   );
 
   useEffect(() => {
@@ -402,6 +419,8 @@ export function App({ ctx, data }) {
 
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
+      const columnsData = getColumnsData(content.columns);
+      setColumns(columnsData);
       setContent(content);
     });
     ctx.handleEvent("download_content", ([info, arrayBuffer]) => {
@@ -513,6 +532,7 @@ export function App({ ctx, data }) {
           fillHandle={true}
           onItemHovered={onItemHovered}
           getRowThemeOverride={getRowThemeOverride}
+          onColumnMoved={hasRelocate ? onColumnMoved : undefined}
         />
       )}
       {showMenu &&
@@ -523,7 +543,7 @@ export function App({ ctx, data }) {
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
-          />,
+          />
         )}
       {!hasData && <p className="text-sm text-gray-700">No data</p>}
       <div id="portal" />
