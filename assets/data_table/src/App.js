@@ -155,7 +155,7 @@ export function App({ ctx, data }) {
   const rows = content.page_length;
 
   const drawHeader = useCallback(
-    (args) => {
+    (args, drawContent) => {
       const {
         ctx,
         theme,
@@ -185,7 +185,8 @@ export function App({ ctx, data }) {
         : theme.textHeader;
       const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
       const shouldDrawMenu = column.hasMenu === true && isHovered;
-      const hasSummary = column.summary ? true : false;
+      const summary = content.columns[column.sourceIndex - 1].summary;
+      const hasSummary = summary ? true : false;
 
       const fadeWidth = 35;
       const fadeStart = rect.width - fadeWidth;
@@ -250,7 +251,6 @@ export function App({ ctx, data }) {
       );
 
       if (hasSummary) {
-        const summary = content.columns[column.sourceIndex - 1].summary;
         const formattedSummary = Object.fromEntries(
           summary.keys.map((k, i) => [k, summary.values[i]])
         );
@@ -285,7 +285,7 @@ export function App({ ctx, data }) {
         ctx.fill(p);
       }
 
-      return true;
+      drawContent();
     },
     [content]
   );

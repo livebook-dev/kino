@@ -4,7 +4,7 @@
     "dev": "npm run build -- --watch --dev"
   },
   "dependencies": {
-    "@glideapps/glide-data-grid": "^5.3.2",
+    "@glideapps/glide-data-grid": "^6.0.3",
     "@remixicon/react": "^4.1.1",
     "lodash": "^4.17.21",
     "marked": "^4.2.2",
