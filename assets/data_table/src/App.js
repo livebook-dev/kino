@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import DataEditor, {
   GridCellKind,
   GridColumnIcon,
@@ -6,18 +6,14 @@ import DataEditor, {
   withAlpha,
   getMiddleCenterBias,
 } from "@glideapps/glide-data-grid";
-import {
-  RiRefreshLine,
-  RiArrowLeftSLine,
-  RiArrowRightSLine,
-  RiSearch2Line,
-  RiSortAsc,
-  RiSortDesc,
-  RiAlignJustify,
-  RiFileDownloadLine,
-  RiArrowDownSLine,
-} from "@remixicon/react";
 import { useLayer } from "react-laag";
+import DataInfo from "./DataInfo";
+import HeaderMenu from "./HeaderMenu";
+import Pagination from "./Pagination";
+import LimitSelect from "./LimitSelect";
+import SearchButton from "./SearchButton";
+import RefetchButton from "./RefetchButton";
+import DownloadExported from "./DownloadExported";
 
 const customHeaderIcons = {
   arrowUp: ({
@@ -460,15 +456,7 @@ export function App({ ctx, data }) {
   return (
     <div className="p-3 font-sans">
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex items-baseline">
-          <h2 className="text-md font-semibold leading-none text-gray-800">
-            {data.name}
-          </h2>
-          <span className="ml-2.5 text-xs leading-none">
-            {totalRows || "?"} {totalRows === 1 ? "entry" : "entries"}
-          </span>
-          {totalRows < data.content.total_rows}
-        </div>
+        <DataInfo data={data} totalRows={totalRows} />
         {showDownload && (
           <DownloadExported
             supportedFormats={supportedFormats}
@@ -545,159 +533,6 @@ export function App({ ctx, data }) {
         )}
       {!hasData && <p className="text-sm text-gray-700">No data</p>}
       <div id="portal" />
-    </div>
-  );
-}
-
-function DownloadExported({ supportedFormats, onDownload }) {
-  const selectRef = useRef();
-
-  return (
-    <span className="tooltip right" data-tooltip="Export to">
-      <IconButton onClick={(_event) => selectRef.current.click()}>
-        <div className="relative">
-          <RiFileDownloadLine size={18} />
-          <select
-            className="absolute inset-0 cursor-pointer opacity-0"
-            ref={selectRef}
-            value=""
-            onChange={(event) => onDownload(event.target.value)}
-          >
-            <option disabled value="">
-              Export to
-            </option>
-            {supportedFormats.map((format) => (
-              <option key={format}>{format}</option>
-            ))}
-          </select>
-        </div>
-      </IconButton>
-    </span>
-  );
-}
-
-function RefetchButton({ onRefetch }) {
-  return (
-    <IconButton aria-label="refresh" onClick={onRefetch}>
-      <RiRefreshLine />
-    </IconButton>
-  );
-}
-
-function SearchButton({ toggleSearch }) {
-  return (
-    <span className="tooltip right" data-tooltip="Current page search">
-      <IconButton aria-label="search" onClick={toggleSearch}>
-        <RiSearch2Line size={16} />
-      </IconButton>
-    </span>
-  );
-}
-
-function IconButton({ children, ...props }) {
-  return (
-    <button
-      {...props}
-      className="align-center flex cursor-pointer items-center rounded-full p-1 leading-none text-gray-500 hover:text-gray-900 focus:bg-gray-100 focus:outline-none disabled:cursor-default disabled:text-gray-300"
-    >
-      {children}
-    </button>
-  );
-}
-
-function LimitSelect({ limit, totalRows, onChange }) {
-  return (
-    <div>
-      <form>
-        <label className="p-1 text-xs font-medium text-gray-500">Show</label>
-        <div class="relative inline-block">
-          <select
-            className="appearance-none rounded-lg border border-gray-400 bg-white px-2 py-1 pr-7 text-xs font-medium text-gray-500 focus:outline-none"
-            value={limit}
-            onChange={(event) => onChange(parseInt(event.target.value))}
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            {totalRows ? <option value={totalRows}>All</option> : null}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-            <RiArrowDownSLine size={16} />
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-function Pagination({ page, maxPage, onPrev, onNext, rows }) {
-  return (
-    <div className="flex gap-3">
-      <button
-        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 focus:outline-none disabled:pointer-events-none disabled:text-gray-300"
-        onClick={onPrev}
-        disabled={page === 1}
-      >
-        <RiArrowLeftSLine size={16} />
-        <span>Prev</span>
-      </button>
-      <div className="rounded-lg border border-gray-400 px-2 py-1 text-xs font-semibold text-gray-500">
-        <span>
-          {page} of {maxPage || "?"}
-        </span>
-      </div>
-      <button
-        className="flex items-center text-xs font-medium text-gray-500 hover:text-gray-800 focus:outline-none disabled:pointer-events-none disabled:text-gray-300"
-        onClick={onNext}
-        disabled={page === maxPage || rows === 0}
-      >
-        <span>Next</span>
-        <RiArrowRightSLine size={16} />
-      </button>
-    </div>
-  );
-}
-
-function HeaderMenu({ layerProps, selectAllCurrent, hasSorting, orderBy }) {
-  return (
-    <div
-      className="flex w-48 flex-col rounded-b-md border border-gray-200 bg-white p-2 font-sans shadow-lg"
-      {...layerProps}
-    >
-      <button
-        className="mb-1.5 flex w-full justify-center rounded-lg border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium leading-none text-gray-700 hover:bg-gray-200"
-        onClick={selectAllCurrent}
-      >
-        Select this column
-      </button>
-      {hasSorting && (
-        <>
-          <HeaderMenuItem onClick={() => orderBy("asc")}>
-            <RiSortAsc size={14} />
-            <span>Sort: ascending</span>
-          </HeaderMenuItem>
-          <HeaderMenuItem onClick={() => orderBy("desc")}>
-            <RiSortDesc size={14} />
-            <span>Sort: descending</span>
-          </HeaderMenuItem>
-          <HeaderMenuItem onClick={() => orderBy("none")}>
-            <RiAlignJustify size={14} />
-            <span>Sort: none</span>
-          </HeaderMenuItem>
-        </>
-      )}
-    </div>
-  );
-}
-
-function HeaderMenuItem({ children, ...props }) {
-  return (
-    <div
-      {...props}
-      className="flex cursor-pointer items-center justify-start gap-1 p-1 text-sm text-gray-700 hover:bg-gray-100"
-    >
-      {children}
     </div>
   );
 }
