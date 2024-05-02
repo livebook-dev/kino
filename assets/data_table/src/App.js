@@ -284,8 +284,6 @@ export function App({ ctx, data }) {
         ctx.translate(arrowX, arrowY);
         ctx.fill(p);
       }
-
-      drawContent();
     },
     [content]
   );
