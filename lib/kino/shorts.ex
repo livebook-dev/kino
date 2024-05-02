@@ -65,7 +65,7 @@ defmodule Kino.Shorts do
   @doc """
   Renders a video of any given format.
 
-  It is a wrapper around `Kino.Audio.new/2`.
+  It is a wrapper around `Kino.Video.new/2`.
 
   ## Examples
 
