@@ -15,7 +15,7 @@ defmodule Kino.RPC do
   means that the evaluated string actually has closure semantics.
 
   The code is parsed and expanded on the remote node. Also, errors
-  and exists are captured and propagated to the caller.
+  and exits are captured and propagated to the caller.
 
   See `Code.eval_string/3` for available `opts`.
   """
