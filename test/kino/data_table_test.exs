@@ -267,4 +267,37 @@ defmodule Kino.DataTableTest do
       data: [["1", "1"], ["2", "2"] | _]
     })
   end
+
+  test "supports data update" do
+    entries = [
+      %User{id: 1, name: "Sherlock Holmes"},
+      %User{id: 2, name: "John Watson"}
+    ]
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [
+                 %{key: "0", label: ":id"},
+                 %{key: "1", label: ":name"}
+               ],
+               total_rows: 2
+             }
+           } = data
+
+    new_entries = [
+      %User{id: 1, name: "Sherlock Holmes"},
+      %User{id: 2, name: "John Watson"},
+      %User{id: 3, name: "Tuka Tuka"}
+    ]
+
+    Kino.DataTable.update(kino, new_entries)
+
+    assert_broadcast_event(kino, "update_content", %{
+      data: [["1", "Sherlock Holmes"], ["2", "John Watson"], ["3", "Tuka Tuka"]],
+      total_rows: 3
+    })
+  end
 end
