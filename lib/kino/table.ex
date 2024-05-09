@@ -54,7 +54,7 @@ defmodule Kino.Table do
 
   @doc """
   Invoked to update state with new data.
-  
+
   This callback is called in response to `update/2`.
   """
   @callback on_update(update_arg :: term(), state :: state()) :: {:ok, state()}
