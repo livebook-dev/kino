@@ -53,7 +53,9 @@ defmodule Kino.Table do
               {:ok, %{data: binary(), extension: String.t(), type: String.t()}}
 
   @doc """
-  Updates the loaded data
+  Invoked to update state with new data.
+  
+  This callback is called in response to `update/2`.
   """
   @callback on_update(update_arg :: term(), state :: state()) :: {:ok, state()}
 
@@ -88,7 +90,10 @@ defmodule Kino.Table do
   end
 
   @doc """
-  Updates the tabular data for a given Kino
+  Updates the table with new data.
+
+  An arbitrary update event can be used and it is then handled by
+  the `c:on_update/2` callback.
   """
   @spec update(t(), term()) :: :ok
   def update(kino, update_arg) do
