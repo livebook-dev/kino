@@ -56,7 +56,7 @@ defmodule Kino.DataTable do
   end
 
   @doc """
-  Updates the tabular data from a given Kino
+  Updates the table to display a new tabular data.
 
   ## Options
 
@@ -72,7 +72,7 @@ defmodule Kino.DataTable do
 
       kino = Kino.DataTable.new(data)
 
-  To update the data you can use the `update/2` function
+  Once created, you can update the table to display new data:
 
       new_data = [
         %{id: 1, name: "Elixir Lang", website: "https://elixir-lang.org"},
