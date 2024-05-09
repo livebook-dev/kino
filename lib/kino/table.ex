@@ -52,7 +52,12 @@ defmodule Kino.Table do
   @callback export_data(rows_spec(), state(), String.t()) ::
               {:ok, %{data: binary(), extension: String.t(), type: String.t()}}
 
-  @optional_callbacks export_data: 3
+  @doc """
+  Updates the loaded data
+  """
+  @callback on_update(update_arg :: term(), state :: state()) :: {:ok, state()}
+
+  @optional_callbacks export_data: 3, on_update: 2
 
   use Kino.JS, assets_path: "lib/assets/data_table/build"
   use Kino.JS.Live
@@ -80,6 +85,14 @@ defmodule Kino.Table do
       end
 
     Kino.JS.Live.new(__MODULE__, {module, init_arg}, export: export)
+  end
+
+  @doc """
+  Updates the tabular data for a given Kino
+  """
+  @spec update(t(), term()) :: :ok
+  def update(kino, update_arg) do
+    Kino.JS.Live.cast(kino, {:update, update_arg})
   end
 
   @impl true
@@ -146,7 +159,7 @@ defmodule Kino.Table do
   end
 
   def handle_event("order_by", %{"key" => nil}, ctx) do
-    {:noreply, ctx |> assign(order: nil, page: 1) |> broadcast_update()}
+    {:noreply, ctx |> reset() |> broadcast_update()}
   end
 
   def handle_event("order_by", %{"key" => key_string, "direction" => direction}, ctx) do
@@ -160,6 +173,18 @@ defmodule Kino.Table do
     relocates = ctx.assigns.relocates ++ [%{from_index: from_index, to_index: to_index}]
     {:noreply, ctx |> assign(relocates: relocates) |> broadcast_update()}
   end
+
+  @impl true
+  def handle_cast({:update, update_arg}, ctx) do
+    unless Kino.Utils.has_function?(ctx.assigns.module, :on_update, 2) do
+      raise ArgumentError, "module #{inspect(ctx.assigns.module)} does not define on_update/2"
+    end
+
+    {:ok, state} = ctx.assigns.module.on_update(update_arg, ctx.assigns.state)
+    {:noreply, assign(ctx, state: state) |> reset() |> broadcast_update()}
+  end
+
+  defp reset(ctx), do: assign(ctx, order: nil, page: 1)
 
   defp broadcast_update(ctx) do
     {content, ctx} = get_content(ctx)

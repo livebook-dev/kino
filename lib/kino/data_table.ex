@@ -46,10 +46,48 @@ defmodule Kino.DataTable do
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
-    tabular = normalize_tabular(tabular)
-
     name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
+    {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
+
+    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled, inspected},
+      export: fn state -> {"text", state.inspected} end
+    )
+  end
+
+  @doc """
+  Updates the tabular data from a given Kino
+
+  ## Options
+
+    * `:keys` - a list of keys to include in the table for each record.
+      The order is reflected in the rendered table. Optional
+
+  ## Examples
+
+      data = [
+        %{id: 1, name: "Elixir", website: "https://elixir-lang.org"},
+        %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
+      ]
+
+      kino = Kino.DataTable.new(data)
+
+  To update the data you can use the `update/2` function
+
+      new_data = [
+        %{id: 1, name: "Elixir Lang", website: "https://elixir-lang.org"},
+        %{id: 2, name: "Erlang Lang", website: "https://www.erlang.org"}
+      ]
+
+      Kino.DataTable.update(kino, new_data)
+  """
+  def update(kino, tabular, opts \\ []) do
+    {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
+    Kino.Table.update(kino, {data_rows, data_columns, count, inspected})
+  end
+
+  defp prepare_data(tabular, opts) do
+    tabular = normalize_tabular(tabular)
     keys = opts[:keys]
 
     {_, meta, _} = reader = init_reader!(tabular)
@@ -68,9 +106,7 @@ defmodule Kino.DataTable do
 
     inspected = inspect(tabular)
 
-    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled},
-      export: fn _ -> {"text", inspected} end
-    )
+    {data_rows, data_columns, count, inspected}
   end
 
   defp normalize_tabular([%struct{} | _] = tabular) do
@@ -126,7 +162,7 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def init({data_rows, data_columns, count, name, sorting_enabled}) do
+  def init({data_rows, data_columns, count, name, sorting_enabled, inspected}) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
     info = %{name: name, features: features}
 
@@ -138,7 +174,8 @@ defmodule Kino.DataTable do
        total_rows: count,
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,
-       columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end)
+       columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end),
+       inspected: inspected
      }}
   end
 
@@ -268,5 +305,21 @@ defmodule Kino.DataTable do
     else
       inspect(value)
     end
+  end
+
+  @impl true
+  def on_update({data_rows, data_columns, count, inspected}, state) do
+    {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
+
+    {:ok,
+     %{
+       state
+       | data_rows: data_rows,
+         total_rows: count,
+         slicing_fun: slicing_fun,
+         slicing_cache: slicing_cache,
+         columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end),
+         inspected: inspected
+     }}
   end
 end
