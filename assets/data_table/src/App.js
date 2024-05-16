@@ -167,10 +167,6 @@ export function App({ ctx, data }) {
         return true;
       }
 
-      if (!hasEntries) {
-        return false;
-      }
-
       ctx.rect(rect.x, rect.y, rect.width, rect.height);
 
       const basePadding = 10;
