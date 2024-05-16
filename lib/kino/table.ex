@@ -205,16 +205,10 @@ defmodule Kino.Table do
 
     ctx = assign(ctx, state: state, key_to_string: key_to_string)
 
-    {page_length, sample_data} =
-      case orientation do
-        :rows -> {length(data), List.first(data)}
-        :columns -> {hd(data) |> length(), Enum.map(data, &List.first(&1))}
-      end
-
-    has_sample_data = if is_list(sample_data), do: Enum.any?(sample_data)
+    {page_length, sample_data} = sample_data(data, orientation)
 
     columns =
-      if has_sample_data do
+      if sample_data != [] do
         sample_data
         |> infer_types()
         |> Enum.zip_with(columns, fn type, column ->
@@ -296,4 +290,8 @@ defmodule Kino.Table do
       relocates: ctx.assigns.relocates
     }
   end
+
+  defp sample_data([], _), do: {0, []}
+  defp sample_data(data, :rows), do: {length(data), hd(data)}
+  defp sample_data(data, :columns), do: {length(hd(data)), Enum.map(data, &List.first(&1))}
 end
