@@ -293,5 +293,6 @@ defmodule Kino.Table do
 
   defp sample_data([], _), do: {0, []}
   defp sample_data(data, :rows), do: {length(data), hd(data)}
+  defp sample_data([[] | _], :columns), do: {0, []}
   defp sample_data(data, :columns), do: {length(hd(data)), Enum.map(data, &List.first(&1))}
 end
