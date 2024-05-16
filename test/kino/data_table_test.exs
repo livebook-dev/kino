@@ -138,6 +138,13 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
+  test "supports empty data" do
+    kino = Kino.DataTable.new([])
+    data = connect(kino)
+
+    assert %{content: %{data: []}} = data
+  end
+
   test "sends only relevant fields if user-specified keys are given" do
     kino = Kino.DataTable.new(@people_entries, keys: [:id])
     data = connect(kino)
