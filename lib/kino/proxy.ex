@@ -10,7 +10,12 @@ defmodule Kino.Proxy do
   """
   @spec listen((Plug.Conn.t() -> Plug.Conn.t())) :: DynamicSupervisor.on_start_child()
   def listen(fun) when is_function(fun, 1) do
-    child_spec = Kino.Bridge.get_proxy_handler_child_spec(fun)
-    Kino.start_child(child_spec)
+    case Kino.Bridge.get_proxy_handler_child_spec(fun) do
+      {:ok, child_spec} ->
+        Kino.start_child(child_spec)
+
+      {:request_error, reason} ->
+        raise "failed to access the proxy handler child spec, reason: #{inspect(reason)}"
+    end
   end
 end
