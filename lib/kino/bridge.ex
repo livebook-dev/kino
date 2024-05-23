@@ -250,6 +250,15 @@ defmodule Kino.Bridge do
     match?({:ok, _}, io_request(:livebook_get_evaluation_file))
   end
 
+  @doc """
+  Requests the child spec for proxy handler with the given function.
+  """
+  @spec get_proxy_handler_child_spec((Plug.Conn.t() -> Plug.Conn.t())) ::
+          Supervisor.child_spec() | {module(), term()} | module()
+  def get_proxy_handler_child_spec(fun) do
+    with {:ok, reply} <- io_request({:livebook_get_proxy_handler_child_spec, fun}), do: reply
+  end
+
   defp io_request(request) do
     gl = Process.group_leader()
     ref = Process.monitor(gl)
