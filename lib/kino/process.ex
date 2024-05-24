@@ -32,6 +32,9 @@ defmodule Kino.Process do
     * `:direction` - defines the direction of the graph visual. The
       value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
 
+    * `:render_ets_tables` - determines whether ETS tables associated with the
+      supervision tree are rendered. Defaults to `false`.
+
   ## Examples
 
   To view the applications running in your instance run:
@@ -78,7 +81,7 @@ defmodule Kino.Process do
       end
 
     direction = direction_from_opts(opts)
-    edges = traverse_supervisor(root_supervisor)
+    edges = traverse_supervisor(root_supervisor, opts)
 
     {:dictionary, dictionary} = process_info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
@@ -157,7 +160,7 @@ defmodule Kino.Process do
                 "the provided identifier #{inspect(supervisor)} does not reference a running process"
       end
 
-    edges = traverse_supervisor(supervisor_pid)
+    edges = traverse_supervisor(supervisor_pid, opts)
 
     Mermaid.new("""
     graph #{direction};
@@ -498,7 +501,7 @@ defmodule Kino.Process do
     |> convert_direction()
   end
 
-  defp traverse_supervisor(supervisor) when is_pid(supervisor) do
+  defp traverse_supervisor(supervisor, opts) when is_pid(supervisor) do
     supervisor_children =
       try do
         Supervisor.which_children(supervisor)
@@ -511,7 +514,7 @@ defmodule Kino.Process do
 
     supervisor_children
     |> traverse_processes(root_node, {%{}, 1, %{root_node.pid => root_node}})
-    |> traverse_ets_tables()
+    |> maybe_traverse_ets_tables(opts)
     |> traverse_links()
     |> Enum.map_join("\n", fn {_pid_pair, edge} ->
       generate_mermaid_entry(edge)
@@ -585,18 +588,30 @@ defmodule Kino.Process do
 
   defp traverse_links({rels, _idx, pid_keys}) do
     rels_with_links =
-      Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
-        {:links, links} = process_info(pid, :links)
+      Enum.reduce(pid_keys, rels, fn
+        {pid, _idx}, rels_with_links when is_pid(pid) ->
+          {:links, links} = process_info(pid, :links)
 
-        Enum.reduce(links, rels_with_links, fn link_pid, acc ->
-          add_new_links_to_acc(pid_keys, pid, link_pid, acc)
-        end)
+          Enum.reduce(links, rels_with_links, fn link_pid, acc ->
+            add_new_links_to_acc(pid_keys, pid, link_pid, acc)
+          end)
+
+        _, rels_with_links ->
+          rels_with_links
       end)
 
     rels_with_links
   end
 
-  defp traverse_ets_tables(supervision_tree_data) do
+  defp maybe_traverse_ets_tables(supervision_tree_data, opts) do
+    if Keyword.get(opts, :render_ets_tables, false) do
+      do_traverse_ets_tables(supervision_tree_data)
+    else
+      supervision_tree_data
+    end
+  end
+
+  defp do_traverse_ets_tables(supervision_tree_data) do
     active_ets_tables =
       :ets.all()
       |> Enum.map(fn table ->
@@ -639,15 +654,16 @@ defmodule Kino.Process do
 
             rel_info = graph_edge(owner_process_info, node_2, :ets)
             updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
+            updated_pid_keys = Map.put(pid_keys, table_info.id, node_2)
 
-            {updated_rels, next_idx + 1, pid_keys}
+            {updated_rels, next_idx + 1, updated_pid_keys}
         end
       end)
 
     ets_heir_map
     |> Enum.reduce(supervision_tree_data_with_ets_owners, fn {ets_table_heir, table_info},
                                                              {rels, next_idx, pid_keys} ->
-      with %{pid: _pid} = node_1 <- Map.get(pid_keys, table_info.owner),
+      with %{pid: _pid} = node_1 <- Map.get(pid_keys, table_info.id),
            %{pid: _pid} = node_2 <- Map.get(pid_keys, ets_table_heir) do
         rel_info = graph_edge(node_1, node_2, :heir)
         updated_rels = Map.put(rels, [node_1.idx, node_2.idx], rel_info)
