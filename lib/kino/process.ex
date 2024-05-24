@@ -623,21 +623,39 @@ defmodule Kino.Process do
         end
       end)
 
-    ets_owner_map
-    |> Enum.reduce(supervision_tree_data, fn {ets_table_owner, table_info},
-                                             {rels, next_idx, pid_keys} ->
-      case Map.get(pid_keys, ets_table_owner) do
-        nil ->
+    supervision_tree_data_with_ets_owners =
+      ets_owner_map
+      |> Enum.reduce(supervision_tree_data, fn {ets_table_owner, table_info},
+                                               {rels, next_idx, pid_keys} ->
+        case Map.get(pid_keys, ets_table_owner) do
+          nil ->
+            {rels, next_idx, pid_keys}
+
+          owner_process_info ->
+            node_2 =
+              graph_node(next_idx, table_info.name, nil, :ets, %{
+                protection: table_info.protection
+              })
+
+            rel_info = graph_edge(owner_process_info, node_2, :ets)
+            updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
+
+            {updated_rels, next_idx + 1, pid_keys}
+        end
+      end)
+
+    ets_heir_map
+    |> Enum.reduce(supervision_tree_data_with_ets_owners, fn {ets_table_heir, table_info},
+                                                             {rels, next_idx, pid_keys} ->
+      with %{pid: _pid} = node_1 <- Map.get(pid_keys, table_info.owner),
+           %{pid: _pid} = node_2 <- Map.get(pid_keys, ets_table_heir) do
+        rel_info = graph_edge(node_1, node_2, :heir)
+        updated_rels = Map.put(rels, [node_1.idx, node_2.idx], rel_info)
+
+        {updated_rels, next_idx, pid_keys}
+      else
+        _ ->
           {rels, next_idx, pid_keys}
-
-        owner_process_info ->
-          node_2 =
-            graph_node(next_idx, table_info.name, nil, :ets, %{protection: table_info.protection})
-
-          rel_info = graph_edge(owner_process_info, node_2, :ets)
-          updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
-
-          {updated_rels, next_idx + 1, pid_keys}
       end
     end)
   end
@@ -682,6 +700,10 @@ defmodule Kino.Process do
 
   defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :ets}) do
     "#{graph_node(node_1)} -- owner --> #{graph_node(node_2)}"
+  end
+
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :heir}) do
+    "#{graph_node(node_1)} -. heir .-> #{graph_node(node_2)}"
   end
 
   defp graph_node(%{pid: :undefined, id: id, idx: idx}) do
