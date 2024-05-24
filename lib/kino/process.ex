@@ -530,46 +530,46 @@ defmodule Kino.Process do
   defp traverse_processes(
          [{id, :undefined, type, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, :undefined, type)
     connection = graph_edge(parent_node, child_node, :supervisor)
 
-    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, resource_keys})
   end
 
   defp traverse_processes(
          [{id, pid, :supervisor, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, pid, :supervisor)
     connection = graph_edge(parent_node, child_node, :supervisor)
-    pid_keys = Map.put(pid_keys, pid, child_node)
+    resource_keys = Map.put(resource_keys, pid, child_node)
 
     children = Supervisor.which_children(pid)
 
-    {subtree_rels, idx, pid_keys} =
-      traverse_processes(children, child_node, {%{}, idx + 1, pid_keys})
+    {subtree_rels, idx, resource_keys} =
+      traverse_processes(children, child_node, {%{}, idx + 1, resource_keys})
 
     updated_rels =
       rels
       |> add_rels(subtree_rels)
       |> add_rel(connection)
 
-    traverse_processes(rest, parent_node, {updated_rels, idx, pid_keys})
+    traverse_processes(rest, parent_node, {updated_rels, idx, resource_keys})
   end
 
   defp traverse_processes(
          [{id, pid, :worker, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, pid, :worker)
     connection = graph_edge(parent_node, child_node, :supervisor)
-    pid_keys = Map.put(pid_keys, pid, child_node)
+    resource_keys = Map.put(resource_keys, pid, child_node)
 
-    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, resource_keys})
   end
 
   defp traverse_processes([], _, acc) do
@@ -586,14 +586,14 @@ defmodule Kino.Process do
     Map.put_new(rels, lookup, edge)
   end
 
-  defp traverse_links({rels, _idx, pid_keys}) do
+  defp traverse_links({rels, _idx, resource_keys}) do
     rels_with_links =
-      Enum.reduce(pid_keys, rels, fn
+      Enum.reduce(resource_keys, rels, fn
         {pid, _idx}, rels_with_links when is_pid(pid) ->
           {:links, links} = process_info(pid, :links)
 
           Enum.reduce(links, rels_with_links, fn link_pid, acc ->
-            add_new_links_to_acc(pid_keys, pid, link_pid, acc)
+            add_new_links_to_acc(resource_keys, pid, link_pid, acc)
           end)
 
         _, rels_with_links ->
@@ -641,10 +641,10 @@ defmodule Kino.Process do
     supervision_tree_data_with_ets_owners =
       ets_owner_map
       |> Enum.reduce(supervision_tree_data, fn {ets_table_owner, table_info},
-                                               {rels, next_idx, pid_keys} ->
-        case Map.get(pid_keys, ets_table_owner) do
+                                               {rels, next_idx, resource_keys} ->
+        case Map.get(resource_keys, ets_table_owner) do
           nil ->
-            {rels, next_idx, pid_keys}
+            {rels, next_idx, resource_keys}
 
           owner_process_info ->
             node_2 =
@@ -654,30 +654,30 @@ defmodule Kino.Process do
 
             rel_info = graph_edge(owner_process_info, node_2, :ets)
             updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
-            updated_pid_keys = Map.put(pid_keys, table_info.id, node_2)
+            updated_resource_keys = Map.put(resource_keys, table_info.id, node_2)
 
-            {updated_rels, next_idx + 1, updated_pid_keys}
+            {updated_rels, next_idx + 1, updated_resource_keys}
         end
       end)
 
     ets_heir_map
     |> Enum.reduce(supervision_tree_data_with_ets_owners, fn {ets_table_heir, table_info},
-                                                             {rels, next_idx, pid_keys} ->
-      with %{pid: _pid} = node_1 <- Map.get(pid_keys, table_info.id),
-           %{pid: _pid} = node_2 <- Map.get(pid_keys, ets_table_heir) do
+                                                             {rels, next_idx, resource_keys} ->
+      with %{pid: _pid} = node_1 <- Map.get(resource_keys, table_info.id),
+           %{pid: _pid} = node_2 <- Map.get(resource_keys, ets_table_heir) do
         rel_info = graph_edge(node_1, node_2, :heir)
         updated_rels = Map.put(rels, [node_1.idx, node_2.idx], rel_info)
 
-        {updated_rels, next_idx, pid_keys}
+        {updated_rels, next_idx, resource_keys}
       else
         _ ->
-          {rels, next_idx, pid_keys}
+          {rels, next_idx, resource_keys}
       end
     end)
   end
 
-  defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
-    case pid_keys do
+  defp add_new_links_to_acc(resource_keys, pid, link_pid, acc) do
+    case resource_keys do
       %{^pid => node_1, ^link_pid => node_2} ->
         add_rel(acc, graph_edge(node_1, node_2, :link))
 
