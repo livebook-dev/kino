@@ -12,6 +12,7 @@ defmodule Kino.Process do
   classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
   classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
   classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+  classDef ets fill:#a5f3fc, stroke:#374151, stroke-width:1px;
   """
 
   @type supervisor :: pid() | atom()
@@ -510,6 +511,7 @@ defmodule Kino.Process do
 
     supervisor_children
     |> traverse_processes(root_node, {%{}, 1, %{root_node.pid => root_node}})
+    |> traverse_ets_tables()
     |> traverse_links()
     |> Enum.map_join("\n", fn {_pid_pair, edge} ->
       generate_mermaid_entry(edge)
@@ -594,6 +596,52 @@ defmodule Kino.Process do
     rels_with_links
   end
 
+  defp traverse_ets_tables(supervision_tree_data) do
+    active_ets_tables =
+      :ets.all()
+      |> Enum.map(fn table ->
+        table
+        |> :ets.info()
+        |> Map.new()
+      end)
+
+    ets_owner_map =
+      active_ets_tables
+      |> Enum.reduce(%{}, fn table_info, acc ->
+        case Map.get(table_info, :owner) do
+          owner_pid when is_pid(owner_pid) -> Map.put(acc, owner_pid, table_info)
+          _ -> acc
+        end
+      end)
+
+    ets_heir_map =
+      active_ets_tables
+      |> Enum.reduce(%{}, fn table_info, acc ->
+        case Map.get(table_info, :heir) do
+          heir_pid when is_pid(heir_pid) -> Map.put(acc, heir_pid, table_info)
+          _ -> acc
+        end
+      end)
+
+    ets_owner_map
+    |> Enum.reduce(supervision_tree_data, fn {ets_table_owner, table_info},
+                                             {rels, next_idx, pid_keys} ->
+      case Map.get(pid_keys, ets_table_owner) do
+        nil ->
+          {rels, next_idx, pid_keys}
+
+        owner_process_info ->
+          node_2 =
+            graph_node(next_idx, table_info.name, nil, :ets, %{protection: table_info.protection})
+
+          rel_info = graph_edge(owner_process_info, node_2, :ets)
+          updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
+
+          {updated_rels, next_idx + 1, pid_keys}
+      end
+    end)
+  end
+
   defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
     case pid_keys do
       %{^pid => node_1, ^link_pid => node_2} ->
@@ -614,12 +662,13 @@ defmodule Kino.Process do
     }
   end
 
-  defp graph_node(idx, id, pid, type) do
+  defp graph_node(idx, id, pid, type, meta \\ nil) do
     %{
       idx: idx,
       id: id,
       pid: pid,
-      type: type
+      type: type,
+      meta: meta
     }
   end
 
@@ -631,8 +680,18 @@ defmodule Kino.Process do
     "#{graph_node(node_1)} ---> #{graph_node(node_2)}"
   end
 
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :ets}) do
+    "#{graph_node(node_1)} -- owner --> #{graph_node(node_2)}"
+  end
+
   defp graph_node(%{pid: :undefined, id: id, idx: idx}) do
     "#{idx}(id: #{inspect(id)}):::notstarted"
+  end
+
+  defp graph_node(%{idx: idx, id: id, meta: %{protection: protection}, type: :ets}) do
+    """
+    #{idx}[("`#{module_or_atom_to_string(id)}\n**_#{protection}_**`")]:::ets
+    """
   end
 
   defp graph_node(%{idx: idx, pid: pid, type: type}) do
