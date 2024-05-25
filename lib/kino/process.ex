@@ -612,29 +612,29 @@ defmodule Kino.Process do
   end
 
   defp do_traverse_ets_tables(supervision_tree_data) do
-    active_ets_tables =
+    {ets_owner_map, ets_heir_map} =
       :ets.all()
-      |> Enum.map(fn table ->
-        table
-        |> :ets.info()
-        |> Map.new()
-      end)
+      |> Enum.reduce({%{}, %{}}, fn table, {ets_owner_map, ets_heir_map} ->
+        try do
+          table_info =
+            %{
+              id: :ets.info(table, :id),
+              name: :ets.info(table, :name),
+              owner: :ets.info(table, :owner),
+              heir: :ets.info(table, :heir),
+              protection: :ets.info(table, :protection)
+            }
 
-    ets_owner_map =
-      active_ets_tables
-      |> Enum.reduce(%{}, fn table_info, acc ->
-        case Map.get(table_info, :owner) do
-          owner_pid when is_pid(owner_pid) -> Map.put(acc, owner_pid, table_info)
-          _ -> acc
-        end
-      end)
-
-    ets_heir_map =
-      active_ets_tables
-      |> Enum.reduce(%{}, fn table_info, acc ->
-        case Map.get(table_info, :heir) do
-          heir_pid when is_pid(heir_pid) -> Map.put(acc, heir_pid, table_info)
-          _ -> acc
+          if table_info.heir == :none do
+            {Map.put(ets_owner_map, table_info.owner, table_info), ets_heir_map}
+          else
+            {
+              Map.put(ets_owner_map, table_info.owner, table_info),
+              Map.put(ets_heir_map, table_info.heir, table_info)
+            }
+          end
+        rescue
+          _ -> {ets_owner_map, ets_heir_map}
         end
       end)
 
