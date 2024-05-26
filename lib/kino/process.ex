@@ -12,6 +12,7 @@ defmodule Kino.Process do
   classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
   classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
   classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+  classDef ets fill:#a5f3fc, stroke:#374151, stroke-width:1px;
   """
 
   @type supervisor :: pid() | atom()
@@ -30,6 +31,9 @@ defmodule Kino.Process do
 
     * `:direction` - defines the direction of the graph visual. The
       value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
+
+    * `:render_ets_tables` - determines whether ETS tables associated with the
+      supervision tree are rendered. Defaults to `false`.
 
   ## Examples
 
@@ -77,7 +81,7 @@ defmodule Kino.Process do
       end
 
     direction = direction_from_opts(opts)
-    edges = traverse_supervisor(root_supervisor)
+    edges = traverse_supervisor(root_supervisor, opts)
 
     {:dictionary, dictionary} = process_info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
@@ -156,7 +160,7 @@ defmodule Kino.Process do
                 "the provided identifier #{inspect(supervisor)} does not reference a running process"
       end
 
-    edges = traverse_supervisor(supervisor_pid)
+    edges = traverse_supervisor(supervisor_pid, opts)
 
     Mermaid.new("""
     graph #{direction};
@@ -497,7 +501,7 @@ defmodule Kino.Process do
     |> convert_direction()
   end
 
-  defp traverse_supervisor(supervisor) when is_pid(supervisor) do
+  defp traverse_supervisor(supervisor, opts) when is_pid(supervisor) do
     supervisor_children =
       try do
         Supervisor.which_children(supervisor)
@@ -510,6 +514,7 @@ defmodule Kino.Process do
 
     supervisor_children
     |> traverse_processes(root_node, {%{}, 1, %{root_node.pid => root_node}})
+    |> maybe_traverse_ets_tables(opts)
     |> traverse_links()
     |> Enum.map_join("\n", fn {_pid_pair, edge} ->
       generate_mermaid_entry(edge)
@@ -525,46 +530,46 @@ defmodule Kino.Process do
   defp traverse_processes(
          [{id, :undefined, type, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, :undefined, type)
     connection = graph_edge(parent_node, child_node, :supervisor)
 
-    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, resource_keys})
   end
 
   defp traverse_processes(
          [{id, pid, :supervisor, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, pid, :supervisor)
     connection = graph_edge(parent_node, child_node, :supervisor)
-    pid_keys = Map.put(pid_keys, pid, child_node)
+    resource_keys = Map.put(resource_keys, pid, child_node)
 
     children = Supervisor.which_children(pid)
 
-    {subtree_rels, idx, pid_keys} =
-      traverse_processes(children, child_node, {%{}, idx + 1, pid_keys})
+    {subtree_rels, idx, resource_keys} =
+      traverse_processes(children, child_node, {%{}, idx + 1, resource_keys})
 
     updated_rels =
       rels
       |> add_rels(subtree_rels)
       |> add_rel(connection)
 
-    traverse_processes(rest, parent_node, {updated_rels, idx, pid_keys})
+    traverse_processes(rest, parent_node, {updated_rels, idx, resource_keys})
   end
 
   defp traverse_processes(
          [{id, pid, :worker, _} | rest],
          parent_node,
-         {rels, idx, pid_keys}
+         {rels, idx, resource_keys}
        ) do
     child_node = graph_node(idx, id, pid, :worker)
     connection = graph_edge(parent_node, child_node, :supervisor)
-    pid_keys = Map.put(pid_keys, pid, child_node)
+    resource_keys = Map.put(resource_keys, pid, child_node)
 
-    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, pid_keys})
+    traverse_processes(rest, parent_node, {add_rel(rels, connection), idx + 1, resource_keys})
   end
 
   defp traverse_processes([], _, acc) do
@@ -581,21 +586,98 @@ defmodule Kino.Process do
     Map.put_new(rels, lookup, edge)
   end
 
-  defp traverse_links({rels, _idx, pid_keys}) do
+  defp traverse_links({rels, _idx, resource_keys}) do
     rels_with_links =
-      Enum.reduce(pid_keys, rels, fn {pid, _idx}, rels_with_links ->
-        {:links, links} = process_info(pid, :links)
+      Enum.reduce(resource_keys, rels, fn
+        {pid, _idx}, rels_with_links when is_pid(pid) ->
+          {:links, links} = process_info(pid, :links)
 
-        Enum.reduce(links, rels_with_links, fn link_pid, acc ->
-          add_new_links_to_acc(pid_keys, pid, link_pid, acc)
-        end)
+          Enum.reduce(links, rels_with_links, fn link_pid, acc ->
+            add_new_links_to_acc(resource_keys, pid, link_pid, acc)
+          end)
+
+        _, rels_with_links ->
+          rels_with_links
       end)
 
     rels_with_links
   end
 
-  defp add_new_links_to_acc(pid_keys, pid, link_pid, acc) do
-    case pid_keys do
+  defp maybe_traverse_ets_tables(supervision_tree_data, opts) do
+    if Keyword.get(opts, :render_ets_tables, false) do
+      do_traverse_ets_tables(supervision_tree_data)
+    else
+      supervision_tree_data
+    end
+  end
+
+  defp do_traverse_ets_tables(supervision_tree_data) do
+    {ets_owner_map, ets_heir_map} =
+      :ets.all()
+      |> Enum.reduce({%{}, %{}}, fn table, {ets_owner_map, ets_heir_map} ->
+        try do
+          table_info =
+            %{
+              id: :ets.info(table, :id),
+              name: :ets.info(table, :name),
+              owner: :ets.info(table, :owner),
+              heir: :ets.info(table, :heir),
+              protection: :ets.info(table, :protection)
+            }
+
+          if table_info.heir == :none do
+            {Map.put(ets_owner_map, table_info.owner, table_info), ets_heir_map}
+          else
+            {
+              Map.put(ets_owner_map, table_info.owner, table_info),
+              Map.put(ets_heir_map, table_info.heir, table_info)
+            }
+          end
+        rescue
+          _ -> {ets_owner_map, ets_heir_map}
+        end
+      end)
+
+    supervision_tree_data_with_ets_owners =
+      ets_owner_map
+      |> Enum.reduce(supervision_tree_data, fn {ets_table_owner, table_info},
+                                               {rels, next_idx, resource_keys} ->
+        case Map.get(resource_keys, ets_table_owner) do
+          nil ->
+            {rels, next_idx, resource_keys}
+
+          owner_process_info ->
+            node_2 =
+              graph_node(next_idx, table_info.name, nil, :ets, %{
+                protection: table_info.protection
+              })
+
+            rel_info = graph_edge(owner_process_info, node_2, :ets)
+            updated_rels = Map.put(rels, [owner_process_info.idx, next_idx], rel_info)
+            updated_resource_keys = Map.put(resource_keys, table_info.id, node_2)
+
+            {updated_rels, next_idx + 1, updated_resource_keys}
+        end
+      end)
+
+    ets_heir_map
+    |> Enum.reduce(supervision_tree_data_with_ets_owners, fn {ets_table_heir, table_info},
+                                                             {rels, next_idx, resource_keys} ->
+      with %{pid: _pid} = node_1 <- Map.get(resource_keys, table_info.id),
+           %{pid: _pid} = node_2 <- Map.get(resource_keys, ets_table_heir) do
+        rel_info = graph_edge(node_1, node_2, :heir)
+        updated_rels = Map.put(rels, [node_1.idx, node_2.idx], rel_info)
+
+        {updated_rels, next_idx, resource_keys}
+      else
+        _ ->
+          {rels, next_idx, resource_keys}
+      end
+    end)
+  end
+
+  defp add_new_links_to_acc(resource_keys, pid, link_pid, acc) do
+    case resource_keys do
       %{^pid => node_1, ^link_pid => node_2} ->
         add_rel(acc, graph_edge(node_1, node_2, :link))
 
@@ -614,12 +696,13 @@ defmodule Kino.Process do
     }
   end
 
-  defp graph_node(idx, id, pid, type) do
+  defp graph_node(idx, id, pid, type, meta \\ nil) do
     %{
       idx: idx,
       id: id,
       pid: pid,
-      type: type
+      type: type,
+      meta: meta
     }
   end
 
@@ -631,8 +714,20 @@ defmodule Kino.Process do
     "#{graph_node(node_1)} ---> #{graph_node(node_2)}"
   end
 
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :ets}) do
+    "#{graph_node(node_1)} -- owner --> #{graph_node(node_2)}"
+  end
+
+  defp generate_mermaid_entry(%{node_1: node_1, node_2: node_2, relationship: :heir}) do
+    "#{graph_node(node_1)} -. heir .-> #{graph_node(node_2)}"
+  end
+
   defp graph_node(%{pid: :undefined, id: id, idx: idx}) do
     "#{idx}(id: #{inspect(id)}):::notstarted"
+  end
+
+  defp graph_node(%{idx: idx, id: id, meta: %{protection: protection}, type: :ets}) do
+    "#{idx}[(\"`#{module_or_atom_to_string(id)}\n**_#{protection}_**`\")]:::ets"
   end
 
   defp graph_node(%{idx: idx, pid: pid, type: type}) do
