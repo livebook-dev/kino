@@ -727,9 +727,7 @@ defmodule Kino.Process do
   end
 
   defp graph_node(%{idx: idx, id: id, meta: %{protection: protection}, type: :ets}) do
-    """
-    #{idx}[("`#{module_or_atom_to_string(id)}\n**_#{protection}_**`")]:::ets
-    """
+    "#{idx}[(\"`#{module_or_atom_to_string(id)}\n**_#{protection}_**`\")]:::ets"
   end
 
   defp graph_node(%{idx: idx, pid: pid, type: type}) do

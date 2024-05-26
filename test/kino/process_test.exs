@@ -10,6 +10,60 @@ defmodule Kino.ProcessTest do
   end
 
   describe "sup_tree/2" do
+    test "should render ETS tables if ETS tables are present and option is enabled" do
+      pid = start_supervised!(supervision_tree_with_ets_table())
+
+      [
+        {:ets_owner, _owner_pid, :worker, _},
+        {:ets_heir, _heir_pid, :worker, _},
+        {Agent, agent_pid, :worker, _}
+      ] = Supervisor.which_children(pid)
+
+      content = pid |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
+      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
+
+      assert content =~
+               "4[(\"`test_ets_table\n**_protected_**`\")]:::ets -. heir .-> 2(ets_heir):::worker"
+
+      content = :supervisor_parent |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
+      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
+
+      assert content =~
+               "4[(\"`test_ets_table\n**_protected_**`\")]:::ets -. heir .-> 2(ets_heir):::worker"
+    end
+
+    test "should not render ETS tables if ETS tables are present but option is not enabled" do
+      pid = start_supervised!(supervision_tree_with_ets_table())
+
+      [
+        {:ets_owner, _owner_pid, :worker, _},
+        {:ets_heir, _heir_pid, :worker, _},
+        {Agent, agent_pid, :worker, _}
+      ] = Supervisor.which_children(pid)
+
+      content = pid |> Kino.Process.sup_tree() |> mermaid()
+      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+      refute content =~ ":::ets"
+
+      content = :supervisor_parent |> Kino.Process.sup_tree() |> mermaid()
+      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+      refute content =~ ":::ets"
+    end
+
     test "shows supervision tree with children" do
       pid =
         start_supervised!(%{
@@ -70,6 +124,42 @@ defmodule Kino.ProcessTest do
   defp mermaid(%Kino.JS{ref: ref}) do
     send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
     assert_receive {:connect_reply, data, %{ref: ^ref}}
+
     data
+  end
+
+  defp supervision_tree_with_ets_table do
+    %{
+      id: Supervisor,
+      start:
+        {Supervisor, :start_link,
+         [
+           [
+             {Agent, fn -> :ok end},
+             %{
+               id: :ets_heir,
+               start: {Agent, :start_link, [fn -> :ok end, [name: :ets_heir]]}
+             },
+             %{
+               id: :ets_owner,
+               start:
+                 {Agent, :start_link,
+                  [
+                    fn ->
+                      heir_pid = Process.whereis(:ets_heir)
+
+                      :ets.new(
+                        :test_ets_table,
+                        [:set, :protected, :named_table, {:heir, heir_pid, nil}]
+                      )
+                    end,
+                    [name: :ets_owner]
+                  ]}
+             }
+           ],
+           [name: :supervisor_parent, strategy: :one_for_one]
+         ]},
+      restart: :temporary
+    }
   end
 end
