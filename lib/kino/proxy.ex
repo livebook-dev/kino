@@ -19,19 +19,6 @@ defmodule Kino.Proxy do
         Plug.Conn.send_resp(conn, 200, "hello")
       end
 
-  The following `Plug.Conn` fields are set:
-
-    * `:host`
-    * `:method`
-    * `:owner`
-    * `:port`
-    * `:remote_ip`
-    * `:query_string`
-    * `:path_info`
-    * `:scheme`
-    * `:script_name`
-    * `:req_headers`
-
   > #### Plug {: .info}
   >
   > In order to use this feature, you need to add `:plug` as a dependency.
