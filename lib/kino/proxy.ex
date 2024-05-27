@@ -4,7 +4,7 @@ defmodule Kino.Proxy do
 
   Livebook proxies requests at the following paths:
 
-    * `/sessions/:id/proxy/*path` - a notebook sessions
+    * `/sessions/:id/proxy/*path` - a notebook session
 
     * `/apps/:slug/:session_id/proxy/*path` - a specific app session
 
