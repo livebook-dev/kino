@@ -9,7 +9,8 @@ defmodule Kino.Proxy do
     * `/apps/:slug/:session_id/proxy/*path` - a specific app session
 
     * `/apps/:slug/proxy/*path` - generic app path, only supported for
-      single-session apps
+      single-session apps. If the app has automatic shutdowns enabled
+      and it is not currently running, it will be automatically started
 
   You can define a custom listener to handle requests at these paths.
   The listener receives a `Plug.Conn` and it should use the `Plug` API
