@@ -35,6 +35,7 @@ defmodule Kino.MixProject do
       {:table, "~> 0.1.2"},
       {:fss, "~> 0.1.0"},
       {:nx, "~> 0.1", optional: true},
+      {:plug, "~> 1.0", optional: true},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
   end

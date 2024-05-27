@@ -2,19 +2,24 @@ defmodule Kino.Proxy do
   @moduledoc """
   Functionality for handling proxy requests forwarded from Livebook.
 
-  This functionality will make the requests forwarded from Livebook
-  through a proxy handler and send the response to the incoming connection
-  according to user definition.
+  Livebook proxies requests at the following paths:
 
-  The proxy handler supports the routes below to perform this proxy
-  between the `Livebook` and current runtime:
+    * `/sessions/:id/proxy/*path` - a notebook sessions
 
-    * `/sessions/:id/proxy/*path` - for notebook sessions.
+    * `/apps/:slug/:session_id/proxy/*path` - a specific app session
 
-    * `/apps/:slug/:session_id/proxy/*path` - for app sessions.
+    * `/apps/:slug/proxy/*path` - generic app path, only supported for
+      single-session apps
 
-  Only certain fields will be forwarded through the proxy handler, which
-  builds a new `%Plug.Conn{}` and sends to the listener function.
+  You can define a custom listener to handle requests at these paths.
+  The listener receives a `Plug.Conn` and should use the `Plug` API
+  to send the response, for example:
+
+      Kino.Proxy.listen(fn conn ->
+        Plug.Conn.send_resp(conn, 200, "hello")
+      end
+
+  The following `Plug.Conn` fields are set:
 
     * `:host`
     * `:method`
@@ -27,8 +32,14 @@ defmodule Kino.Proxy do
     * `:script_name`
     * `:req_headers`
 
-  It is possible to create notebooks and apps as APIs, allowing the user to fetch the
-  request data and send a proper response.
+  > #### Plug {: .info}
+  >
+  > In order to use this feature, you need to add `:plug` as a dependency.
+
+  ## Examples
+
+  Using the proxy feature, you can use Livebook apps to build APIs.
+  For example, we could provide a data export endpoint:
 
       data = <<...>>
       token = "auth-token"
@@ -47,12 +58,15 @@ defmodule Kino.Proxy do
           |> Plug.Conn.send_resp(200, "use /export/data to get extract the report data")
       end)
 
-  So you would need to access the `/sessions/:id/proxy/export/data` to extract the data from
-  your session and return as a body response.
+  Once deployed as an app, the user would be able to export the data
+  by sending a request to `/apps/:slug/proxy/export/data`.
   """
 
   @doc """
-  Persists the function to be listened by the proxy handler.
+  Registers a request listener.
+
+  Expects the listener to be a function that handles a request
+  `Plug.Conn`.
   """
   @spec listen((Plug.Conn.t() -> Plug.Conn.t())) :: DynamicSupervisor.on_start_child()
   def listen(fun) when is_function(fun, 1) do
