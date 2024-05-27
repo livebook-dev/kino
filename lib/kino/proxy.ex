@@ -12,7 +12,7 @@ defmodule Kino.Proxy do
       single-session apps
 
   You can define a custom listener to handle requests at these paths.
-  The listener receives a `Plug.Conn` and should use the `Plug` API
+  The listener receives a `Plug.Conn` and it should use the `Plug` API
   to send the response, for example:
 
       Kino.Proxy.listen(fn conn ->
