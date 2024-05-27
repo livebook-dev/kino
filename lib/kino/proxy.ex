@@ -38,7 +38,7 @@ defmodule Kino.Proxy do
 
   ## Examples
 
-  Using the proxy feature, you can use Livebook apps to build APIs.
+  Using the proxy feature, we can use Livebook apps to build APIs.
   For example, we could provide a data export endpoint:
 
       data = <<...>>
