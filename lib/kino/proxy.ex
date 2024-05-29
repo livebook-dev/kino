@@ -62,6 +62,7 @@ defmodule Kino.Proxy do
   >   case Plug.Conn.get_req_header(conn, "authorization") do
   >     ["Bearer " <> ^api_token] ->
   >       Plug.Conn.send_resp(conn, 200, "hello")
+  >
   >     _ ->
   >       conn
   >       |> Plug.Conn.put_resp_header("www-authenticate", "Bearer")
