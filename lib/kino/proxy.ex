@@ -57,15 +57,17 @@ defmodule Kino.Proxy do
   >
   > ```elixir
   > Kino.Proxy.listen(fn conn ->
-  >   import Plug.BasicAuth
+  >   api_token = "my-secret-api-token"
   >
-  >   case Plug.BasicAuth.basic_auth(conn, username: "username", password: "password") do
-  >     %{status: 401} = conn -> Plug.Conn.send_resp(conn)
-  >
-  >     conn -> Plug.Conn.send_resp(conn, 200, "hello")
+  >   case Plug.Conn.get_req_header(conn, "authorization") do
+  >     ["Bearer " <> ^api_token] ->
+  >       Plug.Conn.send_resp(conn, 200, "hello")
+  >     _ ->
+  >       conn
+  >       |> Plug.Conn.put_resp_header("www-authenticate", "Bearer")
+  >       |> Plug.Conn.send_resp(401, "Unauthorized")
   >   end
   > end)
-  > ```
   """
 
   @doc """
