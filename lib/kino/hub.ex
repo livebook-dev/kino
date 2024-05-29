@@ -20,9 +20,9 @@ defmodule Kino.Hub do
   Returns information about the running app.
 
   Note that `:started_by` information is only available for multi-session
-  apps when the app uses a Livebook Teams hub.
+  apps when the app uses a Livebook Teams workspace.
 
-  Unless called from withing an app deployment, returns `%{type: :none}`.
+  Unless called from within an app deployment, returns `%{type: :none}`.
   """
   @spec app_info() :: app_info()
   def app_info() do
@@ -39,7 +39,7 @@ defmodule Kino.Hub do
   Returns user information for the given connected client id.
 
   Note that this information is only available when the session uses
-  Livebook Teams hub, otherwise `:not_available` error is returned.
+  Livebook Teams workspace, otherwise `:not_available` error is returned.
 
   If there is no such connected client, `:not_found` error is returned.
   """
