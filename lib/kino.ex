@@ -459,17 +459,9 @@ defmodule Kino do
 
       {:error, reason} ->
         raise "failed to start child with the spec #{Kernel.inspect(child_spec)}.\n" <>
-                "Reason: #{start_supervised_error(reason)}"
+                "Reason: #{Exception.format_exit(reason)}"
     end
   end
-
-  defp start_supervised_error({{:EXIT, reason}, info}) when is_tuple(info),
-    do: Exception.format_exit(reason)
-
-  defp start_supervised_error({reason, info}) when is_tuple(info),
-    do: Exception.format_exit(reason)
-
-  defp start_supervised_error(reason), do: Exception.format_exit(reason)
 
   @doc """
   Terminates a child started with `start_child/1`.
