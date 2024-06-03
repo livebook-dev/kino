@@ -20,7 +20,7 @@ defmodule Kino.Proxy do
         Plug.Conn.send_resp(conn, 200, "hello")
       end
 
-  > #### Plug {: .info}
+  > #### Plug dependency {: .info}
   >
   > In order to use this feature, you need to add `:plug` as a dependency.
 
@@ -29,12 +29,10 @@ defmodule Kino.Proxy do
   Using the proxy feature, we can use Livebook apps to build APIs.
   For example, we could provide a data export endpoint:
 
-      data = <<...>>
-      token = "auth-token"
 
       Kino.Proxy.listen(fn
         %{path_info: ["export", "data"]} = conn ->
-          ["Bearer " <> ^token] = Plug.Conn.get_req_header(conn, "authorization")
+          data = "some data"
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/csv")
@@ -46,8 +44,32 @@ defmodule Kino.Proxy do
           |> Plug.Conn.send_resp(200, "use /export/data to get extract the report data")
       end)
 
-  Once deployed as an app, the user would be able to export the data
+  Once deployed as an app, the API client would be able to export the data
   by sending a request to `/apps/:slug/proxy/export/data`.
+
+  > #### Authentication {: .warning}
+  >
+  > The paths exposed by `Kino.Proxy` don't use the authentication mechanisms
+  > defined in your Livebook instance.
+  >
+  > If you need to authenticate requests, you should
+  > implement your own authentication mechanism. Here's a simple example.
+  >
+  > ```elixir
+  > Kino.Proxy.listen(fn conn ->
+  >   expected_token = "my-secret-api-token"
+  >
+  >   with ["Bearer " <> user_token] <- Plug.Conn.get_req_header(conn, "authorization"),
+  >        true <- Plug.Crypto.secure_compare(user_token, expected_token) do
+  >     Plug.Conn.send_resp(conn, 200, "hello")
+  >   else
+  >     _ ->
+  >       conn
+  >       |> Plug.Conn.put_resp_header("www-authenticate", "Bearer")
+  >       |> Plug.Conn.send_resp(401, "Unauthorized")
+  >   end
+  > end)
+  > ```
   """
 
   @doc """
