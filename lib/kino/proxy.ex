@@ -57,18 +57,19 @@ defmodule Kino.Proxy do
   >
   > ```elixir
   > Kino.Proxy.listen(fn conn ->
-  >   api_token = "my-secret-api-token"
+  >   expected_token = "my-secret-api-token"
   >
-  >   case Plug.Conn.get_req_header(conn, "authorization") do
-  >     ["Bearer " <> ^api_token] ->
-  >       Plug.Conn.send_resp(conn, 200, "hello")
-  >
+  >   with ["Bearer " <> user_token] <- Plug.Conn.get_req_header(conn, "authorization"),
+  >        true <- Plug.Crypto.secure_compare(user_token, expected_token) do
+  >     Plug.Conn.send_resp(conn, 200, "hello")
+  >   else
   >     _ ->
   >       conn
   >       |> Plug.Conn.put_resp_header("www-authenticate", "Bearer")
   >       |> Plug.Conn.send_resp(401, "Unauthorized")
   >   end
   > end)
+  > ```
   """
 
   @doc """
