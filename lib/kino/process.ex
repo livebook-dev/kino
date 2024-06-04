@@ -10,7 +10,7 @@ defmodule Kino.Process do
   @mermaid_classdefs """
   classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
   classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-  classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+  classDef worker fill:#66c2a5, stroke:#374151, stroke-width:1px;
   classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
   classDef ets fill:#a5f3fc, stroke:#374151, stroke-width:1px;
   """
