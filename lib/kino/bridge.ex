@@ -211,6 +211,14 @@ defmodule Kino.Bridge do
   end
 
   @doc """
+  Returns directories with `.beam` files tied to the current runtime.
+  """
+  @spec get_beam_paths() :: {:ok, String.t()} | {:error, :not_available} | request_error()
+  def get_beam_paths() do
+    with {:ok, reply} <- io_request(:livebook_get_beam_paths), do: reply
+  end
+
+  @doc """
   Starts monitoring clients presence from the given process.
 
   The monitoring process receives the following messages:

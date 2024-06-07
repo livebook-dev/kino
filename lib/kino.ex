@@ -522,6 +522,18 @@ defmodule Kino do
   end
 
   @doc """
+  Returns the directories that contain `.beam` files for modules
+  defined in the notebook.
+  """
+  @spec beam_paths() :: list(String.t())
+  def beam_paths() do
+    case Kino.Bridge.get_beam_paths() do
+      {:ok, paths} -> paths
+      _ -> []
+    end
+  end
+
+  @doc """
   Recompiles dependenies.
 
   Once you have installed dependencies with `Mix.install/1`, this will
