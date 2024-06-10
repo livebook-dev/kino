@@ -43,14 +43,23 @@ defmodule Kino.DataTable do
       data. Sorting requires traversal of the whole enumerable, so it
       may not be desirable for large lazy enumerables. Defaults to `true`
 
+   * `:formatter` - a 2-arity function that is used to format the data
+     in the table. The first parameter passed is the `key` (column name) and
+     the second is the value to be formatted. When formatting column headings
+     the key is the special value `:__column__`. Defaults to the builtin
+     formatter.
+
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
     name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
+    formatter = Keyword.get(opts, :formatter, &__MODULE__.value_to_string/2)
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
 
-    Kino.Table.new(__MODULE__, {data_rows, data_columns, count, name, sorting_enabled, inspected},
+    Kino.Table.new(
+      __MODULE__,
+      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter},
       export: fn state -> {"text", state.inspected} end
     )
   end
@@ -83,7 +92,8 @@ defmodule Kino.DataTable do
   """
   def update(kino, tabular, opts \\ []) do
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
-    Kino.Table.update(kino, {data_rows, data_columns, count, inspected})
+    formatter = Keyword.get(opts, :formatter, &__MODULE__.value_to_string/2)
+    Kino.Table.update(kino, {data_rows, data_columns, count, inspected, formatter})
   end
 
   defp prepare_data(tabular, opts) do
@@ -162,7 +172,7 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def init({data_rows, data_columns, count, name, sorting_enabled, inspected}) do
+  def init({data_rows, data_columns, count, name, sorting_enabled, inspected, formatter}) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
     info = %{name: name, features: features}
 
@@ -174,8 +184,10 @@ defmodule Kino.DataTable do
        total_rows: count,
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,
-       columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end),
-       inspected: inspected
+       columns:
+         Enum.map(data_columns, fn key -> %{key: key, label: formatter.(:__column__, key)} end),
+       inspected: inspected,
+       formatter: formatter
      }}
   end
 
@@ -256,7 +268,9 @@ defmodule Kino.DataTable do
 
     data =
       Enum.map(records, fn record ->
-        Enum.map(state.columns, &(Map.fetch!(record, &1.key) |> value_to_string()))
+        Enum.map(state.columns, fn column ->
+          state.formatter.(column.key, Map.fetch!(record, column.key))
+        end)
       end)
 
     total_rows = count || state.total_rows
@@ -279,9 +293,10 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(value) when is_atom(value), do: inspect(value)
+  @doc false
+  def value_to_string(_key, value) when is_atom(value), do: inspect(value)
 
-  defp value_to_string(value) when is_list(value) do
+  def value_to_string(_key, value) when is_list(value) do
     if List.ascii_printable?(value) do
       List.to_string(value)
     else
@@ -289,7 +304,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(value) when is_binary(value) do
+  def value_to_string(_key, value) when is_binary(value) do
     inspect_opts = Inspect.Opts.new([])
 
     if String.printable?(value, inspect_opts.limit) do
@@ -299,7 +314,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(value) do
+  def value_to_string(_key, value) do
     if mod = String.Chars.impl_for(value) do
       mod.to_string(value)
     else
@@ -308,7 +323,7 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def on_update({data_rows, data_columns, count, inspected}, state) do
+  def on_update({data_rows, data_columns, count, inspected, formatter}, state) do
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
     {:ok,
@@ -318,8 +333,10 @@ defmodule Kino.DataTable do
          total_rows: count,
          slicing_fun: slicing_fun,
          slicing_cache: slicing_cache,
-         columns: Enum.map(data_columns, fn key -> %{key: key, label: value_to_string(key)} end),
-         inspected: inspected
+         columns:
+           Enum.map(data_columns, fn key -> %{key: key, label: formatter.(:__column__, key)} end),
+         inspected: inspected,
+         formatter: formatter
      }}
   end
 end
