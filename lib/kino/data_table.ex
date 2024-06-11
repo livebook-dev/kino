@@ -292,10 +292,9 @@ defmodule Kino.DataTable do
     end
   end
 
-  @doc false
-  def value_to_string(_key, value) when is_atom(value), do: inspect(value)
+  defp value_to_string(_key, value) when is_atom(value), do: inspect(value)
 
-  def value_to_string(_key, value) when is_list(value) do
+  defp value_to_string(_key, value) when is_list(value) do
     if List.ascii_printable?(value) do
       List.to_string(value)
     else
@@ -303,7 +302,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  def value_to_string(_key, value) when is_binary(value) do
+  defp value_to_string(_key, value) when is_binary(value) do
     inspect_opts = Inspect.Opts.new([])
 
     if String.printable?(value, inspect_opts.limit) do
@@ -313,7 +312,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  def value_to_string(_key, value) do
+  defp value_to_string(_key, value) do
     if mod = String.Chars.impl_for(value) do
       mod.to_string(value)
     else
