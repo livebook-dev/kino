@@ -46,7 +46,7 @@ defmodule Kino.DataTable do
    * `:formatter` - a 2-arity function that is used to format the data
      in the table. The first parameter passed is the `key` (column name) and
      the second is the value to be formatted. When formatting column headings
-     the key is the special value `:__column__`. Defaults to the builtin
+     the key is the special value `:__header__`. Defaults to the builtin
      formatter.
 
   """
@@ -54,7 +54,7 @@ defmodule Kino.DataTable do
   def new(tabular, opts \\ []) do
     name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
-    formatter = Keyword.get(opts, :formatter, &__MODULE__.value_to_string/2)
+    formatter = Keyword.get(opts, :formatter)
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
 
     Kino.Table.new(
@@ -184,7 +184,9 @@ defmodule Kino.DataTable do
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,
        columns:
-         Enum.map(data_columns, fn key -> %{key: key, label: formatter.(:__column__, key)} end),
+         Enum.map(data_columns, fn key ->
+           %{key: key, label: value_to_string(:__header__, key, formatter)}
+         end),
        inspected: inspected,
        formatter: formatter
      }}
@@ -268,7 +270,7 @@ defmodule Kino.DataTable do
     data =
       Enum.map(records, fn record ->
         Enum.map(state.columns, fn column ->
-          state.formatter.(column.key, Map.fetch!(record, column.key))
+          value_to_string(column.key, Map.fetch!(record, column.key), state.formatter)
         end)
       end)
 
@@ -289,6 +291,17 @@ defmodule Kino.DataTable do
       {records, Enum.count(sorted), slicing_cache}
     else
       slicing_fun.(rows_spec.offset, rows_spec.limit, slicing_cache)
+    end
+  end
+
+  defp value_to_string(key, value, nil) do
+    value_to_string(key, value)
+  end
+
+  defp value_to_string(key, value, formatter) do
+    case formatter.(key, value) do
+      {:ok, string} -> string
+      :default -> value_to_string(key, value)
     end
   end
 
@@ -333,10 +346,9 @@ defmodule Kino.DataTable do
          slicing_cache: slicing_cache,
          columns:
            Enum.map(data_columns, fn key ->
-             %{key: key, label: state.formatter.(:__column__, key)}
+             %{key: key, label: value_to_string(:__header__, key, state.formatter)}
            end),
-         inspected: inspected,
-         formatter: state.formatter
+         inspected: inspected
      }}
   end
 end
