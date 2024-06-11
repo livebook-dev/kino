@@ -275,6 +275,21 @@ defmodule Kino.DataTableTest do
     })
   end
 
+  test "supports a formatter option" do
+    entries = %{x: 1..3, y: [1.1, 1.2, 1.3]}
+    formatter = &Kino.DataTable.Formatter.format/2
+    kino = Kino.DataTable.new(entries, keys: [:x, :y], formatter: formatter)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: "X"}, %{key: "1", label: "Y"}],
+               data: [["__1__", "1.1"], ["__2__", "1.2"], ["__3__", "1.3"] | _],
+               total_rows: 3
+             }
+           } = data
+  end
+
   test "supports data update" do
     entries = [
       %User{id: 1, name: "Sherlock Holmes"},
