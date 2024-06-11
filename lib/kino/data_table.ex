@@ -92,8 +92,7 @@ defmodule Kino.DataTable do
   """
   def update(kino, tabular, opts \\ []) do
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
-    formatter = Keyword.get(opts, :formatter, &__MODULE__.value_to_string/2)
-    Kino.Table.update(kino, {data_rows, data_columns, count, inspected, formatter})
+    Kino.Table.update(kino, {data_rows, data_columns, count, inspected})
   end
 
   defp prepare_data(tabular, opts) do
@@ -323,7 +322,7 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def on_update({data_rows, data_columns, count, inspected, formatter}, state) do
+  def on_update({data_rows, data_columns, count, inspected}, state) do
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
     {:ok,
@@ -334,9 +333,11 @@ defmodule Kino.DataTable do
          slicing_fun: slicing_fun,
          slicing_cache: slicing_cache,
          columns:
-           Enum.map(data_columns, fn key -> %{key: key, label: formatter.(:__column__, key)} end),
+           Enum.map(data_columns, fn key ->
+             %{key: key, label: state.formatter.(:__column__, key)}
+           end),
          inspected: inspected,
-         formatter: formatter
+         formatter: state.formatter
      }}
   end
 end
