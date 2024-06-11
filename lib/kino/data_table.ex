@@ -46,8 +46,9 @@ defmodule Kino.DataTable do
    * `:formatter` - a 2-arity function that is used to format the data
      in the table. The first parameter passed is the `key` (column name) and
      the second is the value to be formatted. When formatting column headings
-     the key is the special value `:__header__`. Defaults to the builtin
-     formatter.
+     the key is the special value `:__header__`. The formatter function must
+     return either `{:ok, string}` or `:default`. When the return value is
+     `:default` the default data table formatting is applied.
 
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
