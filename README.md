@@ -27,6 +27,7 @@ use cases. The officially supported ones are:
   * [`kino_maplibre`](https://github.com/livebook-dev/kino_maplibre) - for map plotting
   * [`kino_slack`](https://github.com/livebook-dev/kino_slack) - for Slack integration
   * [`kino_vega_lite`](https://github.com/livebook-dev/kino_vega_lite) - for data charting
+  * [`kino_benchee`](https://github.com/livebook-dev/kino_benchee/tree/main) - for rendering Benchee test results
 
 ## License
 
