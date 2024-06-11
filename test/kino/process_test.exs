@@ -114,10 +114,91 @@ defmodule Kino.ProcessTest do
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
 
+    # Process.set_label/1 was addeed in Elixir 1.17.0
+    if function_exported?(Process, :set_label, 1) do
+      test "uses process label in the diagram to identify a process" do
+        process_label = "my task"
+
+        supervisor =
+          start_supervised!(%{
+            id: Supervisor,
+            start:
+              {Supervisor, :start_link,
+               [
+                 [
+                   {Task,
+                    fn ->
+                      Process.set_label(process_label)
+                      Process.sleep(:infinity)
+                    end}
+                 ],
+                 [name: :supervisor_parent, strategy: :one_for_one]
+               ]}
+          })
+
+        [{_, task, _, _}] = Supervisor.which_children(supervisor)
+
+        diagram = Kino.Process.sup_tree(supervisor) |> mermaid()
+
+        %{"pid" => pid_text} = Regex.named_captures(~r/#PID(?<pid>.*)/, inspect(task))
+
+        assert diagram =~
+                 "0(supervisor_parent):::root ---> 1(\"#{process_label}<br/>#{pid_text}\"):::worker"
+      end
+    end
+
     test "raises if supervisor does not exist" do
       assert_raise ArgumentError,
                    ~r/the provided identifier :not_a_valid_supervisor does not reference a running process/,
                    fn -> Kino.Process.sup_tree(:not_a_valid_supervisor) end
+    end
+  end
+
+  describe "seq_trace/2" do
+    # Process.set_label/1 was addeed in Elixir 1.17.0
+    if function_exported?(Process, :set_label, 1) do
+      test "uses process label to identify a process" do
+        parent = self()
+        process_label = "ponger"
+
+        trace_function = fn ->
+          child =
+            spawn(fn ->
+              Process.set_label(process_label)
+
+              receive do
+                :ping ->
+                  send(parent, :pong)
+              end
+            end)
+
+          send(child, :ping)
+
+          receive do
+            :pong -> :ponged!
+          end
+        end
+
+        {_func_result, diagram} = Kino.Process.seq_trace(trace_function)
+        diagram = mermaid(diagram)
+
+        assert diagram =~ ~r/participant 1 AS #{process_label}<br\/><0.\d+.0>;/
+      end
+    end
+  end
+
+  defmodule Ponger do
+    def start_link(process_label) do
+      Task.start_link(fn -> ponger(process_label) end)
+    end
+
+    defp ponger(process_label) do
+      Process.set_label(process_label)
+
+      receive do
+        {:ping, from} ->
+          send(from, :pong)
+      end
     end
   end
 
