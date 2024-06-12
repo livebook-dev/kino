@@ -277,14 +277,19 @@ defmodule Kino.DataTableTest do
 
   test "supports a formatter option" do
     entries = %{x: 1..3, y: [1.1, 1.2, 1.3]}
-    formatter = &Kino.DataTable.Formatter.format/2
+    formatter =
+      fn
+        :__header__, value -> {:ok, "h:#{value}"}
+        :x, value when is_integer(value) -> {:ok, "x:#{value}"}
+        _, _ -> :default
+      end
     kino = Kino.DataTable.new(entries, keys: [:x, :y], formatter: formatter)
     data = connect(kino)
 
     assert %{
              content: %{
-               columns: [%{key: "0", label: "X"}, %{key: "1", label: "Y"}],
-               data: [["__1__", "1.1"], ["__2__", "1.2"], ["__3__", "1.3"] | _],
+               columns: [%{key: "0", label: "h:x"}, %{key: "1", label: "h:y"}],
+               data: [["x:1", "1.1"], ["x:2", "1.2"], ["x:3", "1.3"]],
                total_rows: 3
              }
            } = data
