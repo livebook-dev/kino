@@ -454,7 +454,7 @@ defmodule Kino.Process do
   end
 
   defp format_for_mermaid_participant_alias(pid, process_label) do
-    %{"pid" => pid_text} = Regex.named_captures(~r/#PID(?<pid>.*)/, inspect(pid))
+    pid_text = :erlang.pid_to_list(pid) |> List.to_string()
 
     participant_alias = "#{inspect(process_label)}<br/>#{pid_text}"
     String.replace(participant_alias, "\"", "")
@@ -786,7 +786,7 @@ defmodule Kino.Process do
   end
 
   defp format_for_mermaid_graph_node(pid, process_label) do
-    %{"pid" => pid_text} = Regex.named_captures(~r/#PID(?<pid>.*)/, inspect(pid))
+    pid_text = :erlang.pid_to_list(pid) |> List.to_string()
 
     "#{inspect(process_label)}<br/>#{pid_text}"
     |> String.replace("\"", "")
