@@ -187,21 +187,6 @@ defmodule Kino.ProcessTest do
     end
   end
 
-  defmodule Ponger do
-    def start_link(process_label) do
-      Task.start_link(fn -> ponger(process_label) end)
-    end
-
-    defp ponger(process_label) do
-      Process.set_label(process_label)
-
-      receive do
-        {:ping, from} ->
-          send(from, :pong)
-      end
-    end
-  end
-
   defp mermaid(%Kino.JS{ref: ref}) do
     send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
     assert_receive {:connect_reply, data, %{ref: ^ref}}
