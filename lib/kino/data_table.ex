@@ -295,20 +295,20 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(key, value, nil) do
-    value_to_string(key, value)
+  defp value_to_string(_key, value, nil) do
+    value_to_string(value)
   end
 
   defp value_to_string(key, value, formatter) do
     case formatter.(key, value) do
       {:ok, string} -> string
-      :default -> value_to_string(key, value)
+      :default -> value_to_string(value)
     end
   end
 
-  defp value_to_string(_key, value) when is_atom(value), do: inspect(value)
+  defp value_to_string(value) when is_atom(value), do: inspect(value)
 
-  defp value_to_string(_key, value) when is_list(value) do
+  defp value_to_string(value) when is_list(value) do
     if List.ascii_printable?(value) do
       List.to_string(value)
     else
@@ -316,7 +316,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(_key, value) when is_binary(value) do
+  defp value_to_string(value) when is_binary(value) do
     inspect_opts = Inspect.Opts.new([])
 
     if String.printable?(value, inspect_opts.limit) do
@@ -326,7 +326,7 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(_key, value) do
+  defp value_to_string(value) do
     if mod = String.Chars.impl_for(value) do
       mod.to_string(value)
     else
