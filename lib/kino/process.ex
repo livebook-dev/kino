@@ -771,8 +771,6 @@ defmodule Kino.Process do
     display =
       case process_info(pid, :registered_name) do
         {:registered_name, []} ->
-          inspect(pid)
-
           case get_label(pid) do
             :undefined -> inspect(pid)
             process_label -> format_for_mermaid_graph_node(pid, process_label)
