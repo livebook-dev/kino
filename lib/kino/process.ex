@@ -430,12 +430,11 @@ defmodule Kino.Process do
     {func_result, sequence_diagram}
   end
 
-  defp get_label(pid) do
-    # :proc_lib.get_label/1 was added in OTP 27
-    case function_exported?(:proc_lib, :get_label, 1) do
-      true -> :proc_lib.get_label(pid)
-      false -> :undefined
-    end
+  # :proc_lib.get_label/1 was added in OTP 27
+  if Code.ensure_loaded?(:proc_lib) and function_exported?(:proc_lib, :get_label, 1) do
+    defp get_label(pid), do: :proc_lib.get_label(pid)
+  else
+    defp get_label(_pid), do: :undefined
   end
 
   defp generate_participant_entry(pid, idx, process_label) do
