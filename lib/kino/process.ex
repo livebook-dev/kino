@@ -779,9 +779,9 @@ defmodule Kino.Process do
   defp format_for_mermaid_graph_node(pid, process_label) do
     pid_text = :erlang.pid_to_list(pid) |> List.to_string()
 
-    "#{inspect(process_label)}<br/>#{pid_text}"
-    |> String.replace("\"", "")
-    |> format_as_mermaid_unicode_text()
+    label = process_label |> inspect() |> String.replace(~s{"}, "")
+
+    format_as_mermaid_unicode_text("#{label}<br/>#{pid_text}")
   end
 
   # this is needed to use unicode inside node's text
