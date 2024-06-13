@@ -114,7 +114,7 @@ defmodule Kino.ProcessTest do
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
 
-    # Process.set_label/1 was addeed in Elixir 1.17.0
+    # TODO: remove once we require Elixir v1.17.0
     if function_exported?(Process, :set_label, 1) do
       test "uses process label in the diagram to identify a process" do
         process_label = "my task"
