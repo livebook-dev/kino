@@ -449,8 +449,8 @@ defmodule Kino.Process do
   defp format_for_mermaid_participant_alias(pid, process_label) do
     pid_text = :erlang.pid_to_list(pid) |> List.to_string()
 
-    participant_alias = "#{inspect(process_label)}<br/>#{pid_text}"
-    String.replace(participant_alias, "\"", "")
+    label = process_label |> inspect() |> String.replace(~s{"}, "")
+    "#{label}<br/>#{pid_text}"
   end
 
   defp maybe_add_participant({participants, idx}, pid) when is_pid(pid) do
