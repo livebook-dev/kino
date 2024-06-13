@@ -8,10 +8,10 @@ defmodule Kino.Process do
   alias Kino.Process.Tracer
 
   @mermaid_classdefs """
-  classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-  classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-  classDef worker fill:#66c2a5, stroke:#374151, stroke-width:1px;
-  classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+  classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px, line-height:1.5em;
+  classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px, line-height:1.5em;
+  classDef worker fill:#66c2a5, stroke:#374151, stroke-width:1px, line-height:1.5em;
+  classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px, line-height:1.5em;
   classDef ets fill:#a5f3fc, stroke:#374151, stroke-width:1px;
   """
 
@@ -324,7 +324,7 @@ defmodule Kino.Process do
     previous_tracer = :seq_trace.set_system_tracer(tracer_pid)
 
     # Run the user supplied function and capture the events if no errors were encountered
-    {raw_trace_events, func_result} =
+    {%{raw_trace_events: raw_trace_events, process_labels: process_labels}, func_result} =
       try do
         func_result =
           try do
@@ -336,7 +336,7 @@ defmodule Kino.Process do
             :seq_trace.reset_trace()
           end
 
-        {Tracer.get_trace_events(tracer_pid), func_result}
+        {Tracer.get_trace_info(tracer_pid), func_result}
       after
         # The Tracer GenServer is no longer needed, shut it down
         GenServer.stop(tracer_pid)
@@ -380,7 +380,8 @@ defmodule Kino.Process do
         if pid == calling_pid do
           "participant #{idx} AS self();"
         else
-          generate_participant_entry(pid, idx)
+          process_label = Map.get(process_labels, pid, :undefined)
+          generate_participant_entry(pid, idx, process_label)
         end
       end)
 
@@ -413,6 +414,7 @@ defmodule Kino.Process do
 
     sequence_diagram =
       Mermaid.new("""
+      %%{init: {'themeCSS': '.actor:last-of-type:not(:only-of-type) {dominant-baseline: hanging;}'} }%%
       sequenceDiagram
       #{participants}
       #{messages}
@@ -421,13 +423,34 @@ defmodule Kino.Process do
     {func_result, sequence_diagram}
   end
 
-  defp generate_participant_entry(pid, idx) do
+  # TODO: use :proc_lib.get_label/1 once we require OTP 27
+  if Code.ensure_loaded?(:proc_lib) and function_exported?(:proc_lib, :get_label, 1) do
+    defp get_label(pid), do: :proc_lib.get_label(pid)
+  else
+    defp get_label(_pid), do: :undefined
+  end
+
+  defp generate_participant_entry(pid, idx, process_label) do
     try do
       {:registered_name, name} = process_info(pid, :registered_name)
       "participant #{idx} AS #{module_or_atom_to_string(name)};"
     rescue
-      _ -> "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
+      _ ->
+        case process_label do
+          :undefined ->
+            "participant #{idx} AS #35;PID#{:erlang.pid_to_list(pid)};"
+
+          process_label ->
+            "participant #{idx} AS #{format_for_mermaid_participant_alias(pid, process_label)};"
+        end
     end
+  end
+
+  defp format_for_mermaid_participant_alias(pid, process_label) do
+    pid_text = :erlang.pid_to_list(pid) |> List.to_string()
+
+    label = process_label |> inspect() |> String.replace(~s{"}, "")
+    "#{label}<br/>#{pid_text}"
   end
 
   defp maybe_add_participant({participants, idx}, pid) when is_pid(pid) do
@@ -740,11 +763,31 @@ defmodule Kino.Process do
 
     display =
       case process_info(pid, :registered_name) do
-        {:registered_name, []} -> inspect(pid)
-        {:registered_name, name} -> module_or_atom_to_string(name)
+        {:registered_name, []} ->
+          case get_label(pid) do
+            :undefined -> inspect(pid)
+            process_label -> format_for_mermaid_graph_node(pid, process_label)
+          end
+
+        {:registered_name, name} ->
+          module_or_atom_to_string(name)
       end
 
     "#{idx}(#{display}):::#{type}"
+  end
+
+  defp format_for_mermaid_graph_node(pid, process_label) do
+    pid_text = :erlang.pid_to_list(pid) |> List.to_string()
+
+    label = process_label |> inspect() |> String.replace(~s{"}, "")
+
+    format_as_mermaid_unicode_text("#{label}<br/>#{pid_text}")
+  end
+
+  # this is needed to use unicode inside node's text
+  # (https://mermaid.js.org/syntax/flowchart.html#unicode-text)
+  defp format_as_mermaid_unicode_text(node_text) do
+    "\"#{node_text}\""
   end
 
   defp module_or_atom_to_string(atom) do

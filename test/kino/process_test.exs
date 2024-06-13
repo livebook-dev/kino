@@ -114,10 +114,91 @@ defmodule Kino.ProcessTest do
       assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
     end
 
+    # TODO: remove once we require Elixir v1.17.0
+    if function_exported?(Process, :set_label, 1) do
+      test "uses process label in the diagram to identify a process" do
+        process_label = "my task"
+
+        supervisor =
+          start_supervised!(%{
+            id: Supervisor,
+            start:
+              {Supervisor, :start_link,
+               [
+                 [
+                   {Task,
+                    fn ->
+                      Process.set_label(process_label)
+                      Process.sleep(:infinity)
+                    end}
+                 ],
+                 [name: :supervisor_parent, strategy: :one_for_one]
+               ]}
+          })
+
+        [{_, task, _, _}] = Supervisor.which_children(supervisor)
+
+        diagram = Kino.Process.sup_tree(supervisor) |> mermaid()
+
+        %{"pid" => pid_text} = Regex.named_captures(~r/#PID(?<pid>.*)/, inspect(task))
+
+        assert diagram =~
+                 "0(supervisor_parent):::root ---> 1(\"#{process_label}<br/>#{pid_text}\"):::worker"
+      end
+    end
+
     test "raises if supervisor does not exist" do
       assert_raise ArgumentError,
                    ~r/the provided identifier :not_a_valid_supervisor does not reference a running process/,
                    fn -> Kino.Process.sup_tree(:not_a_valid_supervisor) end
+    end
+  end
+
+  describe "seq_trace/2" do
+    # Process.set_label/1 was addeed in Elixir 1.17.0
+    if function_exported?(Process, :set_label, 1) do
+      test "uses process label to identify a process" do
+        process_label = "ponger"
+        ponger = start_supervised!({Kino.ProcessTest.Ponger, [label: process_label]})
+
+        traced_function = fn ->
+          send(ponger, {:ping, self()})
+
+          receive do
+            :pong -> :ponged!
+          end
+        end
+
+        {_func_result, diagram} = Kino.Process.seq_trace(traced_function)
+        diagram = mermaid(diagram)
+
+        ponger_pid = :erlang.pid_to_list(ponger) |> List.to_string()
+        assert diagram =~ ~r/participant 1 AS #{process_label}<br\/>#{ponger_pid};/
+      end
+    end
+  end
+
+  defmodule Ponger do
+    use GenServer
+
+    def start_link(opts) do
+      GenServer.start_link(__MODULE__, opts)
+    end
+
+    # Process.set_label/1 was addeed in Elixir 1.17.0
+    @compile {:no_warn_undefined, {Process, :set_label, 1}}
+    @impl true
+    def init(opts) do
+      Process.set_label(opts[:label])
+
+      {:ok, nil}
+    end
+
+    @impl true
+    def handle_info({:ping, from}, state) do
+      send(from, :pong)
+
+      {:noreply, state}
     end
   end
 
