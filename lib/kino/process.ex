@@ -423,7 +423,7 @@ defmodule Kino.Process do
     {func_result, sequence_diagram}
   end
 
-  # :proc_lib.get_label/1 was added in OTP 27
+  # TODO: use :proc_lib.get_label/1 once we require OTP 27
   if Code.ensure_loaded?(:proc_lib) and function_exported?(:proc_lib, :get_label, 1) do
     defp get_label(pid), do: :proc_lib.get_label(pid)
   else
