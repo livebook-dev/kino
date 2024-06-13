@@ -45,12 +45,6 @@ defmodule Kino.Process.Tracer do
     {:noreply, trace_events}
   end
 
-  defp update_process_labels(process_labels, pid1, pid2) do
-    process_labels
-    |> put_new_label(pid1)
-    |> put_new_label(pid2)
-  end
-
   defp put_new_label(process_labels, pid) do
     Map.put_new(process_labels, pid, get_label(pid))
   end
