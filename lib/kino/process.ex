@@ -6,7 +6,6 @@ defmodule Kino.Process do
 
   alias Kino.Mermaid
   alias Kino.Process.Tracer
-  alias Kino.Process.LabelTracer
 
   @mermaid_classdefs """
   classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px, line-height:1.5em;
@@ -316,9 +315,6 @@ defmodule Kino.Process do
 
   def seq_trace(trace_pids, trace_function, opts)
       when is_list(trace_pids) or trace_pids == :all do
-    # Set up the tracer responsible for storing calls to Process.set_label/1
-    {:ok, process_label_tracer_pid} = LabelTracer.start_link()
-
     # Set up the process message tracer and the Erlang seq_trace_module
     calling_pid = self()
     {:ok, tracer_pid} = Tracer.start_link()
@@ -328,7 +324,7 @@ defmodule Kino.Process do
     previous_tracer = :seq_trace.set_system_tracer(tracer_pid)
 
     # Run the user supplied function and capture the events if no errors were encountered
-    {raw_trace_events, func_result} =
+    {%{raw_trace_events: raw_trace_events, process_labels: process_labels}, func_result} =
       try do
         func_result =
           try do
@@ -340,7 +336,7 @@ defmodule Kino.Process do
             :seq_trace.reset_trace()
           end
 
-        {Tracer.get_trace_events(tracer_pid), func_result}
+        {Tracer.get_trace_info(tracer_pid), func_result}
       after
         # The Tracer GenServer is no longer needed, shut it down
         GenServer.stop(tracer_pid)
@@ -377,9 +373,6 @@ defmodule Kino.Process do
         |> maybe_add_participant(from)
         |> maybe_add_participant(to)
       end)
-
-    process_labels = LabelTracer.get_process_labels(process_label_tracer_pid)
-    GenServer.stop(process_label_tracer_pid)
 
     # Generate the Mermaid formatted list of participants
     participants =

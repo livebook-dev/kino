@@ -158,32 +158,47 @@ defmodule Kino.ProcessTest do
     # Process.set_label/1 was addeed in Elixir 1.17.0
     if function_exported?(Process, :set_label, 1) do
       test "uses process label to identify a process" do
-        parent = self()
         process_label = "ponger"
+        ponger = start_supervised!({Kino.ProcessTest.Ponger, [label: process_label]})
 
-        trace_function = fn ->
-          child =
-            spawn(fn ->
-              Process.set_label(process_label)
-
-              receive do
-                :ping ->
-                  send(parent, :pong)
-              end
-            end)
-
-          send(child, :ping)
+        traced_function = fn ->
+          send(ponger, {:ping, self()})
 
           receive do
             :pong -> :ponged!
           end
         end
 
-        {_func_result, diagram} = Kino.Process.seq_trace(trace_function)
+        {_func_result, diagram} = Kino.Process.seq_trace(traced_function)
         diagram = mermaid(diagram)
 
-        assert diagram =~ ~r/participant 1 AS #{process_label}<br\/><0.\d+.0>;/
+        ponger_pid = :erlang.pid_to_list(ponger) |> List.to_string()
+        assert diagram =~ ~r/participant 1 AS #{process_label}<br\/>#{ponger_pid};/
       end
+    end
+  end
+
+  defmodule Ponger do
+    use GenServer
+
+    def start_link(opts) do
+      GenServer.start_link(__MODULE__, opts)
+    end
+
+    # Process.set_label/1 was addeed in Elixir 1.17.0
+    @compile {:no_warn_undefined, {Process, :set_label, 1}}
+    @impl true
+    def init(opts) do
+      Process.set_label(opts[:label])
+
+      {:ok, nil}
+    end
+
+    @impl true
+    def handle_info({:ping, from}, state) do
+      send(from, :pong)
+
+      {:noreply, state}
     end
   end
 
