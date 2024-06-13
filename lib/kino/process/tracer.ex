@@ -46,7 +46,7 @@ defmodule Kino.Process.Tracer do
   end
 
   defp put_new_label(process_labels, pid) do
-    Map.put_new(process_labels, pid, get_label(pid))
+    Map.put_new_lazy(process_labels, pid, fn -> get_label(pid) end)
   end
 
   # :proc_lib.get_label/1 was added in OTP 27
