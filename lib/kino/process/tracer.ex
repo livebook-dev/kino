@@ -33,7 +33,7 @@ defmodule Kino.Process.Tracer do
 
     trace_events = [new_event | trace_info.raw_trace_events]
 
-    process_labels = 
+    process_labels =
       trace_info.process_labels
       |> put_new_label(from)
       |> put_new_label(to)
