@@ -32,7 +32,11 @@ defmodule Kino.Process.Tracer do
     }
 
     trace_events = [new_event | trace_info.raw_trace_events]
-    process_labels = update_process_labels(trace_info.process_labels, from, to)
+
+    process_labels = 
+      trace_info.process_labels
+      |> put_new_label(from)
+      |> put_new_label(to)
 
     {:noreply, %{trace_info | raw_trace_events: trace_events, process_labels: process_labels}}
   end
