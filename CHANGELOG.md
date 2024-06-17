@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/livebook-dev/kino)
+
+### Added
+
+* Smart cell editor options `:intellisense_node` and `:source` ([390](https://github.com/livebook-dev/kino/pull/390))
+* Added `:entrypoint` option on `use Kino.JS` to specify custom entrypoint file ([392](https://github.com/livebook-dev/kino/pull/392))
+* Added `Kino.recompile/0` for recompiling path dependencies from `Mix.install/2` ([399](https://github.com/livebook-dev/kino/pull/399))
+* Added `:message_label` option to `Kino.Process.seq_trace/2` ([411](https://github.com/livebook-dev/kino/pull/411))
+* Added `Kino.Workspace.user_info/1` for getting information about the given client ([412](https://github.com/livebook-dev/kino/pull/412))
+* Support for column relocation in `Kino.Table` ([419](https://github.com/livebook-dev/kino/pull/419))
+* Added `:render_ets_tables` option to `Kino.Process.app_tree/2` ([411](https://github.com/livebook-dev/kino/pull/411))
+* Introduced `Kino.Proxy` for handling requests forwarded from Livebook ([431](https://github.com/livebook-dev/kino/pull/431), [433](https://github.com/livebook-dev/kino/pull/433))
+* Added `Kino.beam_paths/0` ([439](https://github.com/livebook-dev/kino/pull/439))
+* Added `:formatter` option to `Kino.DataTable.new/2` ([441](https://github.com/livebook-dev/kino/pull/441))
+* Support for OTP 27 process labels in `Kino.Process.seq_trace/2` ([442](https://github.com/livebook-dev/kino/pull/442))
+
+### Changed
+
+* Make the smart cell editor source explicitly managed ([391](https://github.com/livebook-dev/kino/pull/391))
+* Deprecated the smart cell editor `:attribute` and infavour of explicitly managing the source with `c:handle_editor_change/2`. See [this commit](https://github.com/livebook-dev/kino_db/commit/2b9ee6387217a732797e687b3fc12d6937932e6c) for an example of how to migrate to the new API ([391](https://github.com/livebook-dev/kino/pull/391))
+* `Kino.Tree` to automatically expand tuples of up to 6 elements ([398](https://github.com/livebook-dev/kino/pull/398))
+* Changed `c:Kino.Table.export_data/2` to accept extra argument with order information ([418](https://github.com/livebook-dev/kino/pull/418))
+* Renamed the `Kino.Hub` module to `Kino.Workspace` ([434](https://github.com/livebook-dev/kino/pull/434))
+
+### Fixed
+
+* Fixed `Kino.DataTable` crashing with empty data ([427](https://github.com/livebook-dev/kino/pull/427))
+* Tables font changing on first hover in Firefox ([435](https://github.com/livebook-dev/kino/pull/435))
+
 ## [v0.12.3](https://github.com/livebook-dev/kino/tree/v0.12.3) (2024-01-22)
 
 ### Added
