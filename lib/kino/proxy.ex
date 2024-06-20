@@ -72,23 +72,55 @@ defmodule Kino.Proxy do
   > ```
   """
 
+  @type plug() ::
+          (Plug.Conn.t() -> Plug.Conn.t())
+          | module()
+          | {module(), term()}
+
   @doc """
   Registers a request listener.
 
-  Expects the listener to be a function that handles a request
-  `Plug.Conn`.
+  Expects the listener to be a plug, that is, one of:
+
+    * a function plug: a `fun(conn)` function that takes a `Plug.Conn` and returns a `Plug.Conn`.
+
+    * a module plug: a `module` atom or a `{module, options}` tuple.
   """
-  @spec listen((Plug.Conn.t() -> Plug.Conn.t())) :: DynamicSupervisor.on_start_child()
-  def listen(fun) when is_function(fun, 1) do
+  @spec listen(plug()) :: DynamicSupervisor.on_start_child()
+  def listen(plug) do
     unless Code.ensure_loaded?(Plug) do
       raise """
-      Plug is required as a dependency to use Kino.Proxy.
-      Please add the following to your Mix.install/2:
+      Plug is required as a dependency to use Kino.Proxy. Please add the following to your Mix.install/2:
 
           {:plug, "~> 1.16"}
 
       """
     end
+
+    fun =
+      case plug do
+        fun when is_function(fun, 1) ->
+          fun
+
+        mod when is_atom(mod) ->
+          opts = mod.init([])
+          &mod.call(&1, opts)
+
+        {mod, opts} when is_atom(mod) ->
+          opts = mod.init(opts)
+          &mod.call(&1, opts)
+
+        other ->
+          raise """
+          expected plug to be one of:
+
+            * fun(conn)
+            * module
+            * {module, options}
+
+          got: #{inspect(other)}
+          """
+      end
 
     case Kino.Bridge.get_proxy_handler_child_spec(fun) do
       {:ok, child_spec} ->
