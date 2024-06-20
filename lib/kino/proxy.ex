@@ -72,15 +72,45 @@ defmodule Kino.Proxy do
   > ```
   """
 
+  @type plug() ::
+          (Plug.Conn.t() -> Plug.Conn.t())
+          | module()
+          | {module(), term()}
+
   @doc """
   Registers a request listener.
 
-  Expects the listener to be a function that handles a request
-  `Plug.Conn`.
+  Expects the listener to be a plug, that is, one of:
+
+    * a function plug: a `fun(conn)` function that takes a `Plug.Conn` and returns a `Plug.Conn`.
+
+    * a module plug: a `module` atom or a `{module, options}` tuple.
   """
-  @spec listen((Plug.Conn.t() -> Plug.Conn.t())) :: DynamicSupervisor.on_start_child()
-  def listen(fun) when is_function(fun, 1) do
-    case Kino.Bridge.get_proxy_handler_child_spec(fun) do
+  @spec listen(plug()) :: DynamicSupervisor.on_start_child()
+  def listen(plug) do
+    case plug do
+      fun when is_function(fun, 1) ->
+        :ok
+
+      mod when is_atom(mod) ->
+        :ok
+
+      {mod, _opts} when is_atom(mod) ->
+        :ok
+
+      other ->
+        raise """
+        expected plug to be one of:
+
+          * fun(conn)
+          * module
+          * {module, options}
+
+        got: #{inspect(other)}
+        """
+    end
+
+    case Kino.Bridge.get_proxy_handler_child_spec(plug) do
       {:ok, child_spec} ->
         Kino.start_child(child_spec)
 

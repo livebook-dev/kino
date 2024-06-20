@@ -259,12 +259,12 @@ defmodule Kino.Bridge do
   end
 
   @doc """
-  Requests the child spec for proxy handler with the given function.
+  Requests the child spec for proxy handler with the given plug.
   """
-  @spec get_proxy_handler_child_spec((Plug.Conn.t() -> Plug.Conn.t())) ::
+  @spec get_proxy_handler_child_spec(Kino.Proxy.plug()) ::
           {:ok, {module(), term()}} | request_error()
-  def get_proxy_handler_child_spec(fun) do
-    io_request({:livebook_get_proxy_handler_child_spec, fun})
+  def get_proxy_handler_child_spec(plug) do
+    io_request({:livebook_get_proxy_handler_child_spec, plug})
   end
 
   defp io_request(request) do
