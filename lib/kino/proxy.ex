@@ -88,29 +88,32 @@ defmodule Kino.Proxy do
   """
   @spec listen(plug()) :: DynamicSupervisor.on_start_child()
   def listen(plug) do
-    case plug do
-      fun when is_function(fun, 1) ->
-        :ok
+    fun =
+      case plug do
+        fun when is_function(fun, 1) ->
+          fun
 
-      mod when is_atom(mod) ->
-        :ok
+        mod when is_atom(mod) ->
+          opts = mod.init([])
+          &mod.call(&1, opts)
 
-      {mod, _opts} when is_atom(mod) ->
-        :ok
+        {mod, opts} when is_atom(mod) ->
+          opts = mod.init(opts)
+          &mod.call(&1, opts)
 
-      other ->
-        raise """
-        expected plug to be one of:
+        other ->
+          raise """
+          expected plug to be one of:
 
-          * fun(conn)
-          * module
-          * {module, options}
+            * fun(conn)
+            * module
+            * {module, options}
 
-        got: #{inspect(other)}
-        """
-    end
+          got: #{inspect(other)}
+          """
+      end
 
-    case Kino.Bridge.get_proxy_handler_child_spec(plug) do
+    case Kino.Bridge.get_proxy_handler_child_spec(fun) do
       {:ok, child_spec} ->
         Kino.start_child(child_spec)
 
