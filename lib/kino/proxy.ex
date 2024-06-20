@@ -88,6 +88,15 @@ defmodule Kino.Proxy do
   """
   @spec listen(plug()) :: DynamicSupervisor.on_start_child()
   def listen(plug) do
+    unless Code.ensure_loaded?(Plug) do
+      raise """
+      Plug is required as a dependency to use Kino.Proxy. Please add the following to your Mix.install/2:
+
+          {:plug, "~> 1.16"}
+
+      """
+    end
+
     fun =
       case plug do
         fun when is_function(fun, 1) ->
