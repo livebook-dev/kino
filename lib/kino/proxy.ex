@@ -4,11 +4,11 @@ defmodule Kino.Proxy do
 
   Livebook proxies requests at the following paths:
 
-    * `/sessions/:id/proxy/*path` - a notebook session
+    * `/proxy/sessions/:id/*path` - a notebook session
 
-    * `/apps/:slug/:session_id/proxy/*path` - a specific app session
+    * `/proxy/apps/:slug/sessions/:session_id/*path` - a specific app session
 
-    * `/apps/:slug/proxy/*path` - generic app path, only supported for
+    * `/proxy/apps/:slug/*path` - generic app path, only supported for
       single-session apps. If the app has automatic shutdowns enabled
       and it is not currently running, it will be automatically started
 
