@@ -20,9 +20,13 @@ defmodule Kino.ProcessTest do
       ] = Supervisor.which_children(pid)
 
       content = pid |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
+      agent_pid_text = :erlang.pid_to_list(agent_pid) |> List.to_string()
+
       assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
 
       assert content =~
                "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
@@ -33,7 +37,9 @@ defmodule Kino.ProcessTest do
       content = :supervisor_parent |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
 
       assert content =~
                "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
@@ -52,15 +58,22 @@ defmodule Kino.ProcessTest do
       ] = Supervisor.which_children(pid)
 
       content = pid |> Kino.Process.sup_tree() |> mermaid()
+      agent_pid_text = :erlang.pid_to_list(agent_pid) |> List.to_string()
       assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
       refute content =~ ":::ets"
 
       content = :supervisor_parent |> Kino.Process.sup_tree() |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 3(#{inspect(agent_pid)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
       refute content =~ ":::ets"
     end
 
@@ -81,14 +94,19 @@ defmodule Kino.ProcessTest do
         })
 
       [_, {_, agent, _, _}] = Supervisor.which_children(pid)
+      agent_pid_text = :erlang.pid_to_list(agent) |> List.to_string()
 
       content = Kino.Process.sup_tree(pid) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
 
       content = Kino.Process.sup_tree(:supervisor_parent) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
     end
 
     test "shows supervision tree with children alongside non-started children" do
@@ -108,10 +126,13 @@ defmodule Kino.ProcessTest do
         })
 
       [{:not_started, :undefined, _, _}, {_, agent, _, _}] = Supervisor.which_children(pid)
+      agent_pid_text = :erlang.pid_to_list(agent) |> List.to_string()
 
       content = Kino.Process.sup_tree(pid) |> mermaid()
       assert content =~ "0(supervisor_parent):::root ---> 1(id: :not_started):::notstarted"
-      assert content =~ "0(supervisor_parent):::root ---> 2(#{inspect(agent)}):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
     end
 
     # TODO: remove once we require Elixir v1.17.0

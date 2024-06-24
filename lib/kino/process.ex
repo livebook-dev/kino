@@ -751,7 +751,7 @@ defmodule Kino.Process do
     "#{idx}[(\"`#{module_or_atom_to_string(id)}\n**_#{protection}_**`\")]:::ets"
   end
 
-  defp graph_node(%{idx: idx, pid: pid, type: type}) do
+  defp graph_node(%{idx: idx, id: id, pid: pid, type: type}) do
     type =
       if idx == 0 do
         :root
@@ -763,8 +763,16 @@ defmodule Kino.Process do
       case process_info(pid, :registered_name) do
         {:registered_name, []} ->
           case get_label(pid) do
-            :undefined -> inspect(pid)
-            process_label -> format_for_mermaid_graph_node(pid, process_label)
+            :undefined ->
+              if idx == 0 do
+                inspect(pid)
+              else
+                # Use worker/supervisor id as label
+                format_for_mermaid_graph_node(pid, id)
+              end
+
+            process_label ->
+              format_for_mermaid_graph_node(pid, process_label)
           end
 
         {:registered_name, name} ->
