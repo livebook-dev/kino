@@ -763,8 +763,16 @@ defmodule Kino.Process do
       case process_info(pid, :registered_name) do
         {:registered_name, []} ->
           case get_label(pid) do
-            :undefined -> format_for_mermaid_graph_node(pid, id)
-            process_label -> format_for_mermaid_graph_node(pid, process_label)
+            :undefined ->
+              if idx == 0 do
+                inspect(pid)
+              else
+                # Use worker/supervisor id as label
+                format_for_mermaid_graph_node(pid, id)
+              end
+
+            process_label ->
+              format_for_mermaid_graph_node(pid, process_label)
           end
 
         {:registered_name, name} ->
