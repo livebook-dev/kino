@@ -62,9 +62,18 @@ defmodule Kino.Bridge do
   Note that the input must be known to Livebook, otherwise
   an error is returned.
   """
-  @spec get_input_value(String.t()) :: {:ok, term()} | {:error, :not_found} | request_error()
+  @spec get_input_value(String.t()) ::
+          {:ok, term()} | {:error, :not_found} | {:error, :bad_process} | request_error()
   def get_input_value(input_id) do
-    with {:ok, reply} <- io_request({:livebook_get_input_value, input_id}), do: reply
+    pid = self()
+
+    io_request_result =
+      with {:request_error, :unsupported} <-
+             io_request({:livebook_get_input_value, input_id, pid}),
+           # Livebook <= v0.13.2 does not support the request with pid
+           do: io_request({:livebook_get_input_value, input_id})
+
+    with {:ok, reply} <- io_request_result, do: reply
   end
 
   @doc """
