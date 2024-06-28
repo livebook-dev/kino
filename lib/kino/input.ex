@@ -746,6 +746,14 @@ defmodule Kino.Input do
         raise "failed to read input value, input not found." <>
                 " Make sure to render the input before reading its value"
 
+      {:error, :bad_process} ->
+        raise "input value can only be read in the main evaluation process," <>
+                " but Kino.Input.read/1 was called by another process." <>
+                " You can read the input value upfront and pass it to the process." <>
+                " In case you want to read the latest input value from a long-running" <>
+                " process, consider using Kino.Control.form/2, or subscribing to the" <>
+                " input change using one of the functions in the Kino.Control module"
+
       {:request_error, reason} ->
         raise "failed to read input value, reason: #{inspect(reason)}"
     end
