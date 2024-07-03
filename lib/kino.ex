@@ -428,7 +428,7 @@ defmodule Kino do
   > or `c:Kino.JS.Live.init/2`. If you do that, starting the process
   > will block forever.
   >
-  > Creating many kinos uses `start_child/1` underneath, which means
+  > On creation, many kinos use `start_child/1` underneath, which means
   > that you cannot use functions such as `Kino.DataTable.new/1` in
   > `c:GenServer.init/1`. If you need to do that, you must either
   > create the kinos beforehand and pass in the `GenServer` argument,
