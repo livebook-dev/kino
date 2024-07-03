@@ -201,6 +201,9 @@ defmodule Kino.JS.Live do
   Invoked when the server is started.
 
   See `c:GenServer.init/1` for more details.
+
+  If you want to create other kinos on initialization, see the
+  limitations described in `Kino.start_child/1`.
   """
   @callback init(arg :: term(), ctx :: Context.t()) ::
               {:ok, ctx :: Context.t()} | {:ok, ctx :: Context.t(), opts :: keyword()}
