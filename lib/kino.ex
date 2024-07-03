@@ -428,9 +428,11 @@ defmodule Kino do
   > or `c:Kino.JS.Live.init/2`. If you do that, starting the process
   > will block forever.
   >
-  > Note that creating many kinos uses `start_child/1` underneath,
-  > hence the same restriction applies to starting those. See
-  > `c:Kino.JS.Live.init/2` for more details.
+  > On creation, many kinos use `start_child/1` underneath, which means
+  > that you cannot use functions such as `Kino.DataTable.new/1` in
+  > `c:GenServer.init/1`. If you need to do that, you must either
+  > create the kinos beforehand and pass in the `GenServer` argument,
+  > or create them in `c:GenServer.handle_continue/2`.
   """
   @spec start_child(
           Supervisor.child_spec()

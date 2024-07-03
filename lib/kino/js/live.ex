@@ -202,44 +202,8 @@ defmodule Kino.JS.Live do
 
   See `c:GenServer.init/1` for more details.
 
-  > #### Starting other kinos {: .warning}
-  >
-  > It is generally not possible to start kinos inside the `c:init/2`
-  > callback, as such operation would block forever. In case you need
-  > to start other kinos during initialization, you must start them
-  > beforehand and pass as an argument to `c:init/2`. So instead of
-  >
-  >     defmodule KinoDocs.Custom do
-  >       def new() do
-  >         Kino.JS.Live.new(__MODULE__, {})
-  >       end
-  >
-  >       @impl true
-  >       def init({}, ctx) do
-  >         frame = Kino.Frame.new()
-  >         {:ok, assign(ctx, frame: frame)}
-  >       end
-  >
-  >       ...
-  >     end
-  >
-  > do the following
-  >
-  >     defmodule KinoDocs.Custom do
-  >       def new() do
-  >         frame = Kino.Frame.new()
-  >         Kino.JS.Live.new(__MODULE__, {frame})
-  >       end
-  >
-  >       @impl true
-  >       def init({frame}, ctx) do
-  >         {:ok, assign(ctx, frame: frame)}
-  >       end
-  >
-  >       ...
-  >     end
-  >
-  > Also see `Kino.start_child/1`.
+  If you want to create other kinos on initialization, see the
+  limitations described in `Kino.start_child/1`.
   """
   @callback init(arg :: term(), ctx :: Context.t()) ::
               {:ok, ctx :: Context.t()} | {:ok, ctx :: Context.t(), opts :: keyword()}
