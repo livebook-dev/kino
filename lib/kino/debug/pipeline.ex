@@ -31,6 +31,8 @@ defmodule Kino.Debug.Pipeline do
 
     %{id: last_id} = List.last(items)
 
+    send(self(), :update_result_frame)
+
     {:ok,
      ctx
      |> assign(
@@ -44,8 +46,7 @@ defmodule Kino.Debug.Pipeline do
        error: nil,
        call_count: 1,
        changed?: false
-     )
-     |> update_result_frame()}
+     )}
   end
 
   @impl true
@@ -125,6 +126,10 @@ defmodule Kino.Debug.Pipeline do
     ctx = update(ctx, :call_count, &(&1 + 1))
     broadcast_event(ctx, "call_count_updated", %{"call_count" => ctx.assigns.call_count})
     {:noreply, ctx}
+  end
+
+  def handle_info(:update_result_frame, ctx) do
+    {:noreply, update_result_frame(ctx)}
   end
 
   defp handle_items_change(ctx, items) do

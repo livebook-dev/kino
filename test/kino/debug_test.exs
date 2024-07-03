@@ -54,6 +54,23 @@ defmodule Kino.Debug.Test do
       assert dbg_line == __ENV__.line - 28
     end
 
+    test "initial render with result requiring Kino.start_child/1" do
+      # Rendering %UserAsTable{} creates a Kino.JS.Live
+      call_dbg(
+        %UserAsTable{id: 1}
+        |> Map.replace!(:id, 2)
+        |> Map.replace!(:id, 3)
+      )
+
+      {_kino, _output, frame_ref} = assert_dbg_pipeline_render()
+
+      assert_output(%{
+        type: :frame_update,
+        ref: ^frame_ref,
+        update: {:replace, [%{type: :js}]}
+      })
+    end
+
     test "updates result when a pipeline step is disabled" do
       call_dbg(
         1..5
