@@ -1,7 +1,7 @@
 defmodule Kino.MixProject do
   use Mix.Project
 
-  @version "0.13.1"
+  @version "0.13.2"
   @description "Interactive widgets for Livebook"
 
   def project do
@@ -63,12 +63,12 @@ defmodule Kino.MixProject do
       logo: "images/kino_without_text.png",
       groups_for_modules: [
         # Kino
-        # Kino.Hub
         # Kino.Control
         # Kino.Frame
         # Kino.Input
         # Kino.Process
         # Kino.Shorts
+        # Kino.Workspace
         "Built-in Kinos": [
           Kino.Audio,
           Kino.DataTable,
