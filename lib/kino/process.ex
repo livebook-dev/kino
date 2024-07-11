@@ -764,7 +764,7 @@ defmodule Kino.Process do
         {:registered_name, []} ->
           case get_label(pid) do
             :undefined ->
-              if idx == 0 do
+              if idx == 0 || id == :undefined do
                 inspect(pid)
               else
                 # Use worker/supervisor id as label
