@@ -33,5 +33,11 @@ defmodule Kino.AudioTest do
       Kino.Audio.play(kino)
       assert_broadcast_event(kino, "play", %{})
     end
+
+    test "broadcasts pause to javascript" do
+      kino = Kino.Audio.new(<<>>, :wav)
+      Kino.Audio.pause(kino)
+      assert_broadcast_event(kino, "pause", %{})
+    end
   end
 end

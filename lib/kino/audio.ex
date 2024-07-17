@@ -68,6 +68,14 @@ defmodule Kino.Audio do
     Kino.JS.Live.cast(kino, {:play})
   end
 
+  @doc """
+  Makes a given kino stop playing the audio.
+  """
+  @spec pause(t()) :: :ok
+  def pause(kino) do
+    Kino.JS.Live.cast(kino, {:pause})
+  end
+
   @impl true
   def init(assigns, ctx) do
     {:ok, assign(ctx, assigns)}
@@ -82,6 +90,12 @@ defmodule Kino.Audio do
   @impl true
   def handle_cast({:play}, ctx) do
     broadcast_event(ctx, "play", %{})
+    {:noreply, ctx}
+  end
+
+  @impl true
+  def handle_cast({:pause}, ctx) do
+    broadcast_event(ctx, "pause", %{})
     {:noreply, ctx}
   end
 
