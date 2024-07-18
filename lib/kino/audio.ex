@@ -65,7 +65,7 @@ defmodule Kino.Audio do
   """
   @spec play(t()) :: :ok
   def play(kino) do
-    Kino.JS.Live.cast(kino, {:play})
+    Kino.JS.Live.cast(kino, :play)
   end
 
   @doc """
@@ -73,7 +73,7 @@ defmodule Kino.Audio do
   """
   @spec pause(t()) :: :ok
   def pause(kino) do
-    Kino.JS.Live.cast(kino, {:pause})
+    Kino.JS.Live.cast(kino, :pause)
   end
 
   @impl true
@@ -88,13 +88,12 @@ defmodule Kino.Audio do
   end
 
   @impl true
-  def handle_cast({:play}, ctx) do
+  def handle_cast(:play, ctx) do
     broadcast_event(ctx, "play", %{})
     {:noreply, ctx}
   end
 
-  @impl true
-  def handle_cast({:pause}, ctx) do
+  def handle_cast(:pause, ctx) do
     broadcast_event(ctx, "pause", %{})
     {:noreply, ctx}
   end
