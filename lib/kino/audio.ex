@@ -58,6 +58,24 @@ defmodule Kino.Audio do
     })
   end
 
+  @doc """
+  Makes a given kino play the audio.
+
+  Play has no effect if the audio is already playing.
+  """
+  @spec play(t()) :: :ok
+  def play(kino) do
+    Kino.JS.Live.cast(kino, :play)
+  end
+
+  @doc """
+  Makes a given kino stop playing the audio.
+  """
+  @spec pause(t()) :: :ok
+  def pause(kino) do
+    Kino.JS.Live.cast(kino, :pause)
+  end
+
   @impl true
   def init(assigns, ctx) do
     {:ok, assign(ctx, assigns)}
@@ -67,6 +85,17 @@ defmodule Kino.Audio do
   def handle_connect(%{assigns: %{content: content, type: type, opts: opts}} = ctx) do
     payload = {:binary, %{type: type, opts: opts}, content}
     {:ok, payload, ctx}
+  end
+
+  @impl true
+  def handle_cast(:play, ctx) do
+    broadcast_event(ctx, "play", %{})
+    {:noreply, ctx}
+  end
+
+  def handle_cast(:pause, ctx) do
+    broadcast_event(ctx, "pause", %{})
+    {:noreply, ctx}
   end
 
   defp mime_type!(:wav), do: "audio/wav"

@@ -27,5 +27,17 @@ defmodule Kino.AudioTest do
       kino = Kino.Audio.new(<<>>, "audio/mp2", loop: true)
       assert {:binary, %{type: "audio/mp2", opts: "controls loop"}, <<>>} == connect(kino)
     end
+
+    test "supports playing" do
+      kino = Kino.Audio.new(<<>>, :wav)
+      Kino.Audio.play(kino)
+      assert_broadcast_event(kino, "play", %{})
+    end
+
+    test "supports pausing" do
+      kino = Kino.Audio.new(<<>>, :wav)
+      Kino.Audio.pause(kino)
+      assert_broadcast_event(kino, "pause", %{})
+    end
   end
 end
