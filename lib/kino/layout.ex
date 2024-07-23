@@ -51,6 +51,10 @@ defmodule Kino.Layout do
     * `:gap` - the amount of spacing between grid items in pixels.
       Defaults to `8`
 
+    * `:template` - the [`grid-template-columns`](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns)
+      style property.
+      Defaults to `repeat(\#\{assigns.columns\}, minmax(0, 1fr))`
+
   ## Examples
 
       images =
@@ -63,12 +67,24 @@ defmodule Kino.Layout do
   """
   @spec grid(list(term()), keyword()) :: t()
   def grid(terms, opts \\ []) when is_list(terms) do
-    opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8)
+    opts =
+      Keyword.validate!(opts,
+        columns: 1,
+        boxed: false,
+        gap: 8,
+        template:
+          "repeat(#{if opts[:columns] do
+            opts[:columns]
+          else
+            1
+          end}}, minmax(0, 1fr))"
+      )
 
     info = %{
       columns: opts[:columns],
       boxed: opts[:boxed],
-      gap: opts[:gap]
+      gap: opts[:gap],
+      template: opts[:template]
     }
 
     %Kino.Layout{type: :grid, items: terms, info: info}
