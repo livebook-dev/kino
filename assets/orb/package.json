@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "build": "kino-bundler --outdir ../../lib/assets/orb/build",
+    "dev": "npm run build -- --watch --dev"
+  },
+  "dependencies": {
+    "@memgraph/orb": "^0.4.3"
+  },
+  "devDependencies": {
+    "@livebook/kino-bundler": "^0.1.0"
+  }
+}
