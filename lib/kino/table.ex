@@ -22,7 +22,7 @@ defmodule Kino.Table do
   @type column :: %{
           :key => term(),
           :label => String.t(),
-          optional(:type) => String.t(),
+          optional(:type) => type(),
           optional(:summary) => %{String.t() => String.t()}
         }
 
