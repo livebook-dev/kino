@@ -22,9 +22,22 @@ defmodule Kino.Table do
   @type column :: %{
           :key => term(),
           :label => String.t(),
-          optional(:type) => String.t(),
+          optional(:type) => type(),
           optional(:summary) => %{String.t() => String.t()}
         }
+
+  @typedoc """
+  The following types have meaning on the front-end:
+
+    * "date"
+    * "list"
+    * "number"
+    * "struct"
+    * "text"
+    * "uri"
+
+  """
+  @type type :: String.t()
 
   @type state :: term()
 
