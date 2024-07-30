@@ -26,6 +26,19 @@ defmodule Kino.Table do
           optional(:summary) => %{String.t() => String.t()}
         }
 
+  @typedoc """
+  The following types have meaning on the front-end:
+
+    * "date"
+    * "list"
+    * "number"
+    * "struct"
+    * "text"
+    * "uri"
+
+  """
+  @type type :: String.t()
+
   @type state :: term()
 
   @doc """
