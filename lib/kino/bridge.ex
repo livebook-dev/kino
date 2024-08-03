@@ -86,7 +86,7 @@ defmodule Kino.Bridge do
   end
 
   @doc """
-  Requests the file path for notebook file with the given name.
+  Requests the file path for the notebook file with the given name.
   """
   @spec get_file_entry_path(String.t()) ::
           {:ok, term()} | {:error, :forbidden} | {:error, String.t()} | request_error()
@@ -95,7 +95,7 @@ defmodule Kino.Bridge do
   end
 
   @doc """
-  Requests the file spec for notebook file with the given name.
+  Requests the file spec for the notebook file with the given name.
   """
   @spec get_file_entry_spec(String.t()) ::
           {:ok, term()} | {:error, :forbidden} | {:error, String.t()} | request_error()

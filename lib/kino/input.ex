@@ -519,7 +519,7 @@ defmodule Kino.Input do
 
   > #### Warning {: .warning}
   >
-  > The image input is shared by default: once you upload a image,
+  > The image input is shared by default: once you upload an image,
   > the image will be replicated to all users reading the notebook.
   > Use `Kino.Control.form/2` if you want each user to have a distinct
   > image upload with an explicit submission button.
