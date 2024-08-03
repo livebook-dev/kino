@@ -137,7 +137,7 @@ defmodule Kino.Input do
   @doc """
   Creates a new number input.
 
-  The input value is can be either a number or `nil`.
+  The input value can be either a number or `nil`.
 
   ## Options
 

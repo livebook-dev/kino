@@ -536,7 +536,7 @@ defmodule Kino do
   end
 
   @doc """
-  Recompiles dependenies.
+  Recompiles dependencies.
 
   Once you have installed dependencies with `Mix.install/1`, this will
   recompile any outdated path dependencies declared during the install.
