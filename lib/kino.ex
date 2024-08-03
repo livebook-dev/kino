@@ -170,7 +170,7 @@ defmodule Kino do
   The callback receives a stream element and the accumulated state
   and it should return either of:
 
-    * `{:cont, term_to_render, state}` - the continue
+    * `{:cont, term_to_render, state}` - to continue
 
     * `:halt` - to no longer schedule callback evaluation
 
@@ -276,7 +276,7 @@ defmodule Kino do
 
   The callback should return either of:
 
-    * `{:cont, state}` - the continue
+    * `{:cont, state}` - to continue
 
     * `:halt` - to stop listening
 
