@@ -23,7 +23,7 @@ defmodule Kino.Video do
   @doc """
   Creates a new kino displaying the given binary video.
 
-  The given type be either `:mp4`, `:ogg`, `:avi`, `:wmv`, `:mov`
+  The given type can be either `:mp4`, `:ogg`, `:avi`, `:wmv`, `:mov`
   or a string with video MIME type.
 
   ## Options

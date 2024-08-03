@@ -541,11 +541,11 @@ defmodule Kino do
   Once you have installed dependencies with `Mix.install/1`, this will
   recompile any outdated path dependencies declared during the install.
 
-  > #### Reproducability {: .warning}
+  > #### Reproducibility {: .warning}
   >
   > Keep in mind that recompiling dependency modules is **not** going
   > to mark any cells as stale. This means that the given notebook
-  > state may no longer be reproducable. This function is meant as a
+  > state may no longer be reproducible. This function is meant as a
   > utility when prototyping alongside a Mix project.
   """
   @spec recompile() :: :ok

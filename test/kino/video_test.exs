@@ -4,7 +4,7 @@ defmodule Kino.VideoTest do
   describe "new/2" do
     test "raises an error for a non-image MIME type" do
       assert_raise ArgumentError,
-                   ~s{expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or an video MIME type string, got: "application/json"},
+                   ~s{expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or a video MIME type string, got: "application/json"},
                    fn ->
                      Kino.Video.new(<<>>, "application/json")
                    end
@@ -12,7 +12,7 @@ defmodule Kino.VideoTest do
 
     test "raises an error for an invalid type shorthand" do
       assert_raise ArgumentError,
-                   "expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or an video MIME type string, got: :invalid",
+                   "expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or a video MIME type string, got: :invalid",
                    fn ->
                      Kino.Video.new(<<>>, :invalid)
                    end
