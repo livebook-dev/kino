@@ -79,6 +79,6 @@ defmodule Kino.Video do
 
   defp mime_type!(other) do
     raise ArgumentError,
-          "expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or an video MIME type string, got: #{inspect(other)}"
+          "expected video type to be either :mp4, :ogg, :avi, :wmv, :mov, or a video MIME type string, got: #{inspect(other)}"
   end
 end
