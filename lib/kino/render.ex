@@ -121,7 +121,6 @@ defimpl Kino.Render, for: Kino.Layout do
       type: :grid,
       outputs: outputs,
       columns: kino.info.columns,
-      template: kino.info.template,
       gap: kino.info.gap,
       boxed: kino.info.boxed
     }

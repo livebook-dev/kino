@@ -43,17 +43,14 @@ defmodule Kino.Layout do
 
   ## Options
 
-    * `:columns` - the number of columns in the grid. Defaults to `1`
+    * `:columns` - the number of columns in the grid. Optionally, supports a tuple of relative column widths, e.g:
+      {4,3,8}, for three columns, with the last twice as wide as the first. Defaults to `1`.
 
     * `:boxed` - whether the grid should be wrapped in a bordered box.
       Defaults to `false`
 
     * `:gap` - the amount of spacing between grid items in pixels.
       Defaults to `8`
-
-    * `:template` - the [`grid-template-columns`](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns)
-      style property.
-      Defaults to `repeat(\#\{assigns.columns\}, minmax(0, 1fr))`
 
   ## Examples
 
@@ -67,24 +64,12 @@ defmodule Kino.Layout do
   """
   @spec grid(list(term()), keyword()) :: t()
   def grid(terms, opts \\ []) when is_list(terms) do
-    opts =
-      Keyword.validate!(opts,
-        columns: 1,
-        boxed: false,
-        gap: 8,
-        template:
-          "repeat(#{if opts[:columns] do
-            opts[:columns]
-          else
-            1
-          end}}, minmax(0, 1fr))"
-      )
+    opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8)
 
     info = %{
       columns: opts[:columns],
       boxed: opts[:boxed],
-      gap: opts[:gap],
-      template: opts[:template]
+      gap: opts[:gap]
     }
 
     %Kino.Layout{type: :grid, items: terms, info: info}
