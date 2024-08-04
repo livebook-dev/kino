@@ -1,4 +1,4 @@
-defmodule Kino.AttributeStoreTets do
+defmodule Kino.AttributeStoreTest do
   use ExUnit.Case, async: true
 
   alias Kino.AttributeStore

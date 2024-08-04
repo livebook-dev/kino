@@ -26,7 +26,7 @@ defmodule Kino.Image do
   @doc """
   Creates a new kino displaying the given binary image.
 
-  The given type be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`, `:pixel`
+  The given type can be either `:jpeg`/`:jpg`, `:png`, `:gif`, `:svg`, `:pixel`
   or a string with image MIME type.
 
   ## Pixel data

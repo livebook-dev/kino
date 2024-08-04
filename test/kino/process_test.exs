@@ -176,7 +176,7 @@ defmodule Kino.ProcessTest do
   end
 
   describe "seq_trace/2" do
-    # Process.set_label/1 was addeed in Elixir 1.17.0
+    # Process.set_label/1 was added in Elixir 1.17.0
     if function_exported?(Process, :set_label, 1) do
       test "uses process label to identify a process" do
         process_label = "ponger"

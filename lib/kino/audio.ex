@@ -22,7 +22,7 @@ defmodule Kino.Audio do
   @doc """
   Creates a new kino displaying the given binary audio.
 
-  The given type be either `:wav`, `:mp3`/`:mpeg`, `:ogg`
+  The given type can be either `:wav`, `:mp3`/`:mpeg`, `:ogg`
   or a string with audio MIME type.
 
   ## Options

@@ -33,7 +33,7 @@ defprotocol Kino.Render do
         def to_livebook(graph) do
           source = Graph.to_mermaid(graph)
           mermaid_kino = Kino.Mermaid.new(source)
-          inspect_kino = Kino.Inspect.new(image)
+          inspect_kino = Kino.Inspect.new(graph)
           kino = Kino.Layout.tabs(Graph: mermaid_kino, Raw: inspect_kino)
           Kino.Render.to_livebook(kino)
         end

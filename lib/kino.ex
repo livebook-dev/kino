@@ -170,7 +170,7 @@ defmodule Kino do
   The callback receives a stream element and the accumulated state
   and it should return either of:
 
-    * `{:cont, term_to_render, state}` - the continue
+    * `{:cont, term_to_render, state}` - to continue
 
     * `:halt` - to no longer schedule callback evaluation
 
@@ -276,7 +276,7 @@ defmodule Kino do
 
   The callback should return either of:
 
-    * `{:cont, state}` - the continue
+    * `{:cont, state}` - to continue
 
     * `:halt` - to stop listening
 
@@ -536,16 +536,16 @@ defmodule Kino do
   end
 
   @doc """
-  Recompiles dependenies.
+  Recompiles dependencies.
 
   Once you have installed dependencies with `Mix.install/1`, this will
   recompile any outdated path dependencies declared during the install.
 
-  > #### Reproducability {: .warning}
+  > #### Reproducibility {: .warning}
   >
   > Keep in mind that recompiling dependency modules is **not** going
   > to mark any cells as stale. This means that the given notebook
-  > state may no longer be reproducable. This function is meant as a
+  > state may no longer be reproducible. This function is meant as a
   > utility when prototyping alongside a Mix project.
   """
   @spec recompile() :: :ok
