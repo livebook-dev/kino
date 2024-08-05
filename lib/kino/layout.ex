@@ -43,7 +43,9 @@ defmodule Kino.Layout do
 
   ## Options
 
-    * `:columns` - the number of columns in the grid. Defaults to `1`
+    * `:columns` - the number of columns in the grid. Optionally, supports
+      a tuple of column width ratio, such as `{1, 2, 1}`, for three columns,
+      where the middle one is twice as wide as the others. Defaults to `1`
 
     * `:boxed` - whether the grid should be wrapped in a bordered box.
       Defaults to `false`
