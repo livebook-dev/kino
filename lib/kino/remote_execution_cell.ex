@@ -139,7 +139,7 @@ defmodule Kino.RemoteExecutionCell do
 
   defp quoted_code(code) do
     {delimiter, code} =
-      if String.contains?(code, "\n") do
+      if String.contains?(code, ["\n", ~s/"/]) do
         {~s["""], code <> "\n"}
       else
         {~s["], code}
