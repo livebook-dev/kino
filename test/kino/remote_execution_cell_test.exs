@@ -138,7 +138,14 @@ defmodule Kino.RemoteExecutionCellTest do
                require Kino.RPC
                node = :name@node
                Node.set_cookie(node, :"node-cookie")
-               Kino.RPC.eval_string(node, ~S"\"Number #{1}\"", file: __ENV__.file)
+
+               Kino.RPC.eval_string(
+                 node,
+                 ~S"""
+                 "Number #{1}"
+                 """,
+                 file: __ENV__.file
+               )
                '''
                |> String.replace_trailing("\n", "")
 
