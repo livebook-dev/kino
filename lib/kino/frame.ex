@@ -82,7 +82,7 @@ defmodule Kino.Frame do
   def render(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.call(frame.pid, {:render, term, destination})
+    GenServer.call(frame.pid, {:render, term, destination}, :infinity)
   end
 
   defp update_destination_from_opts!(opts) do
@@ -122,7 +122,7 @@ defmodule Kino.Frame do
   def append(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.call(frame.pid, {:append, term, destination})
+    GenServer.call(frame.pid, {:append, term, destination}, :infinity)
   end
 
   @doc """
@@ -150,7 +150,7 @@ defmodule Kino.Frame do
   @doc false
   @spec get_items(t()) :: list(term())
   def get_items(frame) do
-    GenServer.call(frame.pid, :get_items)
+    GenServer.call(frame.pid, :get_items, :infinity)
   end
 
   @impl true
