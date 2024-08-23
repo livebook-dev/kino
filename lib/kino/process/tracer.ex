@@ -8,7 +8,7 @@ defmodule Kino.Process.Tracer do
   end
 
   def get_trace_info(tracer) do
-    GenServer.call(tracer, :get_trace_info)
+    GenServer.call(tracer, :get_trace_info, :infinity)
   end
 
   @impl true

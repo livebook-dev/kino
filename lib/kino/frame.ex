@@ -150,7 +150,7 @@ defmodule Kino.Frame do
   @doc false
   @spec get_items(t()) :: list(term())
   def get_items(frame) do
-    GenServer.call(frame.pid, :get_items)
+    GenServer.call(frame.pid, :get_items, :infinity)
   end
 
   @impl true

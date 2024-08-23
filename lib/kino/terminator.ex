@@ -45,7 +45,7 @@ defmodule Kino.Terminator do
   """
   def start_task(parent, fun) do
     Task.start_link(fn ->
-      GenServer.call(@name, {:monitor, self(), parent})
+      GenServer.call(@name, {:monitor, self(), parent}, :infinity)
       fun.()
     end)
   end
