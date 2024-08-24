@@ -111,7 +111,8 @@ defmodule Kino.JS.Live.Context do
   ## Options
 
     * `:editor` - note that the smart cell must be initialized with an
-      editor during on init. Supported options: `:source`, `:intellisense_node`.
+      editor during init. Supported options: `:source`, `:intellisense_node`,
+      `:visible`
 
   """
   @spec reconfigure_smart_cell(t(), keyword()) :: t()

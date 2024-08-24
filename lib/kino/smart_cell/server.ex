@@ -25,7 +25,8 @@ defmodule Kino.SmartCell.Server do
               source: editor_opts[:source] || legacy_source,
               language: editor_opts[:language],
               placement: editor_opts[:placement],
-              intellisense_node: editor_opts[:intellisense_node]
+              intellisense_node: editor_opts[:intellisense_node],
+              visible: editor_opts[:visible]
             }
           end
 
@@ -61,7 +62,7 @@ defmodule Kino.SmartCell.Server do
                 " Make sure to enable smart cell editor during init"
       end
 
-      Keyword.validate!(editor_opts, [:source, :intellisense_node])
+      Keyword.validate!(editor_opts, [:source, :intellisense_node, :visible])
     end
 
     put_in(ctx.__private__.smart_cell[:reconfigure_options], opts)
@@ -138,7 +139,8 @@ defmodule Kino.SmartCell.Server do
           language: nil,
           intellisense_node: nil,
           placement: :bottom,
-          default_source: ""
+          default_source: "",
+          visible: true
         ])
 
       unless editor_opts[:placement] in [:top, :bottom] do

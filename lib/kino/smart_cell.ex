@@ -221,6 +221,11 @@ defmodule Kino.SmartCell do
       This is only applicable when `:language` is Elixir. Defaults to
       `nil`
 
+    * `:visible` - whether the editor is shown. Altering this option
+      with `Kino.JS.Live.Context.reconfigure_smart_cell/2` allows the
+      editor to be shown or hidden, depending on the smart cell state.
+      Defaults to `true`
+
   Note that you can programmatically reconfigure some of these options
   later using `Kino.JS.Live.Context.reconfigure_smart_cell/2`.
 
