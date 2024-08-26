@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.14.0](https://github.com/livebook-dev/kino/tree/v0.14.0) (2024-08-26)
+
+### Added
+
+* Added `Kino.Audio.play/1` and `Kino.Audio.pause/1` ([#458](https://github.com/livebook-dev/kino/pull/458))
+* Support for specifying column ratios in `Kino.Layout.grid/2` ([#459](https://github.com/livebook-dev/kino/pull/459))
+* Support for toggling Smart cell editor visibility ([#467](https://github.com/livebook-dev/kino/pull/467))
+
+### Changed
+
+* Remote smart cell to generate code with triple quote when content contains a quote ([#465](https://github.com/livebook-dev/kino/pull/465))
+
+### Fixed
+
 ## [v0.13.2](https://github.com/livebook-dev/kino/tree/v0.13.2) (2024-07-05)
 
 ### Added
