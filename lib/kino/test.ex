@@ -115,6 +115,18 @@ defmodule Kino.Test do
   end
 
   @doc """
+  Sends an editor source event to a `Kino.JS.Live` kino.
+
+  ## Examples
+
+      push_editor_source(kino, "source code")
+
+  """
+  def push_editor_source(kino, source_code) do
+    send(kino.pid, {:editor_source, source_code})
+  end
+
+  @doc """
   Connects to a `Kino.JS.Live` kino and returns the initial data.
 
   If `resolve_fun` is given, it runs after sending the connection
