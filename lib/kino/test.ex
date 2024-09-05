@@ -185,4 +185,19 @@ defmodule Kino.Test do
                      unquote(timeout)
     end
   end
+
+  @doc """
+  Sends a changed smart cell editor source to a `Kino.JS.Live` kino.
+
+  This is going to call `c:Kino.SmartCell.handle_editor_change/2` implementation
+  in the smart cell module.
+
+  ## Examples
+
+      push_smart_cell_editor_source(kino, "source code")
+
+  """
+  def push_smart_cell_editor_source(kino, source) do
+    send(kino.pid, {:editor_source, source})
+  end
 end
