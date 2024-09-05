@@ -115,18 +115,6 @@ defmodule Kino.Test do
   end
 
   @doc """
-  Sends an editor source event to a `Kino.JS.Live` kino.
-
-  ## Examples
-
-      push_editor_source(kino, "source code")
-
-  """
-  def push_editor_source(kino, source_code) do
-    send(kino.pid, {:editor_source, source_code})
-  end
-
-  @doc """
   Connects to a `Kino.JS.Live` kino and returns the initial data.
 
   If `resolve_fun` is given, it runs after sending the connection
@@ -196,5 +184,20 @@ defmodule Kino.Test do
       assert_receive {:runtime_smart_cell_update, ^ref, unquote(attrs), unquote(source), _info},
                      unquote(timeout)
     end
+  end
+
+  @doc """
+  Sends a changed smart cell editor source to a `Kino.JS.Live` kino.
+
+  This is going to call `c:Kino.SmartCell.handle_editor_change/2` implementation
+  in the smart cell module.
+
+  ## Examples
+
+      push_smart_cell_editor_source(kino, "source code")
+
+  """
+  def push_smart_cell_editor_source(kino, source) do
+    send(kino.pid, {:editor_source, source})
   end
 end
