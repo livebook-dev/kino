@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "build": "kino-bundler",
+    "dev": "kino-bundler --watch --dev"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.0.8",
+    "@dnd-kit/sortable": "^7.0.2",
+    "@dnd-kit/utilities": "^3.2.1",
+    "@glideapps/glide-data-grid": "^6.0.3",
+    "@remixicon/react": "^4.1.1",
+    "classnames": "^2.3.2",
+    "lodash": "^4.17.21",
+    "marked": "^4.2.2",
+    "mermaid": "^10.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-laag": "^2.0.5",
+    "react-responsive-carousel": "^3.2.23"
+  },
+  "devDependencies": {
+    "@livebook/kino-bundler": "^0.2.1"
+  }
+}

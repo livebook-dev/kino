@@ -26,4 +26,4 @@ kino-*.tar
 /tmp/
 
 # Node modules.
-assets/*/node_modules/
+assets/node_modules/
