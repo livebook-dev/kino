@@ -14,7 +14,6 @@ defmodule Kino.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases(),
       docs: docs(),
       package: package()
     ]
@@ -38,21 +37,6 @@ defmodule Kino.MixProject do
       {:plug, "~> 1.0", optional: true},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
-  end
-
-  defp aliases do
-    [
-      "assets.setup": assets_cmd("npm install"),
-      "assets.build": assets_cmd("npm run build")
-    ]
-  end
-
-  defp assets_cmd(command) do
-    fn _args ->
-      for dir <- File.ls!("assets") do
-        Mix.shell().cmd(command, cd: Path.join("assets", dir))
-      end
-    end
   end
 
   defp docs do
