@@ -30,8 +30,17 @@ defmodule Kino.Terminator do
         end
 
       if pid do
-        Kino.Bridge.reference_object(pid, parent)
-        Kino.Bridge.monitor_object(pid, cross_node_name(), {:terminate, pid}, ack?: true)
+        terminator = cross_node_name()
+
+        with :ok <- Kino.Bridge.reference_object(pid, parent),
+             :ok <- Kino.Bridge.monitor_object(pid, terminator, {:terminate, pid}, ack?: true) do
+          :ok
+        else
+          # If we fail to reference the object, it means the group
+          # leader terminated, so we immediately terminate the started
+          # process
+          _ -> send(terminator, {:terminate, pid})
+        end
       end
 
       resp
@@ -72,6 +81,11 @@ defmodule Kino.Terminator do
   def handle_info({{:terminate, pid}, reply_to, reply_as}, state) do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
     send(reply_to, reply_as)
+    {:noreply, Map.delete(state, pid)}
+  end
+
+  def handle_info({:terminate, pid}, state) do
+    DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
     {:noreply, Map.delete(state, pid)}
   end
 
