@@ -30,8 +30,16 @@ defmodule Kino.Terminator do
         end
 
       if pid do
+        terminator = cross_node_name()
+
         Kino.Bridge.reference_object(pid, parent)
-        Kino.Bridge.monitor_object(pid, cross_node_name(), {:terminate, pid}, ack?: true)
+
+        with {:request_error, :terminated} <-
+               Kino.Bridge.monitor_object(pid, terminator, {:terminate, pid}, ack?: true) do
+          # If the group leader terminated, it is not going to monitor
+          # the process as we expect, so we terminate it immediately
+          send(terminator, {:terminate, pid})
+        end
       end
 
       resp
@@ -72,6 +80,11 @@ defmodule Kino.Terminator do
   def handle_info({{:terminate, pid}, reply_to, reply_as}, state) do
     DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
     send(reply_to, reply_as)
+    {:noreply, Map.delete(state, pid)}
+  end
+
+  def handle_info({:terminate, pid}, state) do
+    DynamicSupervisor.terminate_child(Kino.DynamicSupervisor, pid)
     {:noreply, Map.delete(state, pid)}
   end
 
