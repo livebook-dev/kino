@@ -32,14 +32,13 @@ defmodule Kino.Terminator do
       if pid do
         terminator = cross_node_name()
 
-        with :ok <- Kino.Bridge.reference_object(pid, parent),
-             :ok <- Kino.Bridge.monitor_object(pid, terminator, {:terminate, pid}, ack?: true) do
-          :ok
-        else
-          # If we fail to reference the object, it means the group
-          # leader terminated, so we immediately terminate the started
-          # process
-          _ -> send(terminator, {:terminate, pid})
+        Kino.Bridge.reference_object(pid, parent)
+
+        with {:request_error, :terminated} <-
+               Kino.Bridge.monitor_object(pid, terminator, {:terminate, pid}, ack?: true) do
+          # If the group leader terminated, it is not going to monitor
+          # the process as we expect, so we terminate it immediately
+          send(terminator, {:terminate, pid})
         end
       end
 
