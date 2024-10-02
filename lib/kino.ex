@@ -480,7 +480,7 @@ defmodule Kino do
   @doc ~S"""
   Interrupts evaluation with the given message.
 
-  This function raises a specific error to let Livebook known that
+  This function raises a specific error to let Livebook know that
   evaluation should be stopped. The error message and a `Continue`
   button are shown to the user, who can then attempt to resolve the
   source of the interrupt before resuming execution.
