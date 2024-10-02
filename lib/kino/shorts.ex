@@ -9,6 +9,44 @@ defmodule Kino.Shorts do
 
   """
 
+  @doc """
+  Returns a special value that results in no visible output.
+
+  It is a wrapper around `Kino.nothing/0`.
+
+  ## Examples
+
+  Supress an otherwise verbose cell's output:
+
+      import Kino.Shorts
+
+      resp = Req.get!("https://example.org")
+      output_nothing()
+
+  For convenience, you can pipe anything into `output_nothing()`
+  to terminate a pipeline of Kinos that control their own rendering:
+
+      import Kino.Shorts
+
+      frame = frame() |> Kino.render
+      frame |> Kino.Frame.render(markdown("> ***Sumbit an event***"))
+
+      Kino.Control.form(
+        [name: Kino.Input.text("Event Name", default: "default")],
+        submit: "Render Event"
+      )
+      |> Kino.render
+      |> Kino.listen(fn
+        event ->
+          Kino.Frame.clear(frame)
+          Kino.Frame.render(frame, markdown("`\#{inspect event}`"))
+      end)
+      |> output_nothing()
+  """
+  @spec output_nothing() :: Kino.nothing()
+  @spec output_nothing(term()) :: Kino.nothing()
+  def output_nothing(_ \\ nil), do: Kino.nothing()
+
   ## Outputs
 
   @doc """
