@@ -158,7 +158,7 @@ defmodule Kino.JS do
 
   On the JavaScript side you are free to use any external packages and
   bundling tooling, as long as you provide the `main.js` file with the
-  `init(ctx, data)` entrypoing. Kino itself defines a couple components
+  `init(ctx, data)` entrypoint. Kino itself defines a couple components
   using `Kino.JS` and we use [esbuild](https://esbuild.github.io) to
   bundle their assets, but it's entirely up to you.
 
