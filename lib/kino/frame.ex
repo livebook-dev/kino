@@ -78,11 +78,14 @@ defmodule Kino.Frame do
       updates are never a part of frame history
 
   """
-  @spec render(t(), term(), keyword()) :: :ok
+  @spec render(t(), term(), keyword()) :: t()
   def render(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.call(frame.pid, {:render, term, destination}, :infinity)
+
+    with :ok <- GenServer.call(frame.pid, {:render, term, destination}, :infinity) do
+      frame
+    end
   end
 
   defp update_destination_from_opts!(opts) do
@@ -118,11 +121,14 @@ defmodule Kino.Frame do
       updates are never a part of frame history
 
   """
-  @spec append(t(), term(), keyword()) :: :ok
+  @spec append(t(), term(), keyword()) :: t()
   def append(frame, term, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.call(frame.pid, {:append, term, destination}, :infinity)
+
+    with :ok <- GenServer.call(frame.pid, {:append, term, destination}, :infinity) do
+      frame
+    end
   end
 
   @doc """
