@@ -146,11 +146,12 @@ defmodule Kino.Frame do
       updates are never a part of frame history
 
   """
-  @spec clear(t(), keyword()) :: :ok
+  @spec clear(t(), keyword()) :: t()
   def clear(frame, opts \\ []) do
     opts = Keyword.validate!(opts, [:to, :temporary])
     destination = update_destination_from_opts!(opts)
-    GenServer.cast(frame.pid, {:clear, destination})
+    :ok = GenServer.cast(frame.pid, {:clear, destination})
+    frame
   end
 
   @doc false
