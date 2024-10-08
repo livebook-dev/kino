@@ -231,6 +231,21 @@ defmodule Kino.DataTableTest do
     assert %{name: "Example"} = data
   end
 
+  test "supports setting number of rows" do
+    entries = %{x: 1..3, y: 1..3}
+
+    kino = Kino.DataTable.new(entries, keys: [:x, :y], num_rows: 2)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               columns: [%{key: "0", label: ":x"}, %{key: "1", label: ":y"}],
+               data: [["1", "1"], ["2", "2"]],
+               total_rows: 3
+             }
+           } = data
+  end
+
   test "supports sliceable data" do
     entries = %{x: 1..3, y: 1..3}
 
