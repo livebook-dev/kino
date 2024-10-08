@@ -9,7 +9,8 @@ defmodule Kino.Table do
   @type info :: %{
           :name => String.t(),
           :features => list(:export | :refetch | :pagination | :sorting | :relocate),
-          optional(:export) => %{formats: list(String.t())}
+          optional(:export) => %{formats: list(String.t())},
+          optional(:num_rows) => pos_integer()
         }
 
   @type rows_spec :: %{
@@ -126,7 +127,7 @@ defmodule Kino.Table do
        content: nil,
        # Data specification
        page: 1,
-       limit: @limit,
+       limit: info[:num_rows] || @limit,
        order: nil,
        relocates: []
      )}

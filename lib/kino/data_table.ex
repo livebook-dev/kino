@@ -50,17 +50,20 @@ defmodule Kino.DataTable do
      return either `{:ok, string}` or `:default`. When the return value is
      `:default` the default data table formatting is applied.
 
+    * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
+
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
     name = Keyword.get(opts, :name, "Data")
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
     formatter = Keyword.get(opts, :formatter)
+    num_rows = Keyword.get(opts, :num_rows)
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
 
     Kino.Table.new(
       __MODULE__,
-      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter},
+      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows},
       export: fn state -> {"text", state.inspected} end
     )
   end
@@ -172,9 +175,9 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def init({data_rows, data_columns, count, name, sorting_enabled, inspected, formatter}) do
+  def init({data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
-    info = %{name: name, features: features}
+    info = %{name: name, features: features, num_rows: num_rows}
 
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 

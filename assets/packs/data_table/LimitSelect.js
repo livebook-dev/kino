@@ -1,6 +1,8 @@
 import React from "react";
 import { RiArrowDownSLine } from "@remixicon/react";
 
+const LIMIT_OPTIONS = [10, 20, 50, 100];
+
 export default function LimitSelect({ limit, totalRows, onChange }) {
   return (
     <div>
@@ -12,10 +14,16 @@ export default function LimitSelect({ limit, totalRows, onChange }) {
             value={limit}
             onChange={(event) => onChange(parseInt(event.target.value))}
           >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
+            {!LIMIT_OPTIONS.includes(limit) && (
+              <option key={limit} value={limit.toString()}>
+                {limit}
+              </option>
+            )}
+            {LIMIT_OPTIONS.map((value) => (
+              <option key={value} value={value.toString()}>
+                {value}
+              </option>
+            ))}
             {totalRows ? <option value={totalRows}>All</option> : null}
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
