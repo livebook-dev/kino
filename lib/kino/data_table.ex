@@ -179,7 +179,8 @@ defmodule Kino.DataTable do
         {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}
       ) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
-    info = %{name: name, features: features, num_rows: num_rows}
+    info = %{name: name, features: features}
+    info = if(num_rows, do: Map.put(info, :num_rows, num_rows), else: info)
 
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
