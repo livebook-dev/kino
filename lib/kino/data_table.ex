@@ -175,7 +175,9 @@ defmodule Kino.DataTable do
   end
 
   @impl true
-  def init({data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}) do
+  def init(
+        {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}
+      ) do
     features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
     info = %{name: name, features: features, num_rows: num_rows}
 
