@@ -162,7 +162,7 @@ defmodule Kino.Shorts do
   def text(text), do: Kino.Text.new(text)
 
   @doc ~S'''
-  Renders Mermaid graphs.
+  Renders Mermaid diagrams.
 
   It is a wrapper around `Kino.Mermaid.new/1`.
 
@@ -178,8 +178,8 @@ defmodule Kino.Shorts do
         C-->D;
       """)
   '''
-  @spec mermaid(String.t()) :: Kino.Mermaid.t()
-  def mermaid(mermaid), do: Kino.Mermaid.new(mermaid)
+  @spec mermaid(String.t(), Keyword.t()) :: Kino.Mermaid.t()
+  def mermaid(diagram, options \\ []), do: Kino.Mermaid.new(diagram, options)
 
   @doc """
   A placeholder for static outputs that can be dynamically updated.

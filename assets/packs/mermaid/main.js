@@ -3,11 +3,11 @@ import "./main.css";
 
 mermaid.initialize({ startOnLoad: false });
 
-export function init(ctx, {graph, caption, download}) {
+export function init(ctx, {diagram, caption, download}) {
   ctx.importCSS("main.css")
   
   function render() {
-    mermaid.render("graph1", graph).then(({ svg, bindFunctions }) => {
+    mermaid.render("diagram", diagram).then(({ svg, bindFunctions }) => {
       let contents = document.createElement("div");
       contents.id = "contents";
       ctx.root.appendChild(contents);

@@ -227,7 +227,7 @@ defmodule Kino.ProcessTest do
     send(Kino.JS.DataStore, {:connect, self(), %{origin: "client:#{inspect(self())}", ref: ref}})
     assert_receive {:connect_reply, data, %{ref: ^ref}}
 
-    data
+    data.diagram
   end
 
   defp supervision_tree_with_ets_table do

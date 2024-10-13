@@ -27,7 +27,7 @@ defmodule Kino.Mermaid do
   @download_defaults [title: "Diagram", filename: "diagram.svg"]
 
   @doc """
-  Creates a new kino displaying the given Mermaid graph.
+  Creates a new kino displaying the given Mermaid diagram.
 
   ## Options
 
@@ -44,7 +44,7 @@ defmodule Kino.Mermaid do
 
   """
   @spec new(binary(), Keyword.t()) :: t()
-  def new(graph, options \\ []) do
+  def new(diagram, options \\ []) do
     options = Keyword.validate!(options, caption: false, download: true)
 
     download =
@@ -61,8 +61,8 @@ defmodule Kino.Mermaid do
 
     caption = Keyword.fetch!(options, :caption)
 
-    Kino.JS.new(__MODULE__, %{graph: graph, caption: caption, download: download},
-      export: fn graph -> {"mermaid", graph} end
+    Kino.JS.new(__MODULE__, %{diagram: diagram, caption: caption, download: download},
+      export: fn diagram -> {"mermaid", diagram} end
     )
   end
 end
