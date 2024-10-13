@@ -1,9 +1,27 @@
-#mermaid button#download {
+#figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#figure figcaption {
+  border-radius: .5rem;
+  background-color: rgb(240 245 249);
+  padding: 0.5rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: rgb(97 117 138);
+}
+
+#contents button#download {
   position: absolute;
   display: none;
 }
 
-#mermaid:hover button#download {
+#contents:hover button#download {
   display: inline;
+  right: 0;
 }
 

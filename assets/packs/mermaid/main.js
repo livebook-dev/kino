@@ -3,45 +3,61 @@ import "./main.css";
 
 mermaid.initialize({ startOnLoad: false });
 
-export function init(ctx, {content, title}) {
+export function init(ctx, {graph, caption, download}) {
   ctx.importCSS("main.css")
   
   function render() {
-    mermaid.render("graph1", content).then(({ svg, bindFunctions }) => {
-      ctx.root.innerHTML = `
-        <div id="mermaid">
-          ${svg}
-          <button id="download" title="Download ${title}">⇩</button>
-        </div>
-      `;
+    mermaid.render("graph1", graph).then(({ svg, bindFunctions }) => {
+      let contents = document.createElement("div");
+      contents.id = "contents";
+      ctx.root.appendChild(contents);
       
-      ctx.root.querySelector("#download").addEventListener("click", (event) => {
-        var binaryData = [];
-        binaryData.push(svg);
-        const downloadBlob = URL.createObjectURL(new Blob(binaryData, {type: "image/svg+xml"}));
-
-        const downloadLink = document.createElement("a");
-        downloadLink.href = downloadBlob;
-        downloadLink.download = `${title}.svg`;
-        document.body.appendChild(downloadLink);
-
-        downloadLink.dispatchEvent(
-          new MouseEvent('click', { 
-            bubbles: true, 
-            cancelable: true, 
-            view: window 
-          })
-        );
-
-        document.body.removeChild(downloadLink);
-      });
+      let figure = document.createElement("figure");
+      figure.id = "figure";
+      figure.innerHTML = svg;
+      contents.appendChild(figure);
+      
+      if (caption) {
+        let figcaption = document.createElement("figcaption");
+        figcaption.textContent = caption;
+        figure.appendChild(figcaption);
+      }
+      
+      if (download) {
+        let downloadButton = document.createElement("button");
+        downloadButton.id = "download"
+        downloadButton.title = `Download ${download.title}`
+        downloadButton.textContent = "⇩"
+        contents.prepend(downloadButton);
+      
+        contents.querySelector("#download").addEventListener("click", (event) => {
+          var binaryData = [];
+          binaryData.push(svg);
+          const downloadBlob = URL.createObjectURL(new Blob(binaryData, {type: "image/svg+xml"}));
+  
+          const downloadLink = document.createElement("a");
+          downloadLink.href = downloadBlob;
+          downloadLink.download = download.filename;
+          contents.appendChild(downloadLink);
+  
+          downloadLink.dispatchEvent(
+            new MouseEvent('click', { 
+              bubbles: true, 
+              cancelable: true, 
+              view: window 
+            })
+          );
+  
+          contents.removeChild(downloadLink);
+        });
+      }
 
       if (bindFunctions) {
         bindFunctions(ctx.root);
       }
 
       // A workaround for https://github.com/mermaid-js/mermaid/issues/1758
-      const svgEl = ctx.root.querySelector("svg");
+      const svgEl = figure.querySelector("svg");
       svgEl.removeAttribute("height");
     });
   }
