@@ -27,8 +27,10 @@ defmodule Kino.Mermaid do
   @doc """
   Creates a new kino displaying the given Mermaid graph.
   """
-  @spec new(binary()) :: t()
-  def new(content) do
-    Kino.JS.new(__MODULE__, content, export: fn content -> {"mermaid", content} end)
+  @spec new(binary(), Keyword.t()) :: t()
+  def new(content, options \\ []) do
+    options = Keyword.validate!(options, [:title])
+    title = Keyword.get(options, :title, "diagram")
+    Kino.JS.new(__MODULE__, %{content: content, title: title}, export: fn content -> {"mermaid", content} end)
   end
 end

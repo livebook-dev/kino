@@ -3,7 +3,7 @@ import "./main.css";
 
 mermaid.initialize({ startOnLoad: false });
 
-export function init(ctx, content) {
+export function init(ctx, {content, title}) {
   ctx.importCSS("main.css")
   
   function render() {
@@ -11,9 +11,10 @@ export function init(ctx, content) {
       ctx.root.innerHTML = `
         <div id="mermaid">
           ${svg}
-          <button id="download" title="Download">⇩</button>
+          <button id="download" title="Download ${title}">⇩</button>
         </div>
-      `
+      `;
+      
       ctx.root.querySelector("#download").addEventListener("click", (event) => {
         var binaryData = [];
         binaryData.push(svg);
@@ -21,7 +22,7 @@ export function init(ctx, content) {
 
         const downloadLink = document.createElement("a");
         downloadLink.href = downloadBlob;
-        downloadLink.download = "mermaid.svg";
+        downloadLink.download = `${title}.svg`;
         document.body.appendChild(downloadLink);
 
         downloadLink.dispatchEvent(
