@@ -48,15 +48,17 @@ defmodule Kino.Mermaid do
     opts = Keyword.validate!(opts, caption: false, download: true)
 
     download =
-      if download = Keyword.fetch!(opts, :download) do
-        case download do
-          true ->
-            @download_defaults
+      case Keyword.fetch!(opts, :download) do
+        true ->
+          Map.new(@download_defaults)
 
-          download_opts when is_list(download_opts) ->
-            Keyword.validate!(download_opts, @download_defaults)
-        end
-        |> Map.new()
+        download_opts when is_list(download_opts) ->
+          download_opts
+          |> Keyword.validate!(@download_defaults)
+          |> Map.new()
+
+        _ ->
+          false
       end
 
     caption = Keyword.fetch!(opts, :caption)
