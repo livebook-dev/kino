@@ -35,6 +35,9 @@ defmodule Kino.Process do
     * `:render_ets_tables` - determines whether ETS tables associated with the
       supervision tree are rendered. Defaults to `false`.
 
+    * `:caption` - an optional caption for the diagram.
+      Defaults to the provided `application` name.
+
   ## Examples
 
   To view the applications running in your instance run:
@@ -86,13 +89,18 @@ defmodule Kino.Process do
     {:dictionary, dictionary} = process_info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
 
-    Mermaid.new("""
-    graph #{direction};
-    application_master(#{inspect(master)}):::supervisor ---> supervisor_ancestor;
-    supervisor_ancestor(#{inspect(ancestor)}):::supervisor ---> 0;
-    #{edges}
-    #{@mermaid_classdefs}
-    """)
+    caption = Keyword.get(opts, :caption, "Application tree for #{inspect(application)}")
+
+    Mermaid.new(
+      """
+      graph #{direction};
+      application_master(#{inspect(master)}):::supervisor ---> supervisor_ancestor;
+      supervisor_ancestor(#{inspect(ancestor)}):::supervisor ---> 0;
+      #{edges}
+      #{@mermaid_classdefs}
+      """,
+      caption: caption
+    )
   end
 
   @doc """
@@ -107,6 +115,9 @@ defmodule Kino.Process do
 
     * `:direction` - defines the direction of the graph visual. The
       value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
+
+    * `:caption` - an optional caption for the diagram.
+      Defaults to the provided `supervisor`.
 
   ## Examples
 
@@ -161,12 +172,16 @@ defmodule Kino.Process do
       end
 
     edges = traverse_supervisor(supervisor_pid, opts)
+    caption = Keyword.get(opts, :caption, "Supervisor tree for #{inspect(supervisor)}")
 
-    Mermaid.new("""
-    graph #{direction};
-    #{edges}
-    #{@mermaid_classdefs}
-    """)
+    Mermaid.new(
+      """
+      graph #{direction};
+      #{edges}
+      #{@mermaid_classdefs}
+      """,
+      caption: caption
+    )
   end
 
   @doc """
@@ -235,6 +250,9 @@ defmodule Kino.Process do
       the given function returns `:continue`, then the default label
       is used. However, if the function returns a `String.t()`, then
       that will be used for the label.
+
+    * `:caption` - an optional caption for the diagram.
+      Defaults to the provided `trace_target`.
 
   ## Examples
 
@@ -412,13 +430,18 @@ defmodule Kino.Process do
       |> Enum.reverse()
       |> Enum.join("\n")
 
+    caption = Keyword.get(opts, :caption, "Messages traced from #{inspect(trace_pids)}")
+
     sequence_diagram =
-      Mermaid.new("""
-      %%{init: {'themeCSS': '.actor:last-of-type:not(:only-of-type) {dominant-baseline: hanging;}'} }%%
-      sequenceDiagram
-      #{participants}
-      #{messages}
-      """)
+      Mermaid.new(
+        """
+        %%{init: {'themeCSS': '.actor:last-of-type:not(:only-of-type) {dominant-baseline: hanging;}'} }%%
+        sequenceDiagram
+        #{participants}
+        #{messages}
+        """,
+        caption: caption
+      )
 
     {func_result, sequence_diagram}
   end

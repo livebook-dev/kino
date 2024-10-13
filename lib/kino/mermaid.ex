@@ -1,10 +1,10 @@
 defmodule Kino.Mermaid do
   @moduledoc ~S'''
-  A kino for rendering Mermaid graphs.
+  A kino for rendering Mermaid diagrams.
 
   > #### Relation to Kino.Markdown {: .info}
   >
-  > Mermaid graphs can also be generated dynamically with `Kino.Markdown`,
+  > Mermaid diagrams can also be generated dynamically with `Kino.Markdown`,
   > however the output of `Kino.Markdown` is never persisted in the
   > notebook source. `Kino.Mermaid` doesn't have this limitation.
 
@@ -44,22 +44,22 @@ defmodule Kino.Mermaid do
 
   """
   @spec new(binary(), Keyword.t()) :: t()
-  def new(diagram, options \\ []) do
-    options = Keyword.validate!(options, caption: false, download: true)
+  def new(diagram, opts \\ []) do
+    opts = Keyword.validate!(opts, caption: false, download: true)
 
     download =
-      if download = Keyword.fetch!(options, :download) do
+      if download = Keyword.fetch!(opts, :download) do
         case download do
           true ->
             @download_defaults
 
-          download_options when is_list(download_options) ->
-            Keyword.validate!(download_options, @download_defaults)
+          download_opts when is_list(download_opts) ->
+            Keyword.validate!(download_opts, @download_defaults)
         end
         |> Map.new()
       end
 
-    caption = Keyword.fetch!(options, :caption)
+    caption = Keyword.fetch!(opts, :caption)
 
     Kino.JS.new(__MODULE__, %{diagram: diagram, caption: caption, download: download},
       export: fn diagram -> {"mermaid", diagram} end
