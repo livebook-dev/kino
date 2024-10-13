@@ -43,7 +43,7 @@ defmodule Kino.Mermaid do
       * `:filename` - The name of the file to be downloaded.
 
   """
-  @spec new(binary(), Keyword.t()) :: t()
+  @spec new(binary(), keyword()) :: t()
   def new(diagram, opts \\ []) do
     opts = Keyword.validate!(opts, caption: false, download: true)
 

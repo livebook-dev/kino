@@ -178,7 +178,7 @@ defmodule Kino.Shorts do
         C-->D;
       """)
   '''
-  @spec mermaid(String.t(), Keyword.t()) :: Kino.Mermaid.t()
+  @spec mermaid(String.t(), keyword()) :: Kino.Mermaid.t()
   def mermaid(diagram, options \\ []), do: Kino.Mermaid.new(diagram, options)
 
   @doc """
