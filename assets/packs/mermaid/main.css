@@ -1,20 +1,3 @@
-#figure {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-#figure figcaption {
-  border-radius: .5rem;
-  background-color: rgb(240 245 249);
-  padding: 0.5rem;
-  font-size: .875rem;
-  line-height: 1.25rem;
-  font-weight: 500;
-  color: rgb(97 117 138);
-}
-
 #contents button#download {
   position: absolute;
   display: none;
@@ -25,3 +8,19 @@
   right: 0;
 }
 
+figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+figure figcaption {
+  border-radius: 0.5rem;
+  background-color: rgb(240 245 249);
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: rgb(97 117 138);
+}

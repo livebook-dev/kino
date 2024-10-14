@@ -3,56 +3,60 @@ import "./main.css";
 
 mermaid.initialize({ startOnLoad: false });
 
-export function init(ctx, {diagram, caption, download}) {
-  ctx.importCSS("main.css")
-  
+export function init(ctx, { diagram, caption, download }) {
+  ctx.importCSS("main.css");
+
   function render() {
     mermaid.render("diagram", diagram).then(({ svg, bindFunctions }) => {
       // Fix for: https://github.com/mermaid-js/mermaid/issues/1766
-      const renderedSvg = svg.replace(/<br>/gi, "<br />")
-      
+      const renderedSvg = svg.replace(/<br>/gi, "<br />");
+
       let contents = document.createElement("div");
       contents.id = "contents";
       ctx.root.appendChild(contents);
-      
+
       let figure = document.createElement("figure");
       figure.id = "figure";
       figure.innerHTML = renderedSvg;
       contents.appendChild(figure);
-      
+
       if (caption) {
         let figcaption = document.createElement("figcaption");
         figcaption.textContent = caption;
         figure.appendChild(figcaption);
       }
-      
+
       if (download) {
         let downloadButton = document.createElement("button");
-        downloadButton.id = "download"
-        downloadButton.title = `Download ${download.title}`
-        downloadButton.textContent = "⇩"
+        downloadButton.id = "download";
+        downloadButton.title = `Download ${download.title}`;
+        downloadButton.textContent = "⇩";
         contents.prepend(downloadButton);
-      
-        contents.querySelector("#download").addEventListener("click", (event) => {
-          var downloadData = [];
-          downloadData.push(renderedSvg);
-          const downloadBlob = URL.createObjectURL(new Blob(downloadData, {type: "image/svg+xml"}));
-  
-          const downloadLink = document.createElement("a");
-          downloadLink.href = downloadBlob;
-          downloadLink.download = download.filename;
-          contents.appendChild(downloadLink);
-  
-          downloadLink.dispatchEvent(
-            new MouseEvent('click', { 
-              bubbles: true, 
-              cancelable: true, 
-              view: window 
-            })
-          );
-  
-          contents.removeChild(downloadLink);
-        });
+
+        contents
+          .querySelector("#download")
+          .addEventListener("click", (event) => {
+            var downloadData = [];
+            downloadData.push(renderedSvg);
+            const downloadBlob = URL.createObjectURL(
+              new Blob(downloadData, { type: "image/svg+xml" })
+            );
+
+            const downloadLink = document.createElement("a");
+            downloadLink.href = downloadBlob;
+            downloadLink.download = download.filename;
+            contents.appendChild(downloadLink);
+
+            downloadLink.dispatchEvent(
+              new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              })
+            );
+
+            contents.removeChild(downloadLink);
+          });
       }
 
       if (bindFunctions) {
