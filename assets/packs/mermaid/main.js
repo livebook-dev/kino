@@ -8,13 +8,16 @@ export function init(ctx, {diagram, caption, download}) {
   
   function render() {
     mermaid.render("diagram", diagram).then(({ svg, bindFunctions }) => {
+      // Fix for: https://github.com/mermaid-js/mermaid/issues/1766
+      const renderedSvg = svg.replace(/<br>/gi, "<br />")
+      
       let contents = document.createElement("div");
       contents.id = "contents";
       ctx.root.appendChild(contents);
       
       let figure = document.createElement("figure");
       figure.id = "figure";
-      figure.innerHTML = svg;
+      figure.innerHTML = renderedSvg;
       contents.appendChild(figure);
       
       if (caption) {
@@ -31,9 +34,9 @@ export function init(ctx, {diagram, caption, download}) {
         contents.prepend(downloadButton);
       
         contents.querySelector("#download").addEventListener("click", (event) => {
-          var binaryData = [];
-          binaryData.push(svg);
-          const downloadBlob = URL.createObjectURL(new Blob(binaryData, {type: "image/svg+xml"}));
+          var downloadData = [];
+          downloadData.push(renderedSvg);
+          const downloadBlob = URL.createObjectURL(new Blob(downloadData, {type: "image/svg+xml"}));
   
           const downloadLink = document.createElement("a");
           downloadLink.href = downloadBlob;
