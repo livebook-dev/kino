@@ -36,6 +36,7 @@ defmodule Kino.Process do
       supervision tree are rendered. Defaults to `false`.
 
     * `:caption` - an optional caption for the diagram.
+      Can be `true` to use the default, falsey for none, or a string for a custom caption.
       Defaults to the provided `application` name.
 
   ## Examples
@@ -89,7 +90,10 @@ defmodule Kino.Process do
     {:dictionary, dictionary} = process_info(root_supervisor, :dictionary)
     [ancestor] = dictionary[:"$ancestors"]
 
-    caption = Keyword.get(opts, :caption, "Application tree for #{inspect(application)}")
+    caption =
+      opts
+      |> Keyword.get(:caption, true)
+      |> get_caption("Application tree for #{inspect(application)}")
 
     Mermaid.new(
       """
@@ -117,6 +121,7 @@ defmodule Kino.Process do
       value can either be `:top_down` or `:left_right`. Defaults to `:top_down`.
 
     * `:caption` - an optional caption for the diagram.
+      Can be `true` to use the default, falsey for none, or a string for a custom caption.
       Defaults to the provided `supervisor`.
 
   ## Examples
@@ -172,7 +177,11 @@ defmodule Kino.Process do
       end
 
     edges = traverse_supervisor(supervisor_pid, opts)
-    caption = Keyword.get(opts, :caption, "Supervisor tree for #{inspect(supervisor)}")
+
+    caption =
+      opts
+      |> Keyword.get(:caption, true)
+      |> get_caption("Supervisor tree for #{inspect(supervisor)}")
 
     Mermaid.new(
       """
@@ -252,6 +261,7 @@ defmodule Kino.Process do
       that will be used for the label.
 
     * `:caption` - an optional caption for the diagram.
+      Can be `true` to use the default, falsey for none, or a string for a custom caption.
       Defaults to the provided `trace_target`.
 
   ## Examples
@@ -430,7 +440,10 @@ defmodule Kino.Process do
       |> Enum.reverse()
       |> Enum.join("\n")
 
-    caption = Keyword.get(opts, :caption, "Messages traced from #{inspect(trace_pids)}")
+    caption =
+      opts
+      |> Keyword.get(:caption, true)
+      |> get_caption("Messages traced from #{inspect(trace_pids)}")
 
     sequence_diagram =
       Mermaid.new(
@@ -829,4 +842,9 @@ defmodule Kino.Process do
   defp process_info(pid, spec) do
     :erpc.call(node(pid), Process, :info, [pid, spec])
   end
+
+  defp get_caption(true, default), do: default
+  defp get_caption(false, _default), do: nil
+  defp get_caption(nil, _default), do: nil
+  defp get_caption(string, _default) when is_binary(string), do: string
 end

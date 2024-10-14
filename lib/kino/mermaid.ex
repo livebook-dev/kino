@@ -31,10 +31,11 @@ defmodule Kino.Mermaid do
 
   ## Options
 
-    * `:caption` - an optional caption for the rendered diagram. Defaults to `false`.
+    * `:caption` - an optional caption for the rendered diagram.
+      Can be `nil` or a string. Defaults to `nil`.
 
     * `:download` - whether or not to allow downloading the rendered Mermaid svg.
-    Defaults to `true`.
+      Defaults to `true`.
 
       Downloads can be further customized by providing a keyword list
       instead of a boolean, containing:
