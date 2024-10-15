@@ -18,6 +18,10 @@ export function init(ctx, { diagram, caption, download }) {
       const figure = document.createElement("figure");
       figure.classList.add("figure");
       figure.innerHTML = svg;
+      // The diagram intrinsic width is actually in max-width, so we adjust it
+      figure.firstElementChild.style.width =
+        figure.firstElementChild.style.maxWidth;
+      figure.firstElementChild.style.maxWidth = "100%";
       container.appendChild(figure);
 
       if (caption) {
@@ -32,7 +36,7 @@ export function init(ctx, { diagram, caption, download }) {
         downloadBtn.classList.add("download-btn");
         downloadBtn.title = "Download";
         downloadBtn.innerHTML = `<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 10H18L12 16L6 10H11V3H13V10ZM4 19H20V12H22V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V12H4V19Z"></path></svg>`;
-        container.appendChild(downloadBtn);
+        figure.appendChild(downloadBtn);
 
         downloadBtn.addEventListener("click", (event) => {
           const blobURL = URL.createObjectURL(
