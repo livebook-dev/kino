@@ -24,47 +24,24 @@ defmodule Kino.Mermaid do
 
   @type t :: Kino.JS.t()
 
-  @download_defaults [title: "Diagram", filename: "diagram.svg"]
-
   @doc """
   Creates a new kino displaying the given Mermaid diagram.
 
   ## Options
 
     * `:caption` - an optional caption for the rendered diagram.
-      Can be `nil` or a string. Defaults to `nil`.
 
-    * `:download` - whether or not to allow downloading the rendered Mermaid svg.
-      Defaults to `true`.
-
-      Downloads can be further customized by providing a keyword list
-      instead of a boolean, containing:
-
-      * `:title` - The alt text displayed for the download button.
-      * `:filename` - The name of the file to be downloaded.
+    * `:download` - whether or not to show a button for downloading
+      the diagram as a SVG. Defaults to `true`.
 
   """
   @spec new(binary(), keyword()) :: t()
   def new(diagram, opts \\ []) do
-    opts = Keyword.validate!(opts, caption: false, download: true)
+    opts = Keyword.validate!(opts, caption: nil, download: true)
 
-    download =
-      case Keyword.fetch!(opts, :download) do
-        true ->
-          Map.new(@download_defaults)
-
-        download_opts when is_list(download_opts) ->
-          download_opts
-          |> Keyword.validate!(@download_defaults)
-          |> Map.new()
-
-        _ ->
-          false
-      end
-
-    caption = Keyword.fetch!(opts, :caption)
-
-    Kino.JS.new(__MODULE__, %{diagram: diagram, caption: caption, download: download},
+    Kino.JS.new(
+      __MODULE__,
+      %{diagram: diagram, caption: opts[:caption], download: opts[:download]},
       export: fn diagram -> {"mermaid", diagram} end
     )
   end

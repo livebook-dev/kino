@@ -179,7 +179,7 @@ defmodule Kino.Shorts do
       """)
   '''
   @spec mermaid(String.t(), keyword()) :: Kino.Mermaid.t()
-  def mermaid(diagram, options \\ []), do: Kino.Mermaid.new(diagram, options)
+  def mermaid(diagram, opts \\ []), do: Kino.Mermaid.new(diagram, opts)
 
   @doc """
   A placeholder for static outputs that can be dynamically updated.
