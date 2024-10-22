@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.14.2](https://github.com/livebook-dev/kino/tree/v0.14.2) (2024-10-22)
+
+### Added
+
+* Support setting a custom number of rows in `Kino.DataTable` ([#476](https://github.com/livebook-dev/kino/pull/476))
+* Added `:caption` and `:download` options to `Kino.Mermaid` ([#477](https://github.com/livebook-dev/kino/pull/477))
+
+### Changed
+
+* Update `Kino.Mermaid` to use Mermaid v11
+* Increased the max column width in `Kino.DataTable`
+
 ## [v0.14.1](https://github.com/livebook-dev/kino/tree/v0.14.1) (2024-09-20)
 
 ### Added
