@@ -147,6 +147,7 @@ export function App({ ctx, data }) {
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
+  const maxColumnWidth = 1200;
   const maxColumnAutoWidth = data.content.columns.length === 1 ? 800 : 350;
   const rows = content.page_length;
 
@@ -510,6 +511,7 @@ export function App({ ctx, data }) {
           onGridSelectionChange={(selection) => setSelection(selection)}
           rowMarkerStartIndex={rowMarkerStartIndex}
           minColumnWidth={minColumnWidth}
+          maxColumnWidth={maxColumnWidth}
           maxColumnAutoWidth={maxColumnAutoWidth}
           fillHandle={true}
           onItemHovered={onItemHovered}
