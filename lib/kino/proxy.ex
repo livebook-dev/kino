@@ -70,6 +70,43 @@ defmodule Kino.Proxy do
   >   end
   > end)
   > ```
+
+  ### Leveraging Plug for APIs with Kino.Proxy
+
+  You can also provide a module plug as an argument to Kino.Proxy.listen/1, like this:
+
+      defmodule MyPlug do
+        def init([]), do: false
+      
+        def call(conn, _opts) do
+          Plug.Conn.send_resp(conn, 200, "hello world!")
+        end
+      end
+  
+      Kino.Proxy.listen(MyPlug)
+
+  Since our API handler is a plug, we can leverage other plugs. For example, here's how to use Plug.Router to handle multiple endpoints:
+  
+      defmodule ApiRouter do
+        use Plug.Router
+      
+        plug :match
+        plug :dispatch
+      
+        get "/hello" do
+          send_resp(conn, 200, "hello from router")
+        end
+      
+        get "/echo/:message" do
+          send_resp(conn, 200, String.upcase(message))
+        end
+      
+        match _ do
+          send_resp(conn, 404, "oops, not found")
+        end
+      end
+      
+      Kino.Proxy.listen(ApiRouter)
   """
 
   @type plug() ::
