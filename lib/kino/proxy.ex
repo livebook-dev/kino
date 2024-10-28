@@ -29,7 +29,6 @@ defmodule Kino.Proxy do
   Using the proxy feature, we can use Livebook apps to build APIs.
   For example, we could provide a data export endpoint:
 
-
       Kino.Proxy.listen(fn
         %{path_info: ["export", "data"]} = conn ->
           data = "some data"
@@ -70,6 +69,44 @@ defmodule Kino.Proxy do
   >   end
   > end)
   > ```
+
+  ## Using Plug modules with Kino.Proxy
+
+  You can also provide a module plug as an argument to `Kino.Proxy.listen/1`,
+  like this:
+
+      defmodule MyPlug do
+        def init([]), do: false
+      
+        def call(conn, _opts) do
+          Plug.Conn.send_resp(conn, 200, "hello world!")
+        end
+      end
+  
+      Kino.Proxy.listen(MyPlug)
+
+  Or a more complex example, using `Plug.Router` to handle multiple endpoints:
+  
+      defmodule ApiRouter do
+        use Plug.Router
+      
+        plug :match
+        plug :dispatch
+      
+        get "/hello" do
+          send_resp(conn, 200, "hello from router")
+        end
+      
+        get "/echo/:message" do
+          send_resp(conn, 200, String.upcase(message))
+        end
+      
+        match _ do
+          send_resp(conn, 404, "oops, not found")
+        end
+      end
+      
+      Kino.Proxy.listen(ApiRouter)
   """
 
   @type plug() ::
