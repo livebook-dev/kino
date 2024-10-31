@@ -82,11 +82,11 @@ defmodule Kino.Proxy do
           Plug.Conn.send_resp(conn, 200, "hello world!")
         end
       end
-  
+
       Kino.Proxy.listen(MyPlug)
 
   Or a more complex example, using `Plug.Router` to handle multiple endpoints:
-  
+
       defmodule ApiRouter do
         use Plug.Router
       
