@@ -122,6 +122,7 @@ defimpl Kino.Render, for: Kino.Layout do
       outputs: outputs,
       columns: kino.info.columns,
       gap: kino.info.gap,
+      max_height: kino.info.max_height,
       boxed: kino.info.boxed
     }
   end

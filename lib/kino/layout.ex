@@ -53,6 +53,10 @@ defmodule Kino.Layout do
     * `:gap` - the amount of spacing between grid items in pixels.
       Defaults to `8`
 
+    * `:max_height` - the maximum height of the grid in pixels. When
+      enabled, a scroll appears if the grid content exceeds the given
+      height
+
   ## Examples
 
       images =
@@ -65,12 +69,13 @@ defmodule Kino.Layout do
   """
   @spec grid(list(term()), keyword()) :: t()
   def grid(terms, opts \\ []) when is_list(terms) do
-    opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8)
+    opts = Keyword.validate!(opts, columns: 1, boxed: false, gap: 8, max_height: nil)
 
     info = %{
       columns: opts[:columns],
       boxed: opts[:boxed],
-      gap: opts[:gap]
+      gap: opts[:gap],
+      max_height: opts[:max_height]
     }
 
     %Kino.Layout{type: :grid, items: terms, info: info}
