@@ -120,7 +120,6 @@ export function App({ ctx, data }) {
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
   const [menu, setMenu] = useState(null);
-  const [showMenu, setShowMenu] = useState(false);
   const [selection, setSelection] = useState(emptySelection);
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
@@ -137,14 +136,8 @@ export function App({ ctx, data }) {
   const headerItems =
     hasSummaries && hasEntries ? Math.max(...summariesItems) : 0;
   const headerHeight = headerTitleSize + headerItems * 22;
-  const menuHeight = hasSorting ? 140 : 70;
   const fixedHeight = 440 + headerHeight;
-  const minRowsToFitMenu = hasSorting ? 3 : 2;
-  const autoHeight =
-    totalRows && totalRows < minRowsToFitMenu && menu
-      ? menuHeight + headerHeight
-      : null;
-  const height = totalRows >= 10 && infiniteScroll ? fixedHeight : autoHeight;
+  const height = totalRows >= 10 && infiniteScroll ? fixedHeight : null;
   const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
   const maxColumnWidth = 1200;
@@ -331,7 +324,7 @@ export function App({ ctx, data }) {
   };
 
   const { layerProps, renderLayer } = useLayer({
-    isOpen: showMenu,
+    isOpen: !!menu,
     auto: true,
     placement: "bottom-end",
     possiblePlacements: ["bottom-end", "bottom-center", "bottom-start"],
@@ -447,11 +440,10 @@ export function App({ ctx, data }) {
       themeOverride: header.id === currentMenu ? themeOverride : null,
     }));
     setColumns(newColumns);
-    setShowMenu(menu ? true : false);
   }, [menu]);
 
   return (
-    <div className="p-3 font-sans">
+    <div className="p-3 font-sans" style={menu ? { minHeight: 260 } : {}}>
       <div className="mb-6 flex items-center gap-3">
         <DataInfo data={data} totalRows={totalRows} />
         {showDownload && (
@@ -519,7 +511,7 @@ export function App({ ctx, data }) {
           onColumnMoved={hasRelocate ? onColumnMoved : undefined}
         />
       )}
-      {showMenu &&
+      {menu &&
         renderLayer(
           <HeaderMenu
             layerProps={layerProps}
