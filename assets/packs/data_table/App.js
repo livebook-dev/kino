@@ -193,7 +193,7 @@ export function App({ ctx, data }) {
 
       const middleCenter = getMiddleCenterBias(
         ctx,
-        `${theme.headerFontStyle} ${theme.fontFamily}`
+        `${theme.headerFontStyle} ${theme.fontFamily}`,
       );
 
       grad.addColorStop(0, fillStyle);
@@ -207,8 +207,8 @@ export function App({ ctx, data }) {
         const variant = isSelected
           ? "selected"
           : column.style === "highlight"
-          ? "special"
-          : "normal";
+            ? "special"
+            : "normal";
 
         const headerSize = theme.headerIconSize;
 
@@ -219,7 +219,7 @@ export function App({ ctx, data }) {
           rect.x + basePadding,
           rect.y + basePadding,
           headerSize,
-          theme
+          theme,
         );
 
         if (column.overlayIcon) {
@@ -230,7 +230,7 @@ export function App({ ctx, data }) {
             rect.x + basePadding + overlayIconSize / 2,
             rect.y + basePadding + overlayIconSize / 2,
             overlayIconSize,
-            theme
+            theme,
           );
         }
       }
@@ -240,12 +240,12 @@ export function App({ ctx, data }) {
         menuBounds.x - rect.width + theme.headerIconSize * 2.5 + 14,
         hasSummary
           ? rect.y + basePadding + theme.headerIconSize / 2 + middleCenter
-          : menuBounds.y + menuBounds.height / 2 + middleCenter
+          : menuBounds.y + menuBounds.height / 2 + middleCenter,
       );
 
       if (hasSummary) {
         const formattedSummary = Object.fromEntries(
-          summary.keys.map((k, i) => [k, summary.values[i]])
+          summary.keys.map((k, i) => [k, summary.values[i]]),
         );
         const fontSize = 13;
         const padding = fontSize + basePadding;
@@ -258,13 +258,13 @@ export function App({ ctx, data }) {
           ctx.fillText(
             `${key}:`,
             rect.x + padding / 2,
-            rect.y + padding * (index + 1) + padding
+            rect.y + padding * (index + 1) + padding,
           );
           ctx.font = baseFont;
           ctx.fillText(
             value,
             rect.x + ctx.measureText(key).width + padding,
-            rect.y + padding * (index + 1) + padding
+            rect.y + padding * (index + 1) + padding,
           );
         });
       }
@@ -278,7 +278,7 @@ export function App({ ctx, data }) {
         ctx.fill(p);
       }
     },
-    [content]
+    [content],
   );
 
   const getCellContent = useCallback(
@@ -298,7 +298,7 @@ export function App({ ctx, data }) {
         readonly: true,
       };
     },
-    [content]
+    [content],
   );
 
   const toggleSearch = () => {
@@ -371,7 +371,7 @@ export function App({ ctx, data }) {
         setMenu({ column, bounds, columnKey: id, columnType: type });
       }
     },
-    [columns]
+    [columns],
   );
 
   const onHeaderClicked = useCallback(
@@ -379,7 +379,7 @@ export function App({ ctx, data }) {
       const { id, type } = columns[column];
       setMenu({ column, bounds, columnKey: id, columnType: type });
     },
-    [columns]
+    [columns],
   );
 
   const onItemHovered = useCallback(
@@ -393,13 +393,13 @@ export function App({ ctx, data }) {
         setHoverRows(null);
       }
     },
-    [rows]
+    [rows],
   );
 
   const getRowThemeOverride = useCallback(
     (row) =>
       hoverRows?.includes(row) ? { bgCell: theme.bgHeaderHovered } : null,
-    [hoverRows]
+    [hoverRows],
   );
 
   useEffect(() => {
@@ -527,7 +527,7 @@ export function App({ ctx, data }) {
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
-          />
+          />,
         )}
       {!hasData && <p className="text-sm text-gray-700">No data</p>}
       <div id="portal" />
