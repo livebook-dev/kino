@@ -9,63 +9,71 @@ defmodule Kino.RemoteExecutionCell do
 
   @default_code ":ok"
   @global_key __MODULE__
-  @global_attrs ["node", "cookie", "cookie_secret", "node_secret"]
-  @distribution_attrs [
-    "node",
-    "use_node_secret",
-    "node_secret",
-    "cookie",
-    "use_cookie_secret",
-    "cookie_secret"
-  ]
 
   @impl true
   def init(attrs, ctx) do
-    {shared_cookie, shared_cookie_secret} =
-      AttributeStore.get_attribute({@global_key, :cookie}, {nil, nil})
+    attrs = convert_legacy_attrs(attrs)
 
-    {shared_node, shared_node_secret} =
-      AttributeStore.get_attribute({@global_key, :node}, {nil, nil})
+    shared_attrs = AttributeStore.get_attribute(@global_key, %{})
+    attrs = Map.merge(shared_attrs, attrs)
 
     fields = %{
       "assign_to" => attrs["assign_to"] || "",
-      "node" => attrs["node"] || shared_node || "",
-      "node_secret" => attrs["node_secret"] || shared_node_secret || "",
-      "cookie" => attrs["cookie"] || shared_cookie || "",
-      "cookie_secret" => attrs["cookie_secret"] || shared_cookie_secret || "",
-      "use_node_secret" =>
-        if(shared_node_secret, do: true, else: Map.get(attrs, "use_node_secret", false)),
-      "use_cookie_secret" =>
-        if(shared_cookie, do: false, else: Map.get(attrs, "use_cookie_secret", true))
+      "node_source" => attrs["node_source"] || "text",
+      "node_text" => attrs["node_text"] || "",
+      "node_secret" => attrs["node_secret"] || "",
+      "node_variable" => attrs["node_variable"] || "",
+      "cookie_source" => attrs["cookie_source"] || "text",
+      "cookie_text" => attrs["cookie_text"] || "",
+      "cookie_secret" => attrs["cookie_secret"] || "",
+      "cookie_variable" => attrs["cookie_variable"] || ""
     }
-
-    intellisense_node = intellisense_node(fields)
 
     code = attrs["code"] || @default_code
 
-    ctx = assign(ctx, fields: fields, code: code)
+    intellisense_node = intellisense_node(fields, [], [])
 
-    {:ok, ctx,
-     editor: [
-       source: code,
-       language: "elixir",
-       intellisense_node: intellisense_node
-     ]}
+    ctx =
+      assign(ctx,
+        fields: fields,
+        code: code,
+        node_options: [],
+        cookie_options: [],
+        intellisense_node: intellisense_node
+      )
+
+    {:ok, ctx, editor: [source: code, language: "elixir", intellisense_node: intellisense_node]}
   end
 
-  defp intellisense_node(fields) do
+  defp intellisense_node(fields, node_options, cookie_options) do
     node =
-      if fields["use_node_secret"] do
-        System.get_env("LB_#{fields["node_secret"]}")
-      else
-        fields["node"]
+      case fields["node_source"] do
+        "text" ->
+          fields["node_text"]
+
+        "secret" ->
+          System.get_env("LB_#{fields["node_secret"]}")
+
+        "variable" ->
+          Enum.find_value(
+            node_options,
+            &(&1.variable == fields["node_variable"] && Atom.to_string(&1.value))
+          )
       end
 
     cookie =
-      if fields["use_cookie_secret"] do
-        System.get_env("LB_#{fields["cookie_secret"]}")
-      else
-        fields["cookie"]
+      case fields["cookie_source"] do
+        "text" ->
+          fields["cookie_text"]
+
+        "secret" ->
+          System.get_env("LB_#{fields["cookie_secret"]}")
+
+        "variable" ->
+          Enum.find_value(
+            cookie_options,
+            &(&1.variable == fields["cookie_variable"] && Atom.to_string(&1.value))
+          )
       end
 
     if is_binary(node) and node =~ "@" and is_binary(cookie) and cookie != "" do
@@ -75,27 +83,40 @@ defmodule Kino.RemoteExecutionCell do
 
   @impl true
   def handle_connect(ctx) do
-    payload = %{fields: ctx.assigns.fields}
+    payload = %{
+      fields: ctx.assigns.fields,
+      node_variables: Enum.map(ctx.assigns.node_options, & &1.variable),
+      cookie_variables: Enum.map(ctx.assigns.cookie_options, & &1.variable)
+    }
+
     {:ok, payload, ctx}
   end
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
-    ctx = update(ctx, :fields, &Map.put(&1, field, value))
-    if field in @global_attrs, do: put_shared_attr(field, value)
+    updated_fields = to_updates(field, value)
+    ctx = put_updated_fields(ctx, updated_fields)
+    {:noreply, maybe_reconfigure_intellisese_node(ctx)}
+  end
 
-    ctx =
-      if field in @distribution_attrs do
-        reconfigure_smart_cell(ctx,
-          editor: [intellisense_node: intellisense_node(ctx.assigns.fields)]
-        )
-      else
-        ctx
-      end
+  defp put_updated_fields(ctx, updated_fields) do
+    ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
+    put_shared_attrs(ctx.assigns.fields)
+    broadcast_event(ctx, "update_field", %{"fields" => updated_fields})
+    ctx
+  end
 
-    broadcast_event(ctx, "update_field", %{"fields" => update_fields(field, value)})
+  defp maybe_reconfigure_intellisese_node(%{assigns: assigns} = ctx) do
+    intellisense_node =
+      intellisense_node(assigns.fields, assigns.node_options, assigns.cookie_options)
 
-    {:noreply, ctx}
+    if intellisense_node == assigns.intellisense_node do
+      ctx
+    else
+      ctx
+      |> assign(intellisense_node: intellisense_node)
+      |> reconfigure_smart_cell(editor: [intellisense_node: intellisense_node])
+    end
   end
 
   @impl true
@@ -104,16 +125,81 @@ defmodule Kino.RemoteExecutionCell do
   end
 
   @impl true
+  def scan_binding(pid, binding, _env) do
+    node_options =
+      for {key, value} <- binding,
+          is_atom(key),
+          is_atom(value) and Atom.to_string(value) =~ "@",
+          do: %{variable: Atom.to_string(key), value: value}
+
+    cookie_options =
+      for {key, value} <- binding,
+          is_atom(key),
+          is_atom(value),
+          do: %{variable: Atom.to_string(key), value: value}
+
+    send(pid, {:scan_binding_result, node_options, cookie_options})
+  end
+
+  @impl true
+  def handle_info({:scan_binding_result, node_options, cookie_options}, ctx) do
+    ctx = assign(ctx, node_options: node_options, cookie_options: cookie_options)
+
+    broadcast_event(ctx, "variables", %{
+      node_variables: Enum.map(node_options, & &1.variable),
+      cookie_variables: Enum.map(cookie_options, & &1.variable)
+    })
+
+    ctx = maybe_update_variable_fields(ctx)
+
+    {:noreply, maybe_reconfigure_intellisese_node(ctx)}
+  end
+
+  defp maybe_update_variable_fields(%{assigns: assigns} = ctx) do
+    updated_fields = %{}
+
+    updated_fields =
+      case {assigns.fields["node_variable"], assigns.node_options} do
+        {"", [%{variable: variable} | _]} -> Map.put(updated_fields, "node_variable", variable)
+        _ -> %{}
+      end
+
+    updated_fields =
+      case {assigns.fields["cookie_variable"], assigns.cookie_options} do
+        {"", [%{variable: variable} | _]} -> Map.put(updated_fields, "cookie_variable", variable)
+        _ -> %{}
+      end
+
+    if updated_fields == %{} do
+      ctx
+    else
+      put_updated_fields(ctx, updated_fields)
+    end
+  end
+
+  @impl true
   def to_attrs(ctx) do
-    Map.put(ctx.assigns.fields, "code", ctx.assigns.code)
+    fields = ctx.assigns.fields
+
+    fields
+    |> Map.take([
+      "assign_to",
+      "node_source",
+      "node_#{fields["node_source"]}",
+      "cookie_source",
+      "cookie_#{fields["cookie_source"]}"
+    ])
+    |> Map.put("code", ctx.assigns.code)
   end
 
   @impl true
   def to_source(%{"code" => ""}), do: ""
-  def to_source(%{"use_node_secret" => false, "node" => ""}), do: ""
-  def to_source(%{"use_node_secret" => true, "node_secret" => ""}), do: ""
-  def to_source(%{"use_cookie_secret" => false, "cookie" => ""}), do: ""
-  def to_source(%{"use_cookie_secret" => true, "cookie_secret" => ""}), do: ""
+  def to_source(%{"node_text" => ""}), do: ""
+  def to_source(%{"node_secret" => ""}), do: ""
+  def to_source(%{"node_variable" => ""}), do: ""
+  def to_source(%{"cookie_text" => ""}), do: ""
+  def to_source(%{"cookie_secret" => ""}), do: ""
+  def to_source(%{"cookie_variable" => ""}), do: ""
 
   def to_source(%{"code" => code, "assign_to" => var} = attrs) do
     var = if Kino.SmartCell.valid_variable_name?(var), do: var
@@ -156,37 +242,70 @@ defmodule Kino.RemoteExecutionCell do
     end
   end
 
-  defp build_set_cookie(%{"use_cookie_secret" => true, "cookie_secret" => secret}) do
+  defp build_set_cookie(%{"cookie_secret" => secret}) do
     quote do
       String.to_atom(System.fetch_env!(unquote("LB_#{secret}")))
     end
   end
 
-  defp build_set_cookie(%{"cookie" => cookie}), do: String.to_atom(cookie)
+  defp build_set_cookie(%{"cookie_text" => cookie}) do
+    String.to_atom(cookie)
+  end
 
-  defp build_node(%{"use_node_secret" => true, "node_secret" => secret}) do
+  defp build_set_cookie(%{"cookie_variable" => variable}) do
+    {String.to_atom(variable), [], nil}
+  end
+
+  defp build_node(%{"node_secret" => secret}) do
     quote do
       String.to_atom(System.fetch_env!(unquote("LB_#{secret}")))
     end
   end
 
-  defp build_node(%{"node" => node}), do: String.to_atom(node)
-
-  defp put_shared_attr("cookie", value) do
-    AttributeStore.put_attribute({@global_key, :cookie}, {value, nil})
+  defp build_node(%{"node_text" => node}) do
+    String.to_atom(node)
   end
 
-  defp put_shared_attr("cookie_secret", value) do
-    AttributeStore.put_attribute({@global_key, :cookie}, {nil, value})
+  defp build_node(%{"node_variable" => variable}) do
+    {String.to_atom(variable), [], nil}
   end
 
-  defp put_shared_attr("node", value) do
-    AttributeStore.put_attribute({@global_key, :node}, {value, nil})
+  defp put_shared_attrs(fields) do
+    shared_attrs =
+      Map.take(fields, [
+        "node_source",
+        "node_#{fields["node_source"]}",
+        "cookie_source",
+        "cookie_#{fields["cookie_source"]}"
+      ])
+
+    AttributeStore.put_attribute(@global_key, shared_attrs)
   end
 
-  defp put_shared_attr("node_secret", value) do
-    AttributeStore.put_attribute({@global_key, :node}, {nil, value})
-  end
+  defp to_updates(field, value), do: %{field => value}
 
-  defp update_fields(field, value), do: %{field => value}
+  defp convert_legacy_attrs(attrs) do
+    attrs =
+      case attrs do
+        %{"use_node_secret" => false, "node" => node} ->
+          Map.merge(attrs, %{"node_source" => "text", "node_text" => node})
+
+        %{"use_node_secret" => true, "node_secret" => secret} ->
+          Map.merge(attrs, %{"node_source" => "secret", "node_secret" => secret})
+
+        attrs ->
+          attrs
+      end
+
+    case attrs do
+      %{"use_cookie_secret" => false, "cookie" => cookie} ->
+        Map.merge(attrs, %{"cookie_source" => "text", "cookie_text" => cookie})
+
+      %{"use_cookie_secret" => true, "cookie_secret" => secret} ->
+        Map.merge(attrs, %{"cookie_source" => "secret", "cookie_secret" => secret})
+
+      attrs ->
+        attrs
+    end
+  end
 end
