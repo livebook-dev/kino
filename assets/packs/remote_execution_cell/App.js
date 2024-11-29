@@ -1,13 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import { RiLockPasswordLine, RiInputMethodLine } from "@remixicon/react";
+import {
+  RiLockPasswordLine,
+  RiInputMethodLine,
+  RiArrowDownSLine,
+} from "@remixicon/react";
 import classNames from "classnames";
 
 export default function App({ ctx, payload }) {
   const [fields, setFields] = useState(payload.fields);
+  const [nodeVariables, setNodeVariables] = useState(payload.node_variables);
+  const [cookieVariables, setCookieVariables] = useState(
+    payload.cookie_variables,
+  );
 
   useEffect(() => {
     ctx.handleEvent("update_field", ({ fields }) => {
       setFields((currentFields) => ({ ...currentFields, ...fields }));
+    });
+
+    ctx.handleEvent("variables", ({ node_variables, cookie_variables }) => {
+      setNodeVariables(node_variables);
+      setCookieVariables(cookie_variables);
     });
   }, []);
 
@@ -43,14 +56,11 @@ export default function App({ ctx, payload }) {
           <InlineLabel label="Node" />
           <SecretField
             ctx={ctx}
-            toggleInputProps={{
-              name: "use_node_secret",
-              checked: fields.use_node_secret,
-              onChange: handleChange,
-            }}
+            source={fields.node_source}
+            onSourceChange={(source) => pushUpdate("node_source", source)}
             textInputProps={{
-              name: "node",
-              value: fields.node,
+              name: "node_text",
+              value: fields.node_text,
               onChange: (event) => handleChange(event, false),
               onBlur: handleBlur,
             }}
@@ -58,6 +68,15 @@ export default function App({ ctx, payload }) {
               name: "node_secret",
               value: fields.node_secret,
               onChange: handleChange,
+            }}
+            variableSelectProps={{
+              name: "node_variable",
+              value: fields.node_variable,
+              onChange: handleChange,
+              options: nodeVariables.map((variable) => ({
+                label: variable,
+                value: variable,
+              })),
             }}
             modalTitle="Set node value"
             required
@@ -67,14 +86,11 @@ export default function App({ ctx, payload }) {
           <InlineLabel label="Cookie" />
           <SecretField
             ctx={ctx}
-            toggleInputProps={{
-              name: "use_cookie_secret",
-              checked: fields.use_cookie_secret,
-              onChange: handleChange,
-            }}
+            source={fields.cookie_source}
+            onSourceChange={(source) => pushUpdate("cookie_source", source)}
             textInputProps={{
-              name: "cookie",
-              value: fields.cookie,
+              name: "cookie_text",
+              value: fields.cookie_text,
               onChange: (event) => handleChange(event, false),
               onBlur: handleBlur,
             }}
@@ -82,6 +98,15 @@ export default function App({ ctx, payload }) {
               name: "cookie_secret",
               value: fields.cookie_secret,
               onChange: handleChange,
+            }}
+            variableSelectProps={{
+              name: "cookie_variable",
+              value: fields.cookie_variable,
+              onChange: handleChange,
+              options: cookieVariables.map((variable) => ({
+                label: variable,
+                value: variable,
+              })),
             }}
             modalTitle="Set cookie value"
             required
@@ -168,11 +193,86 @@ function TextField({
   );
 }
 
+export function SelectField({
+  label = null,
+  value,
+  className,
+  options = [],
+  optionGroups = [],
+  required = false,
+  fullWidth = false,
+  startAdornment,
+  ...props
+}) {
+  function renderOptions(options) {
+    return options.map((option) => (
+      <option key={option.value || ""} value={option.value || ""}>
+        {option.label}
+      </option>
+    ));
+  }
+
+  const isValueAvailable = options.some((option) => option.value === value);
+
+  const noOptions = options.length === 0 && optionGroups.length === 0;
+
+  return (
+    <div
+      className={classNames([
+        "flex max-w-full flex-col",
+        fullWidth ? "w-full" : "w-[20ch]",
+      ])}
+    >
+      {label && (
+        <label className="color-gray-800 mb-0.5 block text-sm font-medium">
+          {label}
+        </label>
+      )}
+      <div
+        className={classNames([
+          "flex items-stretch overflow-hidden rounded-lg border bg-gray-50",
+          required && !value ? "border-red-300" : "border-gray-200",
+        ])}
+      >
+        {startAdornment}
+        <div
+          className={classNames(["w-full relative", noOptions && "opacity-50"])}
+        >
+          <select
+            {...props}
+            value={value}
+            className={classNames([
+              "w-full appearance-none bg-transparent px-3 py-2 pr-7 text-sm text-gray-600 placeholder-gray-400 focus:outline-none",
+              !isValueAvailable && "text-opacity-50",
+              className,
+            ])}
+          >
+            {/* If the value is not in options, we still want to show it.
+                For example, a variable that is not bound yet. */}
+            {!isValueAvailable && <option value={value}>{value}</option>}
+            {renderOptions(options)}
+            {optionGroups.map(({ label, options }) => (
+              <optgroup key={label} label={label}>
+                {renderOptions(options)}
+              </optgroup>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+            <RiArrowDownSLine size={16} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SecretField({
   ctx,
-  toggleInputProps,
+  source,
+  onSourceChange,
   textInputProps,
   secretInputProps,
+  variableSelectProps,
   label = null,
   required = false,
   modalTitle = "Select secret",
@@ -198,36 +298,61 @@ function SecretField({
     );
   }
 
-  const useSecret = toggleInputProps.checked;
+  const sources = ["text", "secret", "variable"];
+
+  function onSourceClick() {
+    const sourceIndex = sources.indexOf(source);
+    const nextSource = sources[(sourceIndex + 1) % sources.length];
+    onSourceChange(nextSource);
+  }
 
   const inputTypeToggle = (
-    <label className="flex items-center border-r border-gray-200 bg-gray-200 px-1.5 text-gray-600 hover:cursor-pointer hover:bg-gray-300">
-      <input {...toggleInputProps} type="checkbox" className="hidden" />
-      {useSecret ? (
-        <RiLockPasswordLine size={24} />
-      ) : (
-        <RiInputMethodLine size={24} />
+    <div
+      className="flex items-center border-r border-gray-200 bg-gray-200 px-1.5 text-gray-600 hover:cursor-pointer hover:bg-gray-300"
+      onClick={onSourceClick}
+    >
+      {source === "text" && <RiInputMethodLine size={24} />}
+      {source === "secret" && <RiLockPasswordLine size={24} />}
+      {source === "variable" && (
+        <span className="w-6 h-6 text-center leading-none text-xl">𝑥</span>
       )}
-    </label>
+    </div>
   );
 
-  return useSecret ? (
-    <TextField
-      {...secretInputProps}
-      inputRef={secretInputRef}
-      label={label}
-      startAdornment={inputTypeToggle}
-      required={required}
-      onClick={selectSecret}
-      className="cursor-pointer"
-      readOnly
-    />
-  ) : (
-    <TextField
-      {...textInputProps}
-      label={label}
-      startAdornment={inputTypeToggle}
-      required={required}
-    />
-  );
+  if (source === "text") {
+    return (
+      <TextField
+        {...textInputProps}
+        label={label}
+        startAdornment={inputTypeToggle}
+        required={required}
+      />
+    );
+  }
+
+  if (source === "secret") {
+    return (
+      <TextField
+        {...secretInputProps}
+        inputRef={secretInputRef}
+        label={label}
+        startAdornment={inputTypeToggle}
+        required={required}
+        onClick={selectSecret}
+        className="cursor-pointer"
+        readOnly
+      />
+    );
+  }
+
+  if (source === "variable") {
+    return (
+      <SelectField
+        {...variableSelectProps}
+        label={label}
+        startAdornment={inputTypeToggle}
+        required={required}
+      />
+    );
+  }
 }

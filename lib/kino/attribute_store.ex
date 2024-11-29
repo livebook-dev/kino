@@ -51,4 +51,9 @@ defmodule Kino.AttributeStore do
       [{_key, value} | _] -> value
     end
   end
+
+  @doc false
+  def clear() do
+    :ets.delete_all_objects(@table_name)
+  end
 end
