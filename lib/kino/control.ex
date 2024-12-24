@@ -406,13 +406,13 @@ defmodule Kino.Control do
       button = Kino.Control.button("Hello")
       input = Kino.Input.checkbox("Check")
 
-      [hello: button, check: input]
+      [{:hello, button, [id: 1]}, {:check, input, [:bar]}]
       |> Kino.Control.tagged_stream()
       |> Kino.listen(fn event ->
         IO.inspect(event)
       end)
-      #=> {:hello, %{origin: "client1", type: :click}}
-      #=> {:check, %{origin: "client1", type: :change, value: true}}
+      #=> {%{tag: :hello, properties: [id: 1]}, %{origin: "client1", type: :click}}
+      #=> {%{tag: :check, properties: [:bar]}, type: :change, value: true}}
   """
   @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do
@@ -423,25 +423,34 @@ defmodule Kino.Control do
             {tag, source} when is_atom(tag) ->
               assert_stream_source!(source)
 
+            {tag, source, _properties} when is_atom(tag) ->
+              assert_stream_source!(source)
+
             _other ->
               raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
           end
 
-          {tag, source} = entry
+          {tag, source, properties} =
+            case entry do
+              {tag, source, properties} -> {tag, source, properties}
+              {tag, source} -> {tag, source, []}
+            end
 
           case source do
             %struct{ref: ref} when struct in [Kino.Control, Kino.Input] ->
-              {[{tag, ref} | tagged_topics], tagged_intervals}
+              {[{%{tag: tag, properties: properties}, ref} | tagged_topics], tagged_intervals}
 
             %Kino.JS.Live{ref: ref} ->
-              {[{tag, ref} | tagged_topics], tagged_intervals}
+              {[{%{tag: tag, properties: properties}, ref} | tagged_topics], tagged_intervals}
 
             {:interval, ms} ->
-              {tagged_topics, [{tag, ms} | tagged_intervals]}
+              {tagged_topics, [{%{tag: tag, properties: properties}, ms} | tagged_intervals]}
           end
       end
 
-    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn tag, event -> {tag, event} end)
+    build_stream(tagged_topics, Enum.reverse(tagged_intervals), fn tag_properties, event ->
+      {tag_properties, event}
+    end)
   end
 
   defp assert_stream_source!(%Kino.Control{}), do: :ok

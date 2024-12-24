@@ -190,7 +190,10 @@ defmodule Kino.ControlTest do
         |> Kino.Control.tagged_stream()
         |> Enum.take(2)
 
-      assert Enum.sort(events) == [{:click, %{origin: "client1"}}, {:name, %{origin: "client2"}}]
+      assert Enum.sort(events) == [
+               {%{tag: :click, properties: []}, %{origin: "client1"}},
+               {%{tag: :name, properties: []}, %{origin: "client2"}}
+             ]
     end
   end
 
