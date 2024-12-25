@@ -165,7 +165,7 @@ defmodule Kino.ControlTest do
 
   describe "tagged_stream/1" do
     test "raises on invalid argument" do
-      assert_raise ArgumentError, "expected a keyword list, got: [0]", fn ->
+      assert_raise ArgumentError, "expected a list of 2-element tuples, got: [0]", fn ->
         Kino.Control.tagged_stream([0])
       end
 
@@ -191,6 +191,16 @@ defmodule Kino.ControlTest do
         |> Enum.take(2)
 
       assert Enum.sort(events) == [{:click, %{origin: "client1"}}, {:name, %{origin: "client2"}}]
+
+      events =
+        [{{:click, "button"}, button}, {{:name, "text"}, input}]
+        |> Kino.Control.tagged_stream()
+        |> Enum.take(2)
+
+      assert Enum.sort(events) == [
+               {{:click, "button"}, %{origin: "client1"}},
+               {{:name, "text"}, %{origin: "client2"}}
+             ]
     end
   end
 
