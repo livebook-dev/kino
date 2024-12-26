@@ -401,6 +401,8 @@ defmodule Kino.Control do
   @doc """
   Same as `stream/1`, but attaches custom tag to every stream item.
 
+  Tags can be arbitrary terms.
+
   ## Example
 
       button = Kino.Control.button("Hello")
@@ -414,17 +416,17 @@ defmodule Kino.Control do
       #=> {:hello, %{origin: "client1", type: :click}}
       #=> {:check, %{origin: "client1", type: :change, value: true}}
   """
-  @spec tagged_stream(keyword(event_source())) :: Enumerable.t()
+  @spec tagged_stream(list({tag :: term(), event_source()})) :: Enumerable.t()
   def tagged_stream(entries) when is_list(entries) do
     {tagged_topics, tagged_intervals} =
       for entry <- entries, reduce: {[], []} do
         {tagged_topics, tagged_intervals} ->
           case entry do
-            {tag, source} when is_atom(tag) ->
+            {_tag, source} ->
               assert_stream_source!(source)
 
             _other ->
-              raise ArgumentError, "expected a keyword list, got: #{inspect(entries)}"
+              raise ArgumentError, "expected a list of 2-element tuples, got: #{inspect(entries)}"
           end
 
           {tag, source} = entry
