@@ -103,7 +103,6 @@ export function App({ ctx, data }) {
   const columnsInitData = getColumnsData(data.content.columns);
   const hasRefetch = data.features.includes("refetch");
   const hasExport = data.features.includes("export");
-  const hasData = data.content.columns.length !== 0;
   const hasSummaries = summariesItems.length > 0;
   const hasSorting = data.features.includes("sorting");
   const hasRelocate = data.features.includes("relocate");
@@ -124,6 +123,7 @@ export function App({ ctx, data }) {
   const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
 
+  const hasData = content.columns.length !== 0;
   const totalRows = content.total_rows;
   const hasEntries = hasData && totalRows > 0;
 

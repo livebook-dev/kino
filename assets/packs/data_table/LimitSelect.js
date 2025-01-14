@@ -8,7 +8,7 @@ export default function LimitSelect({ limit, totalRows, onChange }) {
     <div>
       <form>
         <label className="p-1 text-xs font-medium text-gray-500">Show</label>
-        <div class="relative inline-block">
+        <div className="relative inline-block">
           <select
             className="appearance-none rounded-lg border border-gray-400 bg-white px-2 py-1 pr-7 text-xs font-medium text-gray-500 focus:outline-none"
             value={limit}
