@@ -22,8 +22,11 @@ defmodule Kino.Text do
   @opaque t :: %__MODULE__{
             text: String.t(),
             terminal: boolean(),
-            chunk: boolean()
+            chunk: boolean(),
+            style: style()
           }
+
+  @type style :: [{:color | :font_weight | :font_size, String.Chars.t()}]
 
   @doc """
   Creates a new kino displaying the given text content.
@@ -67,7 +70,7 @@ defmodule Kino.Text do
 
   """
   @spec new(String.t(), opts) :: t()
-        when opts: [terminal: boolean(), chunk: boolean(), style: Enumerable.t()]
+        when opts: [terminal: boolean(), chunk: boolean(), style: style()]
   def new(text, opts \\ []) when is_binary(text) do
     opts = Keyword.validate!(opts, terminal: false, chunk: false, style: [])
     terminal? = opts[:terminal]
