@@ -4,9 +4,10 @@ defmodule Kino.Screen do
 
   Each screen must implement the `c:init/1` and `c:render/1` callbacks.
   Event handlers can be attached by calling the `control/2` function.
-  Note the screen state is shared across all users seeing the given page.
 
-  Let's see some examples.
+  Each user on the page get their own version of their screen, which
+  is not shared. If you want to share them, you can pass a frame as
+  argument to the screen, as shown in the "Dynamic select" example below.
 
   ## Dynamic select
 
@@ -142,7 +143,7 @@ defmodule Kino.Screen do
           if name == "" do
             %{state | name: name, error: "name can't be blank"}
           else
-            %{state | name: name, page: 2}
+            %{state | name: name, error: nil, page: 2}
           end
         end
 
@@ -150,7 +151,7 @@ defmodule Kino.Screen do
           if address == "" do
             %{state | address: address, error: "address can't be blank"}
           else
-            %{state | address: address, page: 3}
+            %{state | address: address, error: nil, page: 3}
           end
         end
 
@@ -171,19 +172,14 @@ defmodule Kino.Screen do
       GenServer.start_link(__MODULE__, mod_frame_state)
     end
 
-    def control(from, fun) when is_function(fun, 2) do
-      Kino.Control.subscribe(from, {__MODULE__, fun})
-      from
+    @impl true
+    def init({module, frame, fun, event, state}) do
+      {:ok, state} = fun.(event, state)
+      {:ok, render(module, frame, event.origin, state)}
     end
 
     @impl true
-    def init({module, frame, state}) do
-      {:ok, state} = module.init(state)
-      {:ok, render(module, frame, nil, state)}
-    end
-
-    @impl true
-    def handle_info({{__MODULE__, fun}, data}, {module, frame, client_id, state}) do
+    def handle_info({{Kino.Screen, fun}, data}, {module, frame, client_id, state}) do
       state = fun.(data, state)
       {:noreply, render(module, frame, client_id, state)}
     end
@@ -191,6 +187,60 @@ defmodule Kino.Screen do
     defp render(module, frame, client_id, state) do
       Kino.Frame.render(frame, module.render(state), to: client_id)
       {module, frame, client_id, state}
+    end
+  end
+
+  defmodule Watcher do
+    @moduledoc false
+    use GenServer
+
+    def start_link(mod_frame_state) do
+      GenServer.start_link(__MODULE__, {mod_frame_state, self()})
+    end
+
+    @impl true
+    def init({{module, frame, state}, parent}) do
+      {:ok, state} = module.init(state)
+      Kino.Frame.render(frame, module.render(state))
+
+      data = %{
+        module: module,
+        frame: frame,
+        state: state,
+        sup: parent,
+        children: %{}
+      }
+
+      {:ok, data, {:continue, {:init, parent}}}
+    end
+
+    @impl true
+    def handle_continue({:init, parent}, state) do
+      [_, {_id, sup, _, _}] = Supervisor.which_children(parent)
+      {:noreply, %{state | sup: sup}}
+    end
+
+    @impl true
+    def handle_info({{Kino.Screen, fun}, event}, data) do
+      if not Map.has_key?(event, :origin) do
+        raise "expected control/2 to map to an event with origin"
+      end
+
+      %{module: module, frame: frame, state: state, sup: sup, children: children} = data
+
+      children =
+        case DynamicSupervisor.start_child(sup, {Server, {module, frame, fun, event, state}}) do
+          {:ok, pid} -> Map.put(children, event.origin, pid)
+          {:error, _} -> children
+        end
+
+      {:noreply, %{data | children: children}}
+    end
+
+    def handle_info({:client_leave, client_id}, %{sup: sup, children: children} = data) do
+      {pid, children} = Map.pop(children, client_id)
+      pid && DynamicSupervisor.terminate_child(sup, pid)
+      {:noreply, %{data | children: children}}
     end
   end
 
@@ -219,11 +269,30 @@ defmodule Kino.Screen do
   """
   @spec control(element, (map(), state() -> state())) :: element
         when element: Kino.Control.t() | Kino.Input.t()
-  defdelegate control(element, fun), to: Server
+
+  def control(from, fun) when is_function(fun, 2) do
+    Kino.Control.subscribe(from, {__MODULE__, fun})
+    from
+  end
 
   def new(module, state) when is_atom(module) do
     frame = Kino.Frame.new()
-    {:ok, _pid} = Kino.start_child({Server, {module, frame, state}})
+
+    children = [
+      # If they boot, we always restart them in case of errors
+      {DynamicSupervisor, max_restarts: 1_000_000, max_seconds: 1},
+      {Watcher, {module, frame, state}}
+    ]
+
+    opts = [strategy: :one_for_one]
+
+    {:ok, _pid} =
+      Kino.start_child(%{
+        id: __MODULE__,
+        start: {Supervisor, :start_link, [children, opts]},
+        type: :supervisor
+      })
+
     frame
   end
 end
