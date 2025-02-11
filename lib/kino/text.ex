@@ -38,9 +38,9 @@ defmodule Kino.Text do
       Defaults to `false`
 
     * `:style` - a keyword list or map of pairs HTML styles, such as
-      `style: [color: "#FF0000", font_weight: :bold]`. Atom keys are
-      automatically from snake case (`font_weight`) to kebab case
-      (`font-weight`). Not supported on terminal outputs.
+      `style: [color: "#FF0000", font_weight: :bold]`. The currently supported
+      styles are `:color`, `:font_size`, and `:font_weight`. Not supported on
+      terminal outputs.
 
   ## Examples
 
@@ -69,27 +69,29 @@ defmodule Kino.Text do
   @spec new(String.t(), opts) :: t()
         when opts: [terminal: boolean(), chunk: boolean(), style: Enumerable.t()]
   def new(text, opts \\ []) when is_binary(text) do
-    opts = Keyword.validate!(opts, terminal: false, chunk: false, style: nil)
+    opts = Keyword.validate!(opts, terminal: false, chunk: false, style: [])
     terminal? = opts[:terminal]
+    style = opts[:style]
 
-    style =
-      if terminal? do
-        if opts[:style] do
-          raise ArgumentError, ":style not supported when :terminal true"
-        end
-      else
-        style = opts[:style] || []
+    cond do
+      not is_list(style) ->
+        raise ArgumentError, ":style must be a keyword list"
 
+      terminal? and style != [] ->
+        raise ArgumentError, ":style not supported when terminal: true"
+
+      true ->
         Enum.each(style, fn
-          {key, _value} when is_binary(key) or is_atom(key) ->
-            true
+          {key, value} when key in [:color, :font_weight, :font_size] ->
+            if String.contains?(to_string(value), ";") do
+              raise ArgumentError, "invalid CSS property value for #{inspect(key)}"
+            end
 
           other ->
-            raise ArgumentError, ":style must be a map or keyword list, got: #{inspect(other)}"
+            raise ArgumentError,
+                  ":style must be a keyword list of color/font_size/font_weight, got: #{inspect(other)}"
         end)
-
-        style
-      end
+    end
 
     %__MODULE__{text: text, terminal: terminal?, chunk: opts[:chunk], style: style}
   end
