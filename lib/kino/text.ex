@@ -40,7 +40,7 @@ defmodule Kino.Text do
       are merged into a single text. This is useful for streaming content.
       Defaults to `false`
 
-    * `:style` - a keyword list or map of pairs HTML styles, such as
+    * `:style` - a keyword list of CSS attributes, such as
       `style: [color: "#FF0000", font_weight: :bold]`. The currently supported
       styles are `:color`, `:font_size`, and `:font_weight`. Not supported on
       terminal outputs.
