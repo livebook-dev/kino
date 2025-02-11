@@ -1,5 +1,5 @@
 defmodule Kino.Screen do
-  @moduledoc ~S"""
+  @moduledoc ~S'''
   Provides a LiveView like experience for building forms in Livebook.
 
   Each screen must implement the `c:init/1` and `c:render/1` callbacks.
@@ -9,10 +9,11 @@ defmodule Kino.Screen do
   is not shared. If you want to share them, you can pass a frame as
   argument to the screen, as shown in the "Dynamic select" example below.
 
-  ## Dynamic select
+  ## Dynamic form/select
 
-  Here is an example that allows you to render different forms depending
-  on the value of a select, each form triggering a different action:
+  Here is an example that allows you to build a dynamic form that renders
+  values depending on the chosen options. On submit, you then process the
+  data (with optinal validation).
 
       defmodule MyScreen do
         @behaviour Kino.Screen
@@ -20,55 +21,83 @@ defmodule Kino.Screen do
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
 
-        # A form to search by name...
-        def render(%{selection: :name} = state) do
+        @countries [none: "", usa: "United States", canada: "Canada"]
+
+        @languages [
+          usa: [none: "", en: "English", es: "Spanish"],
+          canada: [none: "", en: "English", fr: "French"]
+        ]
+
+        @defaults %{
+          country: :none,
+          language: :none
+        }
+
+        # This is a function we will use to start the screen.
+        #
+        # Our screen will be placed in a grid with one additional
+        # frame to render results into. And the state of the screen
+        # holds the form data and the result frame itself.
+        def new(result_frame) do
+          result_frame = Kino.Frame.new()
+          state = %{data: @defaults, frame: result_frame}
+
+          Kino.Layout.grid([
+            Kino.Screen.new(__MODULE__, state),
+            result_frame
+          ])
+        end
+
+        def render(%{data: data}) do
           form(
-            [name: text("Name")],
-            submit: "Search"
+            [
+              country: country_select(data),
+              language: language_select(data)
+            ]
+            |> Enum.filter(fn {_key, value} -> value != nil end),
+            report_changes: true,
+            submit: "Submit"
           )
-          |> control(&by_name/2)
-          |> add_layout(state)
+          |> control(&handle_event/2)
         end
 
-        # A form to search by address...
-        def render(%{selection: :address} = state) do
-          form(
-            [address: text("Address")],
-            submit: "Search"
-          )
-          |> control(&by_address/2)
-          |> add_layout(state)
+        defp country_select(data) do
+          select("Country", @countries, default: data.country)
         end
 
-        # The general layout of the scren
-        defp add_layout(element, state) do
-          select =
-            select("Search by", [name: "Name", address: "Address"], default: state.selection)
-            |> control(&selection/2)
-
-          Kino.Layout.grid([select, element, state.frame])
+        defp language_select(data) do
+          if languages = @languages[data.country] do
+            default = if languages[data.language], do: data.language, else: :none
+            select("Language", languages, default: default)
+          end
         end
 
-        ## Events handlers
-
-        defp selection(%{value: selection}, state) do
-          %{state | selection: selection}
+        def handle_event(%{data: data, type: :change}, state) do
+          %{state | data: Map.merge(@defaults, data)}
         end
 
-        defp by_name(%{data: %{name: name}}, state) do
-          Kino.Frame.render(state.frame, "SEARCHING BY NAME: #{name}")
-          state
-        end
+        def handle_event(%{data: data, type: :submit, origin: client}, state) do
+          data = Map.merge(@defaults, data)
 
-        defp by_address(%{data: %{address: address}}, state) do
-          Kino.Frame.render(state.frame, "SEARCHING BY ADDRESS: #{address}")
-          state
+          # If you want to validate the data, you could do
+          # here and render a different message.
+          markdown =
+            Kino.Markdown.new("""
+            Submitted!
+            * **Country**: #{data.country}
+            * **Language**: #{data.language}
+            """)
+
+          # We render the results only for the user who submits it,
+          # but you can share it across all by removing to: client.
+          Kino.Frame.render(state.frame, markdown, to: client)
+
+          # Reset form values on submission
+          %{state | data: @defaults}
         end
       end
 
-      # In the state, we track the current selection and the frame to print results to
-      state = %{selection: :name, frame: Kino.Frame.new()}
-      Kino.Screen.new(MyScreen, state)
+      MyScreen.new()
 
   ## Wizard like
 
@@ -79,6 +108,13 @@ defmodule Kino.Screen do
 
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
+
+        def new do
+          # Our screen will guide the user to provide its name and address.
+          # We also have a field keeping the current page and if there is an error.
+          state = %{page: 1, name: nil, address: nil, error: nil}
+          Kino.Screen.new(__MODULE__, state)
+        end
 
         # The first screen gets the name.
         #
@@ -150,11 +186,8 @@ defmodule Kino.Screen do
         end
       end
 
-      # Our screen will guide the user to provide its name and address.
-      # We also have a field keeping the current page and if there is an error.
-      state = %{page: 1, name: nil, address: nil, error: nil}
-      Kino.Screen.new(MyScreen, state)
-  """
+      MyScreen.new()
+  '''
 
   defmodule Server do
     @moduledoc false
@@ -185,6 +218,7 @@ defmodule Kino.Screen do
   defmodule Watcher do
     @moduledoc false
     use GenServer
+    require Logger
 
     def start_link(mod_frame_state) do
       GenServer.start_link(__MODULE__, {mod_frame_state, self()})
@@ -221,8 +255,12 @@ defmodule Kino.Screen do
 
       children =
         case DynamicSupervisor.start_child(sup, {Server, {module, frame, fun, event, state}}) do
-          {:ok, pid} -> Map.put(children, event.origin, pid)
-          {:error, _} -> children
+          {:ok, pid} ->
+            Map.put(children, event.origin, pid)
+
+          {:error, error} ->
+            Logger.error(Exception.format_exit(error))
+            children
         end
 
       {:noreply, %{data | children: children}}
