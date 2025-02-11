@@ -81,7 +81,7 @@ defmodule Kino.Text do
         style = opts[:style] || []
 
         Enum.each(style, fn
-          {key, value} when is_binary(key) or is_atom(key) ->
+          {key, _value} when is_binary(key) or is_atom(key) ->
             true
 
           other ->
