@@ -17,7 +17,7 @@ defmodule Kino.Text do
 
   @enforce_keys [:text]
 
-  defstruct [:text, :terminal, :chunk]
+  defstruct [:text, :terminal, :chunk, :style]
 
   @opaque t :: %__MODULE__{
             text: String.t(),
@@ -36,6 +36,11 @@ defmodule Kino.Text do
     * `:chunk` - whether this is a part of a larger text. Adjacent chunks
       are merged into a single text. This is useful for streaming content.
       Defaults to `false`
+
+    * `:style` - a keyword list or map of pairs HTML styles, such as
+      `style: [color: "#FF0000", font_weight: :bold]`. Atom keys are
+      automatically from snake case (`font_weight`) to kebab case
+      (`font-weight`). Not supported on terminal outputs.
 
   ## Examples
 
@@ -61,9 +66,31 @@ defmodule Kino.Text do
       Kino.nothing()
 
   """
-  @spec new(String.t(), opts) :: t() when opts: [terminal: boolean(), chunk: boolean()]
+  @spec new(String.t(), opts) :: t()
+        when opts: [terminal: boolean(), chunk: boolean(), style: Enumerable.t()]
   def new(text, opts \\ []) when is_binary(text) do
-    opts = Keyword.validate!(opts, terminal: false, chunk: false)
-    %__MODULE__{text: text, terminal: opts[:terminal], chunk: opts[:chunk]}
+    opts = Keyword.validate!(opts, terminal: false, chunk: false, style: nil)
+    terminal? = opts[:terminal]
+
+    style =
+      if terminal? do
+        if opts[:style] do
+          raise ArgumentError, ":style not supported when :terminal true"
+        end
+      else
+        style = opts[:style] || []
+
+        Enum.each(style, fn
+          {key, value} when is_binary(key) or is_atom(key) ->
+            true
+
+          other ->
+            raise ArgumentError, ":style must be a map or keyword list, got: #{inspect(other)}"
+        end)
+
+        style
+      end
+
+    %__MODULE__{text: text, terminal: terminal?, chunk: opts[:chunk], style: style}
   end
 end

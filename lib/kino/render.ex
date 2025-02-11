@@ -88,7 +88,7 @@ defimpl Kino.Render, for: Kino.Text do
   end
 
   def to_livebook(kino) do
-    %{type: :plain_text, text: kino.text, chunk: kino.chunk}
+    %{type: :plain_text, text: kino.text, chunk: kino.chunk, style: kino.style}
   end
 end
 
