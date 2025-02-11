@@ -174,8 +174,7 @@ defmodule Kino.Screen do
 
     @impl true
     def init({module, frame, fun, event, state}) do
-      {:ok, state} = fun.(event, state)
-      {:ok, render(module, frame, event.origin, state)}
+      {:ok, render(module, frame, event.origin, fun.(event, state))}
     end
 
     @impl true
@@ -200,7 +199,6 @@ defmodule Kino.Screen do
 
     @impl true
     def init({{module, frame, state}, parent}) do
-      {:ok, state} = module.init(state)
       Kino.Frame.render(frame, module.render(state))
 
       data = %{
@@ -252,6 +250,9 @@ defmodule Kino.Screen do
 
   It receives the second argument given to `new/2` and
   it must return the screen state.
+
+  This function is called in the same process that calls
+  `Kino.Screen.new/2`.
   """
   @callback init(state) :: {:ok, state}
 
@@ -259,7 +260,10 @@ defmodule Kino.Screen do
   Callback invoked to render the screen, whenever there
   is a control event.
 
-  It receives the state and it must return a renderable output.
+  It receives the state and it must return a renderable
+  output. The first time this function is called, it is
+  done within a temporary process until the user first
+  interacts with the form.
   """
   @callback render(state) :: term()
 
@@ -276,6 +280,7 @@ defmodule Kino.Screen do
   end
 
   def new(module, state) when is_atom(module) do
+    {:ok, state} = module.init(state)
     frame = Kino.Frame.new()
 
     children = [
