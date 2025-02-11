@@ -20,11 +20,6 @@ defmodule Kino.Screen do
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
 
-        # In the state, we track the current selection and the frame to print results to
-        def init(results_frame) do
-          {:ok, %{selection: :name, frame: results_frame}}
-        end
-
         # A form to search by name...
         def render(%{selection: :name} = state) do
           form(
@@ -71,8 +66,9 @@ defmodule Kino.Screen do
         end
       end
 
-      results_frame = Kino.Frame.new()
-      Kino.Screen.new(MyScreen, results_frame)
+      # In the state, we track the current selection and the frame to print results to
+      state = %{selection: :name, frame: Kino.Frame.new()}
+      Kino.Screen.new(MyScreen, state)
 
   ## Wizard like
 
@@ -83,12 +79,6 @@ defmodule Kino.Screen do
 
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
-
-        # Our screen will guide the user to provide its name and address.
-        # We also have a field keeping the current page and if there is an error.
-        def init(:ok) do
-          {:ok, %{page: 1, name: nil, address: nil, error: nil}}
-        end
 
         # The first screen gets the name.
         #
@@ -160,7 +150,10 @@ defmodule Kino.Screen do
         end
       end
 
-      Kino.Screen.new(MyScreen, :ok)
+      # Our screen will guide the user to provide its name and address.
+      # We also have a field keeping the current page and if there is an error.
+      state = %{page: 1, name: nil, address: nil, error: nil}
+      Kino.Screen.new(MyScreen, state)
   """
 
   defmodule Server do
@@ -246,24 +239,16 @@ defmodule Kino.Screen do
   @type state :: term()
 
   @doc """
-  Callback invoked when the screen is initialized.
-
-  It receives the second argument given to `new/2` and
-  it must return the screen state.
-
-  This function is called in the same process that calls
-  `Kino.Screen.new/2`.
-  """
-  @callback init(state) :: {:ok, state}
-
-  @doc """
   Callback invoked to render the screen, whenever there
   is a control event.
 
   It receives the state and it must return a renderable
-  output. The first time this function is called, it is
-  done within a temporary process until the user first
-  interacts with the form.
+  output.
+
+  The first time this function is called, it is done within
+  a temporary process until the user first interacts with
+  an element via `control/2`. Then all events happen in a
+  user-specific process.
   """
   @callback render(state) :: term()
 
@@ -280,7 +265,6 @@ defmodule Kino.Screen do
   end
 
   def new(module, state) when is_atom(module) do
-    {:ok, state} = module.init(state)
     frame = Kino.Frame.new()
 
     children = [
