@@ -150,7 +150,7 @@ defmodule Kino.Screen do
           if address == "" do
             %{state | address: address, error: "address can't be blank"}
           else
-            %{state | address: address, page: 2}
+            %{state | address: address, page: 3}
           end
         end
 
