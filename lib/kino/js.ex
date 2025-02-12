@@ -471,7 +471,7 @@ defmodule Kino.JS do
   ## Export
 
   The output can optionally be exported in notebook source by specifying
-  an `:export` function. The function receives `data` as an argument
+  an `:export` function. The function receives the `data` as an argument
   and should return a tuple `{info_string, payload}`. `info_string`
   is used to annotate the Markdown code block where the output is
   persisted. `payload` is the value persisted in the code block. The
@@ -496,7 +496,8 @@ defmodule Kino.JS do
   > You should prefer to use the `data` argument for computing the
   > export payload. However, if it cannot be inferred from `data`,
   > you should just reference the original value. Do not put additional
-  > fields in `data`, just to use it for export.
+  > fields in `data`, just to use it for export, given those fields
+  > are sent to the client.
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, data, opts \\ []) do
