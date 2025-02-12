@@ -187,6 +187,8 @@ defmodule Kino.Screen do
       MyScreen.new()
   '''
 
+  require Logger
+
   defmodule Server do
     @moduledoc false
 
@@ -207,6 +209,11 @@ defmodule Kino.Screen do
       {:noreply, render(module, frame, client_id, state)}
     end
 
+    def handle_info(msg, data) do
+      Logger.warning("unhandled message by #{inspect(__MODULE__)}: #{inspect(msg)}")
+      {:noreply, data}
+    end
+
     defp render(module, frame, client_id, state) do
       Kino.Frame.render(frame, module.render(state), to: client_id)
       {module, frame, client_id, state}
@@ -216,7 +223,6 @@ defmodule Kino.Screen do
   defmodule Watcher do
     @moduledoc false
     use GenServer
-    require Logger
 
     def start_link(mod_frame_state) do
       GenServer.start_link(__MODULE__, {mod_frame_state, self()})
@@ -224,6 +230,7 @@ defmodule Kino.Screen do
 
     @impl true
     def init({{module, frame, state}, parent}) do
+      Kino.Bridge.monitor_clients(self())
       Kino.Frame.render(frame, module.render(state))
 
       data = %{
@@ -269,6 +276,15 @@ defmodule Kino.Screen do
       pid && DynamicSupervisor.terminate_child(sup, pid)
       {:noreply, %{data | children: children}}
     end
+
+    def handle_info({:client_join, _}, data) do
+      {:noreply, data}
+    end
+
+    def handle_info(msg, data) do
+      Logger.warning("unhandled message by #{inspect(__MODULE__)}: #{inspect(msg)}")
+      {:noreply, data}
+    end
   end
 
   @typedoc "The state of the screen"
@@ -299,6 +315,10 @@ defmodule Kino.Screen do
     from
   end
 
+  @doc """
+  Creates a new screen with the given module and state.
+  """
+  @spec new(module(), term()) :: Kino.Frame.t()
   def new(module, state) when is_atom(module) do
     frame = Kino.Frame.new()
 
