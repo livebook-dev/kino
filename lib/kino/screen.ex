@@ -130,8 +130,6 @@ defmodule Kino.Screen do
         end
 
         # The next screen gets the address.
-        #
-        # We also call `add_go_back/1` to add a back button.
         def render(%{page: 2} = state) do
           form(
             [address: text("Address", default: state.address)],
@@ -296,7 +294,6 @@ defmodule Kino.Screen do
   """
   @spec control(element, (map(), state() -> state())) :: element
         when element: Kino.Control.t() | Kino.Input.t()
-
   def control(from, fun) when is_function(fun, 2) do
     Kino.Control.subscribe(from, {__MODULE__, fun})
     from
