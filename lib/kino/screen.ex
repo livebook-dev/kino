@@ -38,7 +38,7 @@ defmodule Kino.Screen do
         # Our screen will be placed in a grid with one additional
         # frame to render results into. And the state of the screen
         # holds the form data and the result frame itself.
-        def new(result_frame) do
+        def new do
           result_frame = Kino.Frame.new()
           state = %{data: @defaults, frame: result_frame}
 
