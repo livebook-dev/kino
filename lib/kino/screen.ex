@@ -229,25 +229,25 @@ defmodule Kino.Screen do
     end
 
     @impl true
-    def init({{module, frame, state}, parent}) do
+    def init(mod_frame_state_parent) do
       Kino.Bridge.monitor_clients(self())
+      {:ok, mod_frame_state_parent, {:continue, :init}}
+    end
+
+    @impl true
+    def handle_continue(:init, {{module, frame, state}, parent}) do
+      [_, {DynamicSupervisor, sup, _, _}] = Supervisor.which_children(parent)
       Kino.Frame.render(frame, module.render(state))
 
       data = %{
         module: module,
         frame: frame,
         state: state,
-        sup: parent,
+        sup: sup,
         children: %{}
       }
 
-      {:ok, data, {:continue, {:init, parent}}}
-    end
-
-    @impl true
-    def handle_continue({:init, parent}, state) do
-      [_, {_id, sup, _, _}] = Supervisor.which_children(parent)
-      {:noreply, %{state | sup: sup}}
+      {:noreply, data}
     end
 
     @impl true
