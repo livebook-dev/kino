@@ -334,7 +334,7 @@ defmodule Kino.DataTable do
 
   defp value_to_string(value) do
     if mod = String.Chars.impl_for(value) do
-      mod.to_string(value)
+      apply(mod, :to_string, [value])
     else
       inspect(value)
     end
