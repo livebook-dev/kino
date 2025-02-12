@@ -21,16 +21,16 @@ defmodule Kino.Screen do
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
 
-        @countries [none: "", usa: "United States", canada: "Canada"]
+        @countries [nil: "", usa: "United States", canada: "Canada"]
 
         @languages [
-          usa: [none: "", en: "English", es: "Spanish"],
-          canada: [none: "", en: "English", fr: "French"]
+          usa: [nil: "", en: "English", es: "Spanish"],
+          canada: [nil: "", en: "English", fr: "French"]
         ]
 
         @defaults %{
-          country: :none,
-          language: :none
+          country: nil,
+          language: nil
         }
 
         # This is a function we will use to start the screen.
@@ -53,8 +53,7 @@ defmodule Kino.Screen do
             [
               country: country_select(data),
               language: language_select(data)
-            ]
-            |> Enum.filter(fn {_key, value} -> value != nil end),
+            ],
             report_changes: true,
             submit: "Submit"
           )
@@ -67,18 +66,16 @@ defmodule Kino.Screen do
 
         defp language_select(data) do
           if languages = @languages[data.country] do
-            default = if languages[data.language], do: data.language, else: :none
+            default = if languages[data.language], do: data.language
             select("Language", languages, default: default)
           end
         end
 
         def handle_event(%{data: data, type: :change}, state) do
-          %{state | data: Map.merge(@defaults, data)}
+          %{state | data: data}
         end
 
         def handle_event(%{data: data, type: :submit, origin: client}, state) do
-          data = Map.merge(@defaults, data)
-
           # If you want to validate the data, you could do
           # here and render a different message.
           markdown =
