@@ -46,7 +46,7 @@ end
 
 defimpl Kino.Render, for: Any do
   def to_livebook(term) do
-    Kino.Output.to_livebook(term)
+    Kino.Output.inspect(term)
   end
 end
 
