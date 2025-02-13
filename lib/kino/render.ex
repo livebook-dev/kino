@@ -52,7 +52,7 @@ end
 
 defimpl Kino.Render, for: Kino.Inspect do
   def to_livebook(raw) do
-    Kino.Output.inspect(raw.term)
+    Kino.Render.Any.to_livebook(raw.term)
   end
 end
 
@@ -164,7 +164,7 @@ defimpl Kino.Render, for: Reference do
         reference |> Kino.ETS.new() |> Kino.Render.to_livebook()
 
       true ->
-        Kino.Output.inspect(reference)
+        Kino.Render.Any.to_livebook(reference)
     end
   end
 
@@ -198,7 +198,7 @@ defimpl Kino.Render, for: Atom do
         Kino.Render.to_livebook(tabs)
 
       true ->
-        Kino.Output.inspect(atom)
+        Kino.Render.Any.to_livebook(atom)
     end
   end
 
@@ -220,7 +220,7 @@ defimpl Kino.Render, for: PID do
         Kino.Render.to_livebook(tabs)
 
       true ->
-        Kino.Output.inspect(pid)
+        Kino.Render.Any.to_livebook(pid)
     end
   end
 end
@@ -229,7 +229,7 @@ defimpl Kino.Render, for: BitString do
   def to_livebook(string) do
     case Kino.Utils.get_image_type(string) do
       nil ->
-        Kino.Output.inspect(string)
+        Kino.Render.Any.to_livebook(string)
 
       type ->
         raw = Kino.Inspect.new(string)
