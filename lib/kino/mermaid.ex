@@ -42,7 +42,7 @@ defmodule Kino.Mermaid do
     Kino.JS.new(
       __MODULE__,
       %{diagram: diagram, caption: opts[:caption], download: opts[:download]},
-      export: fn diagram -> {"mermaid", diagram} end
+      export: fn data -> {"mermaid", data.diagram} end
     )
   end
 end

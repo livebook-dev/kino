@@ -318,8 +318,8 @@ defmodule Kino.JS.Live do
   end
 
   @doc false
-  @spec output_info(t()) :: map()
-  def output_info(%__MODULE__{} = kino) do
+  @spec output_attrs(t()) :: map()
+  def output_attrs(%__MODULE__{} = kino) do
     %{
       js_view: %{
         ref: kino.ref,
