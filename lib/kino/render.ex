@@ -71,7 +71,7 @@ defimpl Kino.Render, for: Kino.JS.Live do
 
   def to_livebook(kino) do
     Kino.Bridge.reference_object(kino.pid, self())
-    %{js_view: js_view, export: export} = Kino.JS.Live.output_info(kino)
+    %{js_view: js_view, export: export} = Kino.JS.Live.output_attrs(kino)
     %{type: :js, js_view: js_view, export: export}
   end
 end

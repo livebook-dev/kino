@@ -200,4 +200,29 @@ defmodule Kino.Test do
   def push_smart_cell_editor_source(kino, source) do
     send(kino.pid, {:editor_source, source})
   end
+
+  @doc """
+  Invokes export for the given `Kino.JS` or `Kino.JS.Live` and returns
+  the result.
+
+  For more details, see `Kino.JS.new/3` and `Kino.JS.Live.new/3`
+  respectively.
+  """
+  def export(kino, timeout \\ 100)
+
+  def export(%Kino.JS{} = kino, timeout) do
+    %{js_view: %{ref: ref, pid: pid}} = Kino.JS.output_attrs(kino)
+    do_export(ref, pid, timeout)
+  end
+
+  def export(%Kino.JS.Live{} = kino, timeout) do
+    %{js_view: %{ref: ref, pid: pid}} = Kino.JS.Live.output_attrs(kino)
+    do_export(ref, pid, timeout)
+  end
+
+  defp do_export(ref, pid, timeout) do
+    send(pid, {:export, self(), %{ref: ref}})
+    assert_receive {:export_reply, export_result, %{ref: ^ref}}, timeout
+    export_result
+  end
 end
