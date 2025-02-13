@@ -178,11 +178,15 @@ defmodule Kino.Control do
   Creates a new form.
 
   A form is composed of regular inputs from the `Kino.Input` module,
-  however in a form input values are not synchronized between users.
-  Consequently, the form is another control for producing user-specific
-  events.
+  however in a form, input values are not synchronized between users.
+  Instead the form emits user-specific events with the input values.
 
-  Either `:submit` or `:report_changes` must be specified.
+  The first argument is a keyword list of fields, where the value is
+  either an input or nil. If the value is nil, it means the data has
+  the input value set to nil too. This is useful in cases where the
+  forms inputs may be generated dynamically.
+
+  Either `:submit` or `:report_changes` must be specified as option.
 
   ## Options
 
@@ -244,19 +248,19 @@ defmodule Kino.Control do
       #=>     type: :submit
       #=>   }}
   """
-  @spec form(list({atom(), Kino.Input.t()}), keyword()) :: t()
+  @spec form(list({atom(), Kino.Input.t() | nil}), keyword()) :: t()
   def form(fields, opts \\ []) when is_list(fields) do
     if fields == [] do
       raise ArgumentError, "expected at least one field, got: []"
     end
 
     for {field, input} <- fields do
-      unless is_atom(field) do
+      if not is_atom(field) do
         raise ArgumentError,
               "expected each field key to be an atom, got: #{inspect(field)}"
       end
 
-      unless is_struct(input, Kino.Input) do
+      if not is_struct(input, Kino.Input) and not is_nil(input) do
         raise ArgumentError,
               "expected each field to be a Kino.Input widget, got: #{inspect(input)} for #{inspect(field)}"
       end
@@ -267,10 +271,14 @@ defmodule Kino.Control do
     end
 
     fields =
-      Enum.map(fields, fn {field, input} ->
-        # Make sure we use this input only in the form and nowhere else
-        input = Kino.Input.duplicate(input)
-        {field, Kino.Render.to_livebook(input)}
+      Enum.map(fields, fn
+        {field, nil} ->
+          {field, nil}
+
+        {field, input} ->
+          # Make sure we use this input only in the form and nowhere else
+          input = Kino.Input.duplicate(input)
+          {field, Kino.Render.to_livebook(input)}
       end)
 
     submit = Keyword.get(opts, :submit, nil)
