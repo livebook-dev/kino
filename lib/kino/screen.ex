@@ -1,19 +1,18 @@
 defmodule Kino.Screen do
   @moduledoc ~S'''
-  Provides a LiveView like experience for building forms in Livebook.
+  Provides a LiveView-like experience for building forms in Livebook.
 
-  Each screen must implement the `c:init/1` and `c:render/1` callbacks.
-  Event handlers can be attached by calling the `control/2` function.
-
-  Each user on the page get their own version of their screen, which
-  is not shared. If you want to share them, you can pass a frame as
-  argument to the screen, as shown in the "Dynamic select" example below.
+  The screen receives its initial state and must implement the `c:render/1`
+  callback. Event handlers can be attached by calling the `control/2` function.
+  The first render of the screen is shared across all users and then further
+  interactions happen within a per-user process.
 
   ## Dynamic form/select
 
   Here is an example that allows you to build a dynamic form that renders
   values depending on the chosen options. On submit, you then process the
-  data (with optinal validation).
+  data (with optional validation) and writes the result into a separate frame.
+  The output frame could also be configured to share results across all users.
 
       defmodule MyScreen do
         @behaviour Kino.Screen
@@ -96,9 +95,9 @@ defmodule Kino.Screen do
 
       MyScreen.new()
 
-  ## Wizard like
+  ## Wizard example
 
-  Here is an example of how to build wizard like functionality with `Kino.Screen`:
+  Here is an example of how to build wizard-like functionality with `Kino.Screen`:
 
       defmodule MyScreen do
         @behaviour Kino.Screen
@@ -106,9 +105,9 @@ defmodule Kino.Screen do
         # Import Kino.Control for forms, Kino.Input for inputs, and Screen for control/2
         import Kino.{Control, Input, Screen}
 
+        # Our screen will guide the user to provide its name and address.
+        # We also have a field keeping the current page and if there is an error.
         def new do
-          # Our screen will guide the user to provide its name and address.
-          # We also have a field keeping the current page and if there is an error.
           state = %{page: 1, name: nil, address: nil, error: nil}
           Kino.Screen.new(__MODULE__, state)
         end
@@ -188,7 +187,6 @@ defmodule Kino.Screen do
 
   defmodule Server do
     @moduledoc false
-
     use GenServer
 
     def start_link(mod_frame_state) do
