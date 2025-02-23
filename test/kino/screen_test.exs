@@ -3,6 +3,16 @@ defmodule Kino.ScreenTest do
 
   import Kino.Control
 
+  defmodule MyScreen do
+    def new(rendering_fun) do
+      Kino.Screen.new(__MODULE__, rendering_fun)
+    end
+
+    def render(rendering_fun) do
+      rendering_fun.()
+    end
+  end
+
   test "renders" do
     _frame = MyScreen.new(fn -> "hello" end)
 
@@ -41,14 +51,14 @@ defmodule Kino.ScreenTest do
 
     frame =
       MyScreen.new(fn ->
-        Kino.Grid.new([
+        Kino.Layout.grid([
           Kino.Screen.control(ok_button, fn _, _ -> fn -> ok_button end end),
           Kino.Screen.control(fail_event_button, fn _, _ -> raise "oops" end),
           Kino.Screen.control(fail_render_button, fn _, _ -> fn -> raise "oops" end end)
         ])
       end)
 
-    assert_output(%{type: :frame_update, update: {:replace, [%{type: :control}]}})
+    assert_output(%{type: :frame_update, update: {:replace, [%{type: :grid}]}})
     {watcher, _dyn_sup} = screen_tree(frame)
 
     assert ExUnit.CaptureLog.capture_log(fn ->
@@ -66,16 +76,6 @@ defmodule Kino.ScreenTest do
            end) =~ "** (RuntimeError) oops"
 
     assert Process.alive?(watcher)
-  end
-
-  defmodule MyScreen do
-    def new(rendering_fun) do
-      Kino.Screen.new(__MODULE__, rendering_fun)
-    end
-
-    def render(rendering_fun) do
-      rendering_fun.()
-    end
   end
 
   defp control(button, parent) do
