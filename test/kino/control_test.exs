@@ -48,6 +48,13 @@ defmodule Kino.ControlTest do
                    end
     end
 
+    test "supports nil fields" do
+      assert %Kino.Control{attrs: %{fields: [name: %{}, age: nil]}} =
+               Kino.Control.form([name: Kino.Input.text("Name"), age: nil],
+                 submit: "Send"
+               )
+    end
+
     test "supports boolean values for :reset_on_submit" do
       assert %Kino.Control{attrs: %{reset_on_submit: [:name]}} =
                Kino.Control.form([name: Kino.Input.text("Name")],
