@@ -501,30 +501,8 @@ defmodule Kino.JS do
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, data, opts \\ []) do
-    # TODO: remove the old export options in Kino v0.14.0
-    export =
-      opts[:export] ||
-        if info_string = opts[:export_info_string] do
-          IO.warn(
-            "passing :export_info_string to Kino.JS.new/3 is deprecated. Specify an :export function instead"
-          )
-
-          export_key = opts[:export_key]
-
-          if export_key do
-            unless is_map(data) do
-              raise ArgumentError,
-                    "expected data to be a map, because :export_key is specified, got: #{inspect(data)}"
-            end
-
-            unless is_map_key(data, export_key) do
-              raise ArgumentError,
-                    "got :export_key of #{inspect(export_key)}, but no such key found in data: #{inspect(data)}"
-            end
-          end
-
-          fn data -> {info_string, if(export_key, do: data[export_key], else: data)} end
-        end
+    opts = Keyword.validate!(opts, [:export])
+    export = opts[:export]
 
     ref = Kino.Output.random_ref()
 
