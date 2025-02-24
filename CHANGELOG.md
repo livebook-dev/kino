@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.15.0](https://github.com/livebook-dev/kino/tree/v0.15.0) (2025-02-24)
+
+### Added
+
+* `:max_height` option to `Kino.Layout.grid/2` ([#479](https://github.com/livebook-dev/kino/pull/479))
+* Support for getting node and cookie from variables in Remote execution cell ([#481](https://github.com/livebook-dev/kino/pull/481))
+* `:style` option to `Kino.Text.new/2` ([#490](https://github.com/livebook-dev/kino/pull/490))
+* Added `Kino.Screen` as an abstraction for building complex forms in apps ([#489](https://github.com/livebook-dev/kino/pull/489))
+
+### Changed
+
+* `Kino.Control.tagged_stream/1` to allow any term as tag ([#485](https://github.com/livebook-dev/kino/pull/485))
+
+### Removed
+
+* Removed the deprecated `:export_info_string` option from `Kino.JS.new/3`
+
+### Fixed
+
+* Entries now showing when updating empty data table via `Kino.DataTable.update/3`
+* Mermaid output export crashing ([#492](https://github.com/livebook-dev/kino/pull/492))
+
 ## [v0.14.2](https://github.com/livebook-dev/kino/tree/v0.14.2) (2024-10-22)
 
 ### Added

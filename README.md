@@ -14,7 +14,7 @@ To bring Kino to Livebook all you need to do is `Mix.install/2`:
 
 ```elixir
 Mix.install([
-  {:kino, "~> 0.14.2"}
+  {:kino, "~> 0.15.0"}
 ])
 ```
 
