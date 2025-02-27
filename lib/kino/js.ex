@@ -501,9 +501,9 @@ defmodule Kino.JS do
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, data, opts \\ []) do
-    # TODO: remove :export_info_string on v1.0, for now we just ignore
+    # TODO: remove :export_info_string, :export_key on v1.0, for now we just ignore
     # it in case a library passes both export options.
-    opts = Keyword.validate!(opts, [:export, :export_info_string])
+    opts = Keyword.validate!(opts, [:export, :export_info_string, :export_key])
     export = opts[:export]
 
     ref = Kino.Output.random_ref()
