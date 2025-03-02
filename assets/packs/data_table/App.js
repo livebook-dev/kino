@@ -77,18 +77,6 @@ const theme = {
   headerIconSize: 22,
 };
 
-// Force font rendering consistency in Safari
-const safariFixStyle = `
-  @media not all and (min-resolution:.001dpcm) {
-    @supports (-webkit-appearance:none) {
-      .gdg-cell, .gdg-header {
-        font-family: 'JetBrains Mono', monospace !important;
-        -webkit-font-smoothing: antialiased;
-      }
-    }
-  }
-`;
-
 export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
@@ -456,9 +444,6 @@ export function App({ ctx, data }) {
 
   return (
     <div className="p-3 font-sans" style={menu ? { minHeight: 260 } : {}}>
-      {/* Add Safari-specific font fix styles */}
-      <style dangerouslySetInnerHTML={{ __html: safariFixStyle }} />
-
       <div className="mb-6 flex items-center gap-3">
         <DataInfo data={data} totalRows={totalRows} />
         {showDownload && (
