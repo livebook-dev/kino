@@ -39,10 +39,6 @@ function createLoadingPlaceholder() {
   return container.firstChild;
 }
 
-/**
- * Checks if the required fonts are already loaded
- * @returns {boolean} True if fonts are loaded, false otherwise
- */
 function areFontsLoaded() {
   return (
     document.fonts &&
@@ -52,9 +48,6 @@ function areFontsLoaded() {
   );
 }
 
-/**
- * Renders the app with required font styles
- */
 function renderApp(ctx, data) {
   const root = createRoot(ctx.root);
   root.render(
