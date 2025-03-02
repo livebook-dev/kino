@@ -93,41 +93,41 @@ export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
 
-  // Calculate appropriate column width based on content
+  /**
+   * Calculate appropriate column width based on content
+   * @param {Object} column - The column definition
+   * @param {Object} data - The data containing content to measure
+   * @returns {number} - The calculated optimal width
+   */
   const calculateColumnWidth = (column, data) => {
-    // Use a canvas to measure text width
+    // Use a canvas for text measurement
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // Apply the correct font for consistent measurements
-    // This is critical for correct initial sizing
     ctx.font = `bold 14px 'JetBrains Mono', monospace`;
     
-    // For Safari we need additional adjustments
+    // Browser-specific adjustments
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const safariAdjustment = isSafari ? 1.15 : 1; // Safari needs wider columns
+    const adjustmentFactor = isSafari ? 1.15 : 1; 
+    const minColumnWidth = isSafari ? 120 : 100;
     
-    // Start with header width + padding, add extra for Safari
-    let width = Math.ceil(ctx.measureText(column.label).width * safariAdjustment) + 40;
+    // Start with header width + padding
+    const headerWidth = Math.ceil(ctx.measureText(column.label).width * adjustmentFactor) + 40;
     
-    // Add minimum width for very short headers (like "id")
-    if (column.label.length <= 2) {
-      width = Math.max(width, 80); // Ensure very short headers get enough space
-    }
+    // Ensure short headers get reasonable width
+    let width = column.label.length <= 2 ? Math.max(headerWidth, 80) : headerWidth;
     
-    // Check data for this column if available
-    if (data && data.data) {
-      // Sample up to 100 rows for performance
+    // Sample data rows if available
+    if (data?.data) {
       const sampleSize = Math.min(100, data.data.length);
       const columnIndex = data.columns.findIndex(col => col.key === column.key);
       
       if (columnIndex >= 0) {
-        // Determine if data is columnar or row-based
         const columnar = data.data_orientation === "columns";
         
-        // Sample data to find max width
+        // Check sample of rows to find maximum content width
         for (let i = 0; i < sampleSize; i++) {
           let cellData;
+          
           if (columnar && data.data[columnIndex] && data.data[columnIndex][i] !== undefined) {
             cellData = String(data.data[columnIndex][i]);
           } else if (!columnar && data.data[i] && data.data[i][columnIndex] !== undefined) {
@@ -135,17 +135,15 @@ export function App({ ctx, data }) {
           }
           
           if (cellData) {
-            const cellWidth = Math.ceil(ctx.measureText(cellData).width * safariAdjustment) + 24;
+            const cellWidth = Math.ceil(ctx.measureText(cellData).width * adjustmentFactor) + 24;
             width = Math.max(width, cellWidth);
           }
         }
       }
     }
     
-    // Restrict to reasonable bounds
-    // Use wider minimum for Safari to avoid text clipping
-    const minWidth = isSafari ? 120 : 100;
-    return Math.min(Math.max(width, minWidth), 350);
+    // Apply min/max constraints
+    return Math.min(Math.max(width, minColumnWidth), 350);
   };
 
   const getColumnsData = (columns) => {
