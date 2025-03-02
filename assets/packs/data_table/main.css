@@ -4,15 +4,17 @@
 
 /* Data table loading placeholder styling */
 .font-loading-placeholder {
-  width: 100%;
-  height: 400px;
+  width: 100%; 
+  min-height: 300px;
+  height: auto;
+  max-height: 60vh; /* Limit height on large screens */
   background-color: white;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   position: relative;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
   
   /* Add subtle background pattern similar to Livebook code cells */
   background-image: 
@@ -24,16 +26,19 @@
 
 /* Header shimmer */
 .data-table-loading-header {
-  height: 64px;
+  height: auto;
+  min-height: 3.5rem; /* ~56px */
   background-color: #f5f7fa;
   border-bottom: 1px solid #E1E8F0;
   display: flex;
-  padding: 0 16px;
+  flex-wrap: wrap;
+  padding: 0.5rem 1rem;
+  align-items: center;
 }
 
 /* Table body loading effect */
 .data-table-loading-body {
-  padding: 0 16px;
+  padding: 0.5rem 1rem;
 }
 
 /* Generic shimmer effect for all elements */
@@ -50,58 +55,60 @@
   background-size: 800px 100%;
   display: inline-block;
   position: relative;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   animation: shimmer 2s infinite linear;
 }
 
 .shimmer-title {
-  width: 100px;
-  height: 24px;
-  margin-top: 20px;
-  margin-right: 20px;
+  width: calc(8% + 5rem); /* Responsive width */
+  max-width: 12rem;
+  height: 1.5rem;
+  margin: 0.5rem 1.25rem 0.5rem 0;
 }
 
 .shimmer-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  margin-top: 14px;
-  margin-left: 12px;
+  width: 2.25rem; /* 36px */
+  height: 2.25rem; /* 36px */
+  border-radius: 0.25rem;
+  margin: 0.5rem 0 0.5rem 0.75rem;
 }
 
 .shimmer-row {
-  height: 44px;
+  height: 2.75rem; /* ~44px */
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   border-bottom: 1px solid #E1E8F0;
 }
 
 .shimmer-cell {
-  height: 20px;
-  margin-right: 24px;
+  height: 1.25rem; /* 20px */
+  margin-right: 1.5rem;
+  flex-shrink: 0;
 }
 
-.shimmer-cell-1 { width: 40px; }
-.shimmer-cell-2 { width: 120px; }
-.shimmer-cell-3 { width: 180px; }
-.shimmer-cell-4 { width: 90px; }
-.shimmer-cell-5 { width: 140px; }
+/* Responsive cell widths using percentages + fixed amount */
+.shimmer-cell-1 { width: calc(5% + 1rem); max-width: 3rem; } /* Index/ID column */
+.shimmer-cell-2 { width: calc(15% + 2rem); max-width: 10rem; }
+.shimmer-cell-3 { width: calc(25% + 2rem); max-width: 16rem; }
+.shimmer-cell-4 { width: calc(10% + 2rem); max-width: 8rem; }
+.shimmer-cell-5 { width: calc(20% + 2rem); max-width: 12rem; }
 
 /* Spinner for loading state */
 .loading-spinner {
   display: inline-block;
   position: absolute;
-  width: 20px;
-  height: 20px;
-  right: 20px;
-  top: 22px;
+  width: 1.25rem;
+  height: 1.25rem;
+  right: 1.25rem;
+  top: 1.375rem;
 }
 
 .loading-spinner:after {
   content: " ";
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   border-radius: 50%;
   border: 2px solid #3E64FF;
   border-color: #3E64FF transparent #3E64FF transparent;
