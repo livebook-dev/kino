@@ -50,19 +50,7 @@ function areFontsLoaded() {
 
 function renderApp(ctx, data) {
   const root = createRoot(ctx.root);
-  root.render(
-    <>
-      <style>
-        {`
-          .gdg-cell, .gdg-header {
-            font-family: 'JetBrains Mono', monospace !important;
-            -webkit-font-smoothing: antialiased;
-          }
-        `}
-      </style>
-      <App ctx={ctx} data={data} />
-    </>,
-  );
+  root.render(<App ctx={ctx} data={data} />);
 }
 
 /**
