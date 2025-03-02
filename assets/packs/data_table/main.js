@@ -5,148 +5,38 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
-/**
- * Creates a table-based skeleton loading UI for the data table that closely matches the final layout
- * @param {Object} options Configuration options for the placeholder
- * @param {number} options.columnCount Number of columns to show (defaults to detected or 5)
- * @param {number} options.rowCount Number of rows to show (defaults to 6)
- * @returns {HTMLElement} The placeholder element
- */
-function createLoadingPlaceholder(options = {}) {
-  // Try to detect a reasonable number of columns from previous renders or URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const debugColumns = urlParams.get("debugColumns");
+function createLoadingPlaceholder() {
+  const placeholderHTML = `
+    <div class="font-loading-placeholder">
+      <div class="shimmer-container">
+        <div class="shimmer-table-container">
+          <table class="shimmer-table">
+            <thead>
+              <tr>
+                <th><div class="shimmer header-shimmer w-12"></div></th>
+                <th><div class="shimmer header-shimmer w-32"></div></th>
+                <th><div class="shimmer header-shimmer w-48"></div></th>
+                <th><div class="shimmer header-shimmer w-24"></div></th>
+                <th><div class="shimmer header-shimmer w-20"></div></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
 
-  // Get column count with fallbacks
-  const columnCount =
-    options.columnCount ||
-    (debugColumns ? parseInt(debugColumns) : null) ||
-    (document.querySelector(".gdg-data")
-      ? document.querySelector(".gdg-data").childElementCount
-      : null) ||
-    5;
-
-  // Get row count with fallbacks
-  const rowCount =
-    options.rowCount ||
-    (urlParams.get("debugRows")
-      ? parseInt(urlParams.get("debugRows"))
-      : null) ||
-    6;
-
-  // Column width mapping function
-  function getColumnWidth(index) {
-    // First column is usually narrow (like an ID column)
-    if (index === 0) return "w-12";
-
-    const widths = ["w-32", "w-48", "w-24", "w-20", "w-28", "w-36"];
-    return widths[(index - 1) % widths.length];
-  }
-
-  // Create main container
-  const placeholder = document.createElement("div");
-  placeholder.className = "font-loading-placeholder";
-
-  // Create inner container
   const container = document.createElement("div");
-  container.className = "shimmer-container";
-
-  // Create toolbar
-  const toolbar = document.createElement("div");
-  toolbar.className = "shimmer-toolbar";
-
-  // Toolbar left side (info)
-  const toolbarLeft = document.createElement("div");
-  toolbarLeft.className = "shimmer-toolbar-left";
-
-  const tableInfo = document.createElement("div");
-  tableInfo.className = "shimmer shimmer-table-info";
-  toolbarLeft.appendChild(tableInfo);
-
-  // Toolbar right side (buttons)
-  const toolbarRight = document.createElement("div");
-  toolbarRight.className = "shimmer-toolbar-right";
-
-  // Add action buttons (search, download, etc.)
-  for (let i = 0; i < 3; i++) {
-    const button = document.createElement("div");
-    button.className = "shimmer shimmer-button";
-    toolbarRight.appendChild(button);
-  }
-
-  toolbar.appendChild(toolbarLeft);
-  toolbar.appendChild(toolbarRight);
-  container.appendChild(toolbar);
-
-  // Create table container
-  const tableContainer = document.createElement("div");
-  tableContainer.className = "shimmer-table-container";
-
-  // Create table structure
-  const table = document.createElement("table");
-  table.className = "shimmer-table";
-
-  // Create header
-  const thead = document.createElement("thead");
-  const headerRow = document.createElement("tr");
-
-  for (let i = 0; i < columnCount; i++) {
-    const th = document.createElement("th");
-    const shimmerDiv = document.createElement("div");
-    shimmerDiv.className = `shimmer header-shimmer ${getColumnWidth(i)}`;
-    th.appendChild(shimmerDiv);
-    headerRow.appendChild(th);
-  }
-
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  // Create table body
-  const tbody = document.createElement("tbody");
-
-  for (let i = 0; i < rowCount; i++) {
-    const row = document.createElement("tr");
-
-    for (let j = 0; j < columnCount; j++) {
-      const td = document.createElement("td");
-      const shimmerDiv = document.createElement("div");
-      shimmerDiv.className = `shimmer ${getColumnWidth(j)}`;
-      td.appendChild(shimmerDiv);
-      row.appendChild(td);
-    }
-
-    tbody.appendChild(row);
-  }
-
-  table.appendChild(tbody);
-  tableContainer.appendChild(table);
-  container.appendChild(tableContainer);
-
-  // Create pagination footer
-  const pagination = document.createElement("div");
-  pagination.className = "shimmer-pagination";
-
-  // Pagination info
-  const paginationInfo = document.createElement("div");
-  paginationInfo.className = "shimmer shimmer-pagination-info";
-  pagination.appendChild(paginationInfo);
-
-  // Pagination controls
-  const paginationControls = document.createElement("div");
-  paginationControls.className = "shimmer-pagination-controls";
-
-  // Add pagination buttons
-  for (let i = 0; i < 3; i++) {
-    const button = document.createElement("div");
-    button.className = "shimmer shimmer-pagination-button";
-    paginationControls.appendChild(button);
-  }
-
-  pagination.appendChild(paginationControls);
-  container.appendChild(pagination);
-
-  placeholder.appendChild(container);
-  return placeholder;
+  container.innerHTML = placeholderHTML.trim();
+  return container.firstChild;
 }
 
 /**
@@ -160,14 +50,6 @@ function areFontsLoaded() {
       (font) => font.family.includes("JetBrains Mono") && font.loaded,
     )
   );
-}
-
-/**
- * Detects if the current browser is Safari
- * @returns {boolean} True if Safari, false otherwise
- */
-function isSafari() {
-  return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
 /**
@@ -260,24 +142,19 @@ async function loadFonts(ctx) {
 }
 
 export async function init(ctx, data) {
-  // Skip loading UI if fonts are already fully loaded
   if (areFontsLoaded()) {
     renderApp(ctx, data);
     return;
   }
 
-  // Show loading skeleton when fonts aren't loaded yet
   const placeholder = createLoadingPlaceholder();
   ctx.root.appendChild(placeholder);
 
   try {
-    // Load fonts and wait for them to be ready
     await loadFonts(ctx);
 
-    // Remove loading placeholder
     ctx.root.removeChild(placeholder);
 
-    // Render the app
     renderApp(ctx, data);
   } catch (error) {
     console.error("Error initializing data table:", error);

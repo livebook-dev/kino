@@ -79,7 +79,7 @@ const theme = {
 
 // Force font rendering consistency in Safari
 const safariFixStyle = `
-  @media not all and (min-resolution:.001dpcm) { 
+  @media not all and (min-resolution:.001dpcm) {
     @supports (-webkit-appearance:none) {
       .gdg-cell, .gdg-header {
         font-family: 'JetBrains Mono', monospace !important;
@@ -93,67 +93,12 @@ export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
 
-  /**
-   * Calculate appropriate column width based on content
-   * @param {Object} column - The column definition
-   * @param {Object} data - The data containing content to measure
-   * @returns {number} - The calculated optimal width
-   */
-  const calculateColumnWidth = (column, data) => {
-    // Use a canvas for text measurement
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.font = `bold 14px 'JetBrains Mono', monospace`;
-    
-    // Browser-specific adjustments
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const adjustmentFactor = isSafari ? 1.15 : 1; 
-    const minColumnWidth = isSafari ? 120 : 100;
-    
-    // Start with header width + padding
-    const headerWidth = Math.ceil(ctx.measureText(column.label).width * adjustmentFactor) + 40;
-    
-    // Ensure short headers get reasonable width
-    let width = column.label.length <= 2 ? Math.max(headerWidth, 80) : headerWidth;
-    
-    // Sample data rows if available
-    if (data?.data) {
-      const sampleSize = Math.min(100, data.data.length);
-      const columnIndex = data.columns.findIndex(col => col.key === column.key);
-      
-      if (columnIndex >= 0) {
-        const columnar = data.data_orientation === "columns";
-        
-        // Check sample of rows to find maximum content width
-        for (let i = 0; i < sampleSize; i++) {
-          let cellData;
-          
-          if (columnar && data.data[columnIndex] && data.data[columnIndex][i] !== undefined) {
-            cellData = String(data.data[columnIndex][i]);
-          } else if (!columnar && data.data[i] && data.data[i][columnIndex] !== undefined) {
-            cellData = String(data.data[i][columnIndex]);
-          }
-          
-          if (cellData) {
-            const cellWidth = Math.ceil(ctx.measureText(cellData).width * adjustmentFactor) + 24;
-            width = Math.max(width, cellWidth);
-          }
-        }
-      }
-    }
-    
-    // Apply min/max constraints
-    return Math.min(Math.max(width, minColumnWidth), 350);
-  };
-
   const getColumnsData = (columns) => {
     const columnsData = columns.map((column) => {
       const summary = column.summary;
       const title = column.label;
       const id = column.key;
-      // Calculate optimal width instead of fixed 250px
-      const width = calculateColumnWidth(column, data.content);
-      columnsInitSize.push({ [title]: width });
+      columnsInitSize.push({ [title]: 250 });
       summary && summariesItems.push(summary.keys.length);
       return {
         title: title,
@@ -162,7 +107,6 @@ export function App({ ctx, data }) {
         icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
         hasMenu: column.type !== "list",
         summary: summary,
-        width: width, // Set initial width
       };
     });
     return columnsData;
@@ -514,7 +458,7 @@ export function App({ ctx, data }) {
     <div className="p-3 font-sans" style={menu ? { minHeight: 260 } : {}}>
       {/* Add Safari-specific font fix styles */}
       <style dangerouslySetInnerHTML={{ __html: safariFixStyle }} />
-      
+
       <div className="mb-6 flex items-center gap-3">
         <DataInfo data={data} totalRows={totalRows} />
         {showDownload && (
