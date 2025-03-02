@@ -2,6 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Data table loading placeholder styling */
+.font-loading-placeholder {
+  width: 100%;
+  height: 400px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  position: relative;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin-bottom: 16px;
+  
+  /* Add subtle background pattern similar to Livebook code cells */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+}
+
+/* Header shimmer */
+.data-table-loading-header {
+  height: 64px;
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #E1E8F0;
+  display: flex;
+  padding: 0 16px;
+}
+
+/* Table body loading effect */
+.data-table-loading-body {
+  padding: 0 16px;
+}
+
+/* Generic shimmer effect for all elements */
+.shimmer {
+  background: #f6f8fb;
+  background-image: linear-gradient(
+    to right, 
+    #f6f8fb 0%, 
+    #f0f3f9 20%, 
+    #f6f8fb 40%, 
+    #f6f8fb 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  display: inline-block;
+  position: relative;
+  border-radius: 4px;
+  animation: shimmer 2s infinite linear;
+}
+
+.shimmer-title {
+  width: 100px;
+  height: 24px;
+  margin-top: 20px;
+  margin-right: 20px;
+}
+
+.shimmer-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  margin-top: 14px;
+  margin-left: 12px;
+}
+
+.shimmer-row {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #E1E8F0;
+}
+
+.shimmer-cell {
+  height: 20px;
+  margin-right: 24px;
+}
+
+.shimmer-cell-1 { width: 40px; }
+.shimmer-cell-2 { width: 120px; }
+.shimmer-cell-3 { width: 180px; }
+.shimmer-cell-4 { width: 90px; }
+.shimmer-cell-5 { width: 140px; }
+
+/* Spinner for loading state */
+.loading-spinner {
+  display: inline-block;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  right: 20px;
+  top: 22px;
+}
+
+.loading-spinner:after {
+  content: " ";
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #3E64FF;
+  border-color: #3E64FF transparent #3E64FF transparent;
+  animation: spinner 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .tooltip {
   position: relative;
   display: flex;

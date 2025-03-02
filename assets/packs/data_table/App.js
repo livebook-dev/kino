@@ -61,7 +61,7 @@ const cellKind = {
 };
 
 const theme = {
-  fontFamily: "JetBrains Mono",
+  fontFamily: "JetBrains Mono, monospace", // Add fallback font
   bgHeader: "white",
   textDark: "#61758a",
   textHeader: "#304254",
@@ -77,16 +77,85 @@ const theme = {
   headerIconSize: 22,
 };
 
+// Force font rendering consistency in Safari
+const safariFixStyle = `
+  @media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) {
+      .gdg-cell, .gdg-header {
+        font-family: 'JetBrains Mono', monospace !important;
+        -webkit-font-smoothing: antialiased;
+      }
+    }
+  }
+`;
+
 export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
+
+  // Calculate appropriate column width based on content
+  const calculateColumnWidth = (column, data) => {
+    // Use a canvas to measure text width
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Apply the correct font for consistent measurements
+    // This is critical for correct initial sizing
+    ctx.font = `bold 14px 'JetBrains Mono', monospace`;
+    
+    // For Safari we need additional adjustments
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const safariAdjustment = isSafari ? 1.15 : 1; // Safari needs wider columns
+    
+    // Start with header width + padding, add extra for Safari
+    let width = Math.ceil(ctx.measureText(column.label).width * safariAdjustment) + 40;
+    
+    // Add minimum width for very short headers (like "id")
+    if (column.label.length <= 2) {
+      width = Math.max(width, 80); // Ensure very short headers get enough space
+    }
+    
+    // Check data for this column if available
+    if (data && data.data) {
+      // Sample up to 100 rows for performance
+      const sampleSize = Math.min(100, data.data.length);
+      const columnIndex = data.columns.findIndex(col => col.key === column.key);
+      
+      if (columnIndex >= 0) {
+        // Determine if data is columnar or row-based
+        const columnar = data.data_orientation === "columns";
+        
+        // Sample data to find max width
+        for (let i = 0; i < sampleSize; i++) {
+          let cellData;
+          if (columnar && data.data[columnIndex] && data.data[columnIndex][i] !== undefined) {
+            cellData = String(data.data[columnIndex][i]);
+          } else if (!columnar && data.data[i] && data.data[i][columnIndex] !== undefined) {
+            cellData = String(data.data[i][columnIndex]);
+          }
+          
+          if (cellData) {
+            const cellWidth = Math.ceil(ctx.measureText(cellData).width * safariAdjustment) + 24;
+            width = Math.max(width, cellWidth);
+          }
+        }
+      }
+    }
+    
+    // Restrict to reasonable bounds
+    // Use wider minimum for Safari to avoid text clipping
+    const minWidth = isSafari ? 120 : 100;
+    return Math.min(Math.max(width, minWidth), 350);
+  };
 
   const getColumnsData = (columns) => {
     const columnsData = columns.map((column) => {
       const summary = column.summary;
       const title = column.label;
       const id = column.key;
-      columnsInitSize.push({ [title]: 250 });
+      // Calculate optimal width instead of fixed 250px
+      const width = calculateColumnWidth(column, data.content);
+      columnsInitSize.push({ [title]: width });
       summary && summariesItems.push(summary.keys.length);
       return {
         title: title,
@@ -95,6 +164,7 @@ export function App({ ctx, data }) {
         icon: headerIcons[column.type] || GridColumnIcon.HeaderString,
         hasMenu: column.type !== "list",
         summary: summary,
+        width: width, // Set initial width
       };
     });
     return columnsData;
@@ -444,6 +514,9 @@ export function App({ ctx, data }) {
 
   return (
     <div className="p-3 font-sans" style={menu ? { minHeight: 260 } : {}}>
+      {/* Add Safari-specific font fix styles */}
+      <style dangerouslySetInnerHTML={{ __html: safariFixStyle }} />
+      
       <div className="mb-6 flex items-center gap-3">
         <DataInfo data={data} totalRows={totalRows} />
         {showDownload && (
