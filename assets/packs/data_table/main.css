@@ -9,118 +9,144 @@
   height: auto;
   max-height: 60vh; /* Limit height on large screens */
   background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   position: relative;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  margin-bottom: 1rem;
-  
-  /* Add subtle background pattern similar to Livebook code cells */
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: -1px -1px;
 }
 
-/* Header shimmer */
-.data-table-loading-header {
-  height: auto;
-  min-height: 3.5rem; /* ~56px */
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #E1E8F0;
+/* Inner container structure to match layout */
+.shimmer-container {
   display: flex;
-  flex-wrap: wrap;
-  padding: 0.5rem 1rem;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Toolbar section */
+.shimmer-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: white;
+  border-bottom: 1px solid #ebeef2;
+  justify-content: space-between;
+}
+
+.shimmer-toolbar-left {
+  display: flex;
   align-items: center;
 }
 
-/* Table body loading effect */
-.data-table-loading-body {
-  padding: 0.5rem 1rem;
-}
-
-/* Generic shimmer effect for all elements */
-.shimmer {
-  background: #f6f8fb;
-  background-image: linear-gradient(
-    to right, 
-    #f6f8fb 0%, 
-    #f0f3f9 20%, 
-    #f6f8fb 40%, 
-    #f6f8fb 100%
-  );
-  background-repeat: no-repeat;
-  background-size: 800px 100%;
-  display: inline-block;
-  position: relative;
-  border-radius: 0.25rem;
-  animation: shimmer 2s infinite linear;
-}
-
-.shimmer-title {
-  width: calc(8% + 5rem); /* Responsive width */
-  max-width: 12rem;
-  height: 1.5rem;
-  margin: 0.5rem 1.25rem 0.5rem 0;
+.shimmer-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .shimmer-button {
-  width: 2.25rem; /* 36px */
-  height: 2.25rem; /* 36px */
-  border-radius: 0.25rem;
-  margin: 0.5rem 0 0.5rem 0.75rem;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 0.375rem;
 }
 
-.shimmer-row {
-  height: 2.75rem; /* ~44px */
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  border-bottom: 1px solid #E1E8F0;
-}
-
-.shimmer-cell {
-  height: 1.25rem; /* 20px */
-  margin-right: 1.5rem;
-  flex-shrink: 0;
-}
-
-/* Responsive cell widths using percentages + fixed amount */
-.shimmer-cell-1 { width: calc(5% + 1rem); max-width: 3rem; } /* Index/ID column */
-.shimmer-cell-2 { width: calc(15% + 2rem); max-width: 10rem; }
-.shimmer-cell-3 { width: calc(25% + 2rem); max-width: 16rem; }
-.shimmer-cell-4 { width: calc(10% + 2rem); max-width: 8rem; }
-.shimmer-cell-5 { width: calc(20% + 2rem); max-width: 12rem; }
-
-/* Spinner for loading state */
-.loading-spinner {
-  display: inline-block;
-  position: absolute;
-  width: 1.25rem;
+.shimmer-table-info {
   height: 1.25rem;
-  right: 1.25rem;
-  top: 1.375rem;
+  width: 7rem;
+  margin-right: 1rem;
 }
 
-.loading-spinner:after {
-  content: " ";
-  display: block;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid #3E64FF;
-  border-color: #3E64FF transparent #3E64FF transparent;
-  animation: spinner 1.2s linear infinite;
+/* Shimmer table */
+.shimmer-table-container {
+  flex: 1;
+  overflow: auto;
+  padding: 0 0.25rem 0.5rem 0.25rem;
 }
+
+.shimmer-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0.5rem;
+}
+
+.shimmer-table th {
+  padding: 0.625rem 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e9eef4;
+  text-align: left;
+  font-weight: 500;
+}
+
+.shimmer-table td {
+  padding: 0.625rem 0.5rem;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+/* Pagination footer */
+.shimmer-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: #fcfcfd;
+  border-top: 1px solid #ebeef2;
+}
+
+.shimmer-pagination-info {
+  height: 1.25rem;
+  width: 8rem;
+}
+
+.shimmer-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shimmer-pagination-button {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 0.375rem;
+}
+
+/* Shimmer effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f2f5 25%,
+    #e6e9ef 50%,
+    #f0f2f5 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  height: 1rem;
+  border-radius: 0.25rem;
+  width: 100%;
+  display: block;
+}
+
+.header-shimmer {
+  height: 1.5rem;
+}
+
+/* Column width classes */
+.w-12 { width: 3rem; }
+.w-20 { width: 5rem; }
+.w-24 { width: 6rem; }
+.w-28 { width: 7rem; }
+.w-32 { width: 8rem; }
+.w-36 { width: 9rem; }
+.w-48 { width: 12rem; }
 
 @keyframes shimmer {
   0% {
-    background-position: -468px 0;
+    background-position: -200% 0;
   }
   100% {
-    background-position: 468px 0;
+    background-position: 200% 0;
   }
 }
 

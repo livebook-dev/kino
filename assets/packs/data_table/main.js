@@ -6,89 +6,146 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
 /**
- * Creates a skeleton loading UI for the data table
+ * Creates a table-based skeleton loading UI for the data table that closely matches the final layout
+ * @param {Object} options Configuration options for the placeholder
+ * @param {number} options.columnCount Number of columns to show (defaults to detected or 5)
+ * @param {number} options.rowCount Number of rows to show (defaults to 6)
+ * @returns {HTMLElement} The placeholder element
  */
-function createLoadingPlaceholder() {
+function createLoadingPlaceholder(options = {}) {
+  // Try to detect a reasonable number of columns from previous renders or URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const debugColumns = urlParams.get("debugColumns");
+
+  // Get column count with fallbacks
+  const columnCount =
+    options.columnCount ||
+    (debugColumns ? parseInt(debugColumns) : null) ||
+    (document.querySelector(".gdg-data")
+      ? document.querySelector(".gdg-data").childElementCount
+      : null) ||
+    5;
+
+  // Get row count with fallbacks
+  const rowCount =
+    options.rowCount ||
+    (urlParams.get("debugRows")
+      ? parseInt(urlParams.get("debugRows"))
+      : null) ||
+    6;
+
+  // Column width mapping function
+  function getColumnWidth(index) {
+    // First column is usually narrow (like an ID column)
+    if (index === 0) return "w-12";
+
+    const widths = ["w-32", "w-48", "w-24", "w-20", "w-28", "w-36"];
+    return widths[(index - 1) % widths.length];
+  }
+
+  // Create main container
   const placeholder = document.createElement("div");
   placeholder.className = "font-loading-placeholder";
 
-  // Add toolbar with shimmer elements
-  const topBar = document.createElement("div");
-  topBar.style.padding = "12px 16px";
-  topBar.style.display = "flex";
-  topBar.style.alignItems = "center";
+  // Create inner container
+  const container = document.createElement("div");
+  container.className = "shimmer-container";
 
-  // Info shimmer
+  // Create toolbar
+  const toolbar = document.createElement("div");
+  toolbar.className = "shimmer-toolbar";
+
+  // Toolbar left side (info)
+  const toolbarLeft = document.createElement("div");
+  toolbarLeft.className = "shimmer-toolbar-left";
+
   const tableInfo = document.createElement("div");
-  tableInfo.className = "shimmer";
-  tableInfo.style.width = "150px";
-  tableInfo.style.height = "22px";
-  tableInfo.style.borderRadius = "4px";
-  topBar.appendChild(tableInfo);
+  tableInfo.className = "shimmer shimmer-table-info";
+  toolbarLeft.appendChild(tableInfo);
 
-  // Spacer
-  const spacer = document.createElement("div");
-  spacer.style.flexGrow = "1";
-  topBar.appendChild(spacer);
+  // Toolbar right side (buttons)
+  const toolbarRight = document.createElement("div");
+  toolbarRight.className = "shimmer-toolbar-right";
 
-  // Action buttons shimmer
+  // Add action buttons (search, download, etc.)
   for (let i = 0; i < 3; i++) {
     const button = document.createElement("div");
-    button.className = "shimmer";
-    button.style.width = "36px";
-    button.style.height = "36px";
-    button.style.borderRadius = "4px";
-    button.style.marginLeft = "12px";
-    topBar.appendChild(button);
+    button.className = "shimmer shimmer-button";
+    toolbarRight.appendChild(button);
   }
 
-  // Header with column titles
-  const header = document.createElement("div");
-  header.className = "data-table-loading-header";
+  toolbar.appendChild(toolbarLeft);
+  toolbar.appendChild(toolbarRight);
+  container.appendChild(toolbar);
 
-  // Column header shimmer blocks
-  const columnWidths = [60, 120, 160, 140]; // Varied widths for realism
-  for (let i = 0; i < columnWidths.length; i++) {
-    const title = document.createElement("div");
-    title.className = "shimmer shimmer-title";
-    title.style.width = `${columnWidths[i]}px`;
-    header.appendChild(title);
+  // Create table container
+  const tableContainer = document.createElement("div");
+  tableContainer.className = "shimmer-table-container";
+
+  // Create table structure
+  const table = document.createElement("table");
+  table.className = "shimmer-table";
+
+  // Create header
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+
+  for (let i = 0; i < columnCount; i++) {
+    const th = document.createElement("th");
+    const shimmerDiv = document.createElement("div");
+    shimmerDiv.className = `shimmer header-shimmer ${getColumnWidth(i)}`;
+    th.appendChild(shimmerDiv);
+    headerRow.appendChild(th);
   }
 
-  // Loading spinner
-  const spinner = document.createElement("div");
-  spinner.className = "loading-spinner";
-  header.appendChild(spinner);
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
 
-  // Table body with rows
-  const body = document.createElement("div");
-  body.className = "data-table-loading-body";
+  // Create table body
+  const tbody = document.createElement("tbody");
 
-  // Create shimmer rows with cells
-  for (let i = 0; i < 7; i++) {
-    const row = document.createElement("div");
-    row.className = "shimmer-row";
+  for (let i = 0; i < rowCount; i++) {
+    const row = document.createElement("tr");
 
-    // Index cell
-    const indexCell = document.createElement("div");
-    indexCell.className = "shimmer shimmer-cell shimmer-cell-1";
-    row.appendChild(indexCell);
-
-    // Data cells
-    for (let j = 2; j <= 5; j++) {
-      const cell = document.createElement("div");
-      cell.className = `shimmer shimmer-cell shimmer-cell-${j}`;
-      row.appendChild(cell);
+    for (let j = 0; j < columnCount; j++) {
+      const td = document.createElement("td");
+      const shimmerDiv = document.createElement("div");
+      shimmerDiv.className = `shimmer ${getColumnWidth(j)}`;
+      td.appendChild(shimmerDiv);
+      row.appendChild(td);
     }
 
-    body.appendChild(row);
+    tbody.appendChild(row);
   }
 
-  // Assemble the placeholder
-  placeholder.appendChild(topBar);
-  placeholder.appendChild(header);
-  placeholder.appendChild(body);
+  table.appendChild(tbody);
+  tableContainer.appendChild(table);
+  container.appendChild(tableContainer);
 
+  // Create pagination footer
+  const pagination = document.createElement("div");
+  pagination.className = "shimmer-pagination";
+
+  // Pagination info
+  const paginationInfo = document.createElement("div");
+  paginationInfo.className = "shimmer shimmer-pagination-info";
+  pagination.appendChild(paginationInfo);
+
+  // Pagination controls
+  const paginationControls = document.createElement("div");
+  paginationControls.className = "shimmer-pagination-controls";
+
+  // Add pagination buttons
+  for (let i = 0; i < 3; i++) {
+    const button = document.createElement("div");
+    button.className = "shimmer shimmer-pagination-button";
+    paginationControls.appendChild(button);
+  }
+
+  pagination.appendChild(paginationControls);
+  container.appendChild(pagination);
+
+  placeholder.appendChild(container);
   return placeholder;
 }
 
