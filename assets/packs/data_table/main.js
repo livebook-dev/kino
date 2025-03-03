@@ -56,10 +56,6 @@ function renderApp(ctx, data) {
   root.render(<App ctx={ctx} data={data} />);
 }
 
-/**
- * Loads required fonts and CSS with appropriate fallbacks
- * @returns {Promise} Resolves when fonts are loaded or timeout occurs
- */
 async function loadFonts(ctx) {
   // Import all CSS files in parallel
   const cssPromises = [
@@ -71,24 +67,6 @@ async function loadFonts(ctx) {
     ),
     ctx.importCSS("main.css"),
   ];
-
-  // Add style to ensure consistent rendering
-  const fontStylesheet = document.createElement("style");
-  fontStylesheet.textContent = `
-    @font-face {
-      font-family: 'JetBrains Mono';
-      font-display: block;
-    }
-    @font-face {
-      font-family: 'Inter';
-      font-display: block;
-    }
-    * {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-  `;
-  document.head.appendChild(fontStylesheet);
 
   // Force font loading with invisible element
   const fontPreloader = document.createElement("div");
@@ -125,7 +103,6 @@ async function loadFonts(ctx) {
   } finally {
     // Clean up font loading elements
     document.body.removeChild(fontPreloader);
-    document.head.removeChild(fontStylesheet);
   }
 }
 
