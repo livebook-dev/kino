@@ -44,6 +44,9 @@ function areFontsLoaded() {
     document.fonts &&
     Array.from(document.fonts).some(
       (font) => font.family.includes("JetBrains Mono") && font.loaded,
+    ) &&
+    Array.from(document.fonts).some(
+      (font) => font.family.includes("Inter") && font.loaded,
     )
   );
 }
@@ -64,7 +67,7 @@ async function loadFonts(ctx) {
       "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap",
     ),
     ctx.importCSS(
-      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap",
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap",
     ),
     ctx.importCSS("main.css"),
   ];
@@ -74,6 +77,10 @@ async function loadFonts(ctx) {
   fontStylesheet.textContent = `
     @font-face {
       font-family: 'JetBrains Mono';
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Inter';
       font-display: block;
     }
     * {
@@ -91,10 +98,10 @@ async function loadFonts(ctx) {
     visibility: hidden;
     pointer-events: none;
     left: -9999px;
-    font-family: 'JetBrains Mono', monospace;
   `;
   fontPreloader.innerHTML =
-    "<span style=\"font-family:'JetBrains Mono'\">Font preload</span>";
+    "<span style=\"font-family:'JetBrains Mono'\">Font preload</span>" +
+    "<span style=\"font-family:'Inter'\">Font preload</span>";
   document.body.appendChild(fontPreloader);
 
   // Wait for CSS imports to complete
