@@ -4,40 +4,7 @@ import "@glideapps/glide-data-grid/dist/index.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-
-function createLoadingPlaceholder() {
-  const placeholderHTML = `
-    <div class="font-loading-placeholder">
-      <div class="shimmer-container">
-        <div class="shimmer-table-container">
-          <table class="shimmer-table">
-            <thead>
-              <tr>
-                <th><div class="shimmer header-shimmer w-12"></div></th>
-                <th><div class="shimmer header-shimmer w-32"></div></th>
-                <th><div class="shimmer header-shimmer w-48"></div></th>
-                <th><div class="shimmer header-shimmer w-24"></div></th>
-                <th><div class="shimmer header-shimmer w-20"></div></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-              <tr><td><div class="shimmer w-12"></div></td><td><div class="shimmer w-32"></div></td><td><div class="shimmer w-48"></div></td><td><div class="shimmer w-24"></div></td><td><div class="shimmer w-20"></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const container = document.createElement("div");
-  container.innerHTML = placeholderHTML.trim();
-  return container.firstChild;
-}
+import { createPlaceholder } from "./Placeholder";
 
 function areFontsLoaded() {
   return (
@@ -57,7 +24,6 @@ function renderApp(ctx, data) {
 }
 
 async function loadFonts(ctx) {
-  // Import all CSS files in parallel
   const cssPromises = [
     ctx.importCSS(
       "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap",
@@ -82,11 +48,8 @@ async function loadFonts(ctx) {
     "<span style=\"font-family:'Inter'\">Font preload</span>";
   document.body.appendChild(fontPreloader);
 
-  // Wait for CSS imports to complete
   await Promise.all(cssPromises);
 
-  // Use consistent timeout (no browser detection needed)
-  // This is sufficient for all browsers and simplifies the code
   const FONT_TIMEOUT = 500;
 
   try {
@@ -112,7 +75,7 @@ export async function init(ctx, data) {
     return;
   }
 
-  const placeholder = createLoadingPlaceholder();
+  const placeholder = createPlaceholder();
   ctx.root.appendChild(placeholder);
 
   try {
