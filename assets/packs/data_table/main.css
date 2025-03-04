@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom tooltip implementation */
 .tooltip {
   position: relative;
   display: flex;
