@@ -1,3 +1,6 @@
+/**
+ * Creates a loading placeholder for the data table
+ */
 export function createPlaceholder() {
   const placeholderHTML = `
     <div class="w-full">

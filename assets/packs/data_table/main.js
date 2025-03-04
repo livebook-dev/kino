@@ -23,7 +23,7 @@ function renderApp(ctx, data) {
   root.render(<App ctx={ctx} data={data} />);
 }
 
-async function loadFonts(ctx) {
+async function loadStyles(ctx) {
   const cssPromises = [
     ctx.importCSS(
       "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap",
@@ -79,21 +79,14 @@ export async function init(ctx, data) {
   ctx.root.appendChild(placeholder);
 
   try {
-    await loadFonts(ctx);
-
-    ctx.root.removeChild(placeholder);
-
-    renderApp(ctx, data);
+    await loadStyles(ctx);
   } catch (error) {
-    console.error("Error initializing data table:", error);
-
-    // Clean up and fallback render
-    try {
+    console.error("Error loading styles:", error);
+  } finally {
+    // Remove placeholder and render the app regardless of errors
+    if (placeholder.parentNode) {
       ctx.root.removeChild(placeholder);
-    } catch (e) {
-      // Ignore if already removed
     }
-
     renderApp(ctx, data);
   }
 }
