@@ -4,7 +4,7 @@ import "@glideapps/glide-data-grid/dist/index.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { createPlaceholder } from "./Placeholder";
+import { createTableSkeleton } from "./Skeleton";
 
 function renderApp(ctx, data) {
   const root = createRoot(ctx.root);
@@ -38,38 +38,32 @@ async function loadStyles(ctx) {
 
   await Promise.all(cssPromises);
 
-  const FONT_TIMEOUT = 500;
+  const FONT_LOAD_TIMEOUT = 500;
 
   try {
     if (document.fonts && document.fonts.ready) {
-      // Use Font Loading API with timeout fallback
       await Promise.race([
         document.fonts.ready,
-        new Promise((resolve) => setTimeout(resolve, FONT_TIMEOUT)),
+        new Promise((resolve) => setTimeout(resolve, FONT_LOAD_TIMEOUT)),
       ]);
     } else {
-      // Simple timeout fallback for older browsers
-      await new Promise((resolve) => setTimeout(resolve, FONT_TIMEOUT));
+      await new Promise((resolve) => setTimeout(resolve, FONT_LOAD_TIMEOUT));
     }
   } finally {
-    // Clean up font loading elements
     document.body.removeChild(fontPreloader);
   }
 }
 
 export async function init(ctx, data) {
-  const placeholder = createPlaceholder();
-  ctx.root.appendChild(placeholder);
+  const tableSkeleton = createTableSkeleton();
+  ctx.root.appendChild(tableSkeleton);
 
   try {
     await loadStyles(ctx);
   } catch (error) {
     console.error("Error loading styles:", error);
   } finally {
-    // Remove placeholder and render the app regardless of errors
-    if (placeholder.parentNode) {
-      ctx.root.removeChild(placeholder);
-    }
+    ctx.root.removeChild(tableSkeleton);
     renderApp(ctx, data);
   }
 }

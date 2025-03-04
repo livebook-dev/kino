@@ -61,7 +61,7 @@ const cellKind = {
 };
 
 const theme = {
-  fontFamily: "JetBrains Mono, monospace", // Add fallback font
+  fontFamily: "JetBrains Mono",
   bgHeader: "white",
   textDark: "#61758a",
   textHeader: "#304254",

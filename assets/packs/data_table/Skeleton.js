@@ -1,8 +1,8 @@
 /**
- * Creates a loading placeholder for the data table
+ * Creates a loading skeleton for the data table
  */
-export function createPlaceholder() {
-  const placeholderHTML = `
+export function createTableSkeleton() {
+  const skeletonHTML = `
     <div class="w-full">
       <table class="w-full border-separate border-spacing-0 mt-2 animate-pulse">
         <thead>
@@ -25,7 +25,7 @@ export function createPlaceholder() {
   `;
 
   const container = document.createElement("div");
-  container.innerHTML = placeholderHTML.trim();
+  container.innerHTML = skeletonHTML.trim();
   return container.firstChild;
 }
 
