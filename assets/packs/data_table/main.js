@@ -6,18 +6,6 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { createPlaceholder } from "./Placeholder";
 
-function areFontsLoaded() {
-  return (
-    document.fonts &&
-    Array.from(document.fonts).some(
-      (font) => font.family.includes("JetBrains Mono") && font.loaded,
-    ) &&
-    Array.from(document.fonts).some(
-      (font) => font.family.includes("Inter") && font.loaded,
-    )
-  );
-}
-
 function renderApp(ctx, data) {
   const root = createRoot(ctx.root);
   root.render(<App ctx={ctx} data={data} />);
@@ -70,11 +58,6 @@ async function loadStyles(ctx) {
 }
 
 export async function init(ctx, data) {
-  if (areFontsLoaded()) {
-    renderApp(ctx, data);
-    return;
-  }
-
   const placeholder = createPlaceholder();
   ctx.root.appendChild(placeholder);
 
