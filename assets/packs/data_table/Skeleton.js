@@ -2,17 +2,10 @@
  * Creates a loading skeleton for the data table
  */
 export function createTableSkeleton() {
-  const skeletonHTML = `
+  const container = document.createElement("div");
+  container.innerHTML = `
     <div class="w-full">
       <table class="w-full border-separate border-spacing-0 mt-2 animate-pulse">
-        <thead>
-          <tr class="bg-slate-50 h-[1.5rem]">
-          ${createHeaderCell("w-12")}
-          ${createHeaderCell("w-32")}
-          ${createHeaderCell("w-48")}
-          ${createHeaderCell("w-20")}
-          </tr>
-        </thead>
         <tbody>
           ${createTableRow()}
           ${createTableRow()}
@@ -23,18 +16,7 @@ export function createTableSkeleton() {
       </table>
     </div>
   `;
-
-  const container = document.createElement("div");
-  container.innerHTML = skeletonHTML.trim();
-  return container.firstChild;
-}
-
-function createHeaderCell(width) {
-  return `
-    <th class="p-2.5 ${width}">
-      ${cellContent()}
-    </th>
-  `;
+  return container;
 }
 
 function createTableRow() {
@@ -51,14 +33,8 @@ function createTableRow() {
 function createDataCell(width) {
   return `
     <td class="p-2.5 border-b border-slate-100 ${width}">
-      ${cellContent()}
+      <div class="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 h-4 rounded">
+      </div>
     </td>
-  `;
-}
-
-function cellContent() {
-  return `
-    <div class="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 h-4 rounded block">
-    </div>
   `;
 }

@@ -6,9 +6,15 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { createTableSkeleton } from "./Skeleton";
 
-function renderApp(ctx, data) {
-  const root = createRoot(ctx.root);
-  root.render(<App ctx={ctx} data={data} />);
+export async function init(ctx, data) {
+  ctx.root.appendChild(createTableSkeleton());
+
+  try {
+    await loadStyles(ctx);
+  } finally {
+    const root = createRoot(ctx.root);
+    root.render(<App ctx={ctx} data={data} />);
+  }
 }
 
 async function loadStyles(ctx) {
@@ -22,48 +28,42 @@ async function loadStyles(ctx) {
     ctx.importCSS("main.css"),
   ];
 
-  // Force font loading with invisible element
+  // We force all fonts to be loaded by adding an invisible element,
+  // and then we explicitly wait for the fonts to finish loading.
+  // This is important on first uncached render. If we don't wait
+  // and render the table with fallback fonts, the columns get wrong
+  // default widths. Also, on Firefox ans Safari, once the font is
+  // loaded, the table only updates on hover, which is bad UX.
+
   const fontPreloader = document.createElement("div");
   fontPreloader.setAttribute("aria-hidden", "true");
   fontPreloader.style.cssText = `
     position: absolute;
     visibility: hidden;
-    pointer-events: none;
     left: -9999px;
   `;
-  fontPreloader.innerHTML =
-    "<span style=\"font-family:'JetBrains Mono'\">Font preload</span>" +
-    "<span style=\"font-family:'Inter'\">Font preload</span>";
+  fontPreloader.innerHTML = `
+    <span style="font-family: 'JetBrains Mono'">
+      <span style="font-weight: 400">preload</span>"
+      <span style="font-weight: 500">preload</span>"
+      <span style="font-weight: 600">preload</span>"
+    </span>"
+    <span style="font-family: 'Inter'">
+      <span style="font-weight: 400">preload</span>"
+      <span style="font-weight: 500">preload</span>"
+      <span style="font-weight: 600">preload</span>"
+    </span>"
+  `;
+
   document.body.appendChild(fontPreloader);
 
-  await Promise.all(cssPromises);
-
-  const FONT_LOAD_TIMEOUT = 500;
-
   try {
+    await Promise.all(cssPromises);
+
     if (document.fonts && document.fonts.ready) {
-      await Promise.race([
-        document.fonts.ready,
-        new Promise((resolve) => setTimeout(resolve, FONT_LOAD_TIMEOUT)),
-      ]);
-    } else {
-      await new Promise((resolve) => setTimeout(resolve, FONT_LOAD_TIMEOUT));
+      await document.fonts.ready;
     }
   } finally {
     document.body.removeChild(fontPreloader);
-  }
-}
-
-export async function init(ctx, data) {
-  const tableSkeleton = createTableSkeleton();
-  ctx.root.appendChild(tableSkeleton);
-
-  try {
-    await loadStyles(ctx);
-  } catch (error) {
-    console.error("Error loading styles:", error);
-  } finally {
-    ctx.root.removeChild(tableSkeleton);
-    renderApp(ctx, data);
   }
 }
