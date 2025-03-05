@@ -5,11 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.15.3](https://github.com/livebook-dev/kino/tree/v0.15.3) (2025-03-05)
+
+### Fixed
+
+* `Kino.HTML` to wait for external scripts to load before executing inline ones
+* Fixed menu opening in table with summary
+* Improved UX for initial table load ([#497](https://github.com/livebook-dev/kino/pull/497), [#499](https://github.com/livebook-dev/kino/pull/499))
+
 ## [v0.15.2](https://github.com/livebook-dev/kino/tree/v0.15.2) (2025-02-27)
 
 ### Fixed
 
-* `Kino.JS.new/3` to ignore `:export_key`, instead of raising (#495)
+* `Kino.JS.new/3` to ignore `:export_key`, instead of raising ([#495](https://github.com/livebook-dev/kino/pull/495))
 
 ## [v0.15.1](https://github.com/livebook-dev/kino/tree/v0.15.1) (2025-02-26)
 
