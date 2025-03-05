@@ -25,13 +25,18 @@ export async function init(ctx, data) {
   // default widths. Also, in Firefox ans Safari, once the font is
   // loaded, the table only updates on hover, which is bad UX. That
   // said, in Firefox, this doesn't help 100% of the time either.
-  await Promise.all([
-    document.fonts.load("400 16px 'JetBrains Mono'"),
-    document.fonts.load("500 16px 'JetBrains Mono'"),
-    document.fonts.load("600 16px 'JetBrains Mono'"),
-    document.fonts.load("400 16px Inter"),
-    document.fonts.load("500 16px Inter"),
-    document.fonts.load("600 16px Inter"),
+  await Promise.race([
+    Promise.all([
+      document.fonts.load("400 16px 'JetBrains Mono'"),
+      document.fonts.load("500 16px 'JetBrains Mono'"),
+      document.fonts.load("600 16px 'JetBrains Mono'"),
+      document.fonts.load("400 16px Inter"),
+      document.fonts.load("500 16px Inter"),
+      document.fonts.load("600 16px Inter"),
+    ]),
+    // If a font request fails, the promises may not be resolved, so
+    // we add a timeout just to make sure this finishes at some point.
+    new Promise((resolve) => setTimeout(resolve, 5000)),
   ]);
 
   const root = createRoot(ctx.root);
