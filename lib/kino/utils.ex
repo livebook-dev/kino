@@ -35,7 +35,7 @@ defmodule Kino.Utils do
   @spec supervisor?(atom() | pid()) :: boolean
   def supervisor?(supervisor) do
     with pid when is_pid(pid) <- GenServer.whereis(supervisor),
-         {:dictionary, dictionary} <- Process.info(pid, :dictionary),
+         {:dictionary, dictionary} <- :erpc.call(node(pid), Process, :info, [pid, :dictionary]),
          {:supervisor, _, _} <- dictionary[:"$initial_call"],
          do: true,
          else: (_ -> false)
