@@ -36,6 +36,7 @@ defmodule Kino.Table do
     * "struct"
     * "text"
     * "uri"
+    * "image"
 
   """
   @type type :: String.t()
@@ -256,12 +257,11 @@ defmodule Kino.Table do
     Enum.map(sample_data, &type_of/1)
   end
 
-  defp type_of("http" <> _rest), do: "uri"
-
   defp type_of(data) do
     cond do
       number?(data) -> "number"
       date?(data) or date_time?(data) -> "date"
+      http_uri?(data) -> infer_http_resource_type(data)
       true -> "text"
     end
   end
@@ -269,6 +269,16 @@ defmodule Kino.Table do
   defp number?(value), do: match?({_, ""}, Float.parse(value))
   defp date?(value), do: match?({:ok, _}, Date.from_iso8601(value))
   defp date_time?(value), do: match?({:ok, _, _}, DateTime.from_iso8601(value))
+  defp http_uri?(value), do: String.starts_with?(value, "http")
+
+  defp infer_http_resource_type(uri) do
+    with {:ok, resp} <- Req.head(uri),
+         ["image/" <> _] <- Req.Response.get_header(resp, "content-type") do
+      "image"
+    else
+      _ -> "uri"
+    end
+  end
 
   # Map keys to string representation for the client side
   defp stringify_keys(columns, key_to_string) do
