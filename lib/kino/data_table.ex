@@ -43,15 +43,17 @@ defmodule Kino.DataTable do
       data. Sorting requires traversal of the whole enumerable, so it
       may not be desirable for large lazy enumerables. Defaults to `true`
 
-   * `:formatter` - a 2-arity function that is used to format the data
-     in the table. The first parameter passed is the `key` (column name) and
-     the second is the value to be formatted. When formatting column headings
-     the key is the special value `:__header__`. The formatter function must
-     return either `{:ok, string}` or `:default`. When the return value is
-     `:default` the default data table formatting is applied.
+    * `:formatter` - a 2-arity function that is used to format the data
+      in the table. The first parameter passed is the `key` (column name) and
+      the second is the value to be formatted. When formatting column headings
+      the key is the special value `:__header__`. The formatter function must
+      return either `{:ok, string}` or `:default`. When the return value is
+      `:default` the default data table formatting is applied.
 
     * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
 
+    * `:types` - a map of type overrides for the columns.
+      The keys are the column names and the values are the types to be used in place of inferred ones.
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
@@ -64,7 +66,8 @@ defmodule Kino.DataTable do
     Kino.Table.new(
       __MODULE__,
       {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows},
-      export: fn state -> {"text", state.inspected} end
+      export: fn state -> {"text", state.inspected} end,
+      types: opts[:types]
     )
   end
 
