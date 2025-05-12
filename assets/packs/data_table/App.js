@@ -277,12 +277,12 @@ export function App({ ctx, data }) {
     [content],
   );
 
-  const getCellData = (cellKind, cellData) => {
-    if (cellKind === GridCellKind.Image && !Array.isArray(cellData)) {
-      return [cellData]
+  const getCellData = (cellKind, formattedValue) => {
+    if (cellKind === GridCellKind.Image) {
+      return [formattedValue]
     }
 
-    return cellData
+    return formattedValue
   }
 
   const getCellContent = useCallback(
