@@ -94,8 +94,9 @@ defmodule Kino.Table do
       This works the same as `Kino.JS.new/3`, except the function
       receives the state as an argument
 
-    * `:types` - a map of type overrides for the columns.
-      The keys are the column names and the values are the types to be used in place of inferred ones.
+    * `:types` - a map of display type overrides for the columns. The keys
+      are the column names and each value must be one of `t:type/0`. By
+      default the types are inferred from the data values
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, init_arg, opts \\ []) do

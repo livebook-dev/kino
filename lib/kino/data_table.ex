@@ -52,8 +52,9 @@ defmodule Kino.DataTable do
 
     * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
 
-    * `:types` - a map of type overrides for the columns.
-      The keys are the column names and the values are the types to be used in place of inferred ones.
+    * `:types` - a map of display type overrides for the columns. The keys
+      are the column names and each value must be one of `t:Kino.Table.type/0`. By
+      default the types are inferred from the data values
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
