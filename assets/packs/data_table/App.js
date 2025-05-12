@@ -277,7 +277,7 @@ export function App({ ctx, data }) {
     [content],
   );
 
-  const mapCellData = (cellKind, cellData) => {
+  const getCellData = (cellKind, cellData) => {
     if (cellKind === GridCellKind.Image && !Array.isArray(cellData)) {
       return [cellData]
     }
@@ -289,16 +289,16 @@ export function App({ ctx, data }) {
     ([col, row]) => {
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
       const columnar = content.data_orientation === "columns";
-      const cellData = columnar
+      const formattedValue = columnar
         ? content.data[col][row]
         : content.data[row][col];
 
-      const mappedCellData = mapCellData(kind, cellData)
+      const cellData = getCellData(kind, formattedValue)
 
       return {
         kind: kind,
-        data: mappedCellData,
-        displayData: mappedCellData,
+        data: cellData,
+        displayData: cellData,
         allowOverlay: true,
         allowWrapping: false,
         readonly: true,
