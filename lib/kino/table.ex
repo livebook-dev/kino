@@ -105,7 +105,14 @@ defmodule Kino.Table do
         fn ctx -> export.(ctx.assigns.state) end
       end
 
-    Kino.JS.Live.new(__MODULE__, {module, init_arg, opts[:types]}, export: export)
+    types = opts[:types]
+
+    if types != nil and not Enum.all?(types, fn {_, value} -> value in @types end) do
+      raise ArgumentError,
+            "Invalid column types were provided: #{inspect(types)}. Valid types are: #{inspect(@types)}"
+    end
+
+    Kino.JS.Live.new(__MODULE__, {module, init_arg, types}, export: export)
   end
 
   @doc """
@@ -122,11 +129,6 @@ defmodule Kino.Table do
   @impl true
   def init({module, init_arg, types}, ctx) do
     {:ok, info, state} = module.init(init_arg)
-
-    if types != nil and not Enum.all?(types, fn {_, value} -> value in @types end) do
-      raise ArgumentError,
-            "Invalid column types were provided: #{inspect(types)}. Valid types are: #{inspect(@types)}"
-    end
 
     {:ok,
      assign(ctx,
