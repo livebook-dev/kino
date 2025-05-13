@@ -49,6 +49,7 @@ const headerIcons = {
   date: GridColumnIcon.HeaderDate,
   list: GridColumnIcon.HeaderArray,
   struct: "curlyBraces",
+  image: GridColumnIcon.HeaderImage
 };
 
 const cellKind = {
@@ -58,6 +59,7 @@ const cellKind = {
   date: GridCellKind.Text,
   list: GridCellKind.Text,
   struct: GridCellKind.Text,
+  image: GridCellKind.Image,
 };
 
 const theme = {
@@ -275,13 +277,23 @@ export function App({ ctx, data }) {
     [content],
   );
 
+  const getCellData = (cellKind, formattedValue) => {
+    if (cellKind === GridCellKind.Image) {
+      return [formattedValue]
+    }
+
+    return formattedValue
+  }
+
   const getCellContent = useCallback(
     ([col, row]) => {
       const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
       const columnar = content.data_orientation === "columns";
-      const cellData = columnar
+      const formattedValue = columnar
         ? content.data[col][row]
         : content.data[row][col];
+
+      const cellData = getCellData(kind, formattedValue)
 
       return {
         kind: kind,
