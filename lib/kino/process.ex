@@ -247,10 +247,10 @@ defmodule Kino.Process do
 
   ## Options
 
-    * `:message_label` - A function to help label message events. If
+    * `:message_label` - A function to label message events. If
       the given function returns `:continue`, then the default label
-      is used. However, if the function returns a `String.t()`, then
-      that will be used for the label.
+      is used. However, if the function returns `{:ok, String.t()}`,
+      then the given string will be used for the label.
 
     * `:caption` - an optional caption for the diagram. Either a custom
       caption as string, or `nil` to disable the default caption.
