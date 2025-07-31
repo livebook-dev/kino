@@ -318,7 +318,8 @@ defmodule Kino.Control do
   """
   @spec subscribe(t() | Kino.Input.t() | Kino.JS.Live.t(), term()) :: :ok
   def subscribe(source, tag)
-      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or is_struct(source, Kino.JS.Live) do
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or
+             is_struct(source, Kino.JS.Live) do
     Kino.SubscriptionManager.subscribe(source.ref, self(), tag)
   end
 
@@ -327,7 +328,8 @@ defmodule Kino.Control do
   """
   @spec unsubscribe(t() | Kino.Input.t() | Kino.JS.Live.t()) :: :ok
   def unsubscribe(source)
-      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or is_struct(source, Kino.JS.Live) do
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or
+             is_struct(source, Kino.JS.Live) do
     Kino.SubscriptionManager.unsubscribe(source.ref, self())
   end
 
