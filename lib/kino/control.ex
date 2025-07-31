@@ -307,7 +307,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Subscribes the calling process to control, input, or JS.Live events.
+  Subscribes the calling process to control, input, or `Kino.JS.Live` events.
 
   This is an alternative API to `stream/1`, such that event
   messages are consumed via process messages instead of streams.
