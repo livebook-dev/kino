@@ -80,6 +80,16 @@ defmodule Kino.ControlTest do
 
       assert_receive {:name, ^info}
     end
+
+    test "subscribes to Kino.JS.Live events" do
+      kino = Kino.TestModules.LiveCounter.new(0)
+
+      Kino.Control.subscribe(kino, :counter)
+
+      Kino.TestModules.LiveCounter.bump(kino, 5)
+
+      assert_receive {:counter, %{event: :bump, by: 5}}
+    end
   end
 
   describe "stream/1" do

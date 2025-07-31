@@ -307,7 +307,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Subscribes the calling process to control or input events.
+  Subscribes the calling process to control, input, or JS.Live events.
 
   This is an alternative API to `stream/1`, such that event
   messages are consumed via process messages instead of streams.
@@ -316,18 +316,18 @@ defmodule Kino.Control do
   event details. In particular, it always includes `:origin`, which
   is an opaque identifier of the client that triggered the event.
   """
-  @spec subscribe(t() | Kino.Input.t(), term()) :: :ok
+  @spec subscribe(t() | Kino.Input.t() | Kino.JS.Live.t(), term()) :: :ok
   def subscribe(source, tag)
-      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or is_struct(source, Kino.JS.Live) do
     Kino.SubscriptionManager.subscribe(source.ref, self(), tag)
   end
 
   @doc """
-  Unsubscribes the calling process from control or input events.
+  Unsubscribes the calling process from control, input, or JS.Live events.
   """
-  @spec unsubscribe(t() | Kino.Input.t()) :: :ok
+  @spec unsubscribe(t() | Kino.Input.t() | Kino.JS.Live.t()) :: :ok
   def unsubscribe(source)
-      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) do
+      when is_struct(source, Kino.Control) or is_struct(source, Kino.Input) or is_struct(source, Kino.JS.Live) do
     Kino.SubscriptionManager.unsubscribe(source.ref, self())
   end
 
