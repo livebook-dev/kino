@@ -324,7 +324,7 @@ defmodule Kino.Control do
   end
 
   @doc """
-  Unsubscribes the calling process from control, input, or JS.Live events.
+  Unsubscribes the calling process from control, input, or `Kino.JS.Live` events.
   """
   @spec unsubscribe(t() | Kino.Input.t() | Kino.JS.Live.t()) :: :ok
   def unsubscribe(source)
