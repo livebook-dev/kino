@@ -36,6 +36,7 @@ defmodule Kino.Table do
     * "struct"
     * "text"
     * "uri"
+    * "image"
 
   """
   @type type :: String.t()
@@ -80,6 +81,7 @@ defmodule Kino.Table do
 
   @type t :: Kino.JS.Live.t()
 
+  @types ["date", "list", "number", "struct", "text", "uri", "image"]
   @limit 10
 
   @doc """
@@ -92,6 +94,9 @@ defmodule Kino.Table do
       This works the same as `Kino.JS.new/3`, except the function
       receives the state as an argument
 
+    * `:types` - a map of display type overrides for the columns. The keys
+      are the column names and each value must be one of `t:type/0`. By
+      default the types are inferred from the data values
   """
   @spec new(module(), term(), keyword()) :: t()
   def new(module, init_arg, opts \\ []) do
@@ -100,7 +105,14 @@ defmodule Kino.Table do
         fn ctx -> export.(ctx.assigns.state) end
       end
 
-    Kino.JS.Live.new(__MODULE__, {module, init_arg}, export: export)
+    types = opts[:types] || %{}
+
+    for {_key, value} <- types, value not in @types do
+      raise ArgumentError,
+            "got invalid column type: #{inspect(types)}, expected one of: #{inspect(@types)}"
+    end
+
+    Kino.JS.Live.new(__MODULE__, {module, init_arg, types}, export: export)
   end
 
   @doc """
@@ -115,7 +127,7 @@ defmodule Kino.Table do
   end
 
   @impl true
-  def init({module, init_arg}, ctx) do
+  def init({module, init_arg, types}, ctx) do
     {:ok, info, state} = module.init(init_arg)
 
     {:ok,
@@ -129,7 +141,8 @@ defmodule Kino.Table do
        page: 1,
        limit: info[:num_rows] || @limit,
        order: nil,
-       relocates: []
+       relocates: [],
+       type_overrides: types
      )}
   end
 
@@ -226,7 +239,7 @@ defmodule Kino.Table do
         sample_data
         |> infer_types()
         |> Enum.zip_with(columns, fn type, column ->
-          Map.put_new(column, :type, type)
+          Map.put_new(column, :type, ctx.assigns.type_overrides[column.label] || type)
         end)
       else
         columns
