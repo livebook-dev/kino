@@ -143,6 +143,12 @@ defmodule Kino.Input do
 
     * `:default` - the initial input value. Defaults to `nil`
 
+    * `:min` - the minimum value
+
+    * `:max` - the maximum value
+
+    * `:step` - the input increment
+
     * `:debounce` - determines when input changes are emitted. When
       set to `:blur`, the change propagates when the user leaves the
       input. When set to a non-negative number of milliseconds, the
@@ -150,16 +156,45 @@ defmodule Kino.Input do
   """
   @spec number(String.t(), keyword()) :: t()
   def number(label, opts \\ []) when is_binary(label) and is_list(opts) do
+    min = Keyword.get(opts, :min, nil)
+    max = Keyword.get(opts, :max, nil)
+    step = Keyword.get(opts, :step, nil)
     default = Keyword.get(opts, :default, nil)
     debounce = Keyword.get(opts, :debounce, :blur)
+
+    if min && max && min >= max do
+      raise ArgumentError,
+            "expected :min to be less than :max, got: #{inspect(min)} and #{inspect(max)}"
+    end
 
     assert_default_value!(default, "be either number or nil", fn value ->
       is_nil(value) or is_number(value)
     end)
 
+    if (default && min && default < min) || (default && max && default > max) do
+      raise ArgumentError,
+            "expected :default to be between :min and :max, got: #{inspect(default)}"
+    end
+
+    assert_default_value!(step, "be either number or nil", fn value ->
+      is_nil(value) or is_number(value)
+    end)
+
+    if step && step <= 0 do
+      raise ArgumentError, "expected :step to be positive, got: #{inspect(step)}"
+    end
+
     assert_debounce_value!(debounce)
 
-    new(%{type: :number, label: label, default: default, debounce: debounce})
+    new(%{
+      type: :number,
+      label: label,
+      default: default,
+      min: min,
+      max: max,
+      step: step,
+      debounce: debounce
+    })
   end
 
   defp assert_default_value!(value, message, check) do
