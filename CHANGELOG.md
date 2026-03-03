@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.19.0](https://github.com/livebook-dev/kino/tree/v0.19.0) (2026-03-03)
+
+### Added
+
+* Added `:min`, `:max` and `:step` options to `Kino.Input.number/2` ([#509](https://github.com/livebook-dev/kino/pull/509))
+
 ## [v0.18.0](https://github.com/livebook-dev/kino/tree/v0.18.0) (2025-12-01)
 
 ### Removed
