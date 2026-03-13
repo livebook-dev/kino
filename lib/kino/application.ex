@@ -4,9 +4,6 @@ defmodule Kino.Application do
   use Application
 
   def start(_type, _args) do
-    original = Application.fetch_env!(:elixir, :dbg_callback)
-    Application.put_env(:elixir, :dbg_callback, {Kino.Debug, :dbg, [original]})
-
     Kino.AttributeStore.initialize()
 
     Kino.SmartCell.register(Kino.RemoteExecutionCell)
