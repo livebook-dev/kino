@@ -26,8 +26,8 @@ defmodule Kino.Workspace do
   Note that `:started_by` information is only available for multi-session
   apps when the app uses a Livebook Teams workspace.
 
-  If there is set of parameters used to start the session, `:session_params` map is returned.
-  This is only available for multi-session apps.
+  Multi-session apps can be started with `lb_*` query parameters. Those parameters
+  are available in `:session_params` map.
 
   Unless called from within an app deployment, returns `%{type: :none}`.
   """
