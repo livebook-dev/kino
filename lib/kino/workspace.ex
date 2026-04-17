@@ -5,8 +5,12 @@ defmodule Kino.Workspace do
 
   @type app_info ::
           %{type: :single}
-          | %{:type => :multi, optional(:started_by) => user_info()}
           | %{type: :none}
+          | %{
+              :type => :multi_session,
+              optional(:started_by) => user_info(),
+              optional(:session_params) => map()
+            }
 
   @type user_info :: %{
           id: String.t(),
@@ -21,6 +25,9 @@ defmodule Kino.Workspace do
 
   Note that `:started_by` information is only available for multi-session
   apps when the app uses a Livebook Teams workspace.
+
+  Multi-session apps can be started with `lb_*` query parameters. Those parameters
+  are available in `:session_params` map.
 
   Unless called from within an app deployment, returns `%{type: :none}`.
   """
