@@ -241,8 +241,6 @@ defmodule Kino.SmartCell do
 
   '''
 
-  require Logger
-
   import Kino.Utils, only: [has_function?: 3]
 
   alias Kino.JS.Live.Context
