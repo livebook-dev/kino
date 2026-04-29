@@ -280,6 +280,7 @@ defmodule Kino.JS do
     opts = Module.get_attribute(env.module, :js_opts)
     assets_path = opts[:assets_path]
     entrypoint = opts[:entrypoint] || "main.js"
+    assets_path_defined? = assets_path != nil
     asset_paths = __paths__(assets_path)
 
     loaded_assets =
@@ -291,9 +292,7 @@ defmodule Kino.JS do
       end
 
     inline_assets = Module.get_attribute(env.module, :inline_assets)
-
     any_inline_assets? = inline_assets != []
-    assets_path_defined? = assets_path != nil
 
     assets =
       case {any_inline_assets?, assets_path_defined?} do
