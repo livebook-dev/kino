@@ -45,12 +45,9 @@ defmodule Kino.Workspace do
   @doc """
   Returns user information for the given connected client id.
 
-  Note that this information is only available when the session uses
-  Livebook Teams workspace, otherwise `:not_available` error is returned.
-
   If there is no such connected client, `:not_found` error is returned.
   """
-  @spec user_info(String.t()) :: {:ok, user_info()} | {:error, :not_found | :not_available}
+  @spec user_info(String.t()) :: {:ok, user_info()} | {:error, :not_found}
   def user_info(client_id) do
     case Kino.Bridge.get_user_info(client_id) do
       {:ok, user_info} ->
