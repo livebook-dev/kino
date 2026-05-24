@@ -393,6 +393,16 @@ defmodule Kino.Process do
         |> maybe_add_participant(to)
       end)
 
+    # loopup table for genserver call reply message references
+    ref_loopup =
+      Enum.reduce(trace_events, %{}, fn
+        %{message: {:"$gen_call", {to, [:alias | alias_ref]}, _msg}}, acc ->
+          acc |> Map.put(alias_ref, to)
+
+        _, acc ->
+          acc
+      end)
+
     # Generate the Mermaid formatted list of participants
     participants =
       Enum.map_join(participants_lookup, "\n", fn {pid, idx} ->
@@ -409,7 +419,10 @@ defmodule Kino.Process do
       trace_events
       |> Enum.reduce({[], MapSet.new()}, fn %{from: from, to: to, message: message},
                                             {events, started_processes} ->
-        events = [normalize_message(from, to, message, participants_lookup, opts) | events]
+        # to might be a pid or a reference
+        # normalize to pid
+        deref_to = Map.get(ref_loopup, to, to)
+        events = [normalize_message(from, deref_to, message, participants_lookup, opts) | events]
 
         from_idx = Map.get(participants_lookup, from, :not_found)
         to_idx = Map.get(participants_lookup, to, :not_found)
@@ -511,12 +524,26 @@ defmodule Kino.Process do
 
       :continue ->
         case message do
-          {:EXIT, _, reason} -> "EXIT: #{label_from_reason(reason)}"
-          {:spawn_request, _, _, _, _, _, _, _} -> "SPAWN"
-          {:DOWN, _, :process, _, reason} -> "DOWN: #{label_from_reason(reason)}"
-          {:"$gen_call", _ref, value} -> "CALL: #{label_from_value(value)}"
-          {:"$gen_cast", value} -> "CAST: #{label_from_value(value)}"
-          value -> "INFO: #{label_from_value(value)}"
+          {:EXIT, _, reason} ->
+            "EXIT: #{label_from_reason(reason)}"
+
+          {:spawn_request, _, _, _, _, _, _, _} ->
+            "SPAWN"
+
+          {:DOWN, _, :process, _, reason} ->
+            "DOWN: #{label_from_reason(reason)}"
+
+          {:"$gen_call", _ref, value} ->
+            "CALL: #{label_from_value(value)}"
+
+          {:"$gen_cast", value} ->
+            "CAST: #{label_from_value(value)}"
+
+          {[:alias | ref], reply} when is_reference(ref) ->
+            "REPLY: #{label_from_value(reply)}"
+
+          value ->
+            "INFO: #{label_from_value(value)}"
         end
     end
   end
