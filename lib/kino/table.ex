@@ -6,9 +6,11 @@ defmodule Kino.Table do
   fetching and traversal to the behaviour implementation.
   """
 
+  @type feature :: :export | :refetch | :pagination | :sorting | :relocate | :actions
+
   @type info :: %{
           :name => String.t(),
-          :features => list(:export | :refetch | :pagination | :sorting | :relocate),
+          :features => list(feature()),
           optional(:export) => %{formats: list(String.t())},
           optional(:num_rows) => pos_integer()
         }
@@ -147,7 +149,8 @@ defmodule Kino.Table do
       name: ctx.assigns.info.name,
       features: ctx.assigns.info.features,
       export: ctx.assigns.info[:export],
-      content: ctx.assigns.content
+      content: ctx.assigns.content,
+      actions: ctx.assigns.state[:actions] || []
     }
 
     {:ok, payload, ctx}
@@ -191,6 +194,14 @@ defmodule Kino.Table do
   def handle_event("relocate", %{"from_index" => from_index, "to_index" => to_index}, ctx) do
     relocates = ctx.assigns.relocates ++ [%{from_index: from_index, to_index: to_index}]
     {:noreply, ctx |> assign(relocates: relocates) |> broadcast_update()}
+  end
+
+  def handle_event("action", %{"action" => action, "index" => index}, ctx) do
+    action = String.to_existing_atom(action)
+    item = Enum.at(ctx.assigns.state.data_rows, index)
+    emit_event(ctx, {action, item})
+
+    {:noreply, ctx}
   end
 
   @impl true

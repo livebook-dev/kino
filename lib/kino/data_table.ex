@@ -43,14 +43,16 @@ defmodule Kino.DataTable do
       data. Sorting requires traversal of the whole enumerable, so it
       may not be desirable for large lazy enumerables. Defaults to `true`
 
-   * `:formatter` - a 2-arity function that is used to format the data
-     in the table. The first parameter passed is the `key` (column name) and
-     the second is the value to be formatted. When formatting column headings
-     the key is the special value `:__header__`. The formatter function must
-     return either `{:ok, string}` or `:default`. When the return value is
-     `:default` the default data table formatting is applied.
+    * `:formatter` - a 2-arity function that is used to format the data
+      in the table. The first parameter passed is the `key` (column name) and
+      the second is the value to be formatted. When formatting column headings
+      the key is the special value `:__header__`. The formatter function must
+      return either `{:ok, string}` or `:default`. When the return value is
+      `:default` the default data table formatting is applied.
 
     * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
+
+    * `:actions` - the list of actions per row. Defaults to empty list.
 
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
@@ -59,11 +61,13 @@ defmodule Kino.DataTable do
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
     formatter = Keyword.get(opts, :formatter)
     num_rows = Keyword.get(opts, :num_rows)
+    actions = Keyword.get(opts, :actions, [])
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
 
     Kino.Table.new(
       __MODULE__,
-      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows},
+      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows,
+       actions},
       export: fn state -> {"text", state.inspected} end
     )
   end
@@ -176,17 +180,25 @@ defmodule Kino.DataTable do
 
   @impl true
   def init(
-        {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}
+        {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows,
+         actions}
       ) do
-    features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
+    features =
+      Kino.Utils.truthy_keys(
+        pagination: true,
+        sorting: sorting_enabled,
+        actions: Enum.count(actions) > 0
+      )
+
     info = %{name: name, features: features}
-    info = if(num_rows, do: Map.put(info, :num_rows, num_rows), else: info)
+    info = if num_rows, do: Map.put(info, :num_rows, num_rows), else: info
 
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
     {:ok, info,
      %{
        data_rows: data_rows,
+       actions: actions,
        total_rows: count,
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,

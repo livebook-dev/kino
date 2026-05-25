@@ -344,4 +344,25 @@ defmodule Kino.DataTableTest do
       total_rows: 3
     })
   end
+
+  test "supports actions column" do
+    entry = Enum.at(@people_entries, 0)
+    action = %{tag: :my_clicked_action, label: "Click me!"}
+
+    kino = Kino.DataTable.new(@people_entries, actions: [action])
+    myself = self()
+
+    :erlang.trace(Process.whereis(Kino.SubscriptionManager), true, [:receive, tracer: self()])
+    :erlang.trace_pattern(:receive, [], [])
+
+    # Get initial data to populate the key-string mapping
+    connect(kino)
+    Kino.listen(kino, &send(myself, &1))
+
+    assert_receive {:trace, _, :receive, {:"$gen_cast", {:subscribe, ref, _, _}}}
+                   when kino.ref == ref
+
+    push_event(kino, "action", %{"action" => to_string(action.tag), "index" => 0})
+    assert_receive {tag, ^entry} when tag == action.tag
+  end
 end
