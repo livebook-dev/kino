@@ -52,8 +52,31 @@ defmodule Kino.DataTable do
 
     * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
 
-    * `:actions` - the list of actions per row. Defaults to empty list.
+    * `:actions` - a list of actions include in the table for each record.
+      Defaults to empty list. See the section below for more information.
 
+  ## Actions
+
+  You can define a set of actions that can be triggered for each record in your data table.
+
+  For each action, you must define a `:tag` to be used programmatically and a `:label`
+  to be shown to the user.
+
+  Then, you'll be able to listen for these actions using `Kino.listen/2`.
+
+      data = [
+        %{id: 1, name: "Elixir", website: "https://elixir-lang.org"},
+        %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
+      ]
+
+      actions = [%{tag: :view, label: "View"}]
+      data_table = Kino.DataTable.new(data, actions: actions)
+
+      Kino.listen(data_table, fn {tag, record} ->
+        if tag == :view do
+          # execute your "view" action for this record
+        end
+      end)
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
