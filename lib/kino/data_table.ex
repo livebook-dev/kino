@@ -61,8 +61,12 @@ defmodule Kino.DataTable do
     sorting_enabled = Keyword.get(opts, :sorting_enabled, true)
     formatter = Keyword.get(opts, :formatter)
     num_rows = Keyword.get(opts, :num_rows)
-    actions = Keyword.get(opts, :actions, [])
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
+
+    actions =
+      for %{tag: tag, label: label} <- Keyword.get(opts, :actions, []) do
+        %{tag: tag, label: label}
+      end
 
     Kino.Table.new(
       __MODULE__,
