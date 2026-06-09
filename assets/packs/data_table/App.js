@@ -14,6 +14,10 @@ import LimitSelect from "./LimitSelect";
 import SearchButton from "./SearchButton";
 import RefetchButton from "./RefetchButton";
 import DownloadExported from "./DownloadExported";
+import ActionButton from "./ActionButton";
+import ActionMenu from "./ActionMenu";
+
+const customRenderers = [ActionButton];
 
 const customHeaderIcons = {
   arrowUp: ({
@@ -40,6 +44,13 @@ const customHeaderIcons = {
   18V13.9C18 13.0142 18.5759 12.2628 19.3738 12C18.5759 11.7372 18 10.9858 18 10.1V6C18 5.44772 17.5523 5 17
   5H16V3H17C18.6569 3 20 4.34315 20 6V9.7C20 10.5284 20.6716 11.2 21.5 11.2H22V12.8H21.5C20.6716 12.8 20 13.4716 20
   14.3Z"></path></svg>`,
+  threeDots: ({
+    fgColor,
+  }) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fgColor}">
+  <path d="M4.5 10.5C3.675 10.5 3 11.175 3 12C3 12.825 3.675 13.5 4.5 13.5C5.325 13.5 6 12.825 6 12C6
+  11.175 5.325 10.5 4.5 10.5ZM19.5 10.5C18.675 10.5 18 11.175 18 12C18 12.825 18.675 13.5 19.5 13.5C20.325
+  13.5 21 12.825 21 12C21 11.175 20.325 10.5 19.5 10.5ZM12 10.5C11.175 10.5 10.5 11.175 10.5 12C10.5 12.825
+  11.175 13.5 12 13.5C12.825 13.5 13.5 12.825 13.5 12C13.5 11.175 12.825 10.5 12 10.5Z"></path></svg>`,
 };
 
 const headerIcons = {
@@ -81,6 +92,8 @@ export function App({ ctx, data }) {
   const summariesItems = [];
   const columnsInitSize = [];
 
+  const hasActions = data.features.includes("actions");
+
   const getColumnsData = (columns) => {
     const columnsData = columns.map((column) => {
       const summary = column.summary;
@@ -97,6 +110,18 @@ export function App({ ctx, data }) {
         summary: summary,
       };
     });
+
+    if (hasActions) {
+      columnsData.push({
+        title: "",
+        id: "actions",
+        type: GridCellKind.Custom,
+        icon: "",
+        hasMenu: false,
+        summary: undefined,
+      });
+    }
+
     return columnsData;
   };
 
@@ -114,15 +139,19 @@ export function App({ ctx, data }) {
     columns: CompactSelection.empty(),
   };
 
+  const [actions, _] = useState(data.actions);
   const [content, setContent] = useState(data.content);
   const [showSearch, setShowSearch] = useState(false);
   const [columns, setColumns] = useState(columnsInitData);
   const [colSizes, setColSizes] = useState(columnsInitSize);
   const [menu, setMenu] = useState(null);
+  const [actionsMenu, setActionsMenu] = useState(null);
+  const [action, setAction] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [selection, setSelection] = useState(emptySelection);
-  const [rowMarkerOffset, setRowMarkerOffset] = useState(0);
   const [hoverRows, setHoverRows] = useState(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
   const hasData = content.columns.length !== 0;
   const totalRows = content.total_rows;
@@ -139,14 +168,13 @@ export function App({ ctx, data }) {
   const headerHeight = headerTitleSize + headerItems * 22;
   const fixedHeight = 440 + headerHeight;
   const height = totalRows >= 10 && infiniteScroll ? fixedHeight : null;
-  const rowMarkerStartIndex = (content.page - 1) * content.limit + 1;
   const minColumnWidth = hasSummaries ? 150 : 50;
   const maxColumnWidth = 1200;
   const maxColumnAutoWidth = data.content.columns.length === 1 ? 800 : 350;
   const rows = content.page_length;
 
   const drawHeader = useCallback(
-    (args, drawContent) => {
+    (args, _) => {
       const {
         ctx,
         theme,
@@ -158,7 +186,7 @@ export function App({ ctx, data }) {
         spriteManager,
       } = args;
 
-      if (column.sourceIndex === 0) {
+      if (column.sourceIndex === 0 || column.id === "actions") {
         return true;
       }
 
@@ -170,9 +198,10 @@ export function App({ ctx, data }) {
       const fillStyle = isSelected
         ? theme.textHeaderSelected
         : theme.textHeader;
+
       const fillInfoStyle = isSelected ? theme.accentLight : theme.textDark;
       const shouldDrawMenu = column.hasMenu === true && isHovered;
-      const summary = content.columns[column.sourceIndex - 1].summary;
+      const summary = content.columns[column.sourceIndex - 1]?.summary;
       const hasSummary = summary ? true : false;
 
       const fadeWidth = 35;
@@ -277,20 +306,40 @@ export function App({ ctx, data }) {
 
   const getCellContent = useCallback(
     ([col, row]) => {
-      const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
-      const columnar = content.data_orientation === "columns";
-      const cellData = columnar
-        ? content.data[col][row]
-        : content.data[row][col];
+      const isActions = hasActions && content.columns.length === col;
 
-      return {
-        kind: kind,
-        data: cellData,
-        displayData: cellData,
-        allowOverlay: true,
-        allowWrapping: false,
-        readonly: true,
-      };
+      if (isActions) {
+        return {
+          id: "actions",
+          kind: GridCellKind.Custom,
+          data: ({ bounds }) => {
+            setSelectedRowIndex(row);
+            setActionsMenu({ bounds });
+          },
+          displayData: "",
+          allowOverlay: false,
+          allowWrapping: false,
+          hoverEffect: true,
+          readonly: true,
+        };
+      } else {
+        const columnar = content.data_orientation === "columns";
+        const kind = cellKind[content.columns[col].type] || GridCellKind.Text;
+
+        const cellData = columnar
+          ? content.data[col][row]
+          : content.data[row][col];
+
+        return {
+          id: content.columns[col].id,
+          kind: kind,
+          data: cellData,
+          displayData: cellData,
+          allowOverlay: true,
+          allowWrapping: false,
+          readonly: true,
+        };
+      }
     },
     [content],
   );
@@ -324,7 +373,7 @@ export function App({ ctx, data }) {
     setMenu(null);
   };
 
-  const { layerProps, renderLayer } = useLayer({
+  const menuLayer = useLayer({
     isOpen: showMenu,
     auto: true,
     placement: "bottom-end",
@@ -343,6 +392,30 @@ export function App({ ctx, data }) {
     },
   });
 
+  const actionsLayer = useLayer({
+    isOpen: showActionsMenu,
+    auto: true,
+    placement: "bottom-start",
+    possiblePlacements: ["bottom-end", "bottom-start", "top-end", "top-start"],
+    triggerOffset: 0,
+    onOutsideClick: () => setActionsMenu(null),
+    trigger: {
+      getBounds: () => ({
+        left: (actionsMenu?.bounds.x ?? 0) + 5,
+        top: (actionsMenu?.bounds.y ?? 0) + 10,
+        width: actionsMenu?.bounds.width ?? 0,
+        height: actionsMenu?.bounds.height ?? 0,
+        right: 0,
+        bottom: (actionsMenu?.bounds.y ?? 0) + 32,
+      }),
+    },
+  });
+
+  const onActionsMenuClick = ({ action }) => {
+    setAction(action);
+    setActionsMenu(null);
+  };
+
   const onColumnResize = useCallback((column, newSize) => {
     setColSizes((prevColSizes) => {
       return {
@@ -355,13 +428,15 @@ export function App({ ctx, data }) {
   const onColumnMoved = useCallback((startIndex, endIndex) => {
     ctx.pushEvent("relocate", { from_index: startIndex, to_index: endIndex });
     setMenu(null);
+    setActionsMenu(null);
     setSelection(emptySelection);
   }, []);
 
   const onHeaderMenuClick = useCallback(
     (column, bounds) => {
       const { summary, id, type } = columns[column];
-      if (!summary) {
+
+      if (!summary && id !== "actions") {
         setMenu({ column, bounds, columnKey: id, columnType: type });
       }
     },
@@ -371,7 +446,10 @@ export function App({ ctx, data }) {
   const onHeaderClicked = useCallback(
     (column, { bounds }) => {
       const { id, type } = columns[column];
-      setMenu({ column, bounds, columnKey: id, columnType: type });
+
+      if (id !== "actions") {
+        setMenu({ column, bounds, columnKey: id, columnType: type });
+      }
     },
     [columns],
   );
@@ -397,10 +475,14 @@ export function App({ ctx, data }) {
   );
 
   useEffect(() => {
-    selection.rows?.items.length > 0
-      ? setRowMarkerOffset(1)
-      : setRowMarkerOffset(0);
-  }, [selection]);
+    if (selectedRowIndex !== null && action !== null) {
+      ctx.pushEvent("action", { index: selectedRowIndex, action: action });
+
+      setAction(null);
+      setSelectedRowIndex(null);
+      setActionsMenu(null);
+    }
+  }, [selectedRowIndex, action]);
 
   useEffect(() => {
     ctx.handleEvent("update_content", (content) => {
@@ -447,6 +529,11 @@ export function App({ ctx, data }) {
     setShowMenu(menu ? true : false);
   }, [menu]);
 
+  useEffect(
+    () => setShowActionsMenu(actionsMenu ? true : false),
+    [actionsMenu],
+  );
+
   return (
     <div className="p-3 font-sans" style={menu ? { minHeight: 260 } : {}}>
       <div className="mb-6 flex items-center gap-3">
@@ -491,7 +578,6 @@ export function App({ ctx, data }) {
           drawHeader={drawHeader}
           verticalBorder={false}
           rowMarkers="clickable-number"
-          rowMarkerWidth={32}
           onHeaderMenuClick={onHeaderMenuClick}
           onHeaderClicked={onHeaderClicked}
           showSearch={showSearch}
@@ -503,10 +589,9 @@ export function App({ ctx, data }) {
           smoothScrollX={true}
           smoothScrollY={true}
           onColumnResize={onColumnResize}
+          rowSelect="single"
           columnSelect="none"
           gridSelection={selection}
-          onGridSelectionChange={(selection) => setSelection(selection)}
-          rowMarkerStartIndex={rowMarkerStartIndex}
           minColumnWidth={minColumnWidth}
           maxColumnWidth={maxColumnWidth}
           maxColumnAutoWidth={maxColumnAutoWidth}
@@ -514,16 +599,26 @@ export function App({ ctx, data }) {
           onItemHovered={onItemHovered}
           getRowThemeOverride={getRowThemeOverride}
           onColumnMoved={hasRelocate ? onColumnMoved : undefined}
+          customRenderers={customRenderers}
         />
       )}
       {showMenu &&
-        renderLayer(
+        menuLayer.renderLayer(
           <HeaderMenu
-            layerProps={layerProps}
+            layerProps={menuLayer.layerProps}
             menu={menu}
             orderBy={orderBy}
             selectAllCurrent={selectAllCurrent}
             hasSorting={hasSorting}
+          />,
+        )}
+      {showActionsMenu &&
+        actionsLayer.renderLayer(
+          <ActionMenu
+            layerProps={actionsLayer.layerProps}
+            actions={actions}
+            actionsMenu={actionsMenu}
+            onClick={onActionsMenuClick}
           />,
         )}
       {!hasData && <p className="text-sm text-gray-700">No data</p>}

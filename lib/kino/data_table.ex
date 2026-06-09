@@ -43,15 +43,40 @@ defmodule Kino.DataTable do
       data. Sorting requires traversal of the whole enumerable, so it
       may not be desirable for large lazy enumerables. Defaults to `true`
 
-   * `:formatter` - a 2-arity function that is used to format the data
-     in the table. The first parameter passed is the `key` (column name) and
-     the second is the value to be formatted. When formatting column headings
-     the key is the special value `:__header__`. The formatter function must
-     return either `{:ok, string}` or `:default`. When the return value is
-     `:default` the default data table formatting is applied.
+    * `:formatter` - a 2-arity function that is used to format the data
+      in the table. The first parameter passed is the `key` (column name) and
+      the second is the value to be formatted. When formatting column headings
+      the key is the special value `:__header__`. The formatter function must
+      return either `{:ok, string}` or `:default`. When the return value is
+      `:default` the default data table formatting is applied.
 
     * `:num_rows` - the number of rows to show in the table. Defaults to `10`.
 
+    * `:actions` - a list of actions include in the table for each record.
+      Defaults to empty list. See the section below for more information.
+
+  ## Actions
+
+  You can define a set of actions that can be triggered for each record in your data table.
+
+  For each action, you must define a `:tag` to be used programmatically and a `:label`
+  to be shown to the user.
+
+  Then, you'll be able to listen for these actions using `Kino.listen/2`.
+
+      data = [
+        %{id: 1, name: "Elixir", website: "https://elixir-lang.org"},
+        %{id: 2, name: "Erlang", website: "https://www.erlang.org"}
+      ]
+
+      actions = [%{tag: :view, label: "View"}]
+      data_table = Kino.DataTable.new(data, actions: actions)
+
+      Kino.listen(data_table, fn {tag, record} ->
+        if tag == :view do
+          # execute your "view" action for this record
+        end
+      end)
   """
   @spec new(Table.Reader.t(), keyword()) :: t()
   def new(tabular, opts \\ []) do
@@ -61,9 +86,15 @@ defmodule Kino.DataTable do
     num_rows = Keyword.get(opts, :num_rows)
     {data_rows, data_columns, count, inspected} = prepare_data(tabular, opts)
 
+    actions =
+      for %{tag: tag, label: label} <- Keyword.get(opts, :actions, []) do
+        %{tag: tag, label: label}
+      end
+
     Kino.Table.new(
       __MODULE__,
-      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows},
+      {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows,
+       actions},
       export: fn state -> {"text", state.inspected} end
     )
   end
@@ -176,17 +207,25 @@ defmodule Kino.DataTable do
 
   @impl true
   def init(
-        {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows}
+        {data_rows, data_columns, count, name, sorting_enabled, inspected, formatter, num_rows,
+         actions}
       ) do
-    features = Kino.Utils.truthy_keys(pagination: true, sorting: sorting_enabled)
+    features =
+      Kino.Utils.truthy_keys(
+        pagination: true,
+        sorting: sorting_enabled,
+        actions: Enum.count(actions) > 0
+      )
+
     info = %{name: name, features: features}
-    info = if(num_rows, do: Map.put(info, :num_rows, num_rows), else: info)
+    info = if num_rows, do: Map.put(info, :num_rows, num_rows), else: info
 
     {count, slicing_fun, slicing_cache} = init_slicing(data_rows, count)
 
     {:ok, info,
      %{
        data_rows: data_rows,
+       actions: actions,
        total_rows: count,
        slicing_fun: slicing_fun,
        slicing_cache: slicing_cache,
