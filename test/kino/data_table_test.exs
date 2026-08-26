@@ -123,6 +123,22 @@ defmodule Kino.DataTableTest do
            } = data
   end
 
+  test "respects the global inspect configuration when formatting values" do
+    Kino.Config.configure(inspect: [charlists: :as_lists])
+    on_exit(fn -> Application.delete_env(:kino, :inspect) end)
+
+    entries = [%{a: [1, 8], b: [9, 8]}]
+
+    kino = Kino.DataTable.new(entries)
+    data = connect(kino)
+
+    assert %{
+             content: %{
+               data: [["[1, 8]", "[9, 8]"]]
+             }
+           } = data
+  end
+
   test "supports non-utf8 binary values" do
     entries = [
       binaries: [<<110, 120>>, <<200, 210>>]
