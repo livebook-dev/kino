@@ -351,23 +351,25 @@ defmodule Kino.DataTable do
     end
   end
 
-  defp value_to_string(value) when is_atom(value), do: inspect(value)
+  defp value_to_string(value) when is_atom(value), do: inspect(value, inspect_opts())
 
   defp value_to_string(value) when is_list(value) do
-    if List.ascii_printable?(value) do
+    opts = inspect_opts()
+
+    if Inspect.Opts.new(opts).charlists != :as_lists and List.ascii_printable?(value) do
       List.to_string(value)
     else
-      inspect(value)
+      inspect(value, opts)
     end
   end
 
   defp value_to_string(value) when is_binary(value) do
-    inspect_opts = Inspect.Opts.new([])
+    opts = inspect_opts()
 
-    if String.printable?(value, inspect_opts.limit) do
+    if String.printable?(value, Inspect.Opts.new(opts).limit) do
       value
     else
-      inspect(value)
+      inspect(value, opts)
     end
   end
 
@@ -375,8 +377,13 @@ defmodule Kino.DataTable do
     if mod = String.Chars.impl_for(value) do
       apply(mod, :to_string, [value])
     else
-      inspect(value)
+      inspect(value, inspect_opts())
     end
+  end
+
+  defp inspect_opts() do
+    # Table cells are plain text, so we ignore coloring
+    Kino.Config.configuration(:inspect, []) |> Keyword.delete(:syntax_colors)
   end
 
   @impl true
