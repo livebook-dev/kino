@@ -865,7 +865,7 @@ defmodule Kino.Process do
     Kino.Layout.tabs(do_flush(1, []))
   end
 
-  def do_flush(index, acc) do
+  defp do_flush(index, acc) do
     receive do
       msg -> do_flush(index + 1, [{"Message ##{index}", msg} | acc])
     after
