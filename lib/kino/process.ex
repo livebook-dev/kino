@@ -857,4 +857,32 @@ defmodule Kino.Process do
   defp process_info(pid, spec) do
     :erpc.call(node(pid), Process, :info, [pid, spec])
   end
+
+  @doc """
+  Generates a tab interface of flushed messages.
+  """
+  def flush do
+    Kino.Layout.tabs(do_flush(1, []))
+  end
+
+  def do_flush(index, acc) do
+    receive do
+      msg -> do_flush(index + 1, [{"Message ##{index}", msg} | acc])
+    after
+      0 -> :lists.reverse(acc)
+    end
+  end
+
+  @doc """
+  Renders a tab interface of flushed messages.
+
+  This function renders tab interface of flushed messages like `flush/0` with the
+  difference being that this function can be called anywhere within the Livebook
+  code block whereas `flush/0` must have its result be the last thing returned
+  from the code block in order to render the visual.
+  """
+  def render_flush do
+    Kino.render(flush())
+    :ok
+  end
 end
