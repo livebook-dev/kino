@@ -129,10 +129,27 @@ defmodule Kino.ProcessTest do
       agent_pid_text = :erlang.pid_to_list(agent) |> List.to_string()
 
       content = Kino.Process.sup_tree(pid) |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(id: :not_started):::notstarted"
+      assert content =~ "0(supervisor_parent):::root ---> 1(\"id: :not_started\"):::notstarted"
 
       assert content =~
                "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
+    end
+
+    test "quotes non-started child labels that contain special characters" do
+      pid =
+        start_supervised!(%{
+          id: Supervisor,
+          start:
+            {Supervisor, :start_link,
+             [
+               [%{id: {NonAtomId, 3}, start: {Function, :identity, [:ignore]}}],
+               [name: :supervisor_parent, strategy: :one_for_one]
+             ]},
+          restart: :temporary
+        })
+
+      content = Kino.Process.sup_tree(pid) |> mermaid()
+      assert content =~ "---> 1(\"id: {NonAtomId, 3}\"):::notstarted"
     end
 
     # TODO: remove once we require Elixir v1.17.0

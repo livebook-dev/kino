@@ -795,7 +795,7 @@ defmodule Kino.Process do
   end
 
   defp graph_node(%{pid: :undefined, id: id, idx: idx}) do
-    "#{idx}(id: #{inspect(id)}):::notstarted"
+    "#{idx}(#{format_as_mermaid_unicode_text("id: #{inspect(id)}")}):::notstarted"
   end
 
   defp graph_node(%{idx: idx, id: id, meta: %{protection: protection}, type: :ets}) do
