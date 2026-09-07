@@ -216,6 +216,42 @@ defmodule Kino.ProcessTest do
     end
   end
 
+  describe "flush/0" do
+    test "default layout list" do
+      send(self(), :abc)
+      send(self(), :def)
+
+      tabs = Kino.Process.flush()
+
+      assert %{
+               type: :grid,
+               outputs: [
+                 %{type: :terminal_text, text: "\e[34m:abc\e[0m"},
+                 %{type: :terminal_text, text: "\e[34m:def\e[0m"}
+               ]
+             } = Kino.Render.to_livebook(tabs)
+    end
+
+    test "opt in layout tabs" do
+      send(self(), :abc)
+      send(self(), :def)
+
+      tabs = Kino.Process.flush(layout: :tabs)
+
+      assert %{
+               type: :tabs,
+               labels: [
+                 "Message #1",
+                 "Message #2"
+               ],
+               outputs: [
+                 %{type: :terminal_text, text: "\e[34m:abc\e[0m"},
+                 %{type: :terminal_text, text: "\e[34m:def\e[0m"}
+               ]
+             } = Kino.Render.to_livebook(tabs)
+    end
+  end
+
   defmodule Ponger do
     use GenServer
 

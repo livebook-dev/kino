@@ -857,4 +857,50 @@ defmodule Kino.Process do
   defp process_info(pid, spec) do
     :erpc.call(node(pid), Process, :info, [pid, spec])
   end
+
+  @doc """
+  Clears out process messages and arranges them into a list or tabs layout.
+
+  ## Options
+
+    * `:layout` - Selects how to render the flushed messages. The
+      value can either `:list` or `:tabs`. Defaults to `:list`.
+
+  """
+  def flush(opts \\ []) do
+    messages = do_flush([])
+
+    case Keyword.get(opts, :layout, :list) do
+      :list ->
+        Kino.Layout.grid(messages)
+
+      :tabs ->
+        messages
+        |> Enum.with_index(fn msg, index ->
+          {"Message ##{index + 1}", msg}
+        end)
+        |> Kino.Layout.tabs()
+    end
+  end
+
+  defp do_flush(acc) do
+    receive do
+      msg -> do_flush([msg | acc])
+    after
+      0 -> :lists.reverse(acc)
+    end
+  end
+
+  @doc """
+  Clears out process messages and renders all of them.
+
+  This function renders flushed messages like `flush/0` with the
+  difference being that this function can be called anywhere within the Livebook
+  code block whereas `flush/0` must have its result be the last thing returned
+  from the code block in order to render the visual.
+  """
+  def render_flush(opts \\ []) do
+    opts |> flush() |> Kino.render()
+    :ok
+  end
 end
