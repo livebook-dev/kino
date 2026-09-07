@@ -859,7 +859,7 @@ defmodule Kino.Process do
   end
 
   @doc """
-  Generates a tab interface of flushed messages.
+  Clears out process messages and arranges them into a list or tabs layout.
 
   ## Options
 
@@ -892,9 +892,9 @@ defmodule Kino.Process do
   end
 
   @doc """
-  Renders a tab interface of flushed messages.
+  Clears out process messages and renders all of them.
 
-  This function renders tab interface of flushed messages like `flush/0` with the
+  This function renders flushed messages like `flush/0` with the
   difference being that this function can be called anywhere within the Livebook
   code block whereas `flush/0` must have its result be the last thing returned
   from the code block in order to render the visual.
