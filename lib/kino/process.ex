@@ -860,14 +860,32 @@ defmodule Kino.Process do
 
   @doc """
   Generates a tab interface of flushed messages.
+
+  ## Options
+
+    * `:layout` - Selects how to render the flushed messages. The
+      value can either `:list` or `:tabs`. Defaults to `:list`.
+
   """
-  def flush do
-    Kino.Layout.tabs(do_flush(1, []))
+  def flush(opts \\ []) do
+    messages = do_flush([])
+
+    case Keyword.get(opts, :layout, :list) do
+      :list ->
+        Kino.Layout.grid(messages)
+
+      :tabs ->
+        messages
+        |> Enum.with_index(fn msg, index ->
+          {"Message ##{index + 1}", msg}
+        end)
+        |> Kino.Layout.tabs()
+    end
   end
 
-  defp do_flush(index, acc) do
+  defp do_flush(acc) do
     receive do
-      msg -> do_flush(index + 1, [{"Message ##{index}", msg} | acc])
+      msg -> do_flush([msg | acc])
     after
       0 -> :lists.reverse(acc)
     end
@@ -881,8 +899,8 @@ defmodule Kino.Process do
   code block whereas `flush/0` must have its result be the last thing returned
   from the code block in order to render the visual.
   """
-  def render_flush do
-    Kino.render(flush())
+  def render_flush(opts \\ []) do
+    opts |> flush() |> Kino.render()
     :ok
   end
 end
