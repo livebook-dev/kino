@@ -32,7 +32,7 @@ defmodule Kino.MixProject do
   defp deps do
     [
       {:table, "~> 0.1.2"},
-      {:nx, "~> 0.1", optional: true},
+      {:nx, "~> 0.1 or ~> 1.0", optional: true},
       {:plug, "~> 1.0", optional: true},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
