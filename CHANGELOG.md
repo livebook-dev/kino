@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.19.1](https://github.com/livebook-dev/kino/tree/v0.19.1) (2026-09-15)
+
+### Added
+
+* Added `:actions` option to `Kino.DataTable.new/2` ([#513](https://github.com/livebook-dev/kino/pull/513))
+* Added `Kino.Process.flush/0` and `Kino.Process.render_flush/0` ([#515](https://github.com/livebook-dev/kino/pull/515))
+
+### Changed
+
+* Removed runtime override of `dbg_callback` ([#510](https://github.com/livebook-dev/kino/pull/510))
+* Updated Mermaid to v11.17
+* Relaxed the `nx` requirement to allow v1.0 ([#519](https://github.com/livebook-dev/kino/pull/519))
+
+### Fixed
+
+* `Kino.Process.seq_trace/2` to handle GenServer replies ([#512](https://github.com/livebook-dev/kino/pull/512))
+* `Kino.DataTable` to respect configured inspect options, such as `:charlists` ([#514](https://github.com/livebook-dev/kino/pull/514))
+* Quoting of non-started child ids in `Kino.Process` diagrams ([#517](https://github.com/livebook-dev/kino/pull/517))
+
 ## [v0.19.0](https://github.com/livebook-dev/kino/tree/v0.19.0) (2026-03-03)
 
 ### Added
