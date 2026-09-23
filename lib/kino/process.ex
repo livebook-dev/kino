@@ -576,7 +576,9 @@ defmodule Kino.Process do
   defp traverse_supervisor(supervisor, opts) when is_pid(supervisor) do
     supervisor_children =
       try do
-        Supervisor.which_children(supervisor)
+        # which_children/1 returns children newest-first, so reverse it
+        # to render the tree in the order children are defined/started
+        supervisor |> Supervisor.which_children() |> Enum.reverse()
       catch
         _, _ ->
           raise ArgumentError, "the provided process #{inspect(supervisor)} is not a supervisor"
@@ -619,7 +621,7 @@ defmodule Kino.Process do
     connection = graph_edge(parent_node, child_node, :supervisor)
     resource_keys = Map.put(resource_keys, pid, child_node)
 
-    children = Supervisor.which_children(pid)
+    children = pid |> Supervisor.which_children() |> Enum.reverse()
 
     {subtree_rels, idx, resource_keys} =
       traverse_processes(children, child_node, {%{}, idx + 1, resource_keys})

@@ -22,27 +22,28 @@ defmodule Kino.ProcessTest do
       content = pid |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
       agent_pid_text = :erlang.pid_to_list(agent_pid) |> List.to_string()
 
-      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+      assert content =~
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(ets_owner):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
-
-      assert content =~
-               "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
+               "3(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
 
       assert content =~
                "4[(\"`test_ets_table\n**_protected_**`\")]:::ets -. heir .-> 2(ets_heir):::worker"
 
       content = :supervisor_parent |> Kino.Process.sup_tree(render_ets_tables: true) |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
+
+      assert content =~
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
       assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(ets_owner):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
-
-      assert content =~
-               "1(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
+               "3(ets_owner):::worker -- owner --> 4[(\"`test_ets_table\n**_protected_**`\")]:::ets"
 
       assert content =~
                "4[(\"`test_ets_table\n**_protected_**`\")]:::ets -. heir .-> 2(ets_heir):::worker"
@@ -59,20 +60,22 @@ defmodule Kino.ProcessTest do
 
       content = pid |> Kino.Process.sup_tree() |> mermaid()
       agent_pid_text = :erlang.pid_to_list(agent_pid) |> List.to_string()
-      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(ets_owner):::worker"
 
       refute content =~ ":::ets"
 
       content = :supervisor_parent |> Kino.Process.sup_tree() |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(ets_owner):::worker"
-      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 3(\"Agent<br/>#{agent_pid_text}\"):::worker"
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
+      assert content =~ "0(supervisor_parent):::root ---> 2(ets_heir):::worker"
+      assert content =~ "0(supervisor_parent):::root ---> 3(ets_owner):::worker"
 
       refute content =~ ":::ets"
     end
@@ -97,16 +100,18 @@ defmodule Kino.ProcessTest do
       agent_pid_text = :erlang.pid_to_list(agent) |> List.to_string()
 
       content = Kino.Process.sup_tree(pid) |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
+      assert content =~ "0(supervisor_parent):::root ---> 2(agent_child):::worker"
 
       content = Kino.Process.sup_tree(:supervisor_parent) |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(agent_child):::worker"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
+      assert content =~ "0(supervisor_parent):::root ---> 2(agent_child):::worker"
     end
 
     test "shows supervision tree with children alongside non-started children" do
@@ -129,10 +134,11 @@ defmodule Kino.ProcessTest do
       agent_pid_text = :erlang.pid_to_list(agent) |> List.to_string()
 
       content = Kino.Process.sup_tree(pid) |> mermaid()
-      assert content =~ "0(supervisor_parent):::root ---> 1(\"id: :not_started\"):::notstarted"
 
       assert content =~
-               "0(supervisor_parent):::root ---> 2(\"Agent<br/>#{agent_pid_text}\"):::worker"
+               "0(supervisor_parent):::root ---> 1(\"Agent<br/>#{agent_pid_text}\"):::worker"
+
+      assert content =~ "0(supervisor_parent):::root ---> 2(\"id: :not_started\"):::notstarted"
     end
 
     test "quotes non-started child labels that contain special characters" do
