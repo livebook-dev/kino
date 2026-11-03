@@ -62,7 +62,7 @@ defmodule Kino.SmartCell.Server do
                 " Make sure to enable smart cell editor during init"
       end
 
-      Keyword.validate!(editor_opts, [:source, :intellisense_node, :visible])
+      Keyword.validate!(editor_opts, [:source, :intellisense_node, :visible, :diagnostics])
     end
 
     put_in(ctx.__private__.smart_cell[:reconfigure_options], opts)

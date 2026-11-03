@@ -229,6 +229,56 @@ defmodule Kino.SmartCell do
   Note that you can programmatically reconfigure some of these options
   later using `Kino.JS.Live.Context.reconfigure_smart_cell/2`.
 
+  ### Diagnostics
+
+  A smart cell can show diagnostics, such as errors and warnings from
+  a linter, in the editor by passing them in the `:diagnostics` editor
+  option to `Kino.JS.Live.Context.reconfigure_smart_cell/2`:
+
+      @impl true
+      def handle_editor_change(source, ctx) do
+        diagnostics =
+          for {line, column, message} <- MyLinter.lint(source) do
+            %{
+              line: line,
+              column: column,
+              severity: :error,
+              description: message
+            }
+          end
+
+        ctx = Kino.JS.Live.Context.reconfigure_smart_cell(ctx, editor: [
+          diagnostics: diagnostics
+        ])
+        {:ok, assign(ctx, source: source)}
+      end
+
+  Each diagnostic is a map with the following keys:
+
+    * `:line` - the line where the diagnostic starts, 1-based. Required
+
+    * `:column` - the column where the diagnostic starts, 1-based.
+      Defaults to the first non-whitespace character of the line
+
+    * `:end_line` - the line where the diagnostic ends. Defaults to
+      `:line`
+
+    * `:end_column` - the column where the diagnostic ends, exclusive.
+      Defaults to the end of `:end_line`, excluding trailing whitespace
+
+    * `:severity` - one of `:error`, `:warning`, `:info` or `:hint`.
+      Required
+
+    * `:description` - the message shown for the diagnostic. Required
+
+  Columns count UTF-16 code units, which equal characters except for
+  characters outside the Basic Multilingual Plane.
+
+  Every update replaces all of the existing diagnostics, so passing an
+  empty list clears them. Diagnostics are not persisted. Users who
+  connect later see them only after the next update, so you may want
+  to send them again in `c:Kino.JS.Live.handle_connect/1`.
+
   ## Other options
 
   Other than the editor configuration, the following options are
