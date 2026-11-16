@@ -275,9 +275,7 @@ defmodule Kino.SmartCell do
   characters outside the Basic Multilingual Plane.
 
   Every update replaces all of the existing diagnostics, so passing an
-  empty list clears them. Livebook keeps the diagnostics for the
-  lifetime of the smart cell in the session, so users who connect later
-  see them as well. They are not saved with the notebook.
+  empty list clears them.
 
   ## Other options
 
