@@ -45,7 +45,7 @@ defmodule Kino.Process do
       :application_controller.which_applications()
 
   You can then call `Kino.Process.app_tree/1` to render
-  the application tree using using the atom of the application.
+  the application tree using the atom of the application.
 
       Kino.Process.app_tree(:logger)
 
@@ -138,7 +138,7 @@ defmodule Kino.Process do
       end)
 
   You can then call `Kino.Process.sup_tree/1` to render
-  the supervision tree using using the PID of the supervisor.
+  the supervision tree using the PID of the supervisor.
 
       Kino.Process.sup_tree(supervisor_pid)
 
